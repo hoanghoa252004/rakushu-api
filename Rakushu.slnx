@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Rakushu.Api/Rakushu.Api.csproj" Id="d346066f-f6dc-4ab2-af6f-f6da81202807" />
+    <Project Path="src/Rakushu.Application/Rakushu.Application.csproj" Id="529f00a3-8123-4fff-830b-6b5653afb73f" />
+    <Project Path="src/Rakushu.Domain/Rakushu.Domain.csproj" Id="12f49ed8-2776-4831-8b05-40e2f4405b43" />
+    <Project Path="src/Rakushu.Infrastructure/Rakushu.Infrastructure.csproj" Id="b7144c08-2056-4620-95b6-3e4227789547" />
+    <Project Path="src/Rakushu.Persistence/Rakushu.Persistence.csproj" Id="9df8566d-0d7a-4185-90b1-371720253ba2" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Rakushu.IntegrationTest/Rakushu.IntegrationTest.csproj" Id="09ada921-cb84-4be5-96e0-b179592aa1a0" />
+    <Project Path="tests/Rakushu.UnitTest/Rakushu.UnitTest.csproj" Id="f7e0362a-2193-41dc-b679-21202ab8c5c7" />
+  </Folder>
+</Solution>
