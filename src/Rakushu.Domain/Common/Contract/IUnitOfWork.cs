@@ -1,5 +1,6 @@
-﻿namespace Rakushu.Domain.Common.Contract;
+namespace Rakushu.Domain.Common.Contract;
 
-internal interface IUnitOfWork
+public interface IUnitOfWork
 {
+	Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
