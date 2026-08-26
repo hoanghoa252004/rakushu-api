@@ -1,4 +1,4 @@
-namespace Rakushu.Domain.Enums;
+namespace Rakushu.Domain.Entities.User;
 
 public enum UserStatus
 {
