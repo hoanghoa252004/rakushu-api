@@ -1,8 +1,6 @@
 using Rakushu.Application.Usecases.Auth.Login;
-using Rakushu.Domain.Constants;
-using Rakushu.Domain.Entities;
-using Rakushu.Domain.Enums;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.UnitTest.Fakes;
 
 namespace Rakushu.UnitTest.Auth;
@@ -10,7 +8,6 @@ namespace Rakushu.UnitTest.Auth;
 public class LoginCommandHandlerTests
 {
 	private readonly FakeUserRepository _userRepository = new();
-	private readonly FakeRefreshTokenRepository _refreshTokenRepository = new();
 	private readonly FakePasswordHasher _passwordHasher = new();
 	private readonly FakeJwtTokenGenerator _jwtTokenGenerator = new();
 	private readonly FakeUnitOfWork _unitOfWork = new();
@@ -21,7 +18,6 @@ public class LoginCommandHandlerTests
 	{
 		_handler = new LoginCommandHandler(
 			_userRepository,
-			_refreshTokenRepository,
 			_passwordHasher,
 			_jwtTokenGenerator,
 			_unitOfWork);
@@ -31,7 +27,7 @@ public class LoginCommandHandlerTests
 	public async Task Handle_ValidCredentials_ShouldReturnLoginResponseWithTokens()
 	{
 		// Arrange
-		var user = User.Create("alice", "alice@example.com", "hashed_password123", RoleConstants.UserRoleId);
+		var user = User.Create("alice", "alice@example.com", "hashed_password123", RoleConstants.LearnerRoleId);
 		user.SetProfile(Profile.Create(user.Id, "Alice Wonderland"));
 		_userRepository.Users.Add(user);
 
@@ -46,14 +42,14 @@ public class LoginCommandHandlerTests
 		Assert.Equal("alice", result.Value.Username);
 		Assert.Equal("alice@example.com", result.Value.Email);
 		Assert.Equal("fake_access_token", result.Value.AccessToken);
-		Assert.Single(_refreshTokenRepository.Tokens);
+		Assert.Single(_userRepository.RefreshTokens);
 	}
 
 	[Fact]
 	public async Task Handle_InvalidPassword_ShouldReturnInvalidCredentialsError()
 	{
 		// Arrange
-		var user = User.Create("alice", "alice@example.com", "hashed_correct_pass", RoleConstants.UserRoleId);
+		var user = User.Create("alice", "alice@example.com", "hashed_correct_pass", RoleConstants.LearnerRoleId);
 		_userRepository.Users.Add(user);
 
 		var command = new LoginCommand("alice@example.com", "wrong_pass");
@@ -63,14 +59,14 @@ public class LoginCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(DomainErrors.Auth.InvalidCredentials.Code, result.Error.Code);
+		Assert.Equal(UserErrors.InvalidCredentials.Code, result.Error.Code);
 	}
 
 	[Fact]
 	public async Task Handle_BannedUser_ShouldReturnUserInactiveError()
 	{
 		// Arrange
-		var user = User.Create("banned_user", "banned@example.com", "hashed_pass", RoleConstants.UserRoleId, status: UserStatus.Banned.ToString());
+		var user = User.Create("banned_user", "banned@example.com", "hashed_pass", RoleConstants.LearnerRoleId, status: UserStatus.Banned);
 		_userRepository.Users.Add(user);
 
 		var command = new LoginCommand("banned@example.com", "pass");
@@ -80,6 +76,6 @@ public class LoginCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(DomainErrors.Auth.UserInactive.Code, result.Error.Code);
+		Assert.Equal(UserErrors.UserInactive.Code, result.Error.Code);
 	}
 }

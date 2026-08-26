@@ -5,9 +5,8 @@ using Rakushu.Application.Usecases.Admin.Users.DeleteUser;
 using Rakushu.Application.Usecases.Admin.Users.GetUserById;
 using Rakushu.Application.Usecases.Admin.Users.GetUsers;
 using Rakushu.Application.Usecases.Admin.Users.UpdateUser;
-using Rakushu.Domain.Constants;
-using Rakushu.Domain.Entities;
-using Rakushu.Domain.Enums;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.UnitTest.Fakes;
 
 namespace Rakushu.UnitTest.Admin;
@@ -16,7 +15,6 @@ public class AdminUserManagementTests
 {
 	private readonly FakeUserRepository _userRepository = new();
 	private readonly FakeRoleRepository _roleRepository = new();
-	private readonly FakeProfileRepository _profileRepository = new();
 	private readonly FakePasswordHasher _passwordHasher = new();
 	private readonly FakeUnitOfWork _unitOfWork = new();
 
@@ -31,7 +29,7 @@ public class AdminUserManagementTests
 	public async Task AdminCreateUser_ShouldAddUserAndProfile()
 	{
 		var handler = new AdminCreateUserCommandHandler(
-			_userRepository, _roleRepository, _profileRepository, _passwordHasher, _unitOfWork);
+			_userRepository, _roleRepository, _passwordHasher, _unitOfWork);
 
 		var command = new AdminCreateUserCommand(
 			"new_student", "student@test.com", "pass123", RoleConstants.LearnerRoleId, "Student Name");
@@ -42,6 +40,7 @@ public class AdminUserManagementTests
 		Assert.Equal("new_student", result.Value.Username);
 		Assert.Equal(RoleConstants.Learner, result.Value.RoleName);
 		Assert.Single(_userRepository.Users);
+		Assert.NotNull(_userRepository.Users.First().Profile);
 	}
 
 	[Fact]
@@ -56,7 +55,7 @@ public class AdminUserManagementTests
 		var result = await handler.Handle(command, CancellationToken.None);
 
 		Assert.True(result.IsSuccess);
-		Assert.Equal(UserStatus.Banned.ToString(), user.Status);
+		Assert.Equal(UserStatus.Banned, user.Status);
 	}
 
 	[Fact]

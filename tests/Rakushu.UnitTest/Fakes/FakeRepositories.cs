@@ -1,7 +1,9 @@
 using System.Linq.Expressions;
+using MediatR;
 using Rakushu.Application.Abstractions.Authentication;
 using Rakushu.Domain.Common.Contract;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Repositories;
 
 namespace Rakushu.UnitTest.Fakes;
@@ -9,6 +11,14 @@ namespace Rakushu.UnitTest.Fakes;
 public class FakeUnitOfWork : IUnitOfWork
 {
 	public int SaveChangesCallCount { get; private set; }
+	public List<INotification> PublishedEvents { get; } = new();
+
+	public async Task<T> ExecuteAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
+	{
+		SaveChangesCallCount++;
+		return await action();
+	}
+
 	public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
 	{
 		SaveChangesCallCount++;
@@ -19,6 +29,7 @@ public class FakeUnitOfWork : IUnitOfWork
 public class FakeUserRepository : IUserRepository
 {
 	public List<User> Users { get; } = new();
+	public List<RefreshToken> RefreshTokens { get; } = new();
 
 	public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
 	{
@@ -50,9 +61,14 @@ public class FakeUserRepository : IUserRepository
 		return Task.FromResult(Users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)));
 	}
 
-	public Task<User?> GetByIdWithProfileAndRoleAsync(Guid id, CancellationToken cancellationToken = default)
+	public Task<User?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default)
 	{
 		return Task.FromResult(Users.FirstOrDefault(u => u.Id == id));
+	}
+
+	public Task<Profile?> GetProfileByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+	{
+		return Task.FromResult(Users.FirstOrDefault(u => u.Id == userId)?.Profile);
 	}
 
 	public Task<bool> IsEmailUniqueAsync(string email, Guid? excludeUserId = null, CancellationToken cancellationToken = default)
@@ -69,7 +85,26 @@ public class FakeUserRepository : IUserRepository
 		return Task.FromResult(!query.Any());
 	}
 
-	public Task<(IEnumerable<User> Items, int TotalCount)> GetPagedAsync(
+	public Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken cancellationToken = default)
+	{
+		return Task.FromResult(RefreshTokens.FirstOrDefault(t => t.Token == token));
+	}
+
+	public Task RevokeUserRefreshTokensAsync(Guid userId, CancellationToken cancellationToken = default)
+	{
+		foreach (var t in RefreshTokens.Where(t => t.UserId == userId))
+		{
+			t.Revoke();
+		}
+		return Task.CompletedTask;
+	}
+
+	public void AddRefreshToken(RefreshToken token)
+	{
+		RefreshTokens.Add(token);
+	}
+
+	public Task<(IReadOnlyList<User> Items, int TotalCount)> GetPagedAsync(
 		int pageNumber,
 		int pageSize,
 		string? searchTerm = null,
@@ -86,13 +121,13 @@ public class FakeUserRepository : IUserRepository
 		{
 			query = query.Where(u => u.RoleId == roleId.Value);
 		}
-		if (!string.IsNullOrWhiteSpace(status))
+		if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<UserStatus>(status, true, out var parsedStatus))
 		{
-			query = query.Where(u => u.Status == status);
+			query = query.Where(u => u.Status == parsedStatus);
 		}
 		var total = query.Count();
 		var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
-		return Task.FromResult(((IEnumerable<User>)items, total));
+		return Task.FromResult(((IReadOnlyList<User>)items, total));
 	}
 }
 
@@ -116,56 +151,9 @@ public class FakeRoleRepository : IRoleRepository
 
 	public Task<Role?> GetByNameAsync(string roleName, CancellationToken cancellationToken = default) =>
 		Task.FromResult(Roles.FirstOrDefault(r => r.RoleName.Equals(roleName, StringComparison.OrdinalIgnoreCase)));
-}
 
-public class FakeProfileRepository : IProfileRepository
-{
-	public List<Profile> Profiles { get; } = new();
-
-	public Task<Profile?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-		Task.FromResult(Profiles.FirstOrDefault(p => p.Id == id));
-
-	public Task<IEnumerable<Profile>> GetAllAsync(CancellationToken cancellationToken = default) =>
-		Task.FromResult<IEnumerable<Profile>>(Profiles);
-
-	public Task<IEnumerable<Profile>> FindAsync(Expression<Func<Profile, bool>> predicate, CancellationToken cancellationToken = default) =>
-		Task.FromResult<IEnumerable<Profile>>(Profiles.AsQueryable().Where(predicate).ToList());
-
-	public void Add(Profile entity) => Profiles.Add(entity);
-	public void Update(Profile entity) { }
-	public void Delete(Profile entity) => Profiles.Remove(entity);
-	public void DeleteMultiple(List<Profile> entities) => entities.ForEach(e => Profiles.Remove(e));
-
-	public Task<Profile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
-		Task.FromResult(Profiles.FirstOrDefault(p => p.Id == userId));
-}
-
-public class FakeRefreshTokenRepository : IRefreshTokenRepository
-{
-	public List<RefreshToken> Tokens { get; } = new();
-
-	public Task<RefreshToken?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-		Task.FromResult(Tokens.FirstOrDefault(t => t.Id == id));
-
-	public Task<IEnumerable<RefreshToken>> GetAllAsync(CancellationToken cancellationToken = default) =>
-		Task.FromResult<IEnumerable<RefreshToken>>(Tokens);
-
-	public Task<IEnumerable<RefreshToken>> FindAsync(Expression<Func<RefreshToken, bool>> predicate, CancellationToken cancellationToken = default) =>
-		Task.FromResult<IEnumerable<RefreshToken>>(Tokens.AsQueryable().Where(predicate).ToList());
-
-	public void Add(RefreshToken entity) => Tokens.Add(entity);
-	public void Update(RefreshToken entity) { }
-	public void Delete(RefreshToken entity) => Tokens.Remove(entity);
-	public void DeleteMultiple(List<RefreshToken> entities) => entities.ForEach(e => Tokens.Remove(e));
-
-	public Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default) =>
-		Task.FromResult(Tokens.FirstOrDefault(t => t.Token == token));
-
-	public Task RevokeAllUserTokensAsync(Guid userId, CancellationToken cancellationToken = default)
-	{
-		foreach (var t in Tokens.Where(t => t.UserId == userId)) t.Revoke();
-		return Task.CompletedTask;
-	}
+	public Task<IReadOnlyList<Role>> GetAllRolesAsync(CancellationToken cancellationToken = default) =>
+		Task.FromResult<IReadOnlyList<Role>>(Roles);
 }
 
 public class FakePasswordHasher : IPasswordHasher
@@ -176,8 +164,8 @@ public class FakePasswordHasher : IPasswordHasher
 
 public class FakeJwtTokenGenerator : IJwtTokenGenerator
 {
-	public string GenerateAccessToken(User user, string roleName) => "fake_access_token";
-	public string GenerateRefreshToken() => "fake_refresh_token";
+	public string GenerateAccessToken(Guid userId, string email, string username, string roleName) => "fake_access_token";
+	public (string Token, DateTimeOffset ExpiresAt) GenerateRefreshToken() => ("fake_refresh_token", DateTimeOffset.UtcNow.AddDays(7));
 	public int GetAccessTokenExpirationMinutes() => 60;
 	public int GetRefreshTokenExpirationDays() => 7;
 }

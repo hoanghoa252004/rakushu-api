@@ -1,7 +1,7 @@
 using Rakushu.Application.Usecases.Profile.GetMyProfile;
 using Rakushu.Application.Usecases.Profile.UpdateMyProfile;
-using Rakushu.Domain.Constants;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.UnitTest.Fakes;
 
 namespace Rakushu.UnitTest.ProfileTests;
@@ -10,7 +10,6 @@ public class ProfileCommandHandlerTests
 {
 	private readonly FakeCurrentUserContext _currentUserContext = new();
 	private readonly FakeUserRepository _userRepository = new();
-	private readonly FakeProfileRepository _profileRepository = new();
 	private readonly FakeUnitOfWork _unitOfWork = new();
 
 	private readonly GetMyProfileQueryHandler _getQueryHandler;
@@ -19,14 +18,14 @@ public class ProfileCommandHandlerTests
 	public ProfileCommandHandlerTests()
 	{
 		_getQueryHandler = new GetMyProfileQueryHandler(_currentUserContext, _userRepository);
-		_updateCommandHandler = new UpdateMyProfileCommandHandler(_currentUserContext, _userRepository, _profileRepository, _unitOfWork);
+		_updateCommandHandler = new UpdateMyProfileCommandHandler(_currentUserContext, _userRepository, _unitOfWork);
 	}
 
 	[Fact]
 	public async Task GetMyProfile_ShouldReturnProfileDetails()
 	{
 		// Arrange
-		var user = User.Create("eva", "eva@example.com", "hash", RoleConstants.UserRoleId);
+		var user = User.Create("eva", "eva@example.com", "hash", RoleConstants.LearnerRoleId);
 		user.SetProfile(Profile.Create(user.Id, "Eva Green", null, "Hello world", "English", "Japanese"));
 		_userRepository.Users.Add(user);
 		_currentUserContext.UserId = user.Id;
@@ -44,7 +43,7 @@ public class ProfileCommandHandlerTests
 	public async Task UpdateMyProfile_ShouldUpdateProfileFields()
 	{
 		// Arrange
-		var user = User.Create("eva", "eva@example.com", "hash", RoleConstants.UserRoleId);
+		var user = User.Create("eva", "eva@example.com", "hash", RoleConstants.LearnerRoleId);
 		var profile = Profile.Create(user.Id, "Old Name");
 		user.SetProfile(profile);
 		_userRepository.Users.Add(user);

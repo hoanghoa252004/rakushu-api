@@ -1,7 +1,6 @@
 using Rakushu.Application.Usecases.Auth.Register;
-using Rakushu.Domain.Constants;
-using Rakushu.Domain.Entities;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.UnitTest.Fakes;
 
 namespace Rakushu.UnitTest.Auth;
@@ -10,8 +9,6 @@ public class RegisterCommandHandlerTests
 {
 	private readonly FakeUserRepository _userRepository = new();
 	private readonly FakeRoleRepository _roleRepository = new();
-	private readonly FakeProfileRepository _profileRepository = new();
-	private readonly FakeRefreshTokenRepository _refreshTokenRepository = new();
 	private readonly FakePasswordHasher _passwordHasher = new();
 	private readonly FakeJwtTokenGenerator _jwtTokenGenerator = new();
 	private readonly FakeUnitOfWork _unitOfWork = new();
@@ -20,13 +17,11 @@ public class RegisterCommandHandlerTests
 
 	public RegisterCommandHandlerTests()
 	{
-		_roleRepository.Roles.Add(new Role(RoleConstants.UserRoleId, RoleConstants.User, "Standard user"));
+		_roleRepository.Roles.Add(new Role(RoleConstants.LearnerRoleId, RoleConstants.Learner, "Learner user"));
 
 		_handler = new RegisterCommandHandler(
 			_userRepository,
 			_roleRepository,
-			_profileRepository,
-			_refreshTokenRepository,
 			_passwordHasher,
 			_jwtTokenGenerator,
 			_unitOfWork);
@@ -46,12 +41,12 @@ public class RegisterCommandHandlerTests
 		Assert.NotNull(result.Value);
 		Assert.Equal("john_doe", result.Value.Username);
 		Assert.Equal("john@example.com", result.Value.Email);
-		Assert.Equal(RoleConstants.User, result.Value.Role);
+		Assert.Equal(RoleConstants.Learner, result.Value.Role);
 		Assert.Equal("John Doe", result.Value.DisplayName);
 		Assert.Equal("fake_access_token", result.Value.AccessToken);
 		Assert.Single(_userRepository.Users);
-		Assert.Single(_profileRepository.Profiles);
-		Assert.Single(_refreshTokenRepository.Tokens);
+		Assert.NotNull(_userRepository.Users.First().Profile);
+		Assert.Single(_userRepository.RefreshTokens);
 		Assert.Equal(1, _unitOfWork.SaveChangesCallCount);
 	}
 
@@ -59,7 +54,7 @@ public class RegisterCommandHandlerTests
 	public async Task Handle_DuplicateEmail_ShouldReturnEmailAlreadyExistsError()
 	{
 		// Arrange
-		_userRepository.Users.Add(User.Create("existing_user", "john@example.com", "hash", RoleConstants.UserRoleId));
+		_userRepository.Users.Add(User.Create("existing_user", "john@example.com", "hash", RoleConstants.LearnerRoleId));
 		var command = new RegisterCommand("john_doe", "john@example.com", "secret123");
 
 		// Act
@@ -67,14 +62,14 @@ public class RegisterCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(DomainErrors.User.EmailAlreadyExists.Code, result.Error.Code);
+		Assert.Equal(UserErrors.EmailAlreadyExists.Code, result.Error.Code);
 	}
 
 	[Fact]
 	public async Task Handle_DuplicateUsername_ShouldReturnUsernameAlreadyExistsError()
 	{
 		// Arrange
-		_userRepository.Users.Add(User.Create("john_doe", "existing@example.com", "hash", RoleConstants.UserRoleId));
+		_userRepository.Users.Add(User.Create("john_doe", "existing@example.com", "hash", RoleConstants.LearnerRoleId));
 		var command = new RegisterCommand("john_doe", "new@example.com", "secret123");
 
 		// Act
@@ -82,6 +77,6 @@ public class RegisterCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(DomainErrors.User.UsernameAlreadyExists.Code, result.Error.Code);
+		Assert.Equal(UserErrors.UsernameAlreadyExists.Code, result.Error.Code);
 	}
 }
