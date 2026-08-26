@@ -1,6 +1,6 @@
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Repositories;
 
 namespace Rakushu.Application.Usecases.Admin.Users.GetUserById;
@@ -16,10 +16,10 @@ internal sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery
 
 	public async Task<Result<UserDetailDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
 	{
-		var user = await _userRepository.GetByIdWithProfileAndRoleAsync(request.UserId, cancellationToken);
+		var user = await _userRepository.GetByIdWithDetailsAsync(request.UserId, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure<UserDetailDto>(DomainErrors.User.NotFound);
+			return Result.Failure<UserDetailDto>(UserErrors.NotFound);
 		}
 
 		var profile = user.Profile;
@@ -28,13 +28,13 @@ internal sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery
 			Username: user.Username,
 			Email: user.Email,
 			RoleId: user.RoleId,
-			RoleName: user.Role?.RoleName ?? "User",
+			RoleName: user.Role?.RoleName ?? "Learner",
 			DisplayName: profile?.DisplayName ?? user.Username,
 			AvatarUrl: profile?.AvatarUrl,
 			Bio: profile?.Bio,
 			NativeLanguage: profile?.NativeLanguage,
 			LearningLanguage: profile?.LearningLanguage,
-			Status: user.Status,
+			Status: user.Status.ToString(),
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt
 		));

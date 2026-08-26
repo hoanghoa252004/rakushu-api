@@ -3,9 +3,9 @@ using Rakushu.Application.Abstractions.Authentication;
 using Rakushu.Application.Usecases.Profile.GetMyProfile;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Repositories;
-using DomainProfile = Rakushu.Domain.Entities.Profile;
+using UserProfile = Rakushu.Domain.Entities.User.Profile;
 
 namespace Rakushu.Application.Usecases.Profile.UpdateMyProfile;
 
@@ -13,18 +13,15 @@ internal sealed class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyPr
 {
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly IUserRepository _userRepository;
-	private readonly IProfileRepository _profileRepository;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public UpdateMyProfileCommandHandler(
 		ICurrentUserContext currentUserContext,
 		IUserRepository userRepository,
-		IProfileRepository profileRepository,
 		IUnitOfWork unitOfWork)
 	{
 		_currentUserContext = currentUserContext;
 		_userRepository = userRepository;
-		_profileRepository = profileRepository;
 		_unitOfWork = unitOfWork;
 	}
 
@@ -33,19 +30,19 @@ internal sealed class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyPr
 		var userId = _currentUserContext.UserId;
 		if (!userId.HasValue)
 		{
-			return Result.Failure<ProfileResponseDto>(DomainErrors.Auth.InvalidCredentials);
+			return Result.Failure<ProfileResponseDto>(UserErrors.InvalidCredentials);
 		}
 
-		var user = await _userRepository.GetByIdWithProfileAndRoleAsync(userId.Value, cancellationToken);
+		var user = await _userRepository.GetByIdWithDetailsAsync(userId.Value, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure<ProfileResponseDto>(DomainErrors.User.NotFound);
+			return Result.Failure<ProfileResponseDto>(UserErrors.NotFound);
 		}
 
 		var profile = user.Profile;
 		if (profile is null)
 		{
-			profile = DomainProfile.Create(
+			profile = UserProfile.Create(
 				userId: user.Id,
 				displayName: request.DisplayName,
 				avatarUrl: request.AvatarUrl,
@@ -53,7 +50,7 @@ internal sealed class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyPr
 				nativeLanguage: request.NativeLanguage,
 				learningLanguage: request.LearningLanguage);
 
-			_profileRepository.Add(profile);
+			user.SetProfile(profile);
 		}
 		else
 		{
@@ -71,13 +68,13 @@ internal sealed class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyPr
 			UserId: user.Id,
 			Username: user.Username,
 			Email: user.Email,
-			Role: user.Role?.RoleName ?? "User",
-			DisplayName: profile.DisplayName,
+			Role: user.Role?.RoleName ?? "Learner",
+			DisplayName: profile.DisplayName ?? user.Username,
 			AvatarUrl: profile.AvatarUrl,
 			Bio: profile.Bio,
 			NativeLanguage: profile.NativeLanguage,
 			LearningLanguage: profile.LearningLanguage,
-			Status: user.Status,
+			Status: user.Status.ToString(),
 			CreatedAt: profile.CreatedAt,
 			UpdatedAt: profile.UpdatedAt
 		));

@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Authentication;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Repositories;
 
 namespace Rakushu.Application.Usecases.Profile.GetMyProfile;
@@ -24,13 +24,13 @@ internal sealed class GetMyProfileQueryHandler : IRequestHandler<GetMyProfileQue
 		var userId = _currentUserContext.UserId;
 		if (!userId.HasValue)
 		{
-			return Result.Failure<ProfileResponseDto>(DomainErrors.Auth.InvalidCredentials);
+			return Result.Failure<ProfileResponseDto>(UserErrors.InvalidCredentials);
 		}
 
-		var user = await _userRepository.GetByIdWithProfileAndRoleAsync(userId.Value, cancellationToken);
+		var user = await _userRepository.GetByIdWithDetailsAsync(userId.Value, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure<ProfileResponseDto>(DomainErrors.User.NotFound);
+			return Result.Failure<ProfileResponseDto>(UserErrors.NotFound);
 		}
 
 		var profile = user.Profile;
@@ -38,13 +38,13 @@ internal sealed class GetMyProfileQueryHandler : IRequestHandler<GetMyProfileQue
 			UserId: user.Id,
 			Username: user.Username,
 			Email: user.Email,
-			Role: user.Role?.RoleName ?? "User",
+			Role: user.Role?.RoleName ?? "Learner",
 			DisplayName: profile?.DisplayName ?? user.Username,
 			AvatarUrl: profile?.AvatarUrl,
 			Bio: profile?.Bio,
 			NativeLanguage: profile?.NativeLanguage,
 			LearningLanguage: profile?.LearningLanguage,
-			Status: user.Status,
+			Status: user.Status.ToString(),
 			CreatedAt: profile?.CreatedAt ?? user.CreatedAt,
 			UpdatedAt: profile?.UpdatedAt ?? user.UpdatedAt
 		));

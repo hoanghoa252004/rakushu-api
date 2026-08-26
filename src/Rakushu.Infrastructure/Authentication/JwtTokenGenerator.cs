@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Rakushu.Application.Abstractions.Authentication;
-using Rakushu.Domain.Entities;
 
 namespace Rakushu.Infrastructure.Authentication;
 
@@ -18,19 +17,19 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
 		_jwtSettings = jwtOptions.Value;
 	}
 
-	public string GenerateAccessToken(User user, string roleName)
+	public string GenerateAccessToken(Guid userId, string email, string username, string roleName)
 	{
 		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
 		var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
 		var claims = new List<Claim>
 		{
-			new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-			new(JwtRegisteredClaimNames.Email, user.Email),
-			new(JwtRegisteredClaimNames.UniqueName, user.Username),
-			new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-			new(ClaimTypes.Name, user.Username),
-			new(ClaimTypes.Email, user.Email),
+			new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+			new(JwtRegisteredClaimNames.Email, email),
+			new(JwtRegisteredClaimNames.UniqueName, username),
+			new(ClaimTypes.NameIdentifier, userId.ToString()),
+			new(ClaimTypes.Name, username),
+			new(ClaimTypes.Email, email),
 			new(ClaimTypes.Role, roleName),
 			new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
 		};
@@ -50,12 +49,14 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
 		return tokenHandler.WriteToken(token);
 	}
 
-	public string GenerateRefreshToken()
+	public (string Token, DateTimeOffset ExpiresAt) GenerateRefreshToken()
 	{
 		var randomNumber = new byte[64];
 		using var rng = RandomNumberGenerator.Create();
 		rng.GetBytes(randomNumber);
-		return Convert.ToBase64String(randomNumber);
+		var token = Convert.ToBase64String(randomNumber);
+		var expiresAt = DateTimeOffset.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
+		return (token, expiresAt);
 	}
 
 	public int GetAccessTokenExpirationMinutes() => _jwtSettings.AccessTokenExpirationMinutes;

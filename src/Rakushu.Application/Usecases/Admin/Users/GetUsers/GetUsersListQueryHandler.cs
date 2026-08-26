@@ -32,10 +32,10 @@ internal sealed class GetUsersListQueryHandler : IRequestHandler<GetUsersListQue
 			Username: u.Username,
 			Email: u.Email,
 			RoleId: u.RoleId,
-			RoleName: u.Role?.RoleName ?? "User",
+			RoleName: u.Role?.RoleName ?? "Learner",
 			DisplayName: u.Profile?.DisplayName ?? u.Username,
 			AvatarUrl: u.Profile?.AvatarUrl,
-			Status: u.Status,
+			Status: u.Status.ToString(),
 			CreatedAt: u.CreatedAt,
 			UpdatedAt: u.UpdatedAt
 		)).ToList();

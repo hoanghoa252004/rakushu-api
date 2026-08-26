@@ -2,13 +2,10 @@ using MediatR;
 using Rakushu.Application.Abstractions.Authentication;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Constants;
-using Rakushu.Domain.Entities;
-using Rakushu.Domain.Enums;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Repositories;
-using DomainProfile = Rakushu.Domain.Entities.Profile;
-using DomainRefreshToken = Rakushu.Domain.Entities.RefreshToken;
+using UserProfile = Rakushu.Domain.Entities.User.Profile;
 
 namespace Rakushu.Application.Usecases.Auth.Register;
 
@@ -16,8 +13,6 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 {
 	private readonly IUserRepository _userRepository;
 	private readonly IRoleRepository _roleRepository;
-	private readonly IProfileRepository _profileRepository;
-	private readonly IRefreshTokenRepository _refreshTokenRepository;
 	private readonly IPasswordHasher _passwordHasher;
 	private readonly IJwtTokenGenerator _jwtTokenGenerator;
 	private readonly IUnitOfWork _unitOfWork;
@@ -25,89 +20,78 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 	public RegisterCommandHandler(
 		IUserRepository userRepository,
 		IRoleRepository roleRepository,
-		IProfileRepository profileRepository,
-		IRefreshTokenRepository refreshTokenRepository,
 		IPasswordHasher passwordHasher,
 		IJwtTokenGenerator jwtTokenGenerator,
 		IUnitOfWork unitOfWork)
 	{
 		_userRepository = userRepository;
 		_roleRepository = roleRepository;
-		_profileRepository = profileRepository;
-		_refreshTokenRepository = refreshTokenRepository;
 		_passwordHasher = passwordHasher;
 		_jwtTokenGenerator = jwtTokenGenerator;
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<Result<RegisterResponseDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+	public async Task<Result<RegisterResponseDto>> Handle(
+		RegisterCommand request,
+		CancellationToken cancellationToken)
 	{
 		// 1. Check unique email
 		if (!await _userRepository.IsEmailUniqueAsync(request.Email, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<RegisterResponseDto>(DomainErrors.User.EmailAlreadyExists);
+			return Result.Failure<RegisterResponseDto>(UserErrors.EmailAlreadyExists);
 		}
 
 		// 2. Check unique username
 		if (!await _userRepository.IsUsernameUniqueAsync(request.Username, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<RegisterResponseDto>(DomainErrors.User.UsernameAlreadyExists);
+			return Result.Failure<RegisterResponseDto>(UserErrors.UsernameAlreadyExists);
 		}
 
-		// 3. Find default User role
-		var role = await _roleRepository.GetByNameAsync(RoleConstants.User, cancellationToken)
-			?? await _roleRepository.GetByIdAsync(RoleConstants.UserRoleId, cancellationToken);
+		// 3. Find default Learner role
+		var role = await _roleRepository.GetByNameAsync(RoleConstants.Learner, cancellationToken)
+			?? await _roleRepository.GetByIdAsync(RoleConstants.LearnerRoleId, cancellationToken);
 
 		if (role is null)
 		{
-			return Result.Failure<RegisterResponseDto>(DomainErrors.User.RoleNotFound);
+			return Result.Failure<RegisterResponseDto>(RoleErrors.NotFound);
 		}
 
 		// 4. Create User & Profile
-		var userId = Guid.NewGuid();
 		var passwordHash = _passwordHasher.HashPassword(request.Password);
 		var user = User.Create(
 			username: request.Username,
 			email: request.Email,
 			passwordHash: passwordHash,
 			roleId: role.Id,
-			status: UserStatus.Active.ToString(),
-			id: userId);
+			status: UserStatus.Active);
 
-		var displayName = string.IsNullOrWhiteSpace(request.DisplayName)
-			? request.Username
-			: request.DisplayName.Trim();
+		var profile = UserProfile.Create(
+			userId: user.Id,
+			displayName: request.DisplayName ?? request.Username,
+			nativeLanguage: "Vietnamese",
+			learningLanguage: "Japanese");
 
-		var profile = DomainProfile.Create(
-			userId: userId,
-			displayName: displayName,
-			avatarUrl: null,
-			bio: null,
-			nativeLanguage: request.NativeLanguage,
-			learningLanguage: request.LearningLanguage);
-
+		user.SetProfile(profile);
 		_userRepository.Add(user);
-		_profileRepository.Add(profile);
 
 		// 5. Generate Tokens
-		var accessToken = _jwtTokenGenerator.GenerateAccessToken(user, role.RoleName);
-		var refreshTokenStr = _jwtTokenGenerator.GenerateRefreshToken();
-		var expiresAt = DateTimeOffset.UtcNow.AddDays(_jwtTokenGenerator.GetRefreshTokenExpirationDays());
-		var refreshToken = DomainRefreshToken.Create(userId, refreshTokenStr, expiresAt);
+		var accessToken = _jwtTokenGenerator.GenerateAccessToken(user.Id, user.Email, user.Username, role.RoleName);
+		var (refreshTokenStr, expiresAt) = _jwtTokenGenerator.GenerateRefreshToken();
 
-		_refreshTokenRepository.Add(refreshToken);
+		var refreshToken = user.AddRefreshToken(refreshTokenStr, expiresAt);
+		_userRepository.AddRefreshToken(refreshToken);
 
+		// 6. Save to Database
 		await _unitOfWork.SaveChangesAsync(cancellationToken);
 
 		return Result.Success(new RegisterResponseDto(
-			UserId: user.Id,
-			Username: user.Username,
-			Email: user.Email,
-			Role: role.RoleName,
-			DisplayName: profile.DisplayName,
-			AccessToken: accessToken,
-			RefreshToken: refreshTokenStr,
-			AccessTokenExpiresAt: DateTimeOffset.UtcNow.AddMinutes(_jwtTokenGenerator.GetAccessTokenExpirationMinutes())
-		));
+			user.Id,
+			user.Username,
+			user.Email,
+			role.RoleName,
+			profile.DisplayName ?? user.Username,
+			accessToken,
+			refreshTokenStr,
+			expiresAt));
 	}
 }

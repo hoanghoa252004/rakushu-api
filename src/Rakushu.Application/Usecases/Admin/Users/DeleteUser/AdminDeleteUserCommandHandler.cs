@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Repositories;
 
 namespace Rakushu.Application.Usecases.Admin.Users.DeleteUser;
@@ -22,7 +22,7 @@ internal sealed class AdminDeleteUserCommandHandler : IRequestHandler<AdminDelet
 		var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure(DomainErrors.User.NotFound);
+			return Result.Failure(UserErrors.NotFound);
 		}
 
 		_userRepository.Delete(user);

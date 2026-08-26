@@ -7,12 +7,12 @@ namespace Rakushu.Application.Usecases.Auth.Logout;
 
 internal sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result>
 {
-	private readonly IRefreshTokenRepository _refreshTokenRepository;
+	private readonly IUserRepository _userRepository;
 	private readonly IUnitOfWork _unitOfWork;
 
-	public LogoutCommandHandler(IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork)
+	public LogoutCommandHandler(IUserRepository userRepository, IUnitOfWork unitOfWork)
 	{
-		_refreshTokenRepository = refreshTokenRepository;
+		_userRepository = userRepository;
 		_unitOfWork = unitOfWork;
 	}
 
@@ -23,7 +23,7 @@ internal sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, Resu
 			return Result.Success();
 		}
 
-		var token = await _refreshTokenRepository.GetByTokenAsync(request.RefreshToken, cancellationToken);
+		var token = await _userRepository.GetRefreshTokenAsync(request.RefreshToken, cancellationToken);
 		if (token is not null && !token.IsRevoked)
 		{
 			token.Revoke();

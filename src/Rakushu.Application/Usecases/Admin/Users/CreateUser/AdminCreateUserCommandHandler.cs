@@ -3,11 +3,10 @@ using Rakushu.Application.Abstractions.Authentication;
 using Rakushu.Application.Usecases.Admin.Users.GetUserById;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities;
-using Rakushu.Domain.Enums;
-using Rakushu.Domain.Errors;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Repositories;
-using DomainProfile = Rakushu.Domain.Entities.Profile;
+using UserProfile = Rakushu.Domain.Entities.User.Profile;
 
 namespace Rakushu.Application.Usecases.Admin.Users.CreateUser;
 
@@ -15,20 +14,17 @@ internal sealed class AdminCreateUserCommandHandler : IRequestHandler<AdminCreat
 {
 	private readonly IUserRepository _userRepository;
 	private readonly IRoleRepository _roleRepository;
-	private readonly IProfileRepository _profileRepository;
 	private readonly IPasswordHasher _passwordHasher;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public AdminCreateUserCommandHandler(
 		IUserRepository userRepository,
 		IRoleRepository roleRepository,
-		IProfileRepository profileRepository,
 		IPasswordHasher passwordHasher,
 		IUnitOfWork unitOfWork)
 	{
 		_userRepository = userRepository;
 		_roleRepository = roleRepository;
-		_profileRepository = profileRepository;
 		_passwordHasher = passwordHasher;
 		_unitOfWork = unitOfWork;
 	}
@@ -37,46 +33,47 @@ internal sealed class AdminCreateUserCommandHandler : IRequestHandler<AdminCreat
 	{
 		if (!await _userRepository.IsEmailUniqueAsync(request.Email, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<UserDetailDto>(DomainErrors.User.EmailAlreadyExists);
+			return Result.Failure<UserDetailDto>(UserErrors.EmailAlreadyExists);
 		}
 
 		if (!await _userRepository.IsUsernameUniqueAsync(request.Username, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<UserDetailDto>(DomainErrors.User.UsernameAlreadyExists);
+			return Result.Failure<UserDetailDto>(UserErrors.UsernameAlreadyExists);
 		}
 
 		var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
 		if (role is null)
 		{
-			return Result.Failure<UserDetailDto>(DomainErrors.User.RoleNotFound);
+			return Result.Failure<UserDetailDto>(RoleErrors.NotFound);
 		}
 
-		var userId = Guid.NewGuid();
+		var status = Enum.TryParse<UserStatus>(request.Status, true, out var parsedStatus)
+			? parsedStatus
+			: UserStatus.Active;
+
 		var passwordHash = _passwordHasher.HashPassword(request.Password);
-		var status = string.IsNullOrWhiteSpace(request.Status) ? UserStatus.Active.ToString() : request.Status;
 
 		var user = User.Create(
 			username: request.Username,
 			email: request.Email,
 			passwordHash: passwordHash,
 			roleId: role.Id,
-			status: status,
-			id: userId);
+			status: status);
 
 		var displayName = string.IsNullOrWhiteSpace(request.DisplayName)
 			? request.Username
 			: request.DisplayName.Trim();
 
-		var profile = DomainProfile.Create(
-			userId: userId,
+		var profile = UserProfile.Create(
+			userId: user.Id,
 			displayName: displayName,
 			avatarUrl: null,
 			bio: null,
 			nativeLanguage: request.NativeLanguage,
 			learningLanguage: request.LearningLanguage);
 
+		user.SetProfile(profile);
 		_userRepository.Add(user);
-		_profileRepository.Add(profile);
 
 		await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -86,12 +83,12 @@ internal sealed class AdminCreateUserCommandHandler : IRequestHandler<AdminCreat
 			Email: user.Email,
 			RoleId: user.RoleId,
 			RoleName: role.RoleName,
-			DisplayName: profile.DisplayName,
+			DisplayName: profile.DisplayName ?? user.Username,
 			AvatarUrl: profile.AvatarUrl,
 			Bio: profile.Bio,
 			NativeLanguage: profile.NativeLanguage,
 			LearningLanguage: profile.LearningLanguage,
-			Status: user.Status,
+			Status: user.Status.ToString(),
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt
 		));
