@@ -2,8 +2,6 @@ using Rakushu.Api.Extensions;
 using Rakushu.Api.Middleware;
 using Rakushu.Application.Extensions;
 using Rakushu.Infrastructure.Extensions;
-using Rakushu.Persistence.Data;
-using Rakushu.Persistence.DbContext;
 using Rakushu.Persistence.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,21 +20,6 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddSwaggerDocs();
 
 var app = builder.Build();
-
-/// SEED DATABASE IN DEVELOPMENT:
-if (app.Environment.IsDevelopment())
-{
-	using var scope = app.Services.CreateScope();
-	var dbContext = scope.ServiceProvider.GetRequiredService<RakushuDbContext>();
-	try
-	{
-		await DbInitializer.InitializeAsync(dbContext);
-	}
-	catch (Exception ex)
-	{
-		app.Logger.LogError(ex, "An error occurred while initializing/seeding the database.");
-	}
-}
 
 /// USE GLOBAL EXCEPTION MIDDLEWARE:
 app.UseExceptionHandler();
