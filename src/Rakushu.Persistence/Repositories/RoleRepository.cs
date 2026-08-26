@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Repositories;
 using Rakushu.Persistence.DbContext;
 
@@ -13,8 +13,14 @@ public sealed class RoleRepository : Repository<Role, Guid>, IRoleRepository
 
 	public async Task<Role?> GetByNameAsync(string roleName, CancellationToken cancellationToken = default)
 	{
-		return await _dbSet.FirstOrDefaultAsync(
-			r => r.RoleName.ToLower() == roleName.ToLower(),
-			cancellationToken);
+		return await _context.Roles
+			.FirstOrDefaultAsync(r => r.RoleName.ToLower() == roleName.ToLower(), cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<Role>> GetAllRolesAsync(CancellationToken cancellationToken = default)
+	{
+		return await _context.Roles
+			.OrderBy(r => r.RoleName)
+			.ToListAsync(cancellationToken);
 	}
 }

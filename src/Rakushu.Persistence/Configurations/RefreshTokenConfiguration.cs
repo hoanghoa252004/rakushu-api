@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -12,7 +12,7 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 
 		builder.HasKey(t => t.Id);
 		builder.Property(t => t.Id)
-			.HasColumnName("token_id");
+			.HasColumnName("refresh_token_id");
 
 		builder.Property(t => t.UserId)
 			.HasColumnName("user_id")
@@ -23,7 +23,8 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 			.HasMaxLength(500)
 			.IsRequired();
 
-		builder.HasIndex(t => t.Token);
+		builder.HasIndex(t => t.Token)
+			.IsUnique();
 
 		builder.Property(t => t.ExpiresAt)
 			.HasColumnName("expires_at")
@@ -36,10 +37,5 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
 		builder.Property(t => t.CreatedAt)
 			.HasColumnName("created_at")
 			.IsRequired();
-
-		builder.HasOne(t => t.User)
-			.WithMany()
-			.HasForeignKey(t => t.UserId)
-			.OnDelete(DeleteBehavior.Cascade);
 	}
 }

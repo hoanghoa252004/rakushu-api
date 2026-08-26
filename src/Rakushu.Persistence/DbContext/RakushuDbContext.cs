@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.DbContext;
 

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Constants;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -29,24 +28,5 @@ public sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 		builder.Property(r => r.CreatedAt)
 			.HasColumnName("created_at")
 			.IsRequired();
-
-		// Seed initial roles based on project personas
-		builder.HasData(
-			new Role(
-				RoleConstants.AdminRoleId,
-				RoleConstants.Admin,
-				"System Administrator responsible for security monitoring, user management, and business operations",
-				DateTimeOffset.UnixEpoch),
-			new Role(
-				RoleConstants.LinguisticCuratorRoleId,
-				RoleConstants.LinguisticCurator,
-				"Linguistic Curator managing dictionary datasets, moderating OOV/slang terms, and monitoring AI transcription quality",
-				DateTimeOffset.UnixEpoch),
-			new Role(
-				RoleConstants.LearnerRoleId,
-				RoleConstants.Learner,
-				"Learner end-user with interactive video subtitles, SRS spaced repetition, and personal study space",
-				DateTimeOffset.UnixEpoch)
-		);
 	}
 }

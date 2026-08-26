@@ -22,93 +22,7 @@ namespace Rakushu.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Profile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.Property<string>("AvatarUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("avatar_url");
-
-                    b.Property<string>("Bio")
-                        .HasColumnType("text")
-                        .HasColumnName("bio");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("display_name");
-
-                    b.Property<string>("LearningLanguage")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("learning_language");
-
-                    b.Property<string>("NativeLanguage")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("native_language");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_profiles");
-
-                    b.ToTable("profiles", (string)null);
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("token_id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_revoked");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("token");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_refresh_tokens");
-
-                    b.HasIndex("Token")
-                        .HasDatabaseName("ix_refresh_tokens_token");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_refresh_tokens_user_id");
-
-                    b.ToTable("refresh_tokens", (string)null);
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Role", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Role.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -137,32 +51,95 @@ namespace Rakushu.Persistence.Migrations
                         .HasDatabaseName("ix_roles_role_name");
 
                     b.ToTable("roles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "System Administrator responsible for security monitoring, user management, and business operations",
-                            RoleName = "Admin"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedAt = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Linguistic Curator managing dictionary datasets, moderating OOV/slang terms, and monitoring AI transcription quality",
-                            RoleName = "LinguisticCurator"
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedAt = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            Description = "Learner end-user with interactive video subtitles, SRS spaced repetition, and personal study space",
-                            RoleName = "Learner"
-                        });
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.User", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.Profile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("avatar_url");
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("text")
+                        .HasColumnName("bio");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("LearningLanguage")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("learning_language");
+
+                    b.Property<string>("NativeLanguage")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("native_language");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_profiles");
+
+                    b.ToTable("profiles", (string)null);
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("refresh_token_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_revoked");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("token");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_refresh_tokens");
+
+                    b.HasIndex("Token")
+                        .IsUnique()
+                        .HasDatabaseName("ix_refresh_tokens_token");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_refresh_tokens_user_id");
+
+                    b.ToTable("refresh_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -221,11 +198,11 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Profile", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.Profile", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.User", "User")
+                    b.HasOne("Rakushu.Domain.Entities.User.User", "User")
                         .WithOne("Profile")
-                        .HasForeignKey("Rakushu.Domain.Entities.Profile", "Id")
+                        .HasForeignKey("Rakushu.Domain.Entities.User.Profile", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_profiles_users_user_id");
@@ -233,10 +210,10 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.RefreshToken", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.RefreshToken", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.User", "User")
-                        .WithMany()
+                    b.HasOne("Rakushu.Domain.Entities.User.User", "User")
+                        .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -245,9 +222,9 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.User", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.Role", "Role")
+                    b.HasOne("Rakushu.Domain.Entities.Role.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -257,15 +234,16 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Role", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Role.Role", b =>
                 {
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.User", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
                 {
-                    b.Navigation("Profile")
-                        .IsRequired();
+                    b.Navigation("Profile");
+
+                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

@@ -28,8 +28,6 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IRoleRepository, RoleRepository>();
-		services.AddScoped<IProfileRepository, ProfileRepository>();
-		services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
 		return services;
 	}

@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace Rakushu.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialAuthAndUserTables : Migration
+    public partial class InitialCleanSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -56,7 +54,7 @@ namespace Rakushu.Persistence.Migrations
                 columns: table => new
                 {
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    display_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    display_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     avatar_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     bio = table.Column<string>(type: "text", nullable: true),
                     native_language = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
@@ -79,7 +77,7 @@ namespace Rakushu.Persistence.Migrations
                 name: "refresh_tokens",
                 columns: table => new
                 {
-                    token_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    refresh_token_id = table.Column<Guid>(type: "uuid", nullable: false),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     token = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -88,7 +86,7 @@ namespace Rakushu.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_refresh_tokens", x => x.token_id);
+                    table.PrimaryKey("pk_refresh_tokens", x => x.refresh_token_id);
                     table.ForeignKey(
                         name: "fk_refresh_tokens_users_user_id",
                         column: x => x.user_id,
@@ -97,20 +95,11 @@ namespace Rakushu.Persistence.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "roles",
-                columns: new[] { "role_id", "created_at", "description", "role_name" },
-                values: new object[,]
-                {
-                    { new Guid("11111111-1111-1111-1111-111111111111"), new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "System Administrator responsible for security monitoring, user management, and business operations", "Admin" },
-                    { new Guid("22222222-2222-2222-2222-222222222222"), new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Linguistic Curator managing dictionary datasets, moderating OOV/slang terms, and monitoring AI transcription quality", "LinguisticCurator" },
-                    { new Guid("33333333-3333-3333-3333-333333333333"), new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), "Learner end-user with interactive video subtitles, SRS spaced repetition, and personal study space", "Learner" }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "ix_refresh_tokens_token",
                 table: "refresh_tokens",
-                column: "token");
+                column: "token",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_refresh_tokens_user_id",

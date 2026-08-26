@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -41,6 +41,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 		builder.Property(u => u.Status)
 			.HasColumnName("status")
 			.HasMaxLength(30)
+			.HasConversion<string>()
 			.IsRequired();
 
 		builder.Property(u => u.CreatedAt)
@@ -60,6 +61,11 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 		builder.HasOne(u => u.Profile)
 			.WithOne(p => p.User)
 			.HasForeignKey<Profile>(p => p.Id)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		builder.HasMany(u => u.RefreshTokens)
+			.WithOne(t => t.User)
+			.HasForeignKey(t => t.UserId)
 			.OnDelete(DeleteBehavior.Cascade);
 	}
 }

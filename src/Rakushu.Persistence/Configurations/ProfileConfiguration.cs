@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities;
+using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -16,8 +16,7 @@ public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 
 		builder.Property(p => p.DisplayName)
 			.HasColumnName("display_name")
-			.HasMaxLength(100)
-			.IsRequired();
+			.HasMaxLength(100);
 
 		builder.Property(p => p.AvatarUrl)
 			.HasColumnName("avatar_url")
