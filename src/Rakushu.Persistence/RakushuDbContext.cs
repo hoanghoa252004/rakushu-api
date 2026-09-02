@@ -3,69 +3,69 @@ using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Events.DomainEvent;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Persistence.DbContext;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.RefreshToken;
 
-namespace Rakushu.Persistence.UnitOfWork;
+namespace Rakushu.Persistence;
 
-public class UnitOfWork : IUnitOfWork
+public class RakushuDbContext : DbContext, IUnitOfWork
 {
-	private readonly RakushuDbContext _context;
 	private readonly IPublisher _publisher;
-
-	public UnitOfWork(RakushuDbContext context, IPublisher publisher)
+	public RakushuDbContext( 
+		DbContextOptions<RakushuDbContext> options, 
+		IPublisher publisher) : base(options)
 	{
-		_context = context;
 		_publisher = publisher;
+	}
+
+	public DbSet<Role> Roles => Set<Role>();
+	public DbSet<User> Users => Set<User>();
+	public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		base.OnModelCreating(modelBuilder);
+		modelBuilder.ApplyConfigurationsFromAssembly(typeof(RakushuDbContext).Assembly);
 	}
 
 	public async Task<T> ExecuteAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
 	{
-		var strategy = _context.Database.CreateExecutionStrategy();
-
+		var strategy = Database.CreateExecutionStrategy();
 		return await strategy.ExecuteAsync(async () =>
 		{
-			await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-			try
+			await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
 			{
 				var response = await action();
-
-				// 1. If result is failure, rollback transaction
 				if (response is Result result && result.IsFailure)
 				{
 					await transaction.RollbackAsync(cancellationToken);
 					return response;
 				}
-
-				// 2. Cascade domain events loop
 				do
 				{
 					var domainEvents = GetDomainEvents();
-					if (domainEvents.Count > 0)
+					if (domainEvents.Any())
 					{
 						await DispatchDomainEventsAsync(domainEvents, cancellationToken);
 					}
 				} while (CheckDomainEventRemain());
 
-				// 3. Save changes and commit transaction
-				await _context.SaveChangesAsync(cancellationToken);
+
+				await SaveChangesAsync(cancellationToken);
 				await transaction.CommitAsync(cancellationToken);
 
 				return response;
-			}
-			catch
-			{
-				await transaction.RollbackAsync(cancellationToken);
-				throw;
 			}
 		});
 	}
 
 	private List<IDomainEvent> GetDomainEvents()
 	{
-		var domainEventEntities = _context.ChangeTracker.Entries()
+		var domainEventEntities = ChangeTracker.Entries()
 			.Select(e => e.Entity)
 			.OfType<IHasDomainEvents>()
-			.Where(e => e.DomainEvents.Count > 0)
+			.Where(e => e.DomainEvents.Any())
 			.ToList();
 
 		var domainEvents = domainEventEntities
@@ -79,10 +79,17 @@ public class UnitOfWork : IUnitOfWork
 
 	private bool CheckDomainEventRemain()
 	{
-		return _context.ChangeTracker.Entries()
+		var domainEventEntities = ChangeTracker.Entries()
 			.Select(e => e.Entity)
 			.OfType<IHasDomainEvents>()
-			.Any(e => e.DomainEvents.Count > 0);
+			.Where(e => e.DomainEvents.Any())
+			.ToList();
+
+		var domainEvents = domainEventEntities
+			.SelectMany(e => e.DomainEvents)
+			.ToList();
+
+		return domainEvents.Any();
 	}
 
 	private async Task DispatchDomainEventsAsync(List<IDomainEvent> domainEvents, CancellationToken cancellationToken)
@@ -91,10 +98,5 @@ public class UnitOfWork : IUnitOfWork
 		{
 			await _publisher.Publish(domainEvent, cancellationToken);
 		}
-	}
-
-	public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-	{
-		return _context.SaveChangesAsync(cancellationToken);
 	}
 }

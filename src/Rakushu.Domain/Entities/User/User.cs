@@ -1,63 +1,82 @@
 using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.User.Events;
+using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Domain.Entities.User;
 
-public sealed class User : AggregateRoot<Guid>
+public sealed class User : AggregateRoot<UserId>
 {
-	private readonly List<RefreshToken> _refreshTokens = [];
-
-	public Guid RoleId { get; private set; }
-	public string Username { get; private set; } = null!;
+	// MAIN PROPERTIES----------
 	public string Email { get; private set; } = null!;
 	public string PasswordHash { get; private set; } = null!;
+	public string FullName { get; private set; } = null!;
+	public string? AvatarKey { get; private set; }
+	public string NativeLanguage { get; private set; } = null!;
+	public RoleId RoleId { get; private set; } = null!; // REF: USER * - 1 ROLE
 	public UserStatus Status { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
-	// Navigations
-	public Role.Role? Role { get; private set; }
-	public Profile? Profile { get; private set; }
-	public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+	// NAVIGATION PROPERTIES----------
+	// Role:
+	public Role.Role Role { get; private set; } = null!;
 
+	// RefreshTokens:
+	private readonly List<RefreshToken.RefreshToken> _refreshTokens = [];
+	public IReadOnlyCollection<RefreshToken.RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+
+	// CONSTRUCTORS & FACTORY METHODS----------
 	private User() { }
 
-	public User(
-		Guid id,
-		Guid roleId,
-		string username,
+	private User(
+		UserId id,
 		string email,
 		string passwordHash,
-		UserStatus status = UserStatus.Active,
-		DateTimeOffset? createdAt = null,
-		DateTimeOffset? updatedAt = null)
-		: base(id)
+		string fullName,
+		string nativeLanguage,
+		RoleId roleId,
+		UserStatus status,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? avatarKey = null) : base(id)
 	{
-		RoleId = roleId;
-		Username = username;
 		Email = email;
 		PasswordHash = passwordHash;
+		FullName = fullName;
+		NativeLanguage = nativeLanguage;
+		RoleId = roleId;
 		Status = status;
-		CreatedAt = createdAt ?? DateTimeOffset.UtcNow;
-		UpdatedAt = updatedAt ?? DateTimeOffset.UtcNow;
+		CreatedAt = createdAt;
+		UpdatedAt = updatedAt;
+		// Optionals:
+		AvatarKey = avatarKey;
 	}
 
 	public static User Create(
-		string username,
 		string email,
 		string passwordHash,
-		Guid roleId,
-		UserStatus status = UserStatus.Active)
+		string fullName,
+		string nativeLanguage,
+		RoleId roleId,
+		UserStatus status,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? avatarKey = null)
 	{
+		UserId userId = UserId.Create();
 		return new User(
-			Guid.NewGuid(),
-			roleId,
-			username,
-			email,
-			passwordHash,
-			status);
+					userId,
+					email,
+					passwordHash,
+					fullName,
+					nativeLanguage,
+					roleId,
+					status,
+					createdAt,
+					updatedAt,
+					avatarKey
+		);
 	}
-
+	/*
 	public void SetProfile(Profile profile)
 	{
 		Profile = profile;
@@ -105,4 +124,5 @@ public sealed class User : AggregateRoot<Guid>
 			token.Revoke();
 		}
 	}
+	*/
 }

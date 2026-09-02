@@ -19,7 +19,7 @@ internal sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery
 		var user = await _userRepository.GetByIdWithDetailsAsync(request.UserId, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure<UserDetailDto>(UserErrors.NotFound);
+			return Result.Failure<UserDetailDto>(UserError.NotFound);
 		}
 
 		var profile = user.Profile;

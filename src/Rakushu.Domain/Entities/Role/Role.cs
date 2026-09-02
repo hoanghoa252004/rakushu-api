@@ -2,28 +2,35 @@ using Rakushu.Domain.Common;
 
 namespace Rakushu.Domain.Entities.Role;
 
-public sealed class Role : Entity<Guid>
+public sealed class Role : AggregateRoot<RoleId>
 {
-	public string RoleName { get; private set; } = null!;
+	// MAIN PROPERTIES----------
+	public string Title { get; private set; } = null!;
 	public string? Description { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
+	public DateTimeOffset UpdatedAt { get; private set; }
 
-	// Navigations
+	// NAVIGATION PROPERTIES----------
+	// Users:
 	private readonly List<User.User> _users = [];
 	public IReadOnlyCollection<User.User> Users => _users.AsReadOnly();
 
+	// CONSTRUCTORS & FACTORY METHODS----------
 	private Role() { }
 
-	public Role(Guid id, string roleName, string? description = null, DateTimeOffset? createdAt = null)
+	private Role(RoleId id, string title, DateTimeOffset createdAt, DateTimeOffset updatedAt, string? description = null)
 		: base(id)
 	{
-		RoleName = roleName;
+		Title = title;
+		CreatedAt = createdAt;
+		UpdatedAt = updatedAt;
+		// Optionals:
 		Description = description;
-		CreatedAt = createdAt ?? DateTimeOffset.UtcNow;
 	}
 
-	public static Role Create(string roleName, string? description = null)
+	public static Role Create(string title, DateTimeOffset createdAt, DateTimeOffset updatedAt, string? description = null)
 	{
-		return new Role(Guid.NewGuid(), roleName, description);
+		RoleId roleId = RoleId.Create();
+		return new Role(roleId, title, createdAt, updatedAt, description);
 	}
 }

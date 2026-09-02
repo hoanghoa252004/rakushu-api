@@ -1,71 +1,69 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.Configurations;
 
-public sealed class UserConfiguration : IEntityTypeConfiguration<User>
+internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
 	public void Configure(EntityTypeBuilder<User> builder)
 	{
-		builder.ToTable("users");
-
+		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)
-			.HasColumnName("user_id");
+			.HasConversion(
+				id => id.Value,
+				value => new UserId(value));
 
-		builder.Property(u => u.RoleId)
-			.HasColumnName("role_id")
-			.IsRequired();
-
-		builder.Property(u => u.Username)
-			.HasColumnName("username")
-			.HasMaxLength(50)
-			.IsRequired();
-
-		builder.HasIndex(u => u.Username)
-			.IsUnique();
-
+		// Email
 		builder.Property(u => u.Email)
-			.HasColumnName("email")
 			.HasMaxLength(256)
 			.IsRequired();
-
 		builder.HasIndex(u => u.Email)
 			.IsUnique();
 
+		// PasswordHash
 		builder.Property(u => u.PasswordHash)
-			.HasColumnName("password_hash")
 			.IsRequired();
 
-		builder.Property(u => u.Status)
-			.HasColumnName("status")
-			.HasMaxLength(30)
-			.HasConversion<string>()
+		// FullName
+		builder.Property(u => u.FullName)
+			.HasMaxLength(50)
 			.IsRequired();
 
-		builder.Property(u => u.CreatedAt)
-			.HasColumnName("created_at")
+		// AvatarKey
+		builder.Property(u => u.AvatarKey)
+			.HasMaxLength(100);
+
+		// NativeLanguage
+		builder.Property(u => u.NativeLanguage)
+			.HasMaxLength(50)
 			.IsRequired();
 
-		builder.Property(u => u.UpdatedAt)
-			.HasColumnName("updated_at")
+		// RoleId
+		builder.Property(u => u.RoleId)
+			.HasConversion(
+				id => id.Value,
+				value => new RoleId(value))
 			.IsRequired();
-
-		// Relationships
 		builder.HasOne(u => u.Role)
 			.WithMany(r => r.Users)
 			.HasForeignKey(u => u.RoleId)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		builder.HasOne(u => u.Profile)
-			.WithOne(p => p.User)
-			.HasForeignKey<Profile>(p => p.Id)
-			.OnDelete(DeleteBehavior.Cascade);
+		// Status
+		builder.Property(u => u.Status)
+			.HasMaxLength(30)
+			.HasConversion<string>()
+			.IsRequired();
 
-		builder.HasMany(u => u.RefreshTokens)
-			.WithOne(t => t.User)
-			.HasForeignKey(t => t.UserId)
-			.OnDelete(DeleteBehavior.Cascade);
+		// CreatedAt
+		builder.Property(u => u.CreatedAt)
+			.IsRequired();
+
+		// UpdatedAt
+		builder.Property(u => u.UpdatedAt)
+			.IsRequired();
 	}
 }

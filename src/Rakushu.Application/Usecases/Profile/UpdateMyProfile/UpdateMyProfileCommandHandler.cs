@@ -30,13 +30,13 @@ internal sealed class UpdateMyProfileCommandHandler : IRequestHandler<UpdateMyPr
 		var userId = _currentUserContext.UserId;
 		if (!userId.HasValue)
 		{
-			return Result.Failure<ProfileResponseDto>(UserErrors.InvalidCredentials);
+			return Result.Failure<ProfileResponseDto>(UserError.InvalidCredentials);
 		}
 
 		var user = await _userRepository.GetByIdWithDetailsAsync(userId.Value, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure<ProfileResponseDto>(UserErrors.NotFound);
+			return Result.Failure<ProfileResponseDto>(UserError.NotFound);
 		}
 
 		var profile = user.Profile;

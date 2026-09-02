@@ -31,23 +31,23 @@ internal sealed class ChangePasswordCommandHandler : IRequestHandler<ChangePassw
 		var userId = _currentUserContext.UserId;
 		if (!userId.HasValue)
 		{
-			return Result.Failure(UserErrors.InvalidCredentials);
+			return Result.Failure(UserError.InvalidCredentials);
 		}
 
 		var user = await _userRepository.GetByIdAsync(userId.Value, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure(UserErrors.NotFound);
+			return Result.Failure(UserError.NotFound);
 		}
 
 		if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
 		{
-			return Result.Failure(UserErrors.PasswordMismatch);
+			return Result.Failure(UserError.PasswordMismatch);
 		}
 
 		if (request.CurrentPassword == request.NewPassword)
 		{
-			return Result.Failure(UserErrors.SamePassword);
+			return Result.Failure(UserError.SamePassword);
 		}
 
 		var newPasswordHash = _passwordHasher.HashPassword(request.NewPassword);

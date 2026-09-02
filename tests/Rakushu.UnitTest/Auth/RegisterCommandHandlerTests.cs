@@ -62,7 +62,7 @@ public class RegisterCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(UserErrors.EmailAlreadyExists.Code, result.Error.Code);
+		Assert.Equal(UserError.EmailAlreadyExists.Code, result.Error.Code);
 	}
 
 	[Fact]
@@ -77,6 +77,6 @@ public class RegisterCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(UserErrors.UsernameAlreadyExists.Code, result.Error.Code);
+		Assert.Equal(UserError.UsernameAlreadyExists.Code, result.Error.Code);
 	}
 }

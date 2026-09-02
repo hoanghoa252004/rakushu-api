@@ -38,13 +38,13 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 		// 1. Check unique email
 		if (!await _userRepository.IsEmailUniqueAsync(request.Email, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<RegisterResponseDto>(UserErrors.EmailAlreadyExists);
+			return Result.Failure<RegisterResponseDto>(UserError.EmailAlreadyExists);
 		}
 
 		// 2. Check unique username
 		if (!await _userRepository.IsUsernameUniqueAsync(request.Username, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<RegisterResponseDto>(UserErrors.UsernameAlreadyExists);
+			return Result.Failure<RegisterResponseDto>(UserError.UsernameAlreadyExists);
 		}
 
 		// 3. Find default Learner role
@@ -53,7 +53,7 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 
 		if (role is null)
 		{
-			return Result.Failure<RegisterResponseDto>(RoleErrors.NotFound);
+			return Result.Failure<RegisterResponseDto>(RoleError.NotFound);
 		}
 
 		// 4. Create User & Profile

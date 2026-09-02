@@ -2,7 +2,7 @@ using Rakushu.Domain.Common.Errors;
 
 namespace Rakushu.Domain.Entities.User;
 
-public static class UserErrors
+public static class UserError
 {
 	public static readonly Error NotFound = Error.NotFound(
 		"USER.NOT_FOUND", "The user with the specified identifier was not found.");

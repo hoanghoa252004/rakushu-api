@@ -33,17 +33,17 @@ internal sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Result
 		var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure<LoginResponseDto>(UserErrors.InvalidCredentials);
+			return Result.Failure<LoginResponseDto>(UserError.InvalidCredentials);
 		}
 
 		if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
 		{
-			return Result.Failure<LoginResponseDto>(UserErrors.InvalidCredentials);
+			return Result.Failure<LoginResponseDto>(UserError.InvalidCredentials);
 		}
 
 		if (user.Status != UserStatus.Active)
 		{
-			return Result.Failure<LoginResponseDto>(UserErrors.UserInactive);
+			return Result.Failure<LoginResponseDto>(UserError.UserInactive);
 		}
 
 		var roleName = user.Role?.RoleName ?? "Learner";

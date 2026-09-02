@@ -30,23 +30,23 @@ internal sealed class AdminUpdateUserCommandHandler : IRequestHandler<AdminUpdat
 		var user = await _userRepository.GetByIdWithDetailsAsync(request.UserId, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure<UserDetailDto>(UserErrors.NotFound);
+			return Result.Failure<UserDetailDto>(UserError.NotFound);
 		}
 
 		if (!await _userRepository.IsEmailUniqueAsync(request.Email, excludeUserId: user.Id, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<UserDetailDto>(UserErrors.EmailAlreadyExists);
+			return Result.Failure<UserDetailDto>(UserError.EmailAlreadyExists);
 		}
 
 		if (!await _userRepository.IsUsernameUniqueAsync(request.Username, excludeUserId: user.Id, cancellationToken: cancellationToken))
 		{
-			return Result.Failure<UserDetailDto>(UserErrors.UsernameAlreadyExists);
+			return Result.Failure<UserDetailDto>(UserError.UsernameAlreadyExists);
 		}
 
 		var role = await _roleRepository.GetByIdAsync(request.RoleId, cancellationToken);
 		if (role is null)
 		{
-			return Result.Failure<UserDetailDto>(RoleErrors.NotFound);
+			return Result.Failure<UserDetailDto>(RoleError.NotFound);
 		}
 
 		var status = Enum.TryParse<UserStatus>(request.Status, true, out var parsedStatus)

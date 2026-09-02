@@ -22,7 +22,7 @@ internal sealed class AdminDeleteUserCommandHandler : IRequestHandler<AdminDelet
 		var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure(UserErrors.NotFound);
+			return Result.Failure(UserError.NotFound);
 		}
 
 		_userRepository.Delete(user);

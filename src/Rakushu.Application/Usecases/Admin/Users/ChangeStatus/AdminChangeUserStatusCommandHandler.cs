@@ -22,7 +22,7 @@ internal sealed class AdminChangeUserStatusCommandHandler : IRequestHandler<Admi
 		var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
 		if (user is null)
 		{
-			return Result.Failure(UserErrors.NotFound);
+			return Result.Failure(UserError.NotFound);
 		}
 
 		if (Enum.TryParse<UserStatus>(request.Status, true, out var parsedStatus))

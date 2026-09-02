@@ -1,5 +1,5 @@
 using MediatR;
-using Rakushu.Domain.Entities.User.Events;
+using Rakushu.Domain.Entities.User.DomainEvents;
 using Rakushu.Domain.Repositories;
 
 namespace Rakushu.Application.Usecases.Auth.ChangePassword;

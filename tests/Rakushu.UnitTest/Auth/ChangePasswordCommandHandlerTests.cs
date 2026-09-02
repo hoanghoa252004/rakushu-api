@@ -1,7 +1,8 @@
 using Rakushu.Application.Usecases.Auth.ChangePassword;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.Events;
+using Rakushu.Domain.Entities.User.DomainEvents;
+using Rakushu.Domain.Entities.User.RefreshToken;
 using Rakushu.UnitTest.Fakes;
 
 namespace Rakushu.UnitTest.Auth;
@@ -67,6 +68,6 @@ public class ChangePasswordCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(UserErrors.PasswordMismatch.Code, result.Error.Code);
+		Assert.Equal(UserError.PasswordMismatch.Code, result.Error.Code);
 	}
 }

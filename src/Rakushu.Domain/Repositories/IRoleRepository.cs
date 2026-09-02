@@ -3,8 +3,7 @@ using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Domain.Repositories;
 
-public interface IRoleRepository : IRepository<Role, Guid>
+public interface IRoleRepository : IBaseRepository<Role, RoleId>
 {
-	Task<Role?> GetByNameAsync(string roleName, CancellationToken cancellationToken = default);
-	Task<IReadOnlyList<Role>> GetAllRolesAsync(CancellationToken cancellationToken = default);
+	Task<Role?> GetByTitleAsync(string title, CancellationToken cancellationToken = default);
 }

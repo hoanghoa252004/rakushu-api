@@ -31,13 +31,13 @@ internal sealed class RefreshTokenCommandHandler
 		var existingToken = await _userRepository.GetRefreshTokenAsync(request.RefreshToken, cancellationToken);
 		if (existingToken is null || !existingToken.IsActive)
 		{
-			return Result.Failure<RefreshTokenResponseDto>(UserErrors.InvalidRefreshToken);
+			return Result.Failure<RefreshTokenResponseDto>(UserError.InvalidRefreshToken);
 		}
 
 		var user = await _userRepository.GetByIdWithDetailsAsync(existingToken.UserId, cancellationToken);
 		if (user is null || user.Status != UserStatus.Active)
 		{
-			return Result.Failure<RefreshTokenResponseDto>(UserErrors.UserInactive);
+			return Result.Failure<RefreshTokenResponseDto>(UserError.UserInactive);
 		}
 
 		// Rotate token: revoke old, create new

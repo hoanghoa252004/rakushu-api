@@ -4,6 +4,7 @@ using Rakushu.Application.Abstractions.Authentication;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.RefreshToken;
 using Rakushu.Domain.Repositories;
 
 namespace Rakushu.UnitTest.Fakes;

@@ -59,7 +59,7 @@ public class LoginCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(UserErrors.InvalidCredentials.Code, result.Error.Code);
+		Assert.Equal(UserError.InvalidCredentials.Code, result.Error.Code);
 	}
 
 	[Fact]
@@ -76,6 +76,6 @@ public class LoginCommandHandlerTests
 
 		// Assert
 		Assert.True(result.IsFailure);
-		Assert.Equal(UserErrors.UserInactive.Code, result.Error.Code);
+		Assert.Equal(UserError.UserInactive.Code, result.Error.Code);
 	}
 }

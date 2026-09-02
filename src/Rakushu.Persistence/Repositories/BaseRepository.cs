@@ -1,17 +1,16 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Common.Contract;
-using Rakushu.Persistence.DbContext;
 
 namespace Rakushu.Persistence.Repositories;
 
-public class Repository<TEntity, TKey> : IRepository<TEntity, TKey>
+public class BaseRepository<TEntity, TKey> : IBaseRepository<TEntity, TKey>
 	where TEntity : class
 {
 	protected readonly RakushuDbContext _context;
 	protected readonly DbSet<TEntity> _dbSet;
 
-	public Repository(RakushuDbContext context)
+	public BaseRepository(RakushuDbContext context)
 	{
 		_context = context;
 		_dbSet = context.Set<TEntity>();

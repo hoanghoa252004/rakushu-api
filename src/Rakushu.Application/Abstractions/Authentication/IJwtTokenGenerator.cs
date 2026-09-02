@@ -1,9 +1,15 @@
+using Rakushu.Domain.Entities.User;
+
 namespace Rakushu.Application.Abstractions.Authentication;
 
 public interface IJwtTokenGenerator
 {
-	string GenerateAccessToken(Guid userId, string email, string username, string roleName);
-	(string Token, DateTimeOffset ExpiresAt) GenerateRefreshToken();
-	int GetRefreshTokenExpirationDays();
+	// ACESS TOKEN
+	string GenerateAccessToken(UserId userId, string role);
 	int GetAccessTokenExpirationMinutes();
+
+	// REFRESH TOKEN
+	(string RefreshToken, DateTimeOffset ExpiresAt) GenerateRefreshToken();
+	int GetRefreshTokenExpirationDays();
+	
 }

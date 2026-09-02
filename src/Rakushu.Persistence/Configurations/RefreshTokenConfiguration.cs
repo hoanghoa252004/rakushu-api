@@ -1,41 +1,52 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.RefreshToken;
 
 namespace Rakushu.Persistence.Configurations;
 
-public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 {
 	public void Configure(EntityTypeBuilder<RefreshToken> builder)
 	{
-		builder.ToTable("refresh_tokens");
-
+		// Id
 		builder.HasKey(t => t.Id);
 		builder.Property(t => t.Id)
-			.HasColumnName("refresh_token_id");
+			.HasConversion(
+				id => id.Value,
+				value => RefreshTokenId.From(value));
 
+		// UserId
 		builder.Property(t => t.UserId)
-			.HasColumnName("user_id")
+			.HasConversion(
+				id => id.Value,
+				value => UserId.From(value))
 			.IsRequired();
+		builder.HasOne(t => t.User)
+			.WithMany(u => u.RefreshTokens)
+			.HasForeignKey(t => t.UserId)
+			.OnDelete(DeleteBehavior.Cascade);
 
-		builder.Property(t => t.Token)
-			.HasColumnName("token")
-			.HasMaxLength(500)
+		// TokenHash
+		builder.Property(t => t.TokenHash)
 			.IsRequired();
-
-		builder.HasIndex(t => t.Token)
+		builder.HasIndex(t => t.TokenHash)
 			.IsUnique();
 
-		builder.Property(t => t.ExpiresAt)
-			.HasColumnName("expires_at")
-			.IsRequired();
-
+		// IsRevoked
 		builder.Property(t => t.IsRevoked)
-			.HasColumnName("is_revoked")
+			.HasDefaultValue(false)
 			.IsRequired();
 
+		// CreatedAt
 		builder.Property(t => t.CreatedAt)
-			.HasColumnName("created_at")
 			.IsRequired();
+
+		// ExpiresAt
+		builder.Property(t => t.ExpiresAt)
+			.IsRequired();
+
+		// UsedAt
+		builder.Property(t => t.ExpiresAt);
 	}
 }

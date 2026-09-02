@@ -14,43 +14,8 @@ public static class ServiceCollectionExtensions
 		this IServiceCollection services,
 		IConfiguration configuration)
 	{
-		var jwtSection = configuration.GetSection(JwtSettings.SectionName);
-		services.Configure<JwtSettings>(jwtSection);
-
-		var jwtSettings = jwtSection.Get<JwtSettings>() ?? new JwtSettings();
-
-		// Services
-		services.AddHttpContextAccessor();
-		services.AddScoped<IPasswordHasher, PasswordHasher>();
-		services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-		services.AddScoped<ICurrentUserContext, CurrentUserContext>();
-
-		// JWT Authentication
-		var secretKey = !string.IsNullOrWhiteSpace(jwtSettings.SecretKey)
-			? jwtSettings.SecretKey
-			: "RakushuDevSecretKeyChangeMeInProductionMinimum32Chars!";
-
-		services.AddAuthentication(options =>
-		{
-			options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-			options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-		})
-		.AddJwtBearer(options =>
-		{
-			options.TokenValidationParameters = new TokenValidationParameters
-			{
-				ValidateIssuer = true,
-				ValidateAudience = true,
-				ValidateLifetime = true,
-				ValidateIssuerSigningKey = true,
-				ValidIssuer = jwtSettings.Issuer,
-				ValidAudience = jwtSettings.Audience,
-				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-				ClockSkew = TimeSpan.Zero
-			};
-		});
-
-		services.AddAuthorization();
+		// AUTHENTICATION & AUTHORIZATION
+		services.AddAuthenticationServices(configuration);
 
 		return services;
 	}
