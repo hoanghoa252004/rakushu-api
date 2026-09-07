@@ -1,6 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using Rakushu.Application.Abstractions.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 
 namespace Rakushu.Infrastructure.Authentication;
 
@@ -13,26 +14,21 @@ public sealed class CurrentUserContext : ICurrentUserContext
 		_httpContextAccessor = httpContextAccessor;
 	}
 
-	public Guid? UserId
+	public Guid UserId
 	{
 		get
 		{
-			var user = _httpContextAccessor.HttpContext?.User;
-			var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-				?? user?.FindFirst("sub")?.Value;
+			var user = _httpContextAccessor.HttpContext!.User;
 
-			return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+			var sub = user.FindFirst(JwtRegisteredClaimNames.Sub)!.Value;
+
+			Guid.TryParse(sub, out var userId);
+
+			return userId;
 		}
 	}
 
-	public string? Email =>
-		_httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
-		?? _httpContextAccessor.HttpContext?.User?.FindFirst("email")?.Value;
-
 	public string? Role =>
-		_httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value
+		_httpContextAccessor.HttpContext!.User?.FindFirst(ClaimTypes.Role)?.Value
 		?? _httpContextAccessor.HttpContext?.User?.FindFirst("role")?.Value;
-
-	public bool IsAuthenticated =>
-		_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
 }

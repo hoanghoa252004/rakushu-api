@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Rakushu.Application.Abstractions.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Infrastructure.Authentication;
 using System.Text;
 

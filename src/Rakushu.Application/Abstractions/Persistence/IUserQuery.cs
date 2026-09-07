@@ -1,0 +1,16 @@
+﻿using Rakushu.Application.Usecases.Admin.Users.GetUserById;
+using Rakushu.Application.Usecases.Admin.Users.GetUsers;
+using Rakushu.Domain.Entities.User;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Rakushu.Application.Abstractions.Persistence;
+
+public interface IUserQuery
+{
+	Task<UserDto?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default);
+	Task<(IReadOnlyList<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default);
+}

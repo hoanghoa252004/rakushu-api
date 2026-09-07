@@ -19,7 +19,7 @@ public static class UserError
 	public static readonly Error InvalidCredentials = Error.Validation(
 		"AUTH.INVALID_CREDENTIALS", "Invalid email or password.");
 
-	public static readonly Error UserInactive = Error.Validation(
+	public static readonly Error UserInactiveOrBannned = Error.Validation(
 		"AUTH.USER_INACTIVE", "Your account is inactive or has been banned.");
 
 	public static readonly Error InvalidRefreshToken = Error.Validation(
@@ -30,4 +30,7 @@ public static class UserError
 
 	public static readonly Error SamePassword = Error.Validation(
 		"AUTH.SAME_PASSWORD", "New password cannot be the same as the current password.");
+
+	public static readonly Error UnauthorizedResourceAccess = Error.Unauthorized(
+		"AUTH.UNAUTHORIZED_RESOURCE_ACCESS", "You are not authorized to access this resource.");
 }

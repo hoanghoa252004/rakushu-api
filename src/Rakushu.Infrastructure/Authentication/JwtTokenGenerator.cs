@@ -1,11 +1,12 @@
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.RefreshToken;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Rakushu.Application.Abstractions.Authentication;
-using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Infrastructure.Authentication;
 
@@ -18,9 +19,10 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
 		_jwtSettings = jwtOptions.Value;
 	}
 
-	public string GenerateAccessToken(UserId userId, string role)
+	public string GenerateAccessToken(UserId userId, string role, DateTimeOffset expiredDate)
 	{
 		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+
 		var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
 		var claims = new List<Claim>
@@ -33,26 +35,30 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
 		var tokenDescriptor = new SecurityTokenDescriptor
 		{
 			Subject = new ClaimsIdentity(claims),
-			Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
+			Expires = expiredDate.UtcDateTime,
 			Issuer = _jwtSettings.Issuer,
 			Audience = _jwtSettings.Audience,
 			SigningCredentials = credentials
 		};
 
 		var tokenHandler = new JwtSecurityTokenHandler();
+
 		var token = tokenHandler.CreateToken(tokenDescriptor);
 
 		return tokenHandler.WriteToken(token);
 	}
 
-	public (string RefreshToken, DateTimeOffset ExpiresAt) GenerateRefreshToken()
+	public string GenerateHashedToken()
 	{
 		var randomNumber = new byte[64];
+
 		using var rng = RandomNumberGenerator.Create();
+
 		rng.GetBytes(randomNumber);
-		var token = Convert.ToBase64String(randomNumber);
-		var expiresAt = DateTimeOffset.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
-		return (token, expiresAt);
+
+		var hashedToken = Convert.ToBase64String(randomNumber);
+
+		return hashedToken;
 	}
 
 	public int GetAccessTokenExpirationMinutes() => _jwtSettings.AccessTokenExpirationMinutes;

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Repositories;
 
 namespace Rakushu.Persistence.Repositories;
 

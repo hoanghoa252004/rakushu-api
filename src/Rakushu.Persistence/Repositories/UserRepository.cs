@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.RefreshToken;
-using Rakushu.Domain.Repositories;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -15,7 +14,7 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 	{
 		return await _context.Users
 			.Include(u => u.Role)
-			.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
+			.SingleOrDefaultAsync(u => u.Email.Value.ToLower() == email.ToLower(), cancellationToken);
 	}
 
 	public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)

@@ -11,23 +11,32 @@ internal sealed class Register : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapAuthEndpoints()
-			.MapPost("/register", async ([FromBody] RegisterRequestDto dto, ISender sender, CancellationToken cancellationToken) =>
+			// 1. Endpoint
+			.MapPost("/register", async (
+				[FromBody] RegisterRequestDto dto, 
+				ISender sender, 
+				CancellationToken cancellationToken
+				) =>
 			{
 				var command = new RegisterCommand(
-					dto.Username,
 					dto.Email,
 					dto.Password,
-					dto.DisplayName,
+					dto.FullName,
 					dto.NativeLanguage,
-					dto.LearningLanguage);
+					dto.AvatarKey
+					);
 
 				var result = await sender.Send(command, cancellationToken);
+
 				return result.MatchOk();
 			})
+			// 2.Description
 			.WithName("Register")
 			.WithDescription("Registers a new user account with default User role and creates an associated Profile.")
+			// 3. Authentication & Authorization
 			.AllowAnonymous()
-			.Produces<RegisterResponseDto>(StatusCodes.Status200OK)
+			// 4. Response
+			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -35,10 +44,9 @@ internal sealed class Register : IEndpoint
 }
 
 internal record RegisterRequestDto(
-	string Username,
 	string Email,
 	string Password,
-	string? DisplayName = null,
-	string? NativeLanguage = null,
-	string? LearningLanguage = null
+	string FullName,
+	string NativeLanguage,
+	string? AvatarKey = null
 );

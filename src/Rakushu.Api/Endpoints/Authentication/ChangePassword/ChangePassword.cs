@@ -11,15 +11,25 @@ internal sealed class ChangePassword : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapAuthEndpoints()
-			.MapPost("/change-password", async ([FromBody] ChangePasswordRequestDto dto, ISender sender, CancellationToken cancellationToken) =>
+			// 1. Endpoint
+			.MapPost("/change-password", async (
+				[FromBody] ChangePasswordRequestDto dto,
+				ISender sender, 
+				CancellationToken cancellationToken
+				) =>
 			{
 				var command = new ChangePasswordCommand(dto.CurrentPassword, dto.NewPassword);
+
 				var result = await sender.Send(command, cancellationToken);
+
 				return result.MatchOk();
 			})
+			// 2. Description
 			.WithName("ChangePassword")
 			.WithDescription("Changes the password of the authenticated user.")
+			// 3. Authentication & Authorization
 			.RequireAuthorization()
+			// 4. Response
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -27,7 +37,7 @@ internal sealed class ChangePassword : IEndpoint
 	}
 }
 
-internal record ChangePasswordRequestDto(
+internal sealed record ChangePasswordRequestDto(
 	string CurrentPassword,
 	string NewPassword
 );

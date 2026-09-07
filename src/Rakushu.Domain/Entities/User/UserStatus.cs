@@ -2,7 +2,8 @@ namespace Rakushu.Domain.Entities.User;
 
 public enum UserStatus
 {
+	Inactive = 0,
 	Active = 1,
-	Inactive = 2,
-	Banned = 3
+	Banned = 2,
+	Unverified = 3
 }

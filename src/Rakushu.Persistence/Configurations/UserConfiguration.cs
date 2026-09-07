@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.ValueObjects.Email;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -18,6 +19,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
 		// Email
 		builder.Property(u => u.Email)
+			.HasConversion(
+				email => email.Value,
+				value => Email.Create(value).Value)
 			.HasMaxLength(256)
 			.IsRequired();
 		builder.HasIndex(u => u.Email)
@@ -27,19 +31,25 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 		builder.Property(u => u.PasswordHash)
 			.IsRequired();
 
-		// FullName
-		builder.Property(u => u.FullName)
-			.HasMaxLength(50)
-			.IsRequired();
+		// [VO] Profile
+		builder.ComplexProperty(
+			u => u.Profile,
+			profile =>
+			{
+				// FullName
+				profile.Property(p => p.FullName)
+					.HasMaxLength(50)
+					.IsRequired();
 
-		// AvatarKey
-		builder.Property(u => u.AvatarKey)
-			.HasMaxLength(100);
+				// AvatarKey
+				profile.Property(p => p.AvatarKey)
+					.HasMaxLength(100);
 
-		// NativeLanguage
-		builder.Property(u => u.NativeLanguage)
-			.HasMaxLength(50)
-			.IsRequired();
+				// NativeLanguage
+				profile.Property(p => p.NativeLanguage)
+					.HasMaxLength(50)
+					.IsRequired();
+			});
 
 		// RoleId
 		builder.Property(u => u.RoleId)

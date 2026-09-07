@@ -1,18 +1,20 @@
 using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Errors;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User.ValueObjects.Email;
+using Rakushu.Domain.Entities.User.ValueObjects.Profile;
 
 namespace Rakushu.Domain.Entities.User;
 
 public sealed class User : AggregateRoot<UserId>
 {
 	// MAIN PROPERTIES----------
-	public string Email { get; private set; } = null!;
+	public Email Email { get; private set; } = null!;
 	public string PasswordHash { get; private set; } = null!;
-	public string FullName { get; private set; } = null!;
-	public string? AvatarKey { get; private set; }
-	public string NativeLanguage { get; private set; } = null!;
 	public RoleId RoleId { get; private set; } = null!; // REF: USER * - 1 ROLE
 	public UserStatus Status { get; private set; }
+	public Profile Profile { get; private set; } = null!;
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -29,52 +31,85 @@ public sealed class User : AggregateRoot<UserId>
 
 	private User(
 		UserId id,
-		string email,
+		Email email,
 		string passwordHash,
-		string fullName,
-		string nativeLanguage,
 		RoleId roleId,
 		UserStatus status,
+		Profile profile,
 		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt,
-		string? avatarKey = null) : base(id)
+		DateTimeOffset updatedAt) : base(id)
 	{
 		Email = email;
 		PasswordHash = passwordHash;
-		FullName = fullName;
-		NativeLanguage = nativeLanguage;
 		RoleId = roleId;
 		Status = status;
+		Profile = profile;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
-		// Optionals:
-		AvatarKey = avatarKey;
 	}
 
-	public static User Create(
-		string email,
+	public static Result<User> Create(
+		Email email,
 		string passwordHash,
-		string fullName,
-		string nativeLanguage,
 		RoleId roleId,
 		UserStatus status,
+		Profile profile,
 		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt,
-		string? avatarKey = null)
+		DateTimeOffset updatedAt
+		)
 	{
 		UserId userId = UserId.Create();
-		return new User(
+
+		return Result.Success(new User(
 					userId,
 					email,
 					passwordHash,
-					fullName,
-					nativeLanguage,
 					roleId,
 					status,
+					profile,
 					createdAt,
-					updatedAt,
-					avatarKey
-		);
+					updatedAt
+					));
+	}
+
+	public RefreshToken.RefreshToken AddRefreshToken(UserId userId, string hashedToken, DateTimeOffset createdAt, DateTimeOffset expiresAt)
+	{
+		var refreshToken = RefreshToken.RefreshToken.Create(userId, hashedToken, createdAt, expiresAt);
+
+		_refreshTokens.Add(refreshToken);
+
+		return refreshToken;
+	}
+
+	public void UpdatePassword(string newPasswordHash)
+	{
+		PasswordHash = newPasswordHash;
+
+		UpdatedAt = DateTimeOffset.UtcNow;
+
+		//AddDomainEvent(new UserPasswordChangedDomainEvent(Id));
+	}
+
+	public void UpdateProfile(Profile profile)
+	{
+		Profile = profile;
+	}
+
+	public Result ChangeStatus(UserStatus status)
+	{
+		if(!UserStatusTransition.IsAllowed(Status, status))
+		{
+			return Result.Failure(CommonError.InvalidStatusTransition);
+		}
+
+		Status = status;
+
+		if(Status == UserStatus.Banned)
+		{
+			// PUBLISH DOMAIN EVENT to REVOKE REFRESH TOKEN
+		}
+
+		return Result.Success();
 	}
 	/*
 	public void SetProfile(Profile profile)

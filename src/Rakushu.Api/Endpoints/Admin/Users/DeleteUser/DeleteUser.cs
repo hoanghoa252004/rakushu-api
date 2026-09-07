@@ -11,17 +11,22 @@ internal sealed class DeleteUser : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapAdminEndpoints()
+			// 1. Endpoint
 			.MapDelete("/users/{id:guid}", async (
 				[FromRoute] Guid id,
 				ISender sender,
-				CancellationToken cancellationToken) =>
+				CancellationToken cancellationToken
+				) =>
 			{
-				var command = new AdminDeleteUserCommand(id);
+				var command = new DeleteUserCommand(id);
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchOk();
 			})
+			// 2. Description
 			.WithName("AdminDeleteUser")
 			.WithDescription("Permanently deletes a user account and associated profile.")
+			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
+			// 4. Response
 			.Produces(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)

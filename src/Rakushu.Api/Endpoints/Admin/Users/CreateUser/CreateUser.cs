@@ -12,24 +12,30 @@ internal sealed class CreateUser : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapAdminEndpoints()
-			.MapPost("/users", async ([FromBody] AdminCreateUserRequestDto dto, ISender sender, CancellationToken cancellationToken) =>
+			// 1. Endpoint
+			.MapPost("/users", async (
+				[FromBody] CreateUserRequestDto dto, 
+				ISender sender,
+				CancellationToken cancellationToken) =>
 			{
-				var command = new AdminCreateUserCommand(
-					dto.Username,
+				var command = new CreateUserCommand(
 					dto.Email,
 					dto.Password,
 					dto.RoleId,
-					dto.DisplayName,
-					dto.Status,
+					dto.FullName,
 					dto.NativeLanguage,
-					dto.LearningLanguage);
+					dto.AvatarKey
+					);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchOk();
 			})
+			// 2. Description
 			.WithName("AdminCreateUser")
 			.WithDescription("Creates a new user account directly with specified Role and Status.")
-			.Produces<UserDetailDto>(StatusCodes.Status200OK)
+			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
+			// 4. Response
+			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
@@ -38,13 +44,11 @@ internal sealed class CreateUser : IEndpoint
 	}
 }
 
-internal record AdminCreateUserRequestDto(
-	string Username,
+internal record CreateUserRequestDto(
 	string Email,
 	string Password,
 	Guid RoleId,
-	string? DisplayName = null,
-	string? Status = null,
+	string FullName,
 	string? NativeLanguage = null,
-	string? LearningLanguage = null
+	string? AvatarKey = null
 );

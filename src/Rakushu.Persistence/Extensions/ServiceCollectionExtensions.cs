@@ -2,7 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Domain.Common.Contract;
-using Rakushu.Domain.Repositories;
+using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 using Rakushu.Persistence.Repositories;
 
 namespace Rakushu.Persistence.Extensions;

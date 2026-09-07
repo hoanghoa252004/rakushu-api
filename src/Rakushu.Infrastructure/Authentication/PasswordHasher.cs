@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Rakushu.Application.Abstractions.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 
 namespace Rakushu.Infrastructure.Authentication;
 

@@ -1,3 +1,5 @@
+using Rakushu.Domain.Entities.Role;
+
 namespace Rakushu.Api.Endpoints.Admin;
 
 internal static class AdminEndpointGroupExtension
@@ -7,6 +9,6 @@ internal static class AdminEndpointGroupExtension
 		return app.MapGroup("/api/admin")
 			.WithGroupName("admin")
 			.WithTags("Admin")
-			.RequireAuthorization(policy => policy.RequireRole("Admin"));
+			.RequireAuthorization(policy => policy.RequireRole(SystemRoles.SystemAdministrator));
 	}
 }

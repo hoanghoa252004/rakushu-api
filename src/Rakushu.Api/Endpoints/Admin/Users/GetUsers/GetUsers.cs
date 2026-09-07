@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
+using Rakushu.Application.Usecases.Admin.Users.GetUserById;
 using Rakushu.Application.Usecases.Admin.Users.GetUsers;
+using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Api.Endpoints.Admin.Users.GetUsers;
 
@@ -12,28 +14,34 @@ internal sealed class GetUsers : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapAdminEndpoints()
-			.MapGet("/users", async (
-				[FromQuery] int pageNumber,
-				[FromQuery] int pageSize,
+			// 1. Endpoint
+			.MapGet("/users", async(
+				[AsParameters] PaginationRequest pagination,
 				[FromQuery] string? searchTerm,
 				[FromQuery] Guid? roleId,
-				[FromQuery] string? status,
+				[FromQuery] UserStatus? status,
 				ISender sender,
-				CancellationToken cancellationToken) =>
+				CancellationToken cancellationToken
+				) =>
 			{
-				var query = new GetUsersListQuery(
-					pageNumber <= 0 ? 1 : pageNumber,
-					pageSize <= 0 ? 10 : pageSize,
+				var query = new GetUsersQuery(
+					pagination.PageNumber,
+					pagination.PageSize,
 					searchTerm,
 					roleId,
-					status);
+					status
+					);
 
 				var result = await sender.Send(query, cancellationToken);
+
 				return result.MatchOk();
 			})
+			// 2. Description
 			.WithName("AdminGetUsers")
 			.WithDescription("Retrieves a paginated list of users with optional filtering and search.")
-			.Produces<PaginatedList<UserSummaryDto>>(StatusCodes.Status200OK)
+			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
+			// 4. Response
+			.Produces<PaginatedList<UserDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);

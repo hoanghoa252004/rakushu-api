@@ -1,10 +1,7 @@
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using Rakushu.Application.Abstractions.Authentication;
-using Rakushu.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Infrastructure.Clock;
 
 namespace Rakushu.Infrastructure.Extensions;
 
@@ -17,6 +14,8 @@ public static class ServiceCollectionExtensions
 		// AUTHENTICATION & AUTHORIZATION
 		services.AddAuthenticationServices(configuration);
 
+		// CLOCK
+		services.AddSingleton<ISystemClock, SystemClock>();
 		return services;
 	}
 }
