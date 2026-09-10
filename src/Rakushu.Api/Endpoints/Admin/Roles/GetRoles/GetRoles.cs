@@ -18,6 +18,7 @@ internal sealed class GetRoles : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
+			.WithTags("Role")
 			.WithName("AdminGetRoles")
 			.WithDescription("Retrieves the list of available user roles.")
 			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()

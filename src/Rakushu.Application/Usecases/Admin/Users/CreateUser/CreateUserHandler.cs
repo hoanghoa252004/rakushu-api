@@ -11,7 +11,7 @@ using UserProfile = Rakushu.Domain.Entities.User.ValueObjects.Profile.Profile;
 
 namespace Rakushu.Application.Usecases.Admin.Users.CreateUser;
 
-internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Result>
+internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Result<UserId>>
 {// DAOs
 	private readonly IUserRepository _userRepository;
 	private readonly IRoleRepository _roleRepository;
@@ -38,7 +38,7 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 		_systemClock = systemClock;
 	}
 
-	public async Task<Result> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+	public async Task<Result<UserId>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
@@ -48,7 +48,7 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 
 			if (existingUser != null) // Expect that no user with the same email exists
 			{
-				return Result.Failure(UserError.EmailAlreadyExists);
+				return Result.Failure<UserId>(UserError.EmailAlreadyExists);
 			}
 
 			// 3. Find role
@@ -58,20 +58,25 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 
 			if (role == null) 
 			{
-				return Result.Failure(RoleError.NotFound);
+				return Result.Failure<UserId>(RoleError.NotFound);
 			}
 
 			// 4. Create User
 			var emailResult = Email.Create(request.Email);
 
 			if (emailResult.IsFailure)
-				return emailResult;
+			{
+				//return emailResult;
+				return Result.Failure<UserId>(emailResult.Error);
+			}	
 
 			var profileResult = UserProfile.Create(request.FullName, request.NativeLanguage, request.AvatarKey);
 
 			if (profileResult.IsFailure)
 			{
-				return profileResult;
+				//return profileResult;
+				return Result.Failure<UserId>(profileResult.Error);
+
 			}
 
 			var passwordHash = _passwordHasher.HashPassword(request.Password);
@@ -91,12 +96,13 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 
 			if (userResult.IsFailure)
 			{
-				return userResult;
+				//return emailResult;
+				return Result.Failure<UserId>(userResult.Error);
 			}
 
 			_userRepository.Add(userResult.Value);
 
-			return Result.Success();
+			return Result.Success(userResult.Value.Id);
 		}, cancellationToken);
 	}
 }

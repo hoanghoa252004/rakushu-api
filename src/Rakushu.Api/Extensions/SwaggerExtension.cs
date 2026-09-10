@@ -10,32 +10,18 @@ internal static class SwaggerExtension
 
 		return services.AddSwaggerGen(options =>
 		{
-			options.SwaggerDoc("v1", new OpenApiInfo
+			options.SwaggerDoc("common", new OpenApiInfo
 			{
-				Title = "Rakushu API",
+				Title = "Common API",
 				Version = "v1",
-				Description = "Rakushu Japanese Learning API - Authentication, Profile, Admin User Management & Core Services"
-			});
-
-			options.SwaggerDoc("auth", new OpenApiInfo
-			{
-				Title = "Authentication API",
-				Version = "v1",
-				Description = "Endpoints related to Authentication: Register, Login, Logout, Change Password, Refresh Token"
-			});
-
-			options.SwaggerDoc("profile", new OpenApiInfo
-			{
-				Title = "Profile API",
-				Version = "v1",
-				Description = "Endpoints related to Profile Management"
+				Description = "AUTHENTICATION, PROFILE"
 			});
 
 			options.SwaggerDoc("admin", new OpenApiInfo
 			{
 				Title = "Admin API",
 				Version = "v1",
-				Description = "Endpoints related to Admin User & Role Management"
+				Description = "USER - ROLE - SUSCRIPTION PLAN"
 			});
 
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

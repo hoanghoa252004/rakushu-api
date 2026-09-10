@@ -27,6 +27,7 @@ internal sealed class ChangeUserStatus : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
+			.WithTags("User")
 			.WithName("AdminChangeUserStatus")
 			.WithDescription("Updates account status (Active, Inactive, Banned) of a user.")
 			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()

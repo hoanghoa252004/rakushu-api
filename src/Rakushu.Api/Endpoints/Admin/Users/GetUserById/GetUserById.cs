@@ -25,7 +25,8 @@ internal sealed class GetUserById : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithName("AdminGetUserById")
+			.WithTags("User")
+			.WithName("GetUserById")
 			.WithDescription("Retrieves detailed user profile and account details by user ID.")
 			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
 			// 4. Response

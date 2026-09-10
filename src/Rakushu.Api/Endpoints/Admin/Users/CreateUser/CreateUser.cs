@@ -28,14 +28,16 @@ internal sealed class CreateUser : IEndpoint
 					);
 
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				//return result.MatchOk();
+				return result.MatchCreated("GetDriveById", new { id = result.Value });
 			})
 			// 2. Description
-			.WithName("AdminCreateUser")
+			.WithTags("User")
+			.WithName("CreateUser")
 			.WithDescription("Creates a new user account directly with specified Role and Status.")
 			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
 			// 4. Response
-			.Produces(StatusCodes.Status200OK)
+			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)

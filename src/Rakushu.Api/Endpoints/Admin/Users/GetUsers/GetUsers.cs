@@ -37,7 +37,8 @@ internal sealed class GetUsers : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithName("AdminGetUsers")
+			.WithTags("User")
+			.WithName("GetUsers")
 			.WithDescription("Retrieves a paginated list of users with optional filtering and search.")
 			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
 			// 4. Response

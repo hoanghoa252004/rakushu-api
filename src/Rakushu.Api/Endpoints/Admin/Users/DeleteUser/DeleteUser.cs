@@ -23,7 +23,8 @@ internal sealed class DeleteUser : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithName("AdminDeleteUser")
+			.WithTags("User")
+			.WithName("DeleteUser")
 			.WithDescription("Permanently deletes a user account and associated profile.")
 			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
 			// 4. Response
