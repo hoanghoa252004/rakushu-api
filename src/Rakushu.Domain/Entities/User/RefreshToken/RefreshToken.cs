@@ -44,9 +44,13 @@ public sealed class RefreshToken : Entity<RefreshTokenId>
 	}
 
 	// BEHAVIOR METHODS----------
-	public void Revoke(DateTimeOffset usedAt)
+	public void Revoke(DateTimeOffset? usedAt = null)
 	{
 		IsRevoked = true;
-		UsedAt = usedAt;
+
+		if (usedAt is not null)
+		{
+			UsedAt = usedAt;
+		}
 	}
 }

@@ -41,7 +41,12 @@ public sealed partial class Email : ValueObject
 			return Result.Failure<Email>(
 				EmailErrors.InvalidFormat);
 
-		return Result.Success(new Email(value));
+		return Result.Success(NormalizeEmail(value));
+	}
+
+	public static Email NormalizeEmail(string value)
+	{
+		return new Email(value.Trim().ToLower());
 	}
 
 	protected override IEnumerable<object?> GetEqualityComponents()

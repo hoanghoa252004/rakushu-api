@@ -37,7 +37,7 @@ internal sealed class LogoutHandler : IRequestHandler<LogoutCommand, Result>
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			// 1. Find the user by ID
-			var userId = UserId.From(_currentUserContext.UserId);
+			var userId = _currentUserContext.UserId;
 
 			var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
@@ -51,18 +51,7 @@ internal sealed class LogoutHandler : IRequestHandler<LogoutCommand, Result>
 			}
 
 			// 2. Revoke the latest refresh token
-			var latestRefreshToken = user.RefreshTokens.OrderByDescending(rt => rt.CreatedAt).FirstOrDefault();
-
-			if (latestRefreshToken == null // Check whether the user has any active refresh token 
-				|| latestRefreshToken.IsExpired == true
-				&& latestRefreshToken.IsActive == false)
-			{
-				return Result.Failure(UserError.InvalidRefreshToken);
-			}
-
-			var refreshTokenUsedAt = _systemClock.UtcNow;
-
-			latestRefreshToken.Revoke(refreshTokenUsedAt);
+			user.RevokeAllActiveRefreshTokens();
 
 			return Result.Success();
 		}, cancellationToken);

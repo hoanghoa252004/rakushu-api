@@ -37,7 +37,7 @@ internal sealed class ChangePasswordHandler : IRequestHandler<ChangePasswordComm
 		return await _unitOfWork.ExecuteAsync( async () =>
 		{
 			// 1. Find the user by ID
-			var userId = UserId.From(_currentUserContext.UserId);
+			var userId = _currentUserContext.UserId;
 
 			var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
@@ -61,7 +61,7 @@ internal sealed class ChangePasswordHandler : IRequestHandler<ChangePasswordComm
 			// 4. Update new password
 			var newPasswordHash = _passwordHasher.HashPassword(request.NewPassword);
 
-			user.UpdatePassword(newPasswordHash);
+			user.ChangePassword(newPasswordHash);
 
 			return Result.Success();
 		}, cancellationToken);

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.Role;
 
-public static class SystemRoles
+public static class DefaultSystemRoles
 {
 	public static readonly string SystemAdministrator = nameof(SystemAdministrator);
 	public static readonly string LinguisticCurator = nameof(LinguisticCurator);

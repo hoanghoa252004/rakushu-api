@@ -22,6 +22,9 @@ public static class UserError
 	public static readonly Error UserInactiveOrBannned = Error.Validation(
 		"AUTH.USER_INACTIVE", "Your account is inactive or has been banned.");
 
+	public static readonly Error UnverifiedYet = Error.Validation(
+	"AUTH.USER_UNVERIFIED", "Your account has not verified email yet.");
+
 	public static readonly Error InvalidRefreshToken = Error.Validation(
 		"AUTH.INVALID_REFRESH_TOKEN", "The provided refresh token is invalid or expired.");
 

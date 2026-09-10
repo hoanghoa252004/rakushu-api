@@ -25,7 +25,7 @@ internal sealed class GetProfileHandler : IRequestHandler<GetProfileQuery, Resul
 
 	public async Task<Result<UserDto>> Handle(GetProfileQuery request, CancellationToken cancellationToken)
 	{
-		var userId = UserId.From(_currentUserContext.UserId);
+		var userId = _currentUserContext.UserId;
 
 		var profile = await _userQuery.GetByIdAsync(userId, cancellationToken);
 

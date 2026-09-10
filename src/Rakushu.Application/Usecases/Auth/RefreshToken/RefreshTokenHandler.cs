@@ -11,8 +11,6 @@ namespace Rakushu.Application.Usecases.Auth.RefreshToken;
 internal sealed class RefreshTokenHandler
 	: IRequestHandler<RefreshTokenCommand, Result<CredentialResponseDto>>
 {
-	// USER CONTEXT
-	private readonly ICurrentUserContext _currentUserContext;
 
 	// DAOs
 	private readonly IUserRepository _userRepository;
@@ -23,14 +21,12 @@ internal sealed class RefreshTokenHandler
 	private readonly ISystemClock _systemClock;
 
 	public RefreshTokenHandler(
-		ICurrentUserContext currentUserContext,
 		IUserRepository userRepository,
 		IUnitOfWork unitOfWork,
 		IJwtTokenGenerator jwtTokenGenerator,
 		ISystemClock systemClock
 		)
 	{
-		_currentUserContext = currentUserContext;
 		_userRepository = userRepository;
 		_unitOfWork = unitOfWork;
 		_jwtTokenGenerator = jwtTokenGenerator;
@@ -43,10 +39,8 @@ internal sealed class RefreshTokenHandler
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			// 1. Find the user by ID
-			var userId = UserId.From(_currentUserContext.UserId);
-
-			var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+			// 1. Find the user
+			var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
 
 			if (user == null) // Check whether the user exists
 			{
@@ -57,26 +51,21 @@ internal sealed class RefreshTokenHandler
 				return Result.Failure<CredentialResponseDto>(UserError.UserInactiveOrBannned);
 			}
 
-			// 2. Revoke the latest refresh token
-			var latestRefreshToken = user.RefreshTokens.OrderByDescending(rt => rt.CreatedAt).FirstOrDefault();
-
-			if (latestRefreshToken == null // Check whether the user has any active refresh token 
-				|| latestRefreshToken.IsExpired == true
-				&& latestRefreshToken.IsActive == false)
+			// 2. Validate refresh token
+			var refreshToken = user.RefreshTokens
+			.SingleOrDefault(rt => request.RefreshToken == rt.TokenHash
+							&& rt.IsActive == true 
+							&& rt.UsedAt == null);
+			if(refreshToken == null)
 			{
 				return Result.Failure<CredentialResponseDto>(UserError.InvalidRefreshToken);
-			}
-			else if (latestRefreshToken.UserId != user.Id) // Check whether the latest refresh token belongs to the user
-			{
-				return Result.Failure<CredentialResponseDto>(UserError.UnauthorizedResourceAccess);
 			}
 
 			var refreshTokenUsedAt = _systemClock.UtcNow;
 
-			latestRefreshToken.Revoke(refreshTokenUsedAt);
+			refreshToken.Revoke(refreshTokenUsedAt);
 
 			// 3. Generate a new access token and refresh token
-			var role = user.Role;
 
 			var utcNow = _systemClock.UtcNow;
 
@@ -94,13 +83,13 @@ internal sealed class RefreshTokenHandler
 
 			var refreshTokenExpiresAt = utcNow.AddDays(refreshTokenLifetime);
 
-			var refreshToken = user.AddRefreshToken(user.Id, hashedToken, utcNow, refreshTokenExpiresAt);
+			var newRefreshToken = user.AddRefreshToken(user.Id, hashedToken, utcNow, refreshTokenExpiresAt);
 
 			// 5. Return LoginResponseDto
 			return Result.Success(new CredentialResponseDto(
 				accessToken,
 				accessTokenExpiresAt,
-				refreshToken.TokenHash,
+				newRefreshToken.TokenHash,
 				refreshTokenExpiresAt
 			));
 		}, cancellationToken);

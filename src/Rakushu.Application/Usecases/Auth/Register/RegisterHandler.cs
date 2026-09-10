@@ -54,7 +54,7 @@ internal sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result>
 			}
 
 			// 3. Find role LEARNER
-			var role = await _roleRepository.GetByTitleAsync(SystemRoles.Learner, cancellationToken);
+			var role = await _roleRepository.GetByTitleAsync(DefaultSystemRoles.Learner, cancellationToken);
 
 			// 4. Create User
 			var emailResult = Email.Create(request.Email);
@@ -91,6 +91,7 @@ internal sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result>
 
 			_userRepository.Add(userResult.Value);
 
+			await _unitOfWork.SaveChangesAsync();
 			return Result.Success();
 		}, cancellationToken);
 	}

@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
 
 namespace Rakushu.Persistence.Extensions;
@@ -31,11 +33,16 @@ public static class ServiceCollectionExtensions
 			.UseSnakeCaseNamingConvention();
 		});
 
-		// REGISTER REPOSITORIES AND UNIT OF WORK
-		services.AddScoped<IUnitOfWork, RakushuDbContext>();
+		// UNIT OF WORK
+		services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<RakushuDbContext>());
+
+		// REPOSITORIES
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IRoleRepository, RoleRepository>();
 
+		// QUERIES
+		services.AddScoped<IUserQuery, UserQuery>();
+		services.AddScoped<IRoleQuery, RoleQuery>();
 		return services;
 	}
 }

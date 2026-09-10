@@ -33,7 +33,7 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 		return await _unitOfWork.ExecuteAsync( async () =>
 		{
 			// 1. Get the current user 
-			var userId = UserId.From(_currentUserContext.UserId);
+			var userId = _currentUserContext.UserId;
 
 			var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 

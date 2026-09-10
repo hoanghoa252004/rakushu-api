@@ -2,6 +2,7 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User.DomainEvents;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
 using Rakushu.Domain.Entities.User.ValueObjects.Profile;
 
@@ -81,13 +82,21 @@ public sealed class User : AggregateRoot<UserId>
 		return refreshToken;
 	}
 
-	public void UpdatePassword(string newPasswordHash)
+	public void RevokeAllActiveRefreshTokens()
+	{
+		foreach (var refreshToken in _refreshTokens.Where(x => !x.IsRevoked))
+		{
+			refreshToken.Revoke();
+		}
+	}
+
+	public void ChangePassword(string newPasswordHash)
 	{
 		PasswordHash = newPasswordHash;
 
 		UpdatedAt = DateTimeOffset.UtcNow;
 
-		//AddDomainEvent(new UserPasswordChangedDomainEvent(Id));
+		AddDomainEvent(new UserPasswordChangedDomainEvent(this));
 	}
 
 	public void UpdateProfile(Profile profile)
@@ -106,7 +115,7 @@ public sealed class User : AggregateRoot<UserId>
 
 		if(Status == UserStatus.Banned)
 		{
-			// PUBLISH DOMAIN EVENT to REVOKE REFRESH TOKEN
+			AddDomainEvent(new UserBannedDomainEvent(this));
 		}
 
 		return Result.Success();

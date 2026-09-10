@@ -29,7 +29,7 @@ internal sealed class RefreshToken : IEndpoint
 			.WithName("RefreshToken")
 			.WithDescription("Issues a new Access Token and rotates Refresh Token.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization()
+			.AllowAnonymous()
 			// 4. Response
 			.Produces<CredentialResponseDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

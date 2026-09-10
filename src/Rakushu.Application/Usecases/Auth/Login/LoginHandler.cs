@@ -53,6 +53,11 @@ internal sealed class LoginHandler : IRequestHandler<LoginCommand, Result<Creden
 			}
 
 			// 3. Check User Status
+			if (user.Status == UserStatus.Unverified)
+			{
+				return Result.Failure<CredentialResponseDto>(UserError.UnverifiedYet);
+			}
+
 			if (user.Status != UserStatus.Active)
 			{
 				return Result.Failure<CredentialResponseDto>(UserError.UserInactiveOrBannned);
