@@ -4,6 +4,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Admin.Users.CreateUser;
 using Rakushu.Application.Usecases.Admin.Users.GetUserById;
+using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Api.Endpoints.Admin.Users.CreateUser;
 
@@ -28,13 +29,13 @@ internal sealed class CreateUser : IEndpoint
 					);
 
 				var result = await sender.Send(command, cancellationToken);
-				//return result.MatchOk();
-				return result.MatchCreated("GetDriveById", new { id = result.Value });
+
+				return result.MatchCreated("GetUserById", userId => new { id = userId.Value });
 			})
 			// 2. Description
 			.WithTags("User")
 			.WithName("CreateUser")
-			.WithDescription("Creates a new user account directly with specified Role and Status.")
+			.WithDescription("Creates a new user account directly with specified Role and default status = Inactive.")
 			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
 			// 4. Response
 			.Produces(StatusCodes.Status201Created)

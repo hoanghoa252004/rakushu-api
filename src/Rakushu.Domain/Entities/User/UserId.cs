@@ -9,7 +9,7 @@ namespace Rakushu.Domain.Entities.User;
 
 public class UserId : StronglyTypedId<Guid>
 {
-	public UserId(Guid value) : base(value)
+	private UserId(Guid value) : base(value)
 	{
 	}
 

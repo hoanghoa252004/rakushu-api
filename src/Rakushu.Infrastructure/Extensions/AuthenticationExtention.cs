@@ -4,18 +4,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Infrastructure.Authentication;
+using Rakushu.Infrastructure.Extensions.Options;
 using System.Text;
 
 namespace Rakushu.Infrastructure.Extensions;
 
-public static class AuthenticationExtention
+internal static class AuthenticationExtention
 {
-	public static IServiceCollection AddAuthenticationServices(
+	internal static IServiceCollection AddAuthenticationServices(
 		this IServiceCollection services,
 		IConfiguration configuration)
 	{
 		// Authentication:
-		services.Configure<JwtSettings>(configuration.GetSection(nameof(JwtSettings)));
+		services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.ConfigurationSection));
 		var jwtSettings = configuration.GetSection(nameof(JwtSettings));
 
 		services.AddHttpContextAccessor();
@@ -47,6 +48,7 @@ public static class AuthenticationExtention
 		services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 		services.AddScoped<IPasswordHasher, PasswordHasher>();
 		services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+		services.AddScoped<IVerificationCodeHasher, VerificationCodeHasher>();
 		return services;
 	}
 }

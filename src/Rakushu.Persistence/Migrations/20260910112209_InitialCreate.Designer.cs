@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rakushu.Persistence;
@@ -12,9 +13,11 @@ using Rakushu.Persistence;
 namespace Rakushu.Persistence.Migrations
 {
     [DbContext(typeof(RakushuDbContext))]
-    partial class RakushuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260910112209_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,42 +58,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasDatabaseName("ix_roles_title");
 
                     b.ToTable("roles", (string)null);
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.User.EmailVerificationToken.EmailVerificationToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CodeHash")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("code_hash");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<DateTimeOffset?>("UsedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("used_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_email_verification_token");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_email_verification_token_user_id");
-
-                    b.ToTable("email_verification_token", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.User.RefreshToken.RefreshToken", b =>
@@ -209,16 +176,6 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.User.EmailVerificationToken.EmailVerificationToken", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.User.User", null)
-                        .WithMany("EmailVerificationTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_email_verification_token_users_user_id");
-                });
-
             modelBuilder.Entity("Rakushu.Domain.Entities.User.RefreshToken.RefreshToken", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.User.User", "User")
@@ -250,8 +207,6 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
                 {
-                    b.Navigation("EmailVerificationTokens");
-
                     b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618

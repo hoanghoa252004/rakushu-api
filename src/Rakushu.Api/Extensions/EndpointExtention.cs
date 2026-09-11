@@ -1,4 +1,5 @@
 ﻿using Rakushu.Api.Common;
+using System.Text.Json.Serialization;
 
 namespace Rakushu.Api.Extensions;
 
@@ -29,6 +30,12 @@ public static class EndpointExtention
 		{
 			services.AddSingleton(typeof(IEndpoint), type);
 		}
+
+		services.ConfigureHttpJsonOptions(options =>
+		{
+			options.SerializerOptions.Converters.Add(
+				new JsonStringEnumConverter());
+		});
 
 		return services;
 	}

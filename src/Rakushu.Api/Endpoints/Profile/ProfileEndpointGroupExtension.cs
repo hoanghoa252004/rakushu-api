@@ -5,7 +5,7 @@ internal static class ProfileEndpointGroupExtension
 	internal static RouteGroupBuilder MapProfileEndpoints(this IEndpointRouteBuilder app)
 	{
 		return app.MapGroup("/api/profile")
-			.WithGroupName("common")
+			.WithGroupName("auth")
 			.WithTags("Profile");
 	}
 }

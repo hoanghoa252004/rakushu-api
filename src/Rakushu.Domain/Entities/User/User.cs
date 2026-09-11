@@ -3,6 +3,7 @@ using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User.DomainEvents;
+using Rakushu.Domain.Entities.User.EmailVerificationToken;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
 using Rakushu.Domain.Entities.User.ValueObjects.Profile;
 
@@ -26,6 +27,10 @@ public sealed class User : AggregateRoot<UserId>
 	// RefreshTokens:
 	private readonly List<RefreshToken.RefreshToken> _refreshTokens = [];
 	public IReadOnlyCollection<RefreshToken.RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+
+	// EmailVerificationTokens:
+	private readonly List<EmailVerificationToken.EmailVerificationToken> _emailVerificationTokens = [];
+	public IReadOnlyCollection<EmailVerificationToken.EmailVerificationToken> EmailVerificationTokens => _emailVerificationTokens.AsReadOnly();
 
 	// CONSTRUCTORS & FACTORY METHODS----------
 	private User() { }
@@ -90,6 +95,11 @@ public sealed class User : AggregateRoot<UserId>
 		}
 	}
 
+	public void AddEmailVerificationToken(EmailVerificationToken.EmailVerificationToken token)
+	{
+		_emailVerificationTokens.Add(token);
+	}
+
 	public void ChangePassword(string newPasswordHash)
 	{
 		PasswordHash = newPasswordHash;
@@ -119,6 +129,15 @@ public sealed class User : AggregateRoot<UserId>
 		}
 
 		return Result.Success();
+	}
+
+	public EmailVerificationToken.EmailVerificationToken AddEmailVerificationToken(UserId userId, string hashedCode, DateTimeOffset createdAt, DateTimeOffset expiresAt)
+	{
+		var emailVerificationToken = EmailVerificationToken.EmailVerificationToken.Create(userId, hashedCode, createdAt, expiresAt);
+
+		_emailVerificationTokens.Add(emailVerificationToken);
+
+		return emailVerificationToken;
 	}
 	/*
 	public void SetProfile(Profile profile)

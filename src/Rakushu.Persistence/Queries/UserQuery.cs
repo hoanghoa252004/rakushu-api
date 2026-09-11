@@ -2,6 +2,7 @@
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Usecases.Admin.Users.GetUserById;
 using Rakushu.Application.Usecases.Admin.Users.GetUsers;
+using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ internal class UserQuery : IUserQuery
 	{
 		return await _dbContext.Users
 			.AsNoTracking()
+			.Where(u => u.Id == id)
 			.Select(u => new UserDto(
 				u.Id.Value,
 				u.Email.Value,
@@ -34,8 +36,8 @@ internal class UserQuery : IUserQuery
 				u.UpdatedAt,
 				u.Profile.AvatarKey,
 				u.Profile.NativeLanguage
-				))
-			.SingleOrDefaultAsync(u => u.Id == id.Value, cancellationToken);
+			))
+			.SingleOrDefaultAsync(cancellationToken);
 	}
 
 	public async Task<(IReadOnlyList<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default)
@@ -47,15 +49,30 @@ internal class UserQuery : IUserQuery
 		{
 			var searchTerm = query.SearchTerm.Trim();
 
-			users = users.Where(u =>
-				u.Email.Value.Contains(searchTerm) ||
-				u.Profile.FullName.Contains(searchTerm));
+			//var pattern = $"%{searchTerm}%";
+
+			//users = _dbContext.Users.FromSqlInterpolated($"""
+			//	SELECT *
+			//	FROM users
+			//	WHERE email ILIKE {pattern}
+			//	   OR profile_full_name ILIKE {pattern}
+			//	""").AsNoTracking();
+
+			users = users.Where(
+				//u =>
+				//u.Email.Value.Contains(searchTerm) ||
+				//u.Profile.FullName.Contains(searchTerm)
+				u => EF.Functions.ILike(u.Profile.FullName, $"%{searchTerm}%")
+				//|| EF.Functions.ILike(EF.Property<string>(u, nameof(User.Email)), $"%{searchTerm}%")
+				);
 		}
 
 		// Filter by role
 		if (query.RoleId != null)
 		{
-			users = users.Where(u => u.RoleId.Value == query.RoleId);
+			var roleId = RoleId.From(query.RoleId.Value);
+
+			users = users.Where(u => u.RoleId == roleId);
 		}
 
 		// Filter by status

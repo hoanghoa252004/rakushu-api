@@ -1,4 +1,6 @@
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Rakushu.Api.Extensions;
 
@@ -10,9 +12,11 @@ internal static class SwaggerExtension
 
 		return services.AddSwaggerGen(options =>
 		{
-			options.SwaggerDoc("common", new OpenApiInfo
+			options.SchemaFilter<EnumSchemaFilter>();
+
+			options.SwaggerDoc("auth", new OpenApiInfo
 			{
-				Title = "Common API",
+				Title = "Authentication API",
 				Version = "v1",
 				Description = "AUTHENTICATION, PROFILE"
 			});
@@ -57,12 +61,29 @@ internal static class SwaggerExtension
 
 		app.UseSwaggerUI(options =>
 		{
-			options.SwaggerEndpoint("/swagger/v1/swagger.json", "All APIs (v1)");
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
-			options.SwaggerEndpoint("/swagger/profile/swagger.json", "Profile API");
 			options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+			
 		});
 
 		return app;
+	}
+}
+
+internal sealed class EnumSchemaFilter : ISchemaFilter
+{
+	public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+	{
+		var type = Nullable.GetUnderlyingType(context.Type) ?? context.Type;
+
+		if (!type.IsEnum)
+			return;
+
+		schema.Type = "string";
+		schema.Format = null;
+		schema.Enum = Enum.GetNames(type)
+			.Select(name => new OpenApiString(name))
+			.Cast<IOpenApiAny>()
+			.ToList();
 	}
 }

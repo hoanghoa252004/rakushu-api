@@ -15,7 +15,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 		builder.Property(u => u.Id)
 			.HasConversion(
 				id => id.Value,
-				value => new UserId(value));
+				value => UserId.From(value));
 
 		// Email
 		builder.Property(u => u.Email)

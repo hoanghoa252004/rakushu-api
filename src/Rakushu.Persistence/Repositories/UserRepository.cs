@@ -17,6 +17,8 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 
 		return await _context.Users
 			.Include(u => u.Role)
+			.Include(u => u.RefreshTokens)
+			.Include(u => u.EmailVerificationTokens)
 			.SingleOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
 	}
 

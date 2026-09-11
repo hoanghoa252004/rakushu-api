@@ -9,7 +9,7 @@ namespace Rakushu.Domain.Entities.User.RefreshToken;
 
 public class RefreshTokenId : StronglyTypedId<Guid>
 {
-	public RefreshTokenId(Guid value) : base(value)
+	private RefreshTokenId(Guid value) : base(value)
 	{
 	}
 

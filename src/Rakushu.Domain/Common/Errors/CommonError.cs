@@ -10,4 +10,7 @@ public static class CommonError
 {
 	public static readonly Error InvalidStatusTransition = Error.Failure(
 		"GENERAL.INVALID_STATUS_TRANSITION", "The status transition is invalid in the context.");
+
+	public static readonly Error FailedSendEmail = Error.Failure(
+		"GENERAL.FAILED_SEND_EMAIL", "The sending email operation has failed.");
 }

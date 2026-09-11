@@ -36,4 +36,7 @@ public static class UserError
 
 	public static readonly Error UnauthorizedResourceAccess = Error.Unauthorized(
 		"AUTH.UNAUTHORIZED_RESOURCE_ACCESS", "You are not authorized to access this resource.");
+
+	public static readonly Error NoNeedToVerify = Error.Failure(
+		"AUTH.USER_NO_NEED_TO_VERIFY", "You do not need to verify your email anymore.");
 }
