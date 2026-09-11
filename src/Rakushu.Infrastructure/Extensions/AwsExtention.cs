@@ -5,8 +5,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Rakushu.Application.Abstractions.Infrastructure.Email;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
+using Rakushu.Infrastructure.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +51,7 @@ internal static class AwsExtention
 
 		// SES
 		services.AddScoped<IEmailService, AwsSesService>();
+		services.AddScoped<IStorageService, AwsS3Service>();
 		return services;
 	}
 }

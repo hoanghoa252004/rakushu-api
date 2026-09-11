@@ -28,6 +28,13 @@ internal static class SwaggerExtension
 				Description = "USER - ROLE - SUSCRIPTION PLAN"
 			});
 
+			options.SwaggerDoc("storage", new OpenApiInfo
+			{
+				Title = "Storage API",
+				Version = "v1",
+				Description = "STORAGE"
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -63,7 +70,8 @@ internal static class SwaggerExtension
 		{
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
 			options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
-			
+			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
+
 		});
 
 		return app;
