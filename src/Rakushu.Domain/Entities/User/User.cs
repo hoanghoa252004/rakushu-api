@@ -139,6 +139,11 @@ public sealed class User : AggregateRoot<UserId>
 
 		return emailVerificationToken;
 	}
+
+	public void VerifyEmail()
+	{
+		Status = UserStatus.Active;
+	}
 	/*
 	public void SetProfile(Profile profile)
 	{

@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Email;
+using Rakushu.Application.Usecases.Auth.SendEmailVerificationCode;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.EmailVerificationToken;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
 using System;
 using System.Collections.Generic;
@@ -12,9 +12,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Application.Usecases.Auth.SendEmailVerificationCode;
+namespace Rakushu.Application.Usecases.Auth.Verify;
 
-internal sealed class SendEmailVerificationCodeHandler : IRequestHandler<SendEmailVerificationCodeCommand, Result>
+
+internal sealed class VerifyHandler : IRequestHandler<VerifyCommand, Result>
 {
 	// DAOs
 	private readonly IUserRepository _userRepository;
@@ -26,8 +27,8 @@ internal sealed class SendEmailVerificationCodeHandler : IRequestHandler<SendEma
 	private readonly IVerificationCodeHasher _verificationCodeHasher;
 	private readonly IEmailService _emailSender;
 
-	public SendEmailVerificationCodeHandler(
-		IUserRepository userRepository, 
+	public VerifyHandler(
+		IUserRepository userRepository,
 		IUnitOfWork unitOfWork,
 		IEmailService emailSender,
 		IVerificationCodeHasher verificationCodeHasher
@@ -39,17 +40,17 @@ internal sealed class SendEmailVerificationCodeHandler : IRequestHandler<SendEma
 		_verificationCodeHasher = verificationCodeHasher;
 	}
 
-	public async Task<Result> Handle(SendEmailVerificationCodeCommand request, CancellationToken cancellationToken)
+	public async Task<Result> Handle(VerifyCommand request, CancellationToken cancellationToken)
 	{
-		return await _unitOfWork.ExecuteAsync( async () =>
+		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			// 1. Find user by email
+			// 1. Find user by email 
 			var emailResult = Email.Create(request.Email);
 
 			if (emailResult.IsFailure)
 			{
 				return emailResult;
-			}	
+			}
 
 			var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
@@ -64,41 +65,37 @@ internal sealed class SendEmailVerificationCodeHandler : IRequestHandler<SendEma
 				return Result.Failure(UserError.NoNeedToVerify);
 			}
 
-			// 2. Check whether any verification token active:
-			var now = DateTimeOffset.UtcNow;
+			// 2. Find token
+			var codeHash = _verificationCodeHasher.Hash(request.Code);
 
-			var activeToken = user.EmailVerificationTokens
-					.SingleOrDefault(t => !t.IsUsed && !t.IsExpired(now));
+			var token = user.EmailVerificationTokens.SingleOrDefault(t => t.CodeHash == codeHash);
 
-			if (activeToken != null)
+			if (token == null)
 			{
-				var remaining = activeToken.ExpiresAt - now;
-
-				return Result.Failure(
-					UserError.RemainActiveVerificationCode($"Please wait {Math.Ceiling(remaining.TotalMinutes)} minutes."));
+				return Result.Failure(UserError.VerificationCodeNotFound);
 			}
 
-			// Generate code
-			var code = _verificationCodeHasher.Generate6DigitCode();
+			var now = DateTimeOffset.UtcNow;
 
-			// Hash code
-			var codeHash = _verificationCodeHasher.Hash(code);
+			if (token.IsUsed == true || token.IsExpired(now))
+			{
+				return Result.Failure(UserError.InvalidVerificationCode);
 
-			var token = EmailVerificationToken.Create(
-				user.Id,
-				codeHash,
-				now,
-				_verificationCodeHasher.GetExpirationTime(now));
+			}
 
-			user.AddEmailVerificationToken(token);
+			if(_verificationCodeHasher.Verify(request.Code, token.CodeHash) == false)
+			{
+				return Result.Failure(UserError.InvalidVerificationCode);
+			}
 
-			await _emailSender.SendAsync(
-				user.Email.Value,
-				"VERIFY EMAIL RAKUSHU SYSTEM",
-				code,
-				cancellationToken);
+			// 3. Update user status
+			user.VerifyEmail();
+
+			// 4. Mark email verification token as used:
+			token.MarkAsUsed(now);
 
 			return Result.Success();
 		}, cancellationToken);
 	}
 }
+

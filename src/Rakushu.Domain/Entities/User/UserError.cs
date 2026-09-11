@@ -1,4 +1,5 @@
 using Rakushu.Domain.Common.Errors;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Rakushu.Domain.Entities.User;
 
@@ -39,4 +40,15 @@ public static class UserError
 
 	public static readonly Error NoNeedToVerify = Error.Failure(
 		"AUTH.USER_NO_NEED_TO_VERIFY", "You do not need to verify your email anymore.");
+
+	public static readonly Error VerificationCodeNotFound = Error.Failure(
+		"AUTH.VERIFICATION_TOKEN_NOT_FOUND", "The verification code not found.");
+
+	public static readonly Error InvalidVerificationCode = Error.Failure(
+		"AUTH.INVALID_VERIFICATION_TOKEN", "The verification code is invalid ( expired or used or invalid code ).");
+
+	public static Error RemainActiveVerificationCode(string message)
+	{
+		return Error.Failure("AUTH.REMAIN_ACTIVE_VERIFICATION_CODE",message);
+	}
 }
