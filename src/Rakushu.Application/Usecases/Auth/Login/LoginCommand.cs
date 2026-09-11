@@ -3,7 +3,7 @@ using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Application.Usecases.Auth.Login;
 
-public record LoginCommand(
+public sealed record LoginCommand(
 	string Email,
 	string Password
-) : IRequest<Result<LoginResponseDto>>;
+) : IRequest<Result<CredentialResponseDto>>;

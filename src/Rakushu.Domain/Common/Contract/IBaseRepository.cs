@@ -2,7 +2,7 @@
 
 namespace Rakushu.Domain.Common.Contract;
 
-public interface IRepository<TEntity, in TKey> where TEntity : class
+public interface IBaseRepository<TEntity, in TKey> where TEntity : class
 {
 	Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
 

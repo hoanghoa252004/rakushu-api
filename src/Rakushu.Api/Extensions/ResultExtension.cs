@@ -27,13 +27,15 @@ public static class ResultExtension
 	}
 
 	/// CREATED: 201
-	public static IResult MatchCreated<T>(this Result<T> result, string routeName, object routeValues)
+	public static IResult MatchCreated<T>(
+	this Result<T> result,
+	string routeName,
+	Func<T, object> routeValues)
 	{
-		return result.IsSuccess 
-			? Microsoft.AspNetCore.Http.Results.CreatedAtRoute(routeName, routeValues, result.Value) 
+		return result.IsSuccess
+			? Microsoft.AspNetCore.Http.Results.CreatedAtRoute(routeName, routeValues(result.Value), result.Value)
 			: result.Problem();
 	}
-
 	/// ACCEPTED: 202
 	public static IResult MatchAccepted<T>(this Result<T> result, string? uri = null)
 	{

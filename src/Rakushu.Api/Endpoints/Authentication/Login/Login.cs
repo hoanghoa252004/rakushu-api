@@ -1,7 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Authentication;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Auth.Login;
 
@@ -12,27 +11,33 @@ internal sealed class Login : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapAuthEndpoints()
-			.MapPost("/login", async ([FromBody] LoginRequestDto dto, ISender _sender) =>
+			// 1. Endpoint
+			.MapPost("/login", async (
+				[FromBody] LoginRequestDto dto, 
+				ISender sender, 
+				CancellationToken cancellationToken
+				) =>
 			{
 				var command = new LoginCommand(dto.Email, dto.Password);
 
-				var result = await _sender.Send(command);
+				var result = await sender.Send(command, cancellationToken);
 
 				return result.MatchOk();
 			})
+			// 2. Description
 			.WithName("Login")
-			.WithDescription($"**Demo accounts:**\n\n" +
-							$"- Email: `hoathse184053@fpt.edu.vn` \n" +
-							$"- Password: `123456`")
+			.WithDescription("Authenticates user with Email and Password, returns JWT Access Token & Refresh Token with their expiration")
+			// 3. Authentication & Authorization
 			.AllowAnonymous()
-			.Produces(StatusCodes.Status200OK)
+			// 4. Response
+			.Produces<CredentialResponseDto>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
 
-internal record LoginRequestDto(
+internal sealed record LoginRequestDto(
 	string Email,
 	string Password
 );

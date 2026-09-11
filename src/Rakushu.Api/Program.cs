@@ -1,12 +1,16 @@
 using Rakushu.Api.Extensions;
 using Rakushu.Api.Middleware;
 using Rakushu.Application.Extensions;
+using Rakushu.Infrastructure.Extensions;
+using Rakushu.Persistence.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 /// CONFIG SOFTWARE LAYERS:
-builder.Services.AddRakushuApi();
+builder.Services.AddRakushuPersistence(builder.Configuration);
+builder.Services.AddRakushuInfrastructure(builder.Configuration);
 builder.Services.AddRakushuApplication();
+builder.Services.AddRakushuApi();
 
 /// CONFIG MIDDLEWARES:
 builder.Services.AddProblemDetails();
@@ -22,6 +26,10 @@ app.UseExceptionHandler();
 
 /// USE SWAGGER DOCS:
 app.UseSwaggerDocs();
+
+/// AUTHENTICATION & AUTHORIZATION:
+app.UseAuthentication();
+app.UseAuthorization();
 
 /// MAP ENDPOINTS:
 app.MapEndpoints();

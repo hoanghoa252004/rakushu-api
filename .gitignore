@@ -480,3 +480,14 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Local application settings overrides
+appsettings.Development.json
+appsettings.*.local.json
+
+# Plans and AI workspace files
+plans/
+.agents/
+.claude/
+.codex/
+
