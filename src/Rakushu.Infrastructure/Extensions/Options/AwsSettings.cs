@@ -12,4 +12,6 @@ public sealed class AwsSettings
 	public string SenderEmail { get; set; } = string.Empty;
 	public string BucketName { get; set; } = string.Empty;
 	public string BucketUrl { get; set; } = string.Empty;
+	public string PresignUrlExpiration { get; set; } = string.Empty;
+
 }

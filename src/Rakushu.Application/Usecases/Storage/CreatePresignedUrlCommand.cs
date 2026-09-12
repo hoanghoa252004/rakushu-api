@@ -10,5 +10,5 @@ namespace Rakushu.Application.Usecases.Storage;
 
 public sealed record CreatePresignedUrlCommand(
 	string ContentType
-	) : IRequest<Result<string>>;
+	) : IRequest<Result<CreatePresignedUrlResponseDto>>;
 

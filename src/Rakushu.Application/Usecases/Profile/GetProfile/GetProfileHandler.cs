@@ -1,5 +1,6 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Usecases.Admin.Users.GetUserById;
 using Rakushu.Domain.Common.Results;
@@ -15,28 +16,46 @@ internal sealed class GetProfileHandler : IRequestHandler<GetProfileQuery, Resul
 	// DAOs
 	private readonly IUserQuery _userQuery;
 
+	// SERVICES
+	private readonly IStorageService _storageService;
+
 	public GetProfileHandler(
 		ICurrentUserContext currentUserContext,
-		IUserQuery userQuery)
+		IUserQuery userQuery,
+		IStorageService storageService)
 	{
 		_currentUserContext = currentUserContext;
 		_userQuery = userQuery;
+		_storageService = storageService;
 	}
 
 	public async Task<Result<UserDto>> Handle(GetProfileQuery request, CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 
-		var profile = await _userQuery.GetByIdAsync(userId, cancellationToken);
+		var user = await _userQuery.GetByIdAsync(userId, cancellationToken);
 
-		if (profile == null)
+		if (user == null)
 		{
 			return Result.Failure<UserDto>(UserError.NotFound);
 		}
 
-		// Concat Resource URL with AvatarUrl if AvatarUrl is not null
-		// TODO: Implement this logic in the future
+		var avatarUrl = user.AvatarUrl == null
+			? null
+			: await _storageService.CreatePresignedReadUrlAsync(user.AvatarUrl, cancellationToken);
 
-		return Result.Success(profile);
+		var dto = new UserDto(
+			user.Id,
+			user.Email,
+			user.FullName,
+			user.Role,
+			user.Status,
+			user.CreatedAt,
+			user.UpdatedAt,
+			avatarUrl,
+			user.NativeLanguage
+			);
+
+		return Result.Success(dto);
 	}
 }

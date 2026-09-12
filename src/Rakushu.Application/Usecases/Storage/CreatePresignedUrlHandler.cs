@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Application.Usecases.Storage;
 
-internal sealed class CreatePresignedUrlHandler : IRequestHandler<CreatePresignedUrlCommand, Result<string>>
+internal sealed class CreatePresignedUrlHandler : IRequestHandler<CreatePresignedUrlCommand, Result<CreatePresignedUrlResponseDto>>
 {
 	private readonly IStorageService _storageService;
 
@@ -18,12 +18,10 @@ internal sealed class CreatePresignedUrlHandler : IRequestHandler<CreatePresigne
 		_storageService = storageService;
 	}
 
-	public async Task<Result<string>> Handle(CreatePresignedUrlCommand request, CancellationToken cancellationToken)
+	public async Task<Result<CreatePresignedUrlResponseDto>> Handle(CreatePresignedUrlCommand request, CancellationToken cancellationToken)
 	{
-		//string key = request.Path.ToLower();
+		var result = await _storageService.CreatePresignedUrlAsync(request.ContentType, cancellationToken);
 
-		var presignUrl = await _storageService.CreatePresignedUrlAsync(request.ContentType, cancellationToken);
-
-		return Result.Success(presignUrl);
+		return Result.Success(new CreatePresignedUrlResponseDto(result.Key, result.PresignUrl));
 	}
 }

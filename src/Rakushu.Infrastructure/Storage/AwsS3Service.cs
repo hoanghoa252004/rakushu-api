@@ -22,15 +22,31 @@ internal class AwsS3Service : IStorageService
 		_s3Settings = options.Value;
 	}
 
-	public async Task<string> CreatePresignedUrlAsync(string contentType, CancellationToken cancellationToken)
+	public async Task<(string Key, string PresignUrl)> CreatePresignedUrlAsync(string contentType, CancellationToken cancellationToken)
+	{
+		var key = Guid.NewGuid().ToString();
+		var request = new GetPreSignedUrlRequest
+		{
+			BucketName = _s3Settings.BucketName,
+			Key = key,
+			Verb = HttpVerb.PUT,
+			Expires = DateTime.UtcNow.AddMinutes(int.Parse(_s3Settings.PresignUrlExpiration)),
+			ContentType = contentType
+		};
+
+		var presignUrl = await _s3.GetPreSignedURLAsync(request);
+
+		return (key, presignUrl) ;
+	}
+
+	public async Task<string> CreatePresignedReadUrlAsync(string key, CancellationToken cancellationToken)
 	{
 		var request = new GetPreSignedUrlRequest
 		{
 			BucketName = _s3Settings.BucketName,
-			Key = Guid.NewGuid().ToString(),
-			Verb = HttpVerb.PUT,
-			Expires = DateTime.UtcNow.AddMinutes(5),
-			ContentType = contentType
+			Key = key,
+			Verb = HttpVerb.GET,
+			Expires = DateTime.UtcNow.AddMinutes(int.Parse(_s3Settings.PresignUrlExpiration))
 		};
 
 		return await _s3.GetPreSignedURLAsync(request);
