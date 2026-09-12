@@ -1,4 +1,5 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Admin.Users.GetUserById;
@@ -12,17 +13,51 @@ internal sealed class GetUsersHandler : IRequestHandler<GetUsersQuery, Result<Pa
 	// DAOs
 	private readonly IUserQuery _userQuery;
 
-	public GetUsersHandler(IUserQuery userQuery)
+
+	// SERVICES
+	private readonly IStorageService _storageService;
+	public GetUsersHandler(
+		IUserQuery userQuery,
+		IStorageService storageService
+		)
 	{
 		_userQuery = userQuery;
+		_storageService = storageService;
 	}
 
 	public async Task<Result<PaginatedList<UserDto>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
 	{
 		var (items, totalCount) = await _userQuery.GetUsersAsync(request, cancellationToken);
 
+		var users = new List<UserDto>();
+
+		foreach (var user in items)
+		{
+
+			if(user.AvatarUrl == null)
+			{
+				users.Add(user);
+			}
+			else
+			{
+				var avatarUrl = await _storageService.CreatePresignedReadUrlAsync(user.AvatarUrl, cancellationToken);
+
+				users.Add(new UserDto(
+					user.Id,
+					user.Email,
+					user.FullName,
+					user.Role,
+					user.Status,
+					user.CreatedAt,
+					user.UpdatedAt,
+					avatarUrl,
+					user.NativeLanguage
+				));
+			}
+		}
+
 		var result = PaginatedList<UserDto>.Create(
-			items,
+			users,
 			totalCount,
 			request.PageNumber,
 			request.PageSize

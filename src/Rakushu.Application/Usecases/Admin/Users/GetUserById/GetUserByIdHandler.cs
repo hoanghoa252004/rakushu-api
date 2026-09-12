@@ -1,4 +1,5 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User;
@@ -10,9 +11,16 @@ internal sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, Res
 	// DAOs
 	private readonly IUserQuery _userQuery;
 
-	public GetUserByIdHandler(IUserQuery userQuery)
+	// SERVICES
+	private readonly IStorageService _storageService;
+
+	public GetUserByIdHandler(
+		IUserQuery userQuery,
+		IStorageService storageService
+		)
 	{
 		_userQuery = userQuery;
+		_storageService = storageService;
 	}
 
 	public async Task<Result<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
@@ -26,6 +34,22 @@ internal sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, Res
 			return Result.Failure<UserDto>(UserError.NotFound);
 		}
 
-		return Result.Success(user);
+		var avatarUrl = user.AvatarUrl == null 
+			? null 
+			: await _storageService.CreatePresignedReadUrlAsync(user.AvatarUrl, cancellationToken);
+
+		var dto = new UserDto(
+			user.Id,
+			user.Email,
+			user.FullName,
+			user.Role,
+			user.Status,
+			user.CreatedAt,
+			user.UpdatedAt,
+			avatarUrl,
+			user.NativeLanguage
+			);
+
+		return Result.Success(dto);
 	}
 }

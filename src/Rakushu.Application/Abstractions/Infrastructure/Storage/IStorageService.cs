@@ -8,5 +8,6 @@ namespace Rakushu.Application.Abstractions.Infrastructure.Storage;
 
 public interface IStorageService
 {
-	Task<string> CreatePresignedUrlAsync(string contentType, CancellationToken cancellationToken);
+	Task<(string Key, string PresignUrl)> CreatePresignedUrlAsync(string contentType, CancellationToken cancellationToken);
+	Task<string> CreatePresignedReadUrlAsync(string key, CancellationToken cancellationToken);
 }

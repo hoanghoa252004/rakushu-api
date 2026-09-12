@@ -22,7 +22,7 @@ internal class CreatePresignedUrl : IEndpoint
 			.WithTags("Storage")
 			.WithName("CreatePresignedUrl")
 			.AllowAnonymous()
-			.Produces<string>(StatusCodes.Status200OK)
+			.Produces<CreatePresignedUrlResponseDto>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
