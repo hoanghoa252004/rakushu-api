@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.Subscription;
-using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,19 +10,17 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Persistence.Configurations;
 
-
-internal sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
+internal sealed class PlanEntitlementConfiguration : IEntityTypeConfiguration<PlanEntitlement>
 {
-	public void Configure(EntityTypeBuilder<Plan> builder)
+	public void Configure(EntityTypeBuilder<PlanEntitlement> builder)
 	{
 		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)
 			.HasConversion(
 				id => id.Value,
-				value => PlanId.From(value));
+				value => PlanEntitlementId.From(value));
 
-		
+
 	}
 }
-

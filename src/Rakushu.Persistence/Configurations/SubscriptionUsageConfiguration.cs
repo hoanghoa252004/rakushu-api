@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Subscription;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,19 +10,17 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Persistence.Configurations;
 
-
-internal sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
+internal sealed class SubscriptionUsageConfiguration : IEntityTypeConfiguration<SubscriptionUsage>
 {
-	public void Configure(EntityTypeBuilder<Plan> builder)
+	public void Configure(EntityTypeBuilder<SubscriptionUsage> builder)
 	{
 		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)
 			.HasConversion(
 				id => id.Value,
-				value => PlanId.From(value));
+				value => SubscriptionUsageId.From(value));
 
-		
+
 	}
 }
-
