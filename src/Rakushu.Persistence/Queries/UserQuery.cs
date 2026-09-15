@@ -40,7 +40,7 @@ internal class UserQuery : IUserQuery
 			.SingleOrDefaultAsync(cancellationToken);
 	}
 
-	public async Task<(IReadOnlyList<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default)
+	public async Task<(IReadOnlyCollection<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default)
 	{
 		IQueryable<User> users = _dbContext.Users.AsNoTracking();
 

@@ -59,13 +59,13 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_feature");
+                        .HasName("pk_features");
 
                     b.HasIndex("Code")
                         .IsUnique()
-                        .HasDatabaseName("ix_feature_code");
+                        .HasDatabaseName("ix_features_code");
 
-                    b.ToTable("feature", (string)null);
+                    b.ToTable("features", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Plan.Plan", b =>
@@ -90,8 +90,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<int>("Currency")
-                        .HasColumnType("integer")
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("currency");
 
                     b.Property<string>("Description")
@@ -119,13 +121,13 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_plan");
+                        .HasName("pk_plans");
 
                     b.HasIndex("Code")
                         .IsUnique()
-                        .HasDatabaseName("ix_plan_code");
+                        .HasDatabaseName("ix_plans_code");
 
-                    b.ToTable("plan", (string)null);
+                    b.ToTable("plans", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Plan.PlanEntitlement.PlanEntitlement", b =>
@@ -165,16 +167,16 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("plan_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_plan_entitlement");
+                        .HasName("pk_plan_entitlements");
 
                     b.HasIndex("FeatureId")
-                        .HasDatabaseName("ix_plan_entitlement_feature_id");
+                        .HasDatabaseName("ix_plan_entitlements_feature_id");
 
                     b.HasIndex("PlanId", "FeatureId")
                         .IsUnique()
-                        .HasDatabaseName("ix_plan_entitlement_plan_id_feature_id");
+                        .HasDatabaseName("ix_plan_entitlements_plan_id_feature_id");
 
-                    b.ToTable("plan_entitlement", (string)null);
+                    b.ToTable("plan_entitlements", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Role.Role", b =>
@@ -326,15 +328,15 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_subscription");
+                        .HasName("pk_subscriptions");
 
                     b.HasIndex("PlanId")
-                        .HasDatabaseName("ix_subscription_plan_id");
+                        .HasDatabaseName("ix_subscriptions_plan_id");
 
                     b.HasIndex("UserId")
-                        .HasDatabaseName("ix_subscription_user_id");
+                        .HasDatabaseName("ix_subscriptions_user_id");
 
-                    b.ToTable("subscription", (string)null);
+                    b.ToTable("subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage.SubscriptionUsage", b =>
@@ -372,15 +374,15 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("used_value");
 
                     b.HasKey("Id")
-                        .HasName("pk_subscription_usage");
+                        .HasName("pk_subscription_usages");
 
                     b.HasIndex("FeatureId")
-                        .HasDatabaseName("ix_subscription_usage_feature_id");
+                        .HasDatabaseName("ix_subscription_usages_feature_id");
 
                     b.HasIndex("SubscriptionId")
-                        .HasDatabaseName("ix_subscription_usage_subscription_id");
+                        .HasDatabaseName("ix_subscription_usages_subscription_id");
 
-                    b.ToTable("subscription_usage", (string)null);
+                    b.ToTable("subscription_usages", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
@@ -460,14 +462,14 @@ namespace Rakushu.Persistence.Migrations
                         .HasForeignKey("FeatureId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_plan_entitlement_feature_feature_id");
+                        .HasConstraintName("fk_plan_entitlements_features_feature_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Plan.Plan", "Plan")
                         .WithMany("PlanEntitlements")
                         .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_plan_entitlement_plan_plan_id");
+                        .HasConstraintName("fk_plan_entitlements_plans_plan_id");
 
                     b.Navigation("Feature");
 
@@ -503,14 +505,14 @@ namespace Rakushu.Persistence.Migrations
                         .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_subscription_plan_plan_id");
+                        .HasConstraintName("fk_subscriptions_plans_plan_id");
 
                     b.HasOne("Rakushu.Domain.Entities.User.User", "User")
                         .WithMany("Subscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_subscription_users_user_id");
+                        .HasConstraintName("fk_subscriptions_users_user_id");
 
                     b.Navigation("Plan");
 
@@ -524,14 +526,14 @@ namespace Rakushu.Persistence.Migrations
                         .HasForeignKey("FeatureId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_subscription_usage_feature_feature_id");
+                        .HasConstraintName("fk_subscription_usages_features_feature_id");
 
                     b.HasOne("Rakushu.Domain.Entities.User.Subscription.Subscription", "Subscription")
                         .WithMany("SubscriptionUsages")
                         .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_subscription_usage_subscription_subscription_id");
+                        .HasConstraintName("fk_subscription_usages_subscriptions_subscription_id");
 
                     b.Navigation("Feature");
 

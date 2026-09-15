@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using Rakushu.Domain.Entities.User.Subscription;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Rakushu.Api.Extensions;
@@ -33,6 +34,13 @@ internal static class SwaggerExtension
 				Title = "Storage API",
 				Version = "v1",
 				Description = "STORAGE"
+			}); 
+
+			options.SwaggerDoc("subscription", new OpenApiInfo
+			{
+				Title = "Subscription API",
+				Version = "v1",
+				Description = "SUBSCRIPTION"
 			});
 
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -71,6 +79,7 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
 			options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
+			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
 
 		});
 

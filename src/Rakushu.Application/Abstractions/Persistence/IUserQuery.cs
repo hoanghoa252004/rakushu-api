@@ -12,5 +12,5 @@ namespace Rakushu.Application.Abstractions.Persistence;
 public interface IUserQuery
 {
 	Task<UserDto?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default);
-	Task<(IReadOnlyList<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default);
+	Task<(IReadOnlyCollection<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default);
 }

@@ -47,6 +47,8 @@ internal sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
 
 		// Currency
 		builder.Property(u => u.Currency)
+			.HasMaxLength(30)
+			.HasConversion<string>()
 			.IsRequired();
 
 		// BillingCycle

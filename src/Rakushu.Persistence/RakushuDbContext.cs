@@ -8,6 +8,7 @@ using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.EmailVerificationToken;
 using Rakushu.Domain.Entities.User.RefreshToken;
 using Rakushu.Domain.Entities.User.Subscription;
 using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
@@ -27,6 +28,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<Role> Roles => Set<Role>();
 	public DbSet<User> Users => Set<User>();
 	public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+	public DbSet<EmailVerificationToken> EmailVerificationToken => Set<EmailVerificationToken>();
 	public DbSet<Plan> Plans => Set<Plan>();
 	public DbSet<Feature> Features => Set<Feature>();
 	public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
