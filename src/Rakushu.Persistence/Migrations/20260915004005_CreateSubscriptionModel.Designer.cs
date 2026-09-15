@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rakushu.Persistence;
@@ -12,9 +13,11 @@ using Rakushu.Persistence;
 namespace Rakushu.Persistence.Migrations
 {
     [DbContext(typeof(RakushuDbContext))]
-    partial class RakushuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260915004005_CreateSubscriptionModel")]
+    partial class CreateSubscriptionModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,9 +173,8 @@ namespace Rakushu.Persistence.Migrations
                     b.HasIndex("FeatureId")
                         .HasDatabaseName("ix_plan_entitlement_feature_id");
 
-                    b.HasIndex("PlanId", "FeatureId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_plan_entitlement_plan_id_feature_id");
+                    b.HasIndex("PlanId")
+                        .HasDatabaseName("ix_plan_entitlement_plan_id");
 
                     b.ToTable("plan_entitlement", (string)null);
                 });

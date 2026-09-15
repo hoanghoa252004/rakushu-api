@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Subscription;
+namespace Rakushu.Domain.Entities.Plan;
 
 public class PlanId : StronglyTypedId<Guid>
 {

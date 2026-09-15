@@ -32,6 +32,10 @@ public sealed class User : AggregateRoot<UserId>
 	private readonly List<EmailVerificationToken.EmailVerificationToken> _emailVerificationTokens = [];
 	public IReadOnlyCollection<EmailVerificationToken.EmailVerificationToken> EmailVerificationTokens => _emailVerificationTokens.AsReadOnly();
 
+	// Subscriptions:
+	private readonly List<Subscription.Subscription> _subscriptions = [];
+	public IReadOnlyCollection<Subscription.Subscription> Subscriptions => _subscriptions.AsReadOnly();
+
 	// CONSTRUCTORS & FACTORY METHODS----------
 	private User() { }
 

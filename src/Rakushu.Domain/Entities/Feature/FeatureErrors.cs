@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Feature.ObjectValues;
+namespace Rakushu.Domain.Entities.Feature;
 
 public static class FeatureErrors
 {
