@@ -1,24 +1,50 @@
-using Microsoft.EntityFrameworkCore;
+using Dapper;
+using MediatR;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Usecases.Plan.GetPlanById;
 using Rakushu.Application.Usecases.Plan.GetPlans;
-using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Plan;
-using System.Collections.ObjectModel;
+using Rakushu.Persistence.Connection;
 
 namespace Rakushu.Persistence.Queries;
 
-public sealed class PlanQuery : IPlanQuery
+internal sealed class PlanQuery : IPlanQuery
 {
-	private readonly RakushuDbContext _dbContext;
+	private readonly IDbConnectionFactory _connectionFactory;
 
-	public PlanQuery(RakushuDbContext context)
+	public PlanQuery(IDbConnectionFactory connectionFactory)
 	{
-		_dbContext = context;
+		_connectionFactory = connectionFactory;
 	}
 
 	public async Task<PlanDto?> GetByIdAsync(PlanId id, CancellationToken cancellationToken = default)
 	{
+		await using var connection = _connectionFactory.CreateConnection();
+
+		const string sql = """
+			SELECT 
+				id,
+				code,
+				name,
+				price,
+				currency,
+				billing_cycle,
+				status,
+				created_at,
+				updated_at,
+				description
+			FROM plans
+			WHERE id = @Id
+			""";
+
+		return await connection.QuerySingleOrDefaultAsync<PlanDto>(
+			sql,
+			new
+			{
+				Id = id.Value
+			});
+
+		/*
 		return await _dbContext.Plans
 			.AsNoTracking()
 			.Where(p => p.Id == id)
@@ -34,10 +60,79 @@ public sealed class PlanQuery : IPlanQuery
 				p.UpdatedAt,
 				p.Description))
 			.SingleOrDefaultAsync(cancellationToken);
+		*/
 	}
 
 	public async Task<(IReadOnlyCollection<PlanDto> Items, int TotalCount)> GetPlansAsync(GetPlansQuery query, CancellationToken cancellationToken = default)
 	{
+		await using var connection = _connectionFactory.CreateConnection();
+
+		const string sql = """
+			SELECT
+				id,
+				code,
+				name,
+				price,
+				currency,
+				billing_cycle,
+				status,
+				created_at,
+				updated_at,
+				description
+			FROM plans p
+			WHERE
+				(@Status IS NULL OR p.status = @Status)
+				AND
+				(
+					@FeatureCount = 0
+					OR
+					(
+						SELECT COUNT(DISTINCT pe.id)
+						FROM plan_entitlements pe
+						WHERE 
+							pe.plan_id = p.id
+						AND 
+							pe.feature_id = ANY(@FeatureIds)
+					) = @FeatureCount
+				)
+			ORDER BY p.created_at DESC
+			LIMIT @PageSize
+			OFFSET @Offset;
+
+			SELECT COUNT(*)
+			FROM plans p
+			WHERE
+				(@Status IS NULL OR p.status = @Status)
+				AND
+				(
+					@FeatureCount = 0
+					OR
+					(
+						SELECT COUNT(DISTINCT pe.feature_id)
+						FROM plan_entitlements pe
+						WHERE pe.plan_id = p.id
+						  AND pe.feature_id = ANY(@FeatureIds)
+					) = @FeatureCount
+				);
+			""";
+
+		var parameters = new
+		{
+			Status = query.Status?.ToString(),
+			FeatureIds = query.FeatureIds?.ToArray() ?? Array.Empty<Guid>(),
+			FeatureCount = query.FeatureIds?.Count ?? 0,
+			query.PageSize,
+			Offset = (query.PageNumber - 1) * query.PageSize
+		};
+
+		using var multi = await connection.QueryMultipleAsync(sql, parameters);
+
+		var items = (await multi.ReadAsync<PlanDto>()).ToList();
+
+		var totalCount = await multi.ReadSingleAsync<int>();
+
+		return (items,  totalCount);
+		/*
 		IQueryable<Plan> plans = _dbContext.Plans.AsNoTracking();
 
 		// Filter by status
@@ -83,5 +178,7 @@ public sealed class PlanQuery : IPlanQuery
 			.ToListAsync(cancellationToken);
 
 		return (items, totalCount);
+
+		*/
 	}
 }

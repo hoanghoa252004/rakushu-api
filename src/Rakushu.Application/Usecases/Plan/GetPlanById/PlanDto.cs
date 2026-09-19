@@ -8,7 +8,7 @@ public sealed record PlanDto(
 	string Currency,
 	string BillingCycle,
 	string Status,
-	DateTimeOffset CreatedAt,
-	DateTimeOffset UpdatedAt,
+	DateTime CreatedAt,
+	DateTime UpdatedAt,
 	string? Description = null
 );
