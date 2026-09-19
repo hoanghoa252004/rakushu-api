@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Admin.Users.GetUserById;
-using Rakushu.Application.Usecases.Admin.Users.GetUsers;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Application.Usecases.Users.GetUserById;
+using Rakushu.Application.Usecases.Users.GetUsers;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Persistence.Connection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,93 +14,100 @@ namespace Rakushu.Persistence.Queries;
 
 internal class UserQuery : IUserQuery
 {
-	private readonly RakushuDbContext _dbContext;
+	private readonly IDbConnectionFactory _connection;
 
-	public UserQuery(RakushuDbContext dbContext)
+	public UserQuery(IDbConnectionFactory connection)
 	{
-		_dbContext = dbContext;
+		_connection = connection;
 	}
 
 	public async Task<UserDto?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default)
 	{
-		return await _dbContext.Users
-			.AsNoTracking()
-			.Where(u => u.Id == id)
-			.Select(u => new UserDto(
-				u.Id.Value,
-				u.Email.Value,
-				u.Profile.FullName,
-				u.Role.Title,
-				u.Status.ToString(),
-				u.CreatedAt,
-				u.UpdatedAt,
-				u.Profile.AvatarKey,
-				u.Profile.NativeLanguage
-			))
-			.SingleOrDefaultAsync(cancellationToken);
+		await using var connection = _connection.CreateConnection();
+
+		const string sql = """
+			SELECT 
+				u.id,
+				u.email,
+				u.profile_full_name AS FullName,
+				r.title AS Role,
+				u.status,
+				u.created_at,
+				u.updated_at,
+				u.profile_avatar_key AS AvatarUrl,
+				u.profile_native_language AS NativeLanguage
+			FROM users u
+			INNER JOIN roles r ON r.id = u.role_id
+			WHERE u.id = @Id
+			""";
+
+		return await connection.QuerySingleOrDefaultAsync<UserDto>(
+			new CommandDefinition(
+				sql,
+				new
+				{
+					Id = id.Value
+				},
+				cancellationToken: cancellationToken));
 	}
 
-	public async Task<(IReadOnlyList<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default)
+	public async Task<(IReadOnlyCollection<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default)
 	{
-		IQueryable<User> users = _dbContext.Users.AsNoTracking();
+		await using var connection = _connection.CreateConnection();
 
-		// Search
-		if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+		const string sql = """
+		SELECT
+			u.id,
+			u.email,
+			u.profile_full_name AS FullName,
+			r.title AS Role,
+			u.status,
+			u.created_at,
+			u.updated_at,
+			u.profile_avatar_key AS AvatarUrl,
+			u.profile_native_language AS NativeLanguage
+		FROM users u
+		INNER JOIN roles r ON r.id = u.role_id
+		WHERE 
+			(@Status IS NULL OR u.status = @Status)
+			AND
+			(@SearchTerm IS NULL OR u.email ILIKE @SearchTerm OR u.profile_full_name ILIKE @SearchTerm)
+			AND
+			(@RoleId IS NULL OR u.role_id = @RoleId)
+		ORDER BY u.created_at DESC
+		LIMIT @PageSize
+		OFFSET @Offset;
+
+		SELECT COUNT(*)
+		FROM users u
+		WHERE 
+			(@Status IS NULL OR u.status = @Status)
+			AND
+			(@SearchTerm IS NULL OR u.email ILIKE @SearchTerm OR u.profile_full_name ILIKE @SearchTerm)
+			AND
+			(@RoleId IS NULL OR u.role_id = @RoleId);
+		""";
+
+		var parameters = new
 		{
-			var searchTerm = query.SearchTerm.Trim();
+			Status = query.Status,
+			SearchTerm = string.IsNullOrWhiteSpace(query.SearchTerm)
+							? null
+							: $"%{query.SearchTerm.Trim()}%",
+			RoleId = query.RoleId,
+			PageSize = query.PageSize,
+			Offset = (query.PageNumber - 1) * query.PageSize
+		};
 
-			//var pattern = $"%{searchTerm}%";
+		using var multi = await connection.QueryMultipleAsync(
+			new CommandDefinition(
+				sql,
+				parameters,
+				cancellationToken: cancellationToken));
 
-			//users = _dbContext.Users.FromSqlInterpolated($"""
-			//	SELECT *
-			//	FROM users
-			//	WHERE email ILIKE {pattern}
-			//	   OR profile_full_name ILIKE {pattern}
-			//	""").AsNoTracking();
+		var items = (await multi.ReadAsync<UserDto>()).ToList();
 
-			users = users.Where(
-				//u =>
-				//u.Email.Value.Contains(searchTerm) ||
-				//u.Profile.FullName.Contains(searchTerm)
-				u => EF.Functions.ILike(u.Profile.FullName, $"%{searchTerm}%")
-				//|| EF.Functions.ILike(EF.Property<string>(u, nameof(User.Email)), $"%{searchTerm}%")
-				);
-		}
-
-		// Filter by role
-		if (query.RoleId != null)
-		{
-			var roleId = RoleId.From(query.RoleId.Value);
-
-			users = users.Where(u => u.RoleId == roleId);
-		}
-
-		// Filter by status
-		if (query.Status != null)
-		{
-			users = users.Where(u => u.Status == query.Status);
-		}
-
-		// Count BEFORE pagination
-		var totalCount = await users
-			.CountAsync(cancellationToken);
-
-		// Pagination + Projection
-		var items = await users
-			.OrderBy(u => u.Id)
-			.Skip((query.PageNumber - 1) * query.PageSize)
-			.Take(query.PageSize)
-			.Select(u => new UserDto(
-				u.Id.Value,
-				u.Email.Value,
-				u.Profile.FullName,
-				u.Role.Title,
-				u.Status.ToString(),
-				u.CreatedAt,
-				u.UpdatedAt,
-				u.Profile.AvatarKey,
-				u.Profile.NativeLanguage))
-			.ToListAsync(cancellationToken);
+		var totalCount = await multi.ReadSingleAsync<int>();
 
 		return (items, totalCount);
 	}

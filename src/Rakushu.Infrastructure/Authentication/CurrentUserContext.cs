@@ -17,25 +17,30 @@ public sealed class CurrentUserContext : ICurrentUserContext
 		_httpContextAccessor = httpContextAccessor;
 	}
 
-	public UserId UserId
+	public DomainUserId? UserId
 	{
 		get
 		{
-			var user = _httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+			var value = _httpContextAccessor.HttpContext?
+						   .User
+						   .FindFirst(ClaimTypes.NameIdentifier)?
+						   .Value;
 
-			Guid.TryParse(user, out var userId);
+			if (!Guid.TryParse(value, out var userId))
+				return null;
 
 			return DomainUserId.From(userId);
 		}
 	}
 
-	public string RoleTitle
+	public string? Role
 	{
 		get
 		{
-			var role = _httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.Role)!.Value;
-
-			return role;
+			return _httpContextAccessor.HttpContext?
+				.User
+				.FindFirst(ClaimTypes.Role)?
+				.Value;
 		}
 	}
 }

@@ -1,10 +1,14 @@
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Persistence.Connection;
 using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
 
@@ -39,10 +43,18 @@ public static class ServiceCollectionExtensions
 		// REPOSITORIES
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IRoleRepository, RoleRepository>();
+		services.AddScoped<IPlanRepository, PlanRepository>();
+		services.AddScoped<IFeatureRepository, FeatureRepository>();
+
+		// DAPPER CONNECTION
+		DefaultTypeMap.MatchNamesWithUnderscores = true;
+		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
 		// QUERIES
 		services.AddScoped<IUserQuery, UserQuery>();
 		services.AddScoped<IRoleQuery, RoleQuery>();
+		services.AddScoped<IPlanQuery, PlanQuery>();
+		services.AddScoped<IFeatureQuery, FeatureQuery>();
 		return services;
 	}
 }

@@ -2,7 +2,7 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Admin.Users.GetUserById;
+using Rakushu.Application.Usecases.Users.GetUserById;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User;
 

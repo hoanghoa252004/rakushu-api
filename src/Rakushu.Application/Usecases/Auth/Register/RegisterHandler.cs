@@ -54,7 +54,7 @@ internal sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result>
 			}
 
 			// 3. Find role LEARNER
-			var role = await _roleRepository.GetByTitleAsync(DefaultSystemRoles.Learner, cancellationToken);
+			var role = await _roleRepository.GetByTitleAsync(DefaultSystemRoles.Learner.ToString(), cancellationToken);
 
 			// 4. Create User
 			var emailResult = Email.Create(request.Email);

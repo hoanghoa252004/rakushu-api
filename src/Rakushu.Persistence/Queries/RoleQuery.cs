@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Admin.Roles.GetRoles;
+using Rakushu.Application.Usecases.Roles.GetRoles;
 using System;
 using System.Collections.Generic;
 using System.Linq;

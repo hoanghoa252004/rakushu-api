@@ -23,6 +23,162 @@ namespace Rakushu.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Feature.Feature", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_features");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_features_code");
+
+                    b.ToTable("features", (string)null);
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Plan.Plan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BillingCycle")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("billing_cycle");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("currency");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("price");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plans");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_plans_code");
+
+                    b.ToTable("plans", (string)null);
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Plan.PlanEntitlement.PlanEntitlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("FeatureId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("feature_id");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_enabled");
+
+                    b.Property<string>("LimitPeriod")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("limit_period");
+
+                    b.Property<string>("LimitUnit")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("limit_unit");
+
+                    b.Property<int>("LimitValue")
+                        .HasColumnType("integer")
+                        .HasColumnName("limit_value");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plan_entitlements");
+
+                    b.HasIndex("FeatureId")
+                        .HasDatabaseName("ix_plan_entitlements_feature_id");
+
+                    b.HasIndex("PlanId", "FeatureId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_plan_entitlements_plan_id_feature_id");
+
+                    b.ToTable("plan_entitlements", (string)null);
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Role.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -139,6 +295,96 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("refresh_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.Subscription.Subscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_id");
+
+                    b.Property<DateTimeOffset>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscriptions");
+
+                    b.HasIndex("PlanId")
+                        .HasDatabaseName("ix_subscriptions_plan_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_subscriptions_user_id");
+
+                    b.ToTable("subscriptions", (string)null);
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage.SubscriptionUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("FeatureId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("feature_id");
+
+                    b.Property<DateTimeOffset>("PeriodEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_end");
+
+                    b.Property<DateTimeOffset>("PeriodStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("period_start");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subscription_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UsedValue")
+                        .HasColumnType("integer")
+                        .HasColumnName("used_value");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscription_usages");
+
+                    b.HasIndex("FeatureId")
+                        .HasDatabaseName("ix_subscription_usages_feature_id");
+
+                    b.HasIndex("SubscriptionId")
+                        .HasDatabaseName("ix_subscription_usages_subscription_id");
+
+                    b.ToTable("subscription_usages", (string)null);
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -209,6 +455,27 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Plan.PlanEntitlement.PlanEntitlement", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Feature.Feature", "Feature")
+                        .WithMany("PlanEntitlements")
+                        .HasForeignKey("FeatureId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_plan_entitlements_features_feature_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Plan.Plan", "Plan")
+                        .WithMany("PlanEntitlements")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_plan_entitlements_plans_plan_id");
+
+                    b.Navigation("Feature");
+
+                    b.Navigation("Plan");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.User.EmailVerificationToken.EmailVerificationToken", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.User.User", null)
@@ -231,6 +498,48 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.Subscription.Subscription", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Plan.Plan", "Plan")
+                        .WithMany("Subscriptions")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscriptions_plans_plan_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.User.User", "User")
+                        .WithMany("Subscriptions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscriptions_users_user_id");
+
+                    b.Navigation("Plan");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage.SubscriptionUsage", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Feature.Feature", "Feature")
+                        .WithMany("SubscriptionUsages")
+                        .HasForeignKey("FeatureId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscription_usages_features_feature_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.User.Subscription.Subscription", "Subscription")
+                        .WithMany("SubscriptionUsages")
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscription_usages_subscriptions_subscription_id");
+
+                    b.Navigation("Feature");
+
+                    b.Navigation("Subscription");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Role.Role", "Role")
@@ -243,9 +552,28 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Feature.Feature", b =>
+                {
+                    b.Navigation("PlanEntitlements");
+
+                    b.Navigation("SubscriptionUsages");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Plan.Plan", b =>
+                {
+                    b.Navigation("PlanEntitlements");
+
+                    b.Navigation("Subscriptions");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Role.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.User.Subscription.Subscription", b =>
+                {
+                    b.Navigation("SubscriptionUsages");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
@@ -253,6 +581,8 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("EmailVerificationTokens");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Subscriptions");
                 });
 #pragma warning restore 612, 618
         }

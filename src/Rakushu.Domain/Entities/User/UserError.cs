@@ -1,5 +1,4 @@
 using Rakushu.Domain.Common.Errors;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Rakushu.Domain.Entities.User;
 
@@ -51,4 +50,9 @@ public static class UserError
 	{
 		return Error.Failure("AUTH.REMAIN_ACTIVE_VERIFICATION_CODE",message);
 	}
+
+	public static readonly Error InvalidStatus = Error.Validation(
+		"USER.INVALID_STATUS",
+		"The specified user status is invalid. Valid user status: "
+		+ string.Join(", ", Enum.GetNames<UserStatus>()) + ".");
 }
