@@ -2,54 +2,49 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Plan.UpdatePlan;
+using Rakushu.Application.Usecases.Feature.CreateFeature;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Plan.UpdatePlan;
+namespace Rakushu.Api.Endpoints.Feature.CreateFeature;
 
-internal sealed class UpdatePlan : IEndpoint
+internal sealed class CreateFeature : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPlanEndpoints()
+		app.MapFeatureEndpoints()
 			// 1. Endpoint
-			.MapPut("/{id:guid}", async (
-				[FromRoute] Guid id,
-				[FromBody] UpdatePlanRequestDto dto,
+			.MapPost("/", async (
+				[FromBody] CreateFeatureRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken
 				) =>
 			{
-				var command = new UpdatePlanCommand(
-					id,
+				var command = new CreateFeatureCommand(
+					dto.Code,
 					dto.Name,
-					dto.Price,
-					dto.Currency,
-					dto.BillingCycle,
 					dto.Description
 				);
 
 				var result = await sender.Send(command, cancellationToken);
 
-				return result.MatchOk();
+				return result.MatchCreated("GetFeatureById", featureId => new { id = featureId });
 			})
 			// 2. Description
-			.WithName("UpdatePlan")
-			.WithDescription("Updates an existing plan with the provided details.")
+			.WithName("CreateFeature")
+			.WithDescription("Creates a new feature with the specified details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
-			.Produces(StatusCodes.Status200OK)
+			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
-			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
 
-internal sealed record UpdatePlanRequestDto(
-	string Name,
-	decimal Price,
-	string Currency,
-	string BillingCycle,
+internal sealed record CreateFeatureRequestDto(
+	string Code = "AI_CHAT",
+	string Name = "AI Chat Feature",
 	string? Description = null
 );
+

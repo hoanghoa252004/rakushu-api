@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
@@ -43,6 +44,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IRoleRepository, RoleRepository>();
 		services.AddScoped<IPlanRepository, PlanRepository>();
+		services.AddScoped<IFeatureRepository, FeatureRepository>();
 
 		// DAPPER CONNECTION
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -52,6 +54,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IUserQuery, UserQuery>();
 		services.AddScoped<IRoleQuery, RoleQuery>();
 		services.AddScoped<IPlanQuery, PlanQuery>();
+		services.AddScoped<IFeatureQuery, FeatureQuery>();
 		return services;
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature.ObjectValues;
+using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
 using System;
@@ -58,6 +59,10 @@ public sealed class Feature : AggregateRoot<FeatureId>
 		string? description = null
 		)
 	{
+		if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
+			return Result.Failure<Feature>(
+				FeatureErrors.InvalidName);
+
 		var feature = new Feature(
 			FeatureId.Create(),
 			code,
@@ -69,5 +74,18 @@ public sealed class Feature : AggregateRoot<FeatureId>
 			);
 
 		return Result.Success(feature);
+	}
+
+	public Result Update(string name, string? description, DateTimeOffset updatedAt)
+	{
+		if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
+			return Result.Failure(
+				FeatureErrors.InvalidName);
+
+		Name = name;
+		Description = description;
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
 	}
 }

@@ -2,30 +2,27 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Plan.UpdatePlan;
+using Rakushu.Application.Usecases.Feature.UpdateFeature;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Plan.UpdatePlan;
+namespace Rakushu.Api.Endpoints.Feature.UpdateFeature;
 
-internal sealed class UpdatePlan : IEndpoint
+internal sealed class UpdateFeature : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPlanEndpoints()
+		app.MapFeatureEndpoints()
 			// 1. Endpoint
 			.MapPut("/{id:guid}", async (
 				[FromRoute] Guid id,
-				[FromBody] UpdatePlanRequestDto dto,
+				[FromBody] UpdateFeatureRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken
 				) =>
 			{
-				var command = new UpdatePlanCommand(
+				var command = new UpdateFeatureCommand(
 					id,
 					dto.Name,
-					dto.Price,
-					dto.Currency,
-					dto.BillingCycle,
 					dto.Description
 				);
 
@@ -34,8 +31,8 @@ internal sealed class UpdatePlan : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithName("UpdatePlan")
-			.WithDescription("Updates an existing plan with the provided details.")
+			.WithName("UpdateFeature")
+			.WithDescription("Updates an existing feature with the provided details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
@@ -46,10 +43,8 @@ internal sealed class UpdatePlan : IEndpoint
 	}
 }
 
-internal sealed record UpdatePlanRequestDto(
+internal sealed record UpdateFeatureRequestDto(
 	string Name,
-	decimal Price,
-	string Currency,
-	string BillingCycle,
 	string? Description = null
 );
+

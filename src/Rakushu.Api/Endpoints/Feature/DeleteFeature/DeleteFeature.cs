@@ -2,54 +2,38 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Plan.UpdatePlan;
+using Rakushu.Application.Usecases.Feature.DeleteFeature;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Plan.UpdatePlan;
+namespace Rakushu.Api.Endpoints.Feature.DeleteFeature;
 
-internal sealed class UpdatePlan : IEndpoint
+internal sealed class DeleteFeature : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPlanEndpoints()
+		app.MapFeatureEndpoints()
 			// 1. Endpoint
-			.MapPut("/{id:guid}", async (
+			.MapDelete("/{id:guid}", async (
 				[FromRoute] Guid id,
-				[FromBody] UpdatePlanRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken
 				) =>
 			{
-				var command = new UpdatePlanCommand(
-					id,
-					dto.Name,
-					dto.Price,
-					dto.Currency,
-					dto.BillingCycle,
-					dto.Description
-				);
+				var command = new DeleteFeatureCommand(id);
 
 				var result = await sender.Send(command, cancellationToken);
 
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithName("UpdatePlan")
-			.WithDescription("Updates an existing plan with the provided details.")
+			.WithName("DeleteFeature")
+			.WithDescription("Deletes a feature. Cannot delete a feature that has subscription usage.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
 			.Produces(StatusCodes.Status200OK)
-			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
-
-internal sealed record UpdatePlanRequestDto(
-	string Name,
-	decimal Price,
-	string Currency,
-	string BillingCycle,
-	string? Description = null
-);

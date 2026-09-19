@@ -69,7 +69,7 @@ public sealed class UpdatePlanHandler : IRequestHandler<UpdatePlanCommand, Resul
 				return result;
 			}
 
-			return Result.Success(Unit.Value);
+			return Result.Success();
 		}, cancellationToken);
 	}
 }

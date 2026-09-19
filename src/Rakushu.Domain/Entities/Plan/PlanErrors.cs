@@ -41,5 +41,5 @@ public static class PlanErrors
 	public static readonly Error InvalidStatus = Error.Validation(
 		"PLAN.INVALID_STATUS",
 		"The specified plan status is invalid. Valid plan status: "
-		+ string.Join(", ", Enum.GetNames<PlanStatus>()) + ".");
+		+ PlanStatusTransition.GetPlanStatuses() + ".");
 }

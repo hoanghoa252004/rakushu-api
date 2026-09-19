@@ -8,6 +8,7 @@ namespace Rakushu.Domain.Entities.Feature;
 
 public enum FeatureStatus
 {
+	Draft = 0,
 	Active = 1,
 	Inactive = 2,
 	Archived = 3
