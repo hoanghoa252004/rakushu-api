@@ -13,7 +13,8 @@ public static class PlanStatusTransition
 		{
 			PlanStatus.Draft, new HashSet<PlanStatus>
 			{
-				PlanStatus.Active
+				PlanStatus.Active,
+				PlanStatus.Inactive
 			}
 		},
 		{

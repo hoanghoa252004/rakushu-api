@@ -30,13 +30,16 @@ public static class PlanErrors
 
 	public static readonly Error InvalidCurrency = Error.Validation(
 		"PLAN.INVALID_CURRENCY",
-		"The specified currency is not supported.");
+		"The specified currency is not supported. Valid currency: "
+		+ string.Join(", ", Enum.GetNames<Currency>()) + ".");
 
 	public static readonly Error InvalidBillingCycle = Error.Validation(
 		"PLAN.INVALID_BILLING_CYCLE",
-		"The specified billing cycle is invalid.");
+		"The specified billing cycle is invalid. Valid billing cycle: "
+		+ string.Join(", ", Enum.GetNames<BillingCycle>()) + ".");
 
 	public static readonly Error InvalidStatus = Error.Validation(
 		"PLAN.INVALID_STATUS",
-		"The specified plan status is invalid.");
+		"The specified plan status is invalid. Valid plan status: "
+		+ string.Join(", ", Enum.GetNames<PlanStatus>()) + ".");
 }

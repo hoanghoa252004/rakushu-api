@@ -36,7 +36,7 @@ internal sealed class CreatePlan : IEndpoint
 			.WithName("CreatePlan")
 			.WithDescription("Creates a new subscription plan with the specified details.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
 			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

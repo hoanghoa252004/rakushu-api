@@ -40,4 +40,4 @@ internal sealed class ChangeUserStatus : IEndpoint
 	}
 }
 
-internal record ChangeUserStatusRequestDto(UserStatus Status);
+internal sealed record ChangeUserStatusRequestDto(string Status);

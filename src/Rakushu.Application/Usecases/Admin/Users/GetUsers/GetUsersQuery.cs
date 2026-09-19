@@ -11,5 +11,5 @@ public sealed record GetUsersQuery(
 	int PageSize,
 	string? SearchTerm = null,
 	Guid? RoleId = null,
-	UserStatus? Status = null
+	string? Status = null
 ) : IRequest<Result<PaginatedList<UserDto>>>;

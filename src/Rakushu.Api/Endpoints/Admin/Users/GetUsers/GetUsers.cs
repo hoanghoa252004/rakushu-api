@@ -5,7 +5,6 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Admin.Users.GetUserById;
 using Rakushu.Application.Usecases.Admin.Users.GetUsers;
-using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Api.Endpoints.Admin.Users.GetUsers;
 
@@ -19,7 +18,7 @@ internal sealed class GetUsers : IEndpoint
 				[AsParameters] PaginationRequest pagination,
 				[FromQuery] string? searchTerm,
 				[FromQuery] Guid? roleId,
-				[FromQuery] UserStatus? status,
+				[FromQuery] string? status,
 				ISender sender,
 				CancellationToken cancellationToken
 				) =>

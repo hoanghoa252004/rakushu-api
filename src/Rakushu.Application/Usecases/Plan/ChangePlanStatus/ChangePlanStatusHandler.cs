@@ -1,9 +1,7 @@
 ﻿using MediatR;
-using Rakushu.Application.Usecases.Admin.Users.ChangeUserStatus;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +40,12 @@ internal sealed class ChangePlanStatusHandler : IRequestHandler<ChangePlanStatus
 				return Result.Failure(PlanErrors.NotFound);
 			}
 
-			return plan.ChangeStatus(request.Status);
+			if (!Enum.TryParse<PlanStatus>(request.Status, true, out var status))
+			{
+				return Result.Failure<Guid>(PlanErrors.InvalidStatus);
+			}
+
+			return plan.ChangeStatus(status);
 		}, cancellationToken);
 	}
 }

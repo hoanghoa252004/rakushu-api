@@ -1,5 +1,4 @@
 using Dapper;
-using MediatR;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Usecases.Plan.GetPlanById;
 using Rakushu.Application.Usecases.Plan.GetPlans;
@@ -38,11 +37,13 @@ internal sealed class PlanQuery : IPlanQuery
 			""";
 
 		return await connection.QuerySingleOrDefaultAsync<PlanDto>(
-			sql,
-			new
-			{
-				Id = id.Value
-			});
+			new CommandDefinition(
+				sql,
+				new
+				{
+					Id = id.Value
+				},
+				cancellationToken: cancellationToken));
 
 		/*
 		return await _dbContext.Plans
@@ -125,7 +126,11 @@ internal sealed class PlanQuery : IPlanQuery
 			Offset = (query.PageNumber - 1) * query.PageSize
 		};
 
-		using var multi = await connection.QueryMultipleAsync(sql, parameters);
+		using var multi = await connection.QueryMultipleAsync(
+					new CommandDefinition(
+						sql,
+						parameters,
+						cancellationToken: cancellationToken));
 
 		var items = (await multi.ReadAsync<PlanDto>()).ToList();
 

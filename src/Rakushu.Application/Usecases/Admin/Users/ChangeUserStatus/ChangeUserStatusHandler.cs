@@ -1,6 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Application.Usecases.Admin.Users.ChangeUserStatus;
@@ -32,7 +33,12 @@ internal sealed class ChangeUserStatusHandler : IRequestHandler<ChangeUserStatus
 				return Result.Failure(UserError.NotFound);
 			}
 
-			return user.ChangeStatus(request.Status);
+			if (!Enum.TryParse<UserStatus>(request.Status, true, out var status))
+			{
+				return Result.Failure<Guid>(UserError.InvalidStatus);
+			}
+
+			return user.ChangeStatus(status);
 		}, cancellationToken);
 	}
 }

@@ -8,6 +8,6 @@ internal static class AdminEndpointGroupExtension
 	{
 		return app.MapGroup("/api/admin")
 			.WithGroupName("admin")
-			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator));
+			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()));
 	}
 }

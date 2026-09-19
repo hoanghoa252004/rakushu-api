@@ -12,8 +12,8 @@ public sealed record UserDto(
 	string FullName,
 	string Role,
 	string Status,
-	DateTimeOffset CreatedAt,
-	DateTimeOffset UpdatedAt,
+	DateTime CreatedAt,
+	DateTime UpdatedAt,
 	string? AvatarUrl = null,
 	string? NativeLanguage = null
 );

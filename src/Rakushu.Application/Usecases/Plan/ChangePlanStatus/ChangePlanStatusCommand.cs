@@ -10,4 +10,4 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Application.Usecases.Plan.ChangePlanStatus;
 
-public sealed record ChangePlanStatusCommand(Guid PlanId, PlanStatus Status) : IRequest<Result>;
+public sealed record ChangePlanStatusCommand(Guid PlanId, string Status) : IRequest<Result>;

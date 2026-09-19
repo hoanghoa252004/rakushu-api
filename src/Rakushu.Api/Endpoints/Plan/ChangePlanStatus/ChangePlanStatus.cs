@@ -42,4 +42,4 @@ internal sealed class ChangePlanStatus : IEndpoint
 	}
 }
 
-internal record ChangePlanStatusRequestDto(PlanStatus Status);
+internal sealed record ChangePlanStatusRequestDto(string Status);

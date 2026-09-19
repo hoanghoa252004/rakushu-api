@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Plan.GetPlans;
-using Rakushu.Domain.Entities.Feature;
-using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Api.Endpoints.Plan.GetPlans;
 
@@ -17,7 +14,7 @@ internal sealed class GetPlans : IEndpoint
 			// 1. Endpoint
 			.MapGet("/", async (
 				[AsParameters] PaginationRequest pagination,
-				[FromQuery] PlanStatus? status,
+				[FromQuery] string? status,
 				[FromQuery] Guid[]? FeatureIds,
 				ISender sender,
 				CancellationToken cancellationToken = default) =>

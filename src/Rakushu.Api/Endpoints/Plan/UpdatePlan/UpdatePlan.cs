@@ -37,7 +37,7 @@ internal sealed class UpdatePlan : IEndpoint
 			.WithName("UpdatePlan")
 			.WithDescription("Updates an existing plan with the provided details.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

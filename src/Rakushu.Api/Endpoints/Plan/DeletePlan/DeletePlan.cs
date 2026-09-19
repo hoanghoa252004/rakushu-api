@@ -29,7 +29,7 @@ internal sealed class DeletePlan : IEndpoint
 			.WithName("DeletePlan")
 			.WithDescription("Deletes a plan. Cannot delete a plan that has subscriptions.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
 			.Produces(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
