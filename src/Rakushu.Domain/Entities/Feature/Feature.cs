@@ -1,7 +1,7 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature.ObjectValues;
-using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
 using System;
@@ -85,6 +85,18 @@ public sealed class Feature : AggregateRoot<FeatureId>
 		Name = name;
 		Description = description;
 		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result ChangeStatus(FeatureStatus status)
+	{
+		if (!FeatureStatusTransition.IsAllowed(Status, status))
+		{
+			return Result.Failure(CommonError.InvalidStatusTransition);
+		}
+
+		Status = status;
 
 		return Result.Success();
 	}

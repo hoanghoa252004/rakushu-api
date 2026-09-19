@@ -2,33 +2,33 @@
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Plan.ChangePlanStatus;
+using Rakushu.Application.Usecases.Feature.ChangeFeatureStatus;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Plan.ChangePlanStatus;
+namespace Rakushu.Api.Endpoints.Feature.ChangeFeatureStatus;
 
-internal sealed class ChangePlanStatus : IEndpoint
+internal sealed class ChangeFeatureStatus : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPlanEndpoints()
+		app.MapFeatureEndpoints()
 			// 1. Endpoint
 			.MapPatch("/{id:guid}/status", async (
 				[FromRoute] Guid id,
-				[FromBody] ChangePlanStatusRequestDto dto,
+				[FromBody] ChangeFeatureStatusRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken
 				) =>
 			{
-				var command = new ChangePlanStatusCommand(id, dto.Status);
+				var command = new ChangeFeatureStatusCommand(id, dto.Status);
 
 				var result = await sender.Send(command, cancellationToken);
 
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithName("ChangePlanStatus")
-			.WithDescription("Change plan status.")
+			.WithName("ChangeFeatureStatus")
+			.WithDescription("Change feature status.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
@@ -40,4 +40,4 @@ internal sealed class ChangePlanStatus : IEndpoint
 	}
 }
 
-internal sealed record ChangePlanStatusRequestDto(string Status);
+internal sealed record ChangeFeatureStatusRequestDto(string Status);
