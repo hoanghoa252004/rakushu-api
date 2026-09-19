@@ -19,7 +19,7 @@ public static class PlanErrors
 		"PLAN.DUPLICATE_CODE", $"A plan with code '{code}' already exists.");
 
 	public static Error CannotDeletePlanWithSubscriptions() => Error.Conflict(
-		"PLAN.CANNOT_DELETE", "Cannot delete a plan that has active subscriptions.");
+		"PLAN.CANNOT_DELETE", "Cannot delete a plan that has been subscribed, you can only archive it.");
 	public static readonly Error InvalidName = Error.Validation(
 		"PLAN.INVALID_NAME",
 		"Plan name is required and must not exceed 50 characters.");
