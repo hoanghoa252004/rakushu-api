@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Admin.Users.GetUserById;
-using Rakushu.Application.Usecases.Admin.Users.GetUsers;
+using Rakushu.Application.Usecases.Users.GetUserById;
+using Rakushu.Application.Usecases.Users.GetUsers;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Persistence.Connection;
 using System;

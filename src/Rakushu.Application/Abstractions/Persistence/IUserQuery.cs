@@ -1,5 +1,5 @@
-﻿using Rakushu.Application.Usecases.Admin.Users.GetUserById;
-using Rakushu.Application.Usecases.Admin.Users.GetUsers;
+﻿using Rakushu.Application.Usecases.Users.GetUserById;
+using Rakushu.Application.Usecases.Users.GetUsers;
 using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;

@@ -1,34 +1,33 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Plan.ChangePlanStatus;
+using Rakushu.Application.Usecases.Users.DeleteUser;
+using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Plan.ChangePlanStatus;
+namespace Rakushu.Api.Endpoints.Users.DeleteUser;
 
-internal sealed class ChangePlanStatus : IEndpoint
+internal sealed class DeleteUser : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPlanEndpoints()
+		app.MapUserEndpoints()
 			// 1. Endpoint
-			.MapPatch("/{id:guid}/status", async (
+			.MapDelete("/users/{id:guid}", async (
 				[FromRoute] Guid id,
-				[FromBody] ChangePlanStatusRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken
 				) =>
 			{
-				var command = new ChangePlanStatusCommand(id, dto.Status);
-
+				var command = new DeleteUserCommand(id);
 				var result = await sender.Send(command, cancellationToken);
-
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithName("ChangePlanStatus")
-			.WithDescription("Change plan status.")
-			// 3. Authentication & Authorization: already configure in MapAdminEndpoints()
+			.WithName("DeleteUser")
+			.WithDescription("Permanently deletes a user account and associated profile.")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
 			.Produces(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -37,5 +36,3 @@ internal sealed class ChangePlanStatus : IEndpoint
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
-
-internal sealed record ChangePlanStatusRequestDto(string Status);

@@ -1,8 +1,8 @@
 using MediatR;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Admin.Users.GetUserById;
 using Rakushu.Application.Usecases.Profile.GetProfile;
+using Rakushu.Application.Usecases.Users.GetUserById;
 
 namespace Rakushu.Api.Endpoints.Profile.GetProfile;
 

@@ -19,14 +19,14 @@ internal static class SwaggerExtension
 			{
 				Title = "Authentication API",
 				Version = "v1",
-				Description = "AUTHENTICATION, PROFILE"
+				Description = "AUTHENTICATION"
 			});
 
-			options.SwaggerDoc("admin", new OpenApiInfo
+			options.SwaggerDoc("user", new OpenApiInfo
 			{
-				Title = "Admin API",
+				Title = "User API",
 				Version = "v1",
-				Description = "USER - ROLE - SUSCRIPTION PLAN"
+				Description = "ROLE - USER - PROFILE"
 			});
 
 			options.SwaggerDoc("storage", new OpenApiInfo
@@ -77,7 +77,7 @@ internal static class SwaggerExtension
 		app.UseSwaggerUI(options =>
 		{
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
-			options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
 

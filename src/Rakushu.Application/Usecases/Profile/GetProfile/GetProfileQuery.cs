@@ -1,5 +1,5 @@
 using MediatR;
-using Rakushu.Application.Usecases.Admin.Users.GetUserById;
+using Rakushu.Application.Usecases.Users.GetUserById;
 using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Application.Usecases.Profile.GetProfile;

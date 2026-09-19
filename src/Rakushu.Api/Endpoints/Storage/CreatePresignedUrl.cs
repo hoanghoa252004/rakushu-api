@@ -10,7 +10,7 @@ internal class CreatePresignedUrl : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapPost("api/presigned-url", async ([FromBody] CreatePresignedUrlRequestDto request, ISender _sender, CancellationToken cancellationToken) =>
+		app.MapPost("/api/presigned-url", async ([FromBody] CreatePresignedUrlRequestDto request, ISender _sender, CancellationToken cancellationToken) =>
 		{
 			var command = new CreatePresignedUrlCommand(request.ContentType);
 
