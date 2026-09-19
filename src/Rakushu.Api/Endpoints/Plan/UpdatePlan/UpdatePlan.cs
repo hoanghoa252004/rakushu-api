@@ -2,25 +2,26 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Plan.CreatePlan;
+using Rakushu.Application.Usecases.Plan.UpdatePlan;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Plan.CreatePlan;
+namespace Rakushu.Api.Endpoints.Plan.UpdatePlan;
 
-internal sealed class CreatePlan : IEndpoint
+internal sealed class UpdatePlan : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapPlanEndpoints()
 			// 1. Endpoint
-			.MapPost("/", async (
-				[FromBody] CreatePlanRequestDto dto,
+			.MapPut("/{id:guid}", async (
+				[FromRoute] Guid id,
+				[FromBody] UpdatePlanRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken
 				) =>
 			{
-				var command = new CreatePlanCommand(
-					dto.Code,
+				var command = new UpdatePlanCommand(
+					id,
 					dto.Name,
 					dto.Price,
 					dto.Currency,
@@ -30,27 +31,26 @@ internal sealed class CreatePlan : IEndpoint
 
 				var result = await sender.Send(command, cancellationToken);
 
-				return result.MatchCreated("GetPlanById", planId => new { id = planId });
+				return result.MatchOk();
 			})
 			// 2. Description
 			.WithTags("Plan")
-			.WithName("CreatePlan")
-			.WithDescription("Creates a new subscription plan with the specified details.")
+			.WithName("UpdatePlan")
+			.WithDescription("Updates an existing plan with the provided details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator))
 			// 4. Response
-			.Produces(StatusCodes.Status201Created)
+			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
-			.ProducesProblem(StatusCodes.Status409Conflict)
+			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
 
-internal record CreatePlanRequestDto(
-	string Code = "PLAN_NAME_A",
-	string Name = "Plan Name A",
-	decimal Price = 50000,
-	string Currency = "VND",
-	string BillingCycle = "Monthly",
+internal record UpdatePlanRequestDto(
+	string Name,
+	decimal Price,
+	string Currency,
+	string BillingCycle,
 	string? Description = null
 );

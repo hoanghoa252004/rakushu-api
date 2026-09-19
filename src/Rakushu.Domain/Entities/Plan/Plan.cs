@@ -105,4 +105,38 @@ public class Plan : AggregateRoot<PlanId>
 
 		return Result.Success(plan);
 	}
+
+	public Result Update(
+	string name,
+	decimal price,
+	Currency currency,
+	BillingCycle billingCycle,
+	DateTimeOffset updatedAt,
+	string? description = null)
+	{
+		if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
+			return Result.Failure(
+				PlanErrors.InvalidName);
+
+		if (price <= 0)
+			return Result.Failure(
+				PlanErrors.InvalidPrice);
+
+		if (!Enum.IsDefined(currency))
+			return Result.Failure(
+				PlanErrors.InvalidCurrency);
+
+		if (!Enum.IsDefined(billingCycle))
+			return Result.Failure(
+				PlanErrors.InvalidBillingCycle);
+
+		Name = name;
+		Price = price;
+		Currency = currency;
+		BillingCycle = billingCycle;
+		Description = description;
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
 }

@@ -1,7 +1,6 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Persistence;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
-using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Plan.ObjectValues;
@@ -10,13 +9,24 @@ namespace Rakushu.Application.Usecases.Plan.CreatePlan;
 
 public sealed class CreatePlanHandler : IRequestHandler<CreatePlanCommand, Result<Guid>>
 {
+	// DAOs
 	private readonly IPlanRepository _planRepository;
+	
+	// UNIT OF WORK
 	private readonly IUnitOfWork _unitOfWork;
 
-	public CreatePlanHandler(IPlanRepository planRepository, IUnitOfWork unitOfWork)
+	// SERVICES
+	private readonly ISystemClock _systemClock;
+
+	public CreatePlanHandler(
+		IPlanRepository planRepository, 
+		IUnitOfWork unitOfWork,
+		ISystemClock systemClock
+		)
 	{
 		_planRepository = planRepository;
 		_unitOfWork = unitOfWork;
+		_systemClock = systemClock;
 	}
 
 	public async Task<Result<Guid>> Handle(CreatePlanCommand request, CancellationToken cancellationToken)
@@ -49,7 +59,7 @@ public sealed class CreatePlanHandler : IRequestHandler<CreatePlanCommand, Resul
 				return Result.Failure<Guid>(PlanErrors.InvalidBillingCycle);
 			}
 
-			var now = DateTimeOffset.UtcNow;
+			var now = _systemClock.UtcNow;
 
 			var initialStatus = PlanStatus.Draft;
 
