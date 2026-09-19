@@ -60,17 +60,36 @@ public class Plan : AggregateRoot<PlanId>
 	}
 
 	public static Result<Plan> Create(
-		PlanCode planCode,
-		string name,
-		decimal price,
-		Currency currency,
-		BillingCycle billingCycle,
-		PlanStatus status,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt,
-		string? description = null
-		)
+	PlanCode planCode,
+	string name,
+	decimal price,
+	Currency currency,
+	BillingCycle billingCycle,
+	PlanStatus status,
+	DateTimeOffset createdAt,
+	DateTimeOffset updatedAt,
+	string? description = null)
 	{
+		if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
+			return Result.Failure<Plan>(
+				PlanErrors.InvalidName);
+
+		if (price <= 0)
+			return Result.Failure<Plan>(
+				PlanErrors.InvalidPrice);
+
+		if (!Enum.IsDefined(currency))
+			return Result.Failure<Plan>(
+				PlanErrors.InvalidCurrency);
+
+		if (!Enum.IsDefined(billingCycle))
+			return Result.Failure<Plan>(
+				PlanErrors.InvalidBillingCycle);
+
+		if (!Enum.IsDefined(status))
+			return Result.Failure<Plan>(
+				PlanErrors.InvalidStatus);
+
 		var plan = new Plan(
 			PlanId.Create(),
 			planCode,
@@ -82,7 +101,7 @@ public class Plan : AggregateRoot<PlanId>
 			createdAt,
 			updatedAt,
 			description
-			);
+		);
 
 		return Result.Success(plan);
 	}
