@@ -23,7 +23,7 @@ public sealed class GetPlanByIdHandler : IRequestHandler<GetPlanByIdQuery, Resul
 
 		if (plan == null)
 		{
-			return Result.Failure<PlanDto>(PlanErrors.NotFound());
+			return Result.Failure<PlanDto>(PlanErrors.NotFound);
 		}
 
 		return Result.Success(plan);

@@ -34,7 +34,6 @@ internal sealed class UpdatePlan : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithTags("Plan")
 			.WithName("UpdatePlan")
 			.WithDescription("Updates an existing plan with the provided details.")
 			// 3. Authentication & Authorization

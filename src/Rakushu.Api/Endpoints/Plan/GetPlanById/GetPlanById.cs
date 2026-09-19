@@ -26,7 +26,6 @@ internal sealed class GetPlanById : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithTags("Plan")
 			.WithName("GetPlanById")
 			.WithDescription("Retrieves a specific plan by its ID.")
 			// 3. Authentication & Authorization

@@ -39,7 +39,7 @@ public sealed class UpdatePlanHandler : IRequestHandler<UpdatePlanCommand, Resul
 
 			if (plan == null)
 			{
-				return Result.Failure(PlanErrors.NotFound());
+				return Result.Failure(PlanErrors.NotFound);
 			}
 
 			// 2. Parse enum

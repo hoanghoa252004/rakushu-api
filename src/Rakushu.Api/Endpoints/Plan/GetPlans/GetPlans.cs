@@ -33,7 +33,6 @@ internal sealed class GetPlans : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithTags("Plan")
 			.WithName("GetPlans")
 			.WithDescription("Retrieves a paginated list of all plans with their details.")
 			// 3.Authentication & Authorization

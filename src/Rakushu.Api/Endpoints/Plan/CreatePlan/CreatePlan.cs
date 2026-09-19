@@ -33,7 +33,6 @@ internal sealed class CreatePlan : IEndpoint
 				return result.MatchCreated("GetPlanById", planId => new { id = planId });
 			})
 			// 2. Description
-			.WithTags("Plan")
 			.WithName("CreatePlan")
 			.WithDescription("Creates a new subscription plan with the specified details.")
 			// 3. Authentication & Authorization

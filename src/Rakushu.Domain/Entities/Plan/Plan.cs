@@ -1,8 +1,7 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Feature.ObjectValues;
 using Rakushu.Domain.Entities.Plan.ObjectValues;
-using Rakushu.Domain.Entities.User.RefreshToken;
 using Rakushu.Domain.Entities.User.Subscription;
 using System;
 using System.Collections.Generic;
@@ -136,6 +135,18 @@ public class Plan : AggregateRoot<PlanId>
 		BillingCycle = billingCycle;
 		Description = description;
 		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result ChangeStatus(PlanStatus status)
+	{
+		if (!PlanStatusTransition.IsAllowed(Status, status))
+		{
+			return Result.Failure(CommonError.InvalidStatusTransition);
+		}
+
+		Status = status;
 
 		return Result.Success();
 	}

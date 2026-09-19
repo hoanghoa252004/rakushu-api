@@ -11,5 +11,5 @@ public enum LimitPeriod
 	Day = 0,
 	Week = 1,
 	Month = 2,
-	Totla = 3
+	Total = 3
 }

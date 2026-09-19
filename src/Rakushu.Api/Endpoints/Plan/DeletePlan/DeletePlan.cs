@@ -26,7 +26,6 @@ internal sealed class DeletePlan : IEndpoint
 				return result.MatchOk();
 			})
 			// 2. Description
-			.WithTags("Plan")
 			.WithName("DeletePlan")
 			.WithDescription("Deletes a plan. Cannot delete a plan that has subscriptions.")
 			// 3. Authentication & Authorization

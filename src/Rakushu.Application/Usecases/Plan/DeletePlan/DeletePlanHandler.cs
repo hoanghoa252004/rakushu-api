@@ -33,7 +33,7 @@ public sealed class DeletePlanHandler : IRequestHandler<DeletePlanCommand, Resul
 
 			if (plan is null)
 			{
-				return Result.Failure(PlanErrors.NotFound());
+				return Result.Failure(PlanErrors.NotFound);
 			}
 
 			if (plan.Status != PlanStatus.Draft) // if not draft then continue to check
@@ -41,7 +41,7 @@ public sealed class DeletePlanHandler : IRequestHandler<DeletePlanCommand, Resul
 				// Prevent deletion if plan has active subscriptions
 				if (plan.Subscriptions.Any() == true)
 				{
-					return Result.Failure(PlanErrors.CannotDeletePlanWithSubscriptions());
+					return Result.Failure(PlanErrors.CannotDeletePlanWithSubscriptions);
 				}
 			}
 
