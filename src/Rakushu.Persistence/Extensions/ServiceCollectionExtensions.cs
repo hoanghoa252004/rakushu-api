@@ -55,6 +55,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IRoleQuery, RoleQuery>();
 		services.AddScoped<IPlanQuery, PlanQuery>();
 		services.AddScoped<IFeatureQuery, FeatureQuery>();
+		services.AddScoped<IPlanEntitlementQuery, PlanEntitlementQuery>();
 		return services;
 	}
 }

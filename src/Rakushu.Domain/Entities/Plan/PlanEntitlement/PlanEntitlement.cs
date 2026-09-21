@@ -1,12 +1,6 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
-using Rakushu.Domain.Entities.User.RefreshToken;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.Plan.PlanEntitlement;
 
@@ -32,7 +26,7 @@ public sealed class PlanEntitlement : Entity<PlanEntitlementId>
 		PlanEntitlementId planEntitlementId,
 		PlanId planId,
 		FeatureId featureId,
-		bool isEnable,
+		bool isEnabled,
 		int limitValue,
 		LimitUnit limitUnit,
 		LimitPeriod limitPeriod
@@ -40,7 +34,7 @@ public sealed class PlanEntitlement : Entity<PlanEntitlementId>
 	{
 		PlanId = planId;
 		FeatureId = featureId;
-		IsEnabled = isEnable;
+		IsEnabled = isEnabled;
 		LimitValue = limitValue;
 		LimitUnit = limitUnit;
 		LimitPeriod = limitPeriod;
@@ -49,22 +43,67 @@ public sealed class PlanEntitlement : Entity<PlanEntitlementId>
 	public static Result<PlanEntitlement> Create(
 		PlanId planId,
 		FeatureId featureId,
-		bool isEnable,
+		bool isEnabled,
 		int limitValue,
 		LimitUnit limitUnit,
 		LimitPeriod limitPeriod
 		)
 	{
+		if (limitValue < 0)
+		{
+			return Result.Failure<PlanEntitlement>(PlanEntitlementErrors.InvalidLimitValue);
+		}
+
+		if (!Enum.IsDefined(limitUnit))
+		{
+			return Result.Failure<PlanEntitlement>(PlanEntitlementErrors.InvalidLimitUnit);
+		}
+
+		if (!Enum.IsDefined(limitPeriod))
+		{
+			return Result.Failure<PlanEntitlement>(PlanEntitlementErrors.InvalidLimitPeriod);
+		}
+
 		var planEntitlement = new PlanEntitlement(
 			PlanEntitlementId.Create(),
 			planId,
 			featureId,
-			isEnable,
+			isEnabled,
 			limitValue,
 			limitUnit,
 			limitPeriod
 			);
 
 		return Result.Success(planEntitlement);
+	}
+
+	public Result Update(
+		bool isEnabled,
+		int limitValue,
+		LimitUnit limitUnit,
+		LimitPeriod limitPeriod
+		)
+	{
+		if (limitValue < 0)
+		{
+			return Result.Failure(PlanEntitlementErrors.InvalidLimitValue);
+		}
+
+		if (!Enum.IsDefined(limitUnit))
+		{
+			return Result.Failure(PlanEntitlementErrors.InvalidLimitUnit);
+		}
+
+		if (!Enum.IsDefined(limitPeriod))
+		{
+			return Result.Failure(PlanEntitlementErrors.InvalidLimitPeriod);
+		}
+
+		IsEnabled = isEnabled;
+		LimitValue = limitValue;
+		LimitUnit = limitUnit;
+		LimitPeriod = limitPeriod;
+
+		return Result.Success();
 	}
 }

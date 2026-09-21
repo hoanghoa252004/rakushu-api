@@ -1,7 +1,9 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Plan.ObjectValues;
+using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.User.Subscription;
 using System;
 using System.Collections.Generic;
@@ -147,6 +149,97 @@ public class Plan : AggregateRoot<PlanId>
 		}
 
 		Status = status;
+
+		return Result.Success();
+	}
+
+	public Result<PlanEntitlement.PlanEntitlement> AddEntitlement(
+		FeatureId featureId,
+		bool isEnabled,
+		int limitValue,
+		LimitUnit limitUnit,
+		LimitPeriod limitPeriod,
+		DateTimeOffset updatedAt)
+	{
+		if (Status == PlanStatus.Archived)
+		{
+			return Result.Failure<PlanEntitlement.PlanEntitlement>(PlanEntitlementErrors.PlanArchived);
+		}
+
+		if (_planEntitlements.Any(pe => pe.FeatureId == featureId))
+		{
+			return Result.Failure<PlanEntitlement.PlanEntitlement>(PlanEntitlementErrors.DuplicateFeature);
+		}
+
+		var entitlementResult = PlanEntitlement.PlanEntitlement.Create(
+			Id,
+			featureId,
+			isEnabled,
+			limitValue,
+			limitUnit,
+			limitPeriod);
+
+		if (entitlementResult.IsFailure)
+		{
+			return entitlementResult;
+		}
+
+		_planEntitlements.Add(entitlementResult.Value);
+		UpdatedAt = updatedAt;
+
+		return entitlementResult;
+	}
+
+	public Result UpdateEntitlement(
+		PlanEntitlementId entitlementId,
+		bool isEnabled,
+		int limitValue,
+		LimitUnit limitUnit,
+		LimitPeriod limitPeriod,
+		DateTimeOffset updatedAt)
+	{
+		if (Status == PlanStatus.Archived)
+		{
+			return Result.Failure(PlanEntitlementErrors.PlanArchived);
+		}
+
+		var entitlement = _planEntitlements.FirstOrDefault(pe => pe.Id == entitlementId);
+		if (entitlement is null)
+		{
+			return Result.Failure(PlanEntitlementErrors.NotFound);
+		}
+
+		var updateResult = entitlement.Update(isEnabled, limitValue, limitUnit, limitPeriod);
+		if (updateResult.IsFailure)
+		{
+			return updateResult;
+		}
+
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result RemoveEntitlement(PlanEntitlementId entitlementId, DateTimeOffset updatedAt)
+	{
+		if (Status == PlanStatus.Archived)
+		{
+			return Result.Failure(PlanEntitlementErrors.PlanArchived);
+		}
+
+		if (_subscriptions.Any(s => s.Status == SubscriptionStatus.Active))
+		{
+			return Result.Failure(PlanEntitlementErrors.CannotDeleteEntitlementWithSubscriptions);
+		}
+
+		var entitlement = _planEntitlements.FirstOrDefault(pe => pe.Id == entitlementId);
+		if (entitlement is null)
+		{
+			return Result.Failure(PlanEntitlementErrors.NotFound);
+		}
+
+		_planEntitlements.Remove(entitlement);
+		UpdatedAt = updatedAt;
 
 		return Result.Success();
 	}
