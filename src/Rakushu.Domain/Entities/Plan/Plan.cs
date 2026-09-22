@@ -34,6 +34,10 @@ public class Plan : AggregateRoot<PlanId>
 	private readonly List<Subscription> _subscriptions = [];
 	public IReadOnlyCollection<Subscription> Subscriptions => _subscriptions.AsReadOnly();
 
+	// Payments:
+	private readonly List<Payment.Payment> _payments = [];
+	public IReadOnlyCollection<Payment.Payment> Payments => _payments.AsReadOnly();
+
 	private Plan() { }
 
 	private Plan(

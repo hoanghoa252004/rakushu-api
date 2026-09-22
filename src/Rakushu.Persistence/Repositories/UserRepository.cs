@@ -36,4 +36,27 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.Include(u => u.RefreshTokens)
 			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
 	}
+
+	public async Task<User?> GetByIdWithSubscriptionsAsync(UserId id, CancellationToken cancellationToken = default)
+	{
+		return await _context.Users
+			.Include(u => u.Role)
+			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.SubscriptionUsages)
+			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.Plan)
+					.ThenInclude(p => p.PlanEntitlements)
+			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
+	}
+
+	public async Task<User?> GetBySubscriptionIdAsync(Domain.Entities.User.Subscription.SubscriptionId subscriptionId, CancellationToken cancellationToken = default)
+	{
+		return await _context.Users
+			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.SubscriptionUsages)
+			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.Plan)
+					.ThenInclude(p => p.PlanEntitlements)
+			.SingleOrDefaultAsync(u => u.Subscriptions.Any(s => s.Id == subscriptionId), cancellationToken);
+	}
 }

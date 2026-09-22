@@ -1,4 +1,4 @@
-﻿using Rakushu.Domain.Common.Errors;
+using Rakushu.Domain.Common.Errors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,4 +42,7 @@ public static class PlanErrors
 		"PLAN.INVALID_STATUS",
 		"The specified plan status is invalid. Valid plan status: "
 		+ PlanStatusTransition.GetPlanStatuses() + ".");
+
+	public static readonly Error PlanNotActive = Error.Validation(
+		"PLAN.NOT_ACTIVE", "Only active plans can be subscribed to.");
 }

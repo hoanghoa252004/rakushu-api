@@ -1,4 +1,4 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature.ObjectValues;

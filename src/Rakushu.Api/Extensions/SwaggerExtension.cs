@@ -43,6 +43,13 @@ internal static class SwaggerExtension
 				Description = "SUBSCRIPTION"
 			});
 
+			options.SwaggerDoc("payment", new OpenApiInfo
+			{
+				Title = "Payment API",
+				Version = "v1",
+				Description = "PAYMENT & SEPAY INTEGRATION"
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -80,7 +87,7 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
-
+			options.SwaggerEndpoint("/swagger/payment/swagger.json", "Payment API");
 		});
 
 		return app;

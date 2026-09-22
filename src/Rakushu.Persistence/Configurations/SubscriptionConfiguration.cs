@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Plan;
@@ -49,6 +49,21 @@ internal sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subsc
 		builder.Property(u => u.StartDate)
 			.IsRequired();
 
+		// EndDate
+		builder.Property(u => u.EndDate)
+			.IsRequired();
+
+		// CurrentPeriodStart
+		builder.Property(u => u.CurrentPeriodStart)
+			.IsRequired();
+
+		// CurrentPeriodEnd
+		builder.Property(u => u.CurrentPeriodEnd)
+			.IsRequired();
+
+		// CanceledAt
+		builder.Property(u => u.CanceledAt);
+
 		// Status
 		builder.Property(u => u.Status)
 			.HasMaxLength(30)
@@ -62,5 +77,11 @@ internal sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subsc
 		// UpdatedAt
 		builder.Property(u => u.UpdatedAt)
 			.IsRequired();
+
+		// Payments
+		builder.HasMany(s => s.Payments)
+			.WithOne(p => p.Subscription)
+			.HasForeignKey(p => p.SubscriptionId)
+			.OnDelete(DeleteBehavior.SetNull);
 	}
 }

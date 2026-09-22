@@ -34,6 +34,8 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
 	public DbSet<Subscription> Subscriptions => Set<Subscription>();
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();
+	public DbSet<Domain.Entities.Payment.Payment> Payments => Set<Domain.Entities.Payment.Payment>();
+	public DbSet<Domain.Entities.Payment.PaymentTransaction.PaymentTransaction> PaymentTransactions => Set<Domain.Entities.Payment.PaymentTransaction.PaymentTransaction>();
 
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

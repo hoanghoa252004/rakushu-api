@@ -1,9 +1,12 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User.DomainEvents;
-using Rakushu.Domain.Entities.User.EmailVerificationToken;
+using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
 using Rakushu.Domain.Entities.User.ValueObjects.Profile;
 
@@ -35,6 +38,10 @@ public sealed class User : AggregateRoot<UserId>
 	// Subscriptions:
 	private readonly List<Subscription.Subscription> _subscriptions = [];
 	public IReadOnlyCollection<Subscription.Subscription> Subscriptions => _subscriptions.AsReadOnly();
+
+	// Payments:
+	private readonly List<Payment.Payment> _payments = [];
+	public IReadOnlyCollection<Payment.Payment> Payments => _payments.AsReadOnly();
 
 	// CONSTRUCTORS & FACTORY METHODS----------
 	private User() { }
@@ -120,14 +127,14 @@ public sealed class User : AggregateRoot<UserId>
 
 	public Result ChangeStatus(UserStatus status)
 	{
-		if(!UserStatusTransition.IsAllowed(Status, status))
+		if (!UserStatusTransition.IsAllowed(Status, status))
 		{
 			return Result.Failure(CommonError.InvalidStatusTransition);
 		}
 
 		Status = status;
 
-		if(Status == UserStatus.Banned)
+		if (Status == UserStatus.Banned)
 		{
 			AddDomainEvent(new UserBannedDomainEvent(this));
 		}
@@ -147,6 +154,111 @@ public sealed class User : AggregateRoot<UserId>
 	public void VerifyEmail()
 	{
 		Status = UserStatus.Active;
+	}
+
+	public Subscription.Subscription? GetActiveSubscription()
+	{
+		return _subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Active);
+	}
+
+	public Result<Subscription.Subscription> CreatePendingSubscription(PlanId planId, DateTimeOffset now)
+	{
+		if (GetActiveSubscription() != null)
+		{
+			return Result.Failure<Subscription.Subscription>(SubscriptionErrors.AlreadyActive);
+		}
+
+		var subscriptionResult = Subscription.Subscription.CreatePending(Id, planId, now);
+		if (subscriptionResult.IsFailure)
+		{
+			return subscriptionResult;
+		}
+
+		_subscriptions.Add(subscriptionResult.Value);
+		UpdatedAt = now;
+
+		return subscriptionResult;
+	}
+
+	public Result ActivateSubscription(SubscriptionId subscriptionId, DateTimeOffset startDate, DateTimeOffset endDate, DateTimeOffset now)
+	{
+		var subscription = _subscriptions.FirstOrDefault(s => s.Id == subscriptionId);
+		if (subscription == null)
+		{
+			return Result.Failure(SubscriptionErrors.NotFound);
+		}
+
+		var activateResult = subscription.Activate(startDate, endDate, now);
+		if (activateResult.IsFailure)
+		{
+			return activateResult;
+		}
+
+		UpdatedAt = now;
+		return Result.Success();
+	}
+
+	public Result CancelSubscription(SubscriptionId subscriptionId, DateTimeOffset now)
+	{
+		var subscription = _subscriptions.FirstOrDefault(s => s.Id == subscriptionId);
+		if (subscription == null)
+		{
+			return Result.Failure(SubscriptionErrors.NotFound);
+		}
+
+		var cancelResult = subscription.Cancel(now);
+		if (cancelResult.IsFailure)
+		{
+			return cancelResult;
+		}
+
+		UpdatedAt = now;
+		return Result.Success();
+	}
+
+	public Result MarkSubscriptionFailed(SubscriptionId subscriptionId, DateTimeOffset now)
+	{
+		var subscription = _subscriptions.FirstOrDefault(s => s.Id == subscriptionId);
+		if (subscription == null)
+		{
+			return Result.Failure(SubscriptionErrors.NotFound);
+		}
+
+		subscription.MarkAsFailed(now);
+		UpdatedAt = now;
+		return Result.Success();
+	}
+
+	public Result ExpireSubscription(SubscriptionId subscriptionId, DateTimeOffset now)
+	{
+		var subscription = _subscriptions.FirstOrDefault(s => s.Id == subscriptionId);
+		if (subscription == null)
+		{
+			return Result.Failure(SubscriptionErrors.NotFound);
+		}
+
+		subscription.Expire(now);
+		UpdatedAt = now;
+		return Result.Success();
+	}
+
+	public Result AddSubscriptionUsage(SubscriptionId subscriptionId, FeatureId featureId, DateTimeOffset periodStart, DateTimeOffset periodEnd, DateTimeOffset now)
+	{
+		var subscription = _subscriptions.FirstOrDefault(s => s.Id == subscriptionId);
+		if (subscription == null)
+		{
+			return Result.Failure(SubscriptionErrors.NotFound);
+		}
+
+		var usageResult = SubscriptionUsage.Create(subscription.Id, featureId, periodStart, periodEnd, 0, now, now);
+		if (usageResult.IsFailure)
+		{
+			return usageResult;
+		}
+
+		subscription.AddUsage(usageResult.Value, now);
+		UpdatedAt = now;
+		return Result.Success();
 	}
 	/*
 	public void SetProfile(Profile profile)

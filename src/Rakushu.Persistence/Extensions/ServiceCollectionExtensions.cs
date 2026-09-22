@@ -45,6 +45,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IRoleRepository, RoleRepository>();
 		services.AddScoped<IPlanRepository, PlanRepository>();
 		services.AddScoped<IFeatureRepository, FeatureRepository>();
+		services.AddScoped<Domain.Entities.Payment.IPaymentRepository, PaymentRepository>();
 
 		// DAPPER CONNECTION
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
