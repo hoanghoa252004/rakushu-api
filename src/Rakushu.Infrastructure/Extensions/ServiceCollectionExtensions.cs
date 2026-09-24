@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
-using Rakushu.Application.Abstractions.Infrastructure.Email;
 using Rakushu.Application.Abstractions.Infrastructure.Payment;
+using Rakushu.Application.Abstractions.Infrastructure.PaymentGateway;
 using Rakushu.Infrastructure.Clock;
-using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
 using Rakushu.Infrastructure.Payment;
+using Rakushu.Infrastructure.Payment.VnPay;
 
 namespace Rakushu.Infrastructure.Extensions;
 
@@ -28,6 +28,11 @@ public static class ServiceCollectionExtensions
 		// PAYMENT
 		services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.ConfigurationSection));
 		services.AddScoped<IPaymentService, VnPayService>();
+
+		// PAYMENT GATEWAY
+		services.AddScoped<VnPayService>();
+		services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
+
 		return services;
 	}
 }

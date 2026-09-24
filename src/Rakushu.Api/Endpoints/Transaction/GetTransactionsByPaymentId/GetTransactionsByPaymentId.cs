@@ -32,7 +32,7 @@ internal sealed class GetTransactionsByPaymentId : IEndpoint
 					return result.MatchOk();
 				})
 			// 2. Description
-			.WithName("GetTransactionsByPayment")
+			.WithName("GetTransactionsByPaymentId")
 			.WithDescription("Retrieves all transactions for the specified payment with optional filtering.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization()

@@ -9,6 +9,7 @@ namespace Rakushu.Infrastructure.Extensions.Options;
 public sealed class VnPaySettings
 {
 	public const string ConfigurationSection = nameof(VnPaySettings);
+	public string Version { get; set; } = string.Empty;
 	public string TmnCode { get; set; } = string.Empty;
 	public string HashSecret { get; set; } = string.Empty;
 	public string BaseUrl { get; set; } = string.Empty;
@@ -20,4 +21,5 @@ public sealed class VnPaySettings
 	public string BankCode { get; set; } = string.Empty;
 	public int PaymentExpiredInSeconds { get; set; } = 900;
 	public int TransactionExpiredInSeconds { get; set; } = 300;
+	public string TimeZoneId { get; set; } = "SE Asia Standard Time";
 }

@@ -74,6 +74,9 @@ public static class PaymentError
 	public static readonly Error InvalidStatusTransition =
 		Error.Validation("PAYMENT.INVALID_STATUS_TRANSITION", "Invalid status transition for payment.");
 
+	public static readonly Error InvalidSignature =
+		Error.Validation("PAYMENT.INVALID_SIGNATURE", "Invalid signature for payment.");
+
 	//public static Error PaymentConfigNotFound() =>
 	//	Error.NotFound("PAYMENT.PaymentConfigNotFound", "Payment configuration was not found.");
 

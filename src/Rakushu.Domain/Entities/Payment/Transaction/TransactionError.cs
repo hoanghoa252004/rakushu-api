@@ -40,4 +40,10 @@ public static class TransactionError
 
 	public static readonly Error InvalidStatusTransition =
 	Error.Validation("TRANSACTION.INVALID_STATUS_TRANSITION", "Invalid status transition for transaction.");
+
+	public static readonly Error CannotCreateTransactionForNotPendingPayment =
+	Error.Validation("TRANSACTION.CANNOT_CREATE_TRANSACTION_FOR_NOT_PENDING_PAYMENT", "Cannot create transaction for a payment that is not pending.");
+
+	public static readonly Error HasPendingTransaction =
+	Error.Validation("TRANSACTION.HAS_PENDING_TRANSACTION", "Cannot create transaction because payment already has a pending transaction.");
 }

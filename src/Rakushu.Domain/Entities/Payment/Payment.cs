@@ -1,5 +1,6 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.User;
 using System;
@@ -146,5 +147,48 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		_transactions.Add(transaction);
 
 		return Result.Success();
+	}
+
+	public Result<Transaction.Transaction> CreateTransaction(
+		Provider provider,
+		string transactionRef,
+		string paymentUrl,
+		DateTimeOffset expiredAt,
+		DateTimeOffset now)
+	{
+
+		if (Status != PaymentStatus.Pending)
+		{
+			return Result.Failure<Transaction.Transaction>
+				(TransactionError.CannotCreateTransactionForNotPendingPayment);
+		}
+
+		if (_transactions.Any(t => t.Status == Transaction.TransactionStatus.Pending))
+			return Result.Failure<Transaction.Transaction>(
+				TransactionError.HasPendingTransaction);
+
+		var transactionResult = Transaction.Transaction.Create(
+			Id,
+			provider,
+			Amount,
+			Currency,
+			transactionRef,
+			paymentUrl,
+			Transaction.TransactionStatus.Pending,
+			expiredAt,
+			now,
+			now
+		);
+
+		if(transactionResult.IsFailure)
+		{
+			return Result.Failure<Transaction.Transaction>(transactionResult.Error);
+		}
+
+		var transaction = transactionResult.Value;
+
+		_transactions.Add(transaction);
+
+		return Result.Success(transaction);
 	}
 }
