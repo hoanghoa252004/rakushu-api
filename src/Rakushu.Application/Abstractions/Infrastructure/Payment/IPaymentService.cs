@@ -24,6 +24,6 @@ public sealed record CreatePaymentUrlParams(
 	decimal Amount,
 	string Description,
 	string TxnRef,
-	DateTime CreatedAt,
-	DateTime ExpiredAt
+	DateTimeOffset CreatedAt,
+	DateTimeOffset ExpiredAt
 );

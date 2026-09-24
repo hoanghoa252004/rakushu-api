@@ -32,8 +32,9 @@ internal sealed class VnPayService : IPaymentService
 	public Result<string> CreatePaymentUrl(CreatePaymentUrlParams parameters, CancellationToken cancellationToken = default)
 	{
 		var timeZoneById = TimeZoneInfo.FindSystemTimeZoneById(_vnPaySettings.TimeZoneId);
-		var createdAt = TimeZoneInfo.ConvertTimeFromUtc(parameters.CreatedAt, timeZoneById);
-		var expiredAt = TimeZoneInfo.ConvertTimeFromUtc(parameters.ExpiredAt, timeZoneById);
+		var createdAt = TimeZoneInfo.ConvertTime(parameters.CreatedAt, timeZoneById);
+		var expiredAt = TimeZoneInfo.ConvertTime(parameters.ExpiredAt, timeZoneById);
+
 		var pay = new VnPayLibrary();
 		var amount = ((long)parameters.Amount * 100).ToString();
 

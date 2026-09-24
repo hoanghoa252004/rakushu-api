@@ -5,4 +5,5 @@ namespace Rakushu.Domain.Entities.Payment.Transaction;
 
 public interface ITransactionRepository : IBaseRepository<Transaction, TransactionId>
 {
+	Task<Transaction?> GetByTxnRef(string txnRef, CancellationToken cancellationToken = default);
 }

@@ -155,6 +155,51 @@ public sealed class Transaction : Entity<TransactionId>
 		UpdatedAt = updatedAt;
 
 		return Result.Success();
-	} 
+	}
+
+	public Result Expire(DateTimeOffset updatedAt)
+	{
+		if (TransactionStatusTransition.IsAllowed(Status, TransactionStatus.Expired) == false)
+		{
+			return Result.Failure(TransactionError.InvalidStatusTransition);
+		}
+
+		Status = TransactionStatus.Expired;
+
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result Fail(DateTimeOffset updatedAt)
+	{
+		if (TransactionStatusTransition.IsAllowed(Status, TransactionStatus.Failed) == false)
+		{
+			return Result.Failure(TransactionError.InvalidStatusTransition);
+		}
+
+		Status = TransactionStatus.Failed;
+
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result Success(string transactionNo, IReadOnlyDictionary<string, string> parameters, DateTimeOffset updatedAt)
+	{
+		if (TransactionStatusTransition.IsAllowed(Status, TransactionStatus.Successful) == false)
+		{
+			return Result.Failure(TransactionError.InvalidStatusTransition);
+		}
+		Status = TransactionStatus.Successful;
+
+		TransactionNo = transactionNo;
+
+		RawResponsePayload = string.Join("&", parameters.Select(x => $"{x.Key}={x.Value}"));
+
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
 }
 

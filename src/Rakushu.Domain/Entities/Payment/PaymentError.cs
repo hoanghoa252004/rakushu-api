@@ -77,15 +77,9 @@ public static class PaymentError
 	public static readonly Error InvalidSignature =
 		Error.Validation("PAYMENT.INVALID_SIGNATURE", "Invalid signature for payment.");
 
-	//public static Error PaymentConfigNotFound() =>
-	//	Error.NotFound("PAYMENT.PaymentConfigNotFound", "Payment configuration was not found.");
+	public static readonly Error Expired =
+		Error.Validation("PAYMENT.EXPIRED", "Payment has expired.");
 
-	//public static Error InvalidRange() =>
-	//	Error.Validation("PAYMENT.InvalidRange", "Time must be > 0");
-
-	//public static Error InvalidOnlinePaymentExpiredInDays() =>
-	//	Error.Validation("PAYMENT.InvalidOnlinePaymentExpiredInDays", "Online payment expiration must be at least 1 and not > 10.");
-
-	//public static Error InvalidOnlineTransactionExpiredInMinutes() =>
-	//	Error.Validation("PAYMENT.InvalidOnlineTransactionExpiredInMinutes", "Online transaction expiration must be at least 5 minutes and not > 60 minutes.");
+	public static readonly Error HasPendingTransaction =
+		Error.Validation("TRANSACTION.HAS_PENDING_TRANSACTION", "Cannot create transaction because payment is having a pending transaction.");
 }

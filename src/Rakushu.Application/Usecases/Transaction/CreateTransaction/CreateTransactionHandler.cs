@@ -88,8 +88,8 @@ public sealed class CreateTransactionHandler : IRequestHandler<CreateTransaction
 				payment.Amount,
 				$"{payment.User.Profile.FullName} subscribes {payment.Plan.Name}",
 				transactionRef,
-				now.DateTime,
-				expiredAt.DateTime);
+				now,
+				expiredAt);
 
 			// 6. Create payment URL
 			var paymentUrlResult = gatewayService.CreatePaymentUrl(paymentUrlParams, cancellationToken);

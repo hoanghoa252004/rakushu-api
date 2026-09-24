@@ -1,6 +1,5 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.User;
 using System;
@@ -157,15 +156,18 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		DateTimeOffset now)
 	{
 
-		if (Status != PaymentStatus.Pending)
+		if (Status != PaymentStatus.Pending || now <= ExpiredAt)
 		{
 			return Result.Failure<Transaction.Transaction>
-				(TransactionError.CannotCreateTransactionForNotPendingPayment);
+				(PaymentError.Expired);
 		}
 
 		if (_transactions.Any(t => t.Status == Transaction.TransactionStatus.Pending))
-			return Result.Failure<Transaction.Transaction>(
-				TransactionError.HasPendingTransaction);
+			return Result.Failure<Transaction.Transaction>
+				(PaymentError.HasPendingTransaction);
+
+		if (ExpiredAt < expiredAt) // Payment expiry < Transaction expiry
+			expiredAt = now + (expiredAt - ExpiredAt);
 
 		var transactionResult = Transaction.Transaction.Create(
 			Id,
@@ -190,5 +192,19 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		_transactions.Add(transaction);
 
 		return Result.Success(transaction);
+	}
+
+	public Result Complete(DateTimeOffset updatedAt)
+	{
+		if (PaymentStatusTransition.IsAllowed(Status, PaymentStatus.Completed) == false)
+		{
+			return Result.Failure(PaymentError.InvalidStatusTransition);
+		}
+
+		Status = PaymentStatus.Completed;
+
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
 	}
 }
