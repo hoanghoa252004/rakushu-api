@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rakushu.Persistence;
@@ -12,9 +13,11 @@ using Rakushu.Persistence;
 namespace Rakushu.Persistence.Migrations
 {
     [DbContext(typeof(RakushuDbContext))]
-    partial class RakushuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924031821_AddPaymentDomainModel")]
+    partial class AddPaymentDomainModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -112,15 +115,15 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_payments");
+                        .HasName("pk_payment");
 
                     b.HasIndex("PlanId")
-                        .HasDatabaseName("ix_payments_plan_id");
+                        .HasDatabaseName("ix_payment_plan_id");
 
                     b.HasIndex("UserId")
-                        .HasDatabaseName("ix_payments_user_id");
+                        .HasDatabaseName("ix_payment_user_id");
 
-                    b.ToTable("payments", (string)null);
+                    b.ToTable("payment", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Transaction.Transaction", b =>
@@ -187,20 +190,20 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("url");
 
                     b.HasKey("Id")
-                        .HasName("pk_transactions");
+                        .HasName("pk_transaction");
 
                     b.HasIndex("PaymentId")
-                        .HasDatabaseName("ix_transactions_payment_id");
+                        .HasDatabaseName("ix_transaction_payment_id");
 
                     b.HasIndex("TxnRef")
                         .IsUnique()
-                        .HasDatabaseName("ix_transactions_txn_ref");
+                        .HasDatabaseName("ix_transaction_txn_ref");
 
                     b.HasIndex("Url")
                         .IsUnique()
-                        .HasDatabaseName("ix_transactions_url");
+                        .HasDatabaseName("ix_transaction_url");
 
-                    b.ToTable("transactions", (string)null);
+                    b.ToTable("transaction", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Plan.Plan", b =>
@@ -597,14 +600,14 @@ namespace Rakushu.Persistence.Migrations
                         .HasForeignKey("PlanId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_payments_plans_plan_id");
+                        .HasConstraintName("fk_payment_plans_plan_id");
 
                     b.HasOne("Rakushu.Domain.Entities.User.User", "User")
                         .WithMany("Payments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_payments_users_user_id");
+                        .HasConstraintName("fk_payment_users_user_id");
 
                     b.Navigation("Plan");
 
@@ -618,7 +621,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_transactions_payments_payment_id");
+                        .HasConstraintName("fk_transaction_payment_payment_id");
 
                     b.Navigation("Payment");
                 });

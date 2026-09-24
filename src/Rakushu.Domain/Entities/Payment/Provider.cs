@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Plan;
+namespace Rakushu.Domain.Entities.Payment;
 
-public enum Currency
+public enum Provider
 {
-	VND = 0,
-	USD = 1
+	VNPAY = 0,
+	SEPAY = 1
 }
