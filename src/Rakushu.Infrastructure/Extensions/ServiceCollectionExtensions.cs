@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
 		// PAYMENT & SEPAY
 		services.Configure<PaymentSettings>(configuration.GetSection(PaymentSettings.ConfigurationSection));
 		services.Configure<SepaySettings>(configuration.GetSection(SepaySettings.ConfigurationSection));
-		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Payment.ISepayService, Rakushu.Infrastructure.Payment.SepayService>();
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Payment.IPaymentService, Rakushu.Infrastructure.Payment.SepayService>();
 		services.AddHostedService<Rakushu.Infrastructure.Payment.PaymentExpirationBackgroundService>();
 
 		return services;

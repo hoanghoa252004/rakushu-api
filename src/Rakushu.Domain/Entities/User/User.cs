@@ -161,14 +161,18 @@ public sealed class User : AggregateRoot<UserId>
 		return _subscriptions.FirstOrDefault(s => s.Status == SubscriptionStatus.Active);
 	}
 
-	public Result<Subscription.Subscription> CreatePendingSubscription(PlanId planId, DateTimeOffset now)
+	public Result<Subscription.Subscription> CreateActiveSubscription(
+		PlanId planId,
+		DateTimeOffset startDate,
+		DateTimeOffset endDate,
+		DateTimeOffset now)
 	{
 		if (GetActiveSubscription() != null)
 		{
 			return Result.Failure<Subscription.Subscription>(SubscriptionErrors.AlreadyActive);
 		}
 
-		var subscriptionResult = Subscription.Subscription.CreatePending(Id, planId, now);
+		var subscriptionResult = Subscription.Subscription.CreateActive(Id, planId, startDate, endDate, now);
 		if (subscriptionResult.IsFailure)
 		{
 			return subscriptionResult;
@@ -178,24 +182,6 @@ public sealed class User : AggregateRoot<UserId>
 		UpdatedAt = now;
 
 		return subscriptionResult;
-	}
-
-	public Result ActivateSubscription(SubscriptionId subscriptionId, DateTimeOffset startDate, DateTimeOffset endDate, DateTimeOffset now)
-	{
-		var subscription = _subscriptions.FirstOrDefault(s => s.Id == subscriptionId);
-		if (subscription == null)
-		{
-			return Result.Failure(SubscriptionErrors.NotFound);
-		}
-
-		var activateResult = subscription.Activate(startDate, endDate, now);
-		if (activateResult.IsFailure)
-		{
-			return activateResult;
-		}
-
-		UpdatedAt = now;
-		return Result.Success();
 	}
 
 	public Result CancelSubscription(SubscriptionId subscriptionId, DateTimeOffset now)
@@ -212,19 +198,6 @@ public sealed class User : AggregateRoot<UserId>
 			return cancelResult;
 		}
 
-		UpdatedAt = now;
-		return Result.Success();
-	}
-
-	public Result MarkSubscriptionFailed(SubscriptionId subscriptionId, DateTimeOffset now)
-	{
-		var subscription = _subscriptions.FirstOrDefault(s => s.Id == subscriptionId);
-		if (subscription == null)
-		{
-			return Result.Failure(SubscriptionErrors.NotFound);
-		}
-
-		subscription.MarkAsFailed(now);
 		UpdatedAt = now;
 		return Result.Success();
 	}

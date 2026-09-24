@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Results;
 
-namespace Rakushu.Application.Usecases.Payment.Webhook;
+namespace Rakushu.Application.Usecases.Payment.ProcessSepayWebhook;
 
 public sealed record ProcessSepayWebhookCommand(
 	SepayWebhookPayload Payload,

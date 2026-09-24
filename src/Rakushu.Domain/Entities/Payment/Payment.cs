@@ -102,12 +102,6 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		return Result.Success(payment);
 	}
 
-	public void SetQrCodeUrl(string qrCodeUrl, DateTimeOffset now)
-	{
-		QrCodeUrl = qrCodeUrl;
-		UpdatedAt = now;
-	}
-
 	public void AttachSubscription(SubscriptionId subscriptionId, DateTimeOffset now)
 	{
 		SubscriptionId = subscriptionId;
@@ -140,10 +134,21 @@ public sealed class Payment : AggregateRoot<PaymentId>
 
 		foreach (var tx in _transactions.Where(t => t.Status == TransactionStatus.Pending))
 		{
-			tx.MarkFailed(now);
+			tx.Cancel(now);
 		}
 
 		return Result.Success();
+	}
+
+	public Result CancelTransaction(PaymentTransactionId transactionId, DateTimeOffset now)
+	{
+		var tx = _transactions.FirstOrDefault(t => t.Id == transactionId);
+		if (tx is null)
+		{
+			return Result.Failure(PaymentErrors.TransactionNotFound);
+		}
+
+		return tx.Cancel(now);
 	}
 
 	public Result Expire(DateTimeOffset now)

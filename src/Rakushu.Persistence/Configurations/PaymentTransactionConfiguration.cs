@@ -27,11 +27,16 @@ internal sealed class PaymentTransactionConfiguration : IEntityTypeConfiguration
 			.HasForeignKey(t => t.PaymentId)
 			.OnDelete(DeleteBehavior.Cascade);
 
-		// SepayId (Unique index for Webhook idempotency)
+		// SepayId (Unique index for Webhook idempotency, only when not null)
 		builder.Property(t => t.SepayId)
-			.IsRequired();
+			.IsRequired(false);
 		builder.HasIndex(t => t.SepayId)
-			.IsUnique();
+			.IsUnique()
+			.HasFilter("sepay_id IS NOT NULL");
+
+		// ExpiresAt
+		builder.Property(t => t.ExpiresAt)
+			.IsRequired();
 
 		// Gateway
 		builder.Property(t => t.Gateway)

@@ -54,31 +54,9 @@ public sealed class Subscription : Entity<SubscriptionId>
 		UpdatedAt = updatedAt;
 	}
 
-	public static Result<Subscription> CreatePending(
+	public static Result<Subscription> CreateActive(
 		UserId userId,
 		PlanId planId,
-		DateTimeOffset now)
-	{
-		var subscription = new Subscription(
-			SubscriptionId.Create(),
-			userId,
-			planId,
-			SubscriptionStatus.Pending,
-			now,
-			now,
-			now,
-			now,
-			null,
-			now,
-			now);
-
-		return Result.Success(subscription);
-	}
-
-	public static Result<Subscription> Create(
-		UserId userId,
-		PlanId planId,
-		SubscriptionStatus status,
 		DateTimeOffset startDate,
 		DateTimeOffset endDate,
 		DateTimeOffset now)
@@ -87,7 +65,7 @@ public sealed class Subscription : Entity<SubscriptionId>
 			SubscriptionId.Create(),
 			userId,
 			planId,
-			status,
+			SubscriptionStatus.Active,
 			startDate,
 			endDate,
 			startDate,
@@ -97,24 +75,6 @@ public sealed class Subscription : Entity<SubscriptionId>
 			now);
 
 		return Result.Success(subscription);
-	}
-
-	public Result Activate(DateTimeOffset startDate, DateTimeOffset endDate, DateTimeOffset now)
-	{
-		if (Status != SubscriptionStatus.Pending && Status != SubscriptionStatus.Expired && Status != SubscriptionStatus.Failed)
-		{
-			return Result.Failure(SubscriptionErrors.CannotActivate);
-		}
-
-		Status = SubscriptionStatus.Active;
-		StartDate = startDate;
-		EndDate = endDate;
-		CurrentPeriodStart = startDate;
-		CurrentPeriodEnd = endDate;
-		CanceledAt = null;
-		UpdatedAt = now;
-
-		return Result.Success();
 	}
 
 	public Result Cancel(DateTimeOffset now)
@@ -129,12 +89,6 @@ public sealed class Subscription : Entity<SubscriptionId>
 		UpdatedAt = now;
 
 		return Result.Success();
-	}
-
-	public void MarkAsFailed(DateTimeOffset now)
-	{
-		Status = SubscriptionStatus.Failed;
-		UpdatedAt = now;
 	}
 
 	public void Expire(DateTimeOffset now)

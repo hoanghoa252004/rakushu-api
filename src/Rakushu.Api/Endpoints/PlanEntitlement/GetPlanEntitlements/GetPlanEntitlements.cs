@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.PlanEntitlement;
 using Rakushu.Application.Usecases.PlanEntitlement.GetPlanEntitlements;
 using Rakushu.Domain.Entities.Role;
 

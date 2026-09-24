@@ -2,7 +2,7 @@ namespace Rakushu.Application.Usecases.Payment.Checkout;
 
 public sealed record CheckoutResponse(
 	Guid PaymentId,
-	Guid SubscriptionId,
+	Guid? SubscriptionId,
 	string OrderCode,
 	decimal Amount,
 	string Currency,
@@ -10,5 +10,6 @@ public sealed record CheckoutResponse(
 	DateTimeOffset ExpiresAt,
 	string PlanName,
 	string Bank,
-	string AccountNumber
+	string AccountNumber,
+	Guid? TransactionId = null
 );

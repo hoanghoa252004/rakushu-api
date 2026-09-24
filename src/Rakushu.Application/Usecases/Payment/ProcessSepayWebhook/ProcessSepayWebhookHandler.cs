@@ -10,13 +10,13 @@ using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.User;
 using System.Text.RegularExpressions;
 
-namespace Rakushu.Application.Usecases.Payment.Webhook;
+namespace Rakushu.Application.Usecases.Payment.ProcessSepayWebhook;
 
 public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<ProcessSepayWebhookCommand, Result<bool>>
 {
 	private readonly IPaymentRepository _paymentRepository;
 	private readonly IUserRepository _userRepository;
-	private readonly ISepayService _sepayService;
+	private readonly IPaymentService _sepayService;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
@@ -26,7 +26,7 @@ public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<Process
 	public ProcessSepayWebhookHandler(
 		IPaymentRepository paymentRepository,
 		IUserRepository userRepository,
-		ISepayService sepayService,
+		IPaymentService sepayService,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
@@ -62,7 +62,9 @@ public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<Process
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			var now = _systemClock.UtcNow;
-			var transactionDate = DateTimeOffset.TryParse(payload.TransactionDate, out var parsedDate) ? parsedDate : now;
+			var transactionDate = DateTimeOffset.TryParse(payload.TransactionDate, out var parsedDate) 
+				? parsedDate.ToUniversalTime() 
+				: now;
 
 			// 3. Extract OrderCode from content or code field
 			string? extractedOrderCode = null;
@@ -91,7 +93,12 @@ public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<Process
 				return Result.Failure<bool>(PaymentErrors.OrderCodeNotFound);
 			}
 
-			// 4. Handle based on Payment status
+			// 4. Find the latest pending transaction (if any)
+			var pendingTx = payment.Transactions
+				.OrderByDescending(t => t.CreatedAt)
+				.FirstOrDefault(t => t.Status == TransactionStatus.Pending);
+
+			// Handle based on Payment status
 			if (payment.Status == PaymentStatus.Completed)
 			{
 				// Already completed, record transaction as Success
@@ -107,6 +114,7 @@ public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<Process
 					payload.ReferenceCode,
 					TransactionStatus.Success,
 					request.RawData,
+					payment.ExpiresAt,
 					now);
 
 				if (completedTx.IsSuccess)
@@ -119,24 +127,42 @@ public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<Process
 
 			if (payment.Status == PaymentStatus.Expired || payment.Status == PaymentStatus.Canceled)
 			{
-				// Payment is expired or canceled, record transaction as Failed
-				var failedTx = PaymentTransaction.Create(
-					payment.Id,
-					payload.Id,
-					payload.Gateway ?? "Unknown",
-					payload.AccountNumber ?? string.Empty,
-					transactionDate,
-					payload.Content ?? string.Empty,
-					payload.TransferType ?? "in",
-					payload.TransferAmount,
-					payload.ReferenceCode,
-					TransactionStatus.Failed,
-					request.RawData,
-					now);
-
-				if (failedTx.IsSuccess)
+				if (pendingTx != null)
 				{
-					payment.AddTransaction(failedTx.Value, now);
+					pendingTx.MarkFailed(now);
+				}
+				else
+				{
+					var failedTx = PaymentTransaction.Create(
+						payment.Id,
+						payload.Id,
+						payload.Gateway ?? "Unknown",
+						payload.AccountNumber ?? string.Empty,
+						transactionDate,
+						payload.Content ?? string.Empty,
+						payload.TransferType ?? "in",
+						payload.TransferAmount,
+						payload.ReferenceCode,
+						TransactionStatus.Failed,
+						request.RawData,
+						payment.ExpiresAt,
+						now);
+
+					if (failedTx.IsSuccess)
+					{
+						payment.AddTransaction(failedTx.Value, now);
+					}
+				}
+
+				return Result.Failure<bool>(PaymentErrors.Expired);
+			}
+
+			if (payment.ExpiresAt <= now)
+			{
+				payment.Expire(now);
+				if (pendingTx != null)
+				{
+					pendingTx.MarkFailed(now);
 				}
 
 				return Result.Failure<bool>(PaymentErrors.Expired);
@@ -145,7 +171,54 @@ public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<Process
 			// 5. Verify transfer amount
 			if (payload.TransferAmount < payment.Amount)
 			{
-				var partialTx = PaymentTransaction.Create(
+				if (pendingTx != null)
+				{
+					pendingTx.MarkFailed(now);
+				}
+				else
+				{
+					var partialTx = PaymentTransaction.Create(
+						payment.Id,
+						payload.Id,
+						payload.Gateway ?? "Unknown",
+						payload.AccountNumber ?? string.Empty,
+						transactionDate,
+						payload.Content ?? string.Empty,
+						payload.TransferType ?? "in",
+						payload.TransferAmount,
+						payload.ReferenceCode,
+						TransactionStatus.Failed,
+						request.RawData,
+						payment.ExpiresAt,
+						now);
+
+					if (partialTx.IsSuccess)
+					{
+						payment.AddTransaction(partialTx.Value, now);
+					}
+				}
+
+				payment.MarkFailed(now);
+				return Result.Failure<bool>(PaymentErrors.AmountMismatch);
+			}
+
+			// 6. Complete Payment and Transaction
+			if (pendingTx != null)
+			{
+				pendingTx.MarkSuccess(
+					payload.Id,
+					payload.Gateway ?? "Unknown",
+					payload.AccountNumber ?? string.Empty,
+					transactionDate,
+					payload.Content ?? string.Empty,
+					payload.TransferAmount,
+					payload.ReferenceCode,
+					request.RawData,
+					now);
+			}
+			else
+			{
+				var successTx = PaymentTransaction.Create(
 					payment.Id,
 					payload.Id,
 					payload.Gateway ?? "Unknown",
@@ -155,62 +228,42 @@ public sealed partial class ProcessSepayWebhookHandler : IRequestHandler<Process
 					payload.TransferType ?? "in",
 					payload.TransferAmount,
 					payload.ReferenceCode,
-					TransactionStatus.Failed,
+					TransactionStatus.Success,
 					request.RawData,
+					payment.ExpiresAt,
 					now);
 
-				if (partialTx.IsSuccess)
+				if (successTx.IsFailure)
 				{
-					payment.AddTransaction(partialTx.Value, now);
+					return Result.Failure<bool>(successTx.Error);
 				}
 
-				payment.MarkFailed(now);
-				return Result.Failure<bool>(PaymentErrors.AmountMismatch);
+				payment.AddTransaction(successTx.Value, now);
 			}
 
-			// 6. Complete Payment and Transaction
-			var successTx = PaymentTransaction.Create(
-				payment.Id,
-				payload.Id,
-				payload.Gateway ?? "Unknown",
-				payload.AccountNumber ?? string.Empty,
-				transactionDate,
-				payload.Content ?? string.Empty,
-				payload.TransferType ?? "in",
-				payload.TransferAmount,
-				payload.ReferenceCode,
-				TransactionStatus.Success,
-				request.RawData,
-				now);
-
-			if (successTx.IsFailure)
-			{
-				return Result.Failure<bool>(successTx.Error);
-			}
-
-			payment.AddTransaction(successTx.Value, now);
 			payment.Complete(now);
 
-			// 7. Activate Subscription & Generate Usages via User Aggregate Root
-			if (payment.SubscriptionId != null)
+			// 7. Create Active Subscription & Generate Usages via User Aggregate Root
+			var user = await _userRepository.GetByIdWithSubscriptionsAsync(payment.UserId, cancellationToken);
+			if (user != null)
 			{
-				var user = await _userRepository.GetBySubscriptionIdAsync(payment.SubscriptionId, cancellationToken);
-				if (user != null)
-				{
-					var subscription = user.Subscriptions.FirstOrDefault(s => s.Id == payment.SubscriptionId);
-					var plan = subscription?.Plan ?? payment.Plan;
-					var startDate = now;
-					var endDate = (plan != null && plan.BillingCycle == BillingCycle.Yearly)
-						? startDate.AddYears(1)
-						: startDate.AddMonths(1);
+				var plan = payment.Plan;
+				var startDate = now;
+				var endDate = (plan != null && plan.BillingCycle == BillingCycle.Yearly)
+					? startDate.AddYears(1)
+					: startDate.AddMonths(1);
 
-					user.ActivateSubscription(payment.SubscriptionId, startDate, endDate, now);
+				var subResult = user.CreateActiveSubscription(payment.PlanId, startDate, endDate, now);
+				if (subResult.IsSuccess)
+				{
+					var newSubscription = subResult.Value;
+					payment.AttachSubscription(newSubscription.Id, now);
 
 					if (plan != null)
 					{
 						foreach (var entitlement in plan.PlanEntitlements.Where(e => e.IsEnabled))
 						{
-							user.AddSubscriptionUsage(payment.SubscriptionId, entitlement.FeatureId, startDate, endDate, now);
+							user.AddSubscriptionUsage(newSubscription.Id, entitlement.FeatureId, startDate, endDate, now);
 						}
 					}
 				}

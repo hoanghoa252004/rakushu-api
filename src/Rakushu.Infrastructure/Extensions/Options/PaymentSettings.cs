@@ -4,4 +4,5 @@ public sealed class PaymentSettings
 {
 	public const string ConfigurationSection = nameof(PaymentSettings);
 	public int TimeoutInMinutes { get; set; } = 15;
+	public int TransactionTimeoutInMinutes { get; set; } = 5;
 }

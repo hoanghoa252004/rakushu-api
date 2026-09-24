@@ -27,4 +27,10 @@ public static class PaymentErrors
 
 	public static readonly Error DuplicateSepayTransaction = Error.Conflict(
 		"PAYMENT.DUPLICATE_SEPAY_TRANSACTION", "This transaction has already been processed.");
+
+	public static readonly Error TransactionNotFound = Error.NotFound(
+		"PAYMENT.TRANSACTION_NOT_FOUND", "The payment transaction was not found.");
+
+	public static readonly Error TransactionCannotBeCanceled = Error.Validation(
+		"PAYMENT.TRANSACTION_CANNOT_BE_CANCELED", "Payment transaction can only be canceled when it is in Pending state.");
 }

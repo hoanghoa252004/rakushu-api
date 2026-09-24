@@ -10,18 +10,15 @@ namespace Rakushu.Application.Usecases.Payment.ExpirePendingPayments;
 public sealed class ExpirePendingPaymentsHandler : IRequestHandler<ExpirePendingPaymentsCommand, Result<int>>
 {
 	private readonly IPaymentRepository _paymentRepository;
-	private readonly IUserRepository _userRepository;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public ExpirePendingPaymentsHandler(
 		IPaymentRepository paymentRepository,
-		IUserRepository userRepository,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_paymentRepository = paymentRepository;
-		_userRepository = userRepository;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
@@ -41,12 +38,6 @@ public sealed class ExpirePendingPaymentsHandler : IRequestHandler<ExpirePending
 			foreach (var payment in expiredPayments)
 			{
 				payment.Expire(now);
-
-				if (payment.SubscriptionId != null)
-				{
-					var user = await _userRepository.GetBySubscriptionIdAsync(payment.SubscriptionId, cancellationToken);
-					user?.MarkSubscriptionFailed(payment.SubscriptionId, now);
-				}
 			}
 
 			return Result.Success(expiredPayments.Count);

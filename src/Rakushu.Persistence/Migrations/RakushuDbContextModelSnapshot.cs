@@ -174,6 +174,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
                     b.Property<string>("Gateway")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -193,7 +197,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("reference_code");
 
-                    b.Property<long>("SepayId")
+                    b.Property<long?>("SepayId")
                         .HasColumnType("bigint")
                         .HasColumnName("sepay_id");
 
@@ -230,7 +234,8 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasIndex("SepayId")
                         .IsUnique()
-                        .HasDatabaseName("ix_payment_transactions_sepay_id");
+                        .HasDatabaseName("ix_payment_transactions_sepay_id")
+                        .HasFilter("sepay_id IS NOT NULL");
 
                     b.ToTable("payment_transactions", (string)null);
                 });

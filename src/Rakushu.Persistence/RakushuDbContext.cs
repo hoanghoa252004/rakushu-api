@@ -44,6 +44,19 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 		modelBuilder.ApplyConfigurationsFromAssembly(typeof(RakushuDbContext).Assembly);
 	}
 
+	protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+	{
+		base.ConfigureConventions(configurationBuilder);
+
+		configurationBuilder
+			.Properties<DateTimeOffset>()
+			.HaveConversion<DateTimeOffsetToUtcConverter>();
+
+		configurationBuilder
+			.Properties<DateTimeOffset?>()
+			.HaveConversion<NullableDateTimeOffsetToUtcConverter>();
+	}
+
 	public async Task<T> ExecuteAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
 	{
 		var strategy = Database.CreateExecutionStrategy();
@@ -115,3 +128,20 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 		}
 	}
 }
+
+internal sealed class DateTimeOffsetToUtcConverter : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTimeOffset, DateTimeOffset>
+{
+	public DateTimeOffsetToUtcConverter()
+		: base(d => d.ToUniversalTime(), d => d)
+	{
+	}
+}
+
+internal sealed class NullableDateTimeOffsetToUtcConverter : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTimeOffset?, DateTimeOffset?>
+{
+	public NullableDateTimeOffsetToUtcConverter()
+		: base(d => d.HasValue ? d.Value.ToUniversalTime() : d, d => d)
+	{
+	}
+}
+

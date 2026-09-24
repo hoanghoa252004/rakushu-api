@@ -6,7 +6,7 @@ namespace Rakushu.Domain.Entities.Payment.PaymentTransaction;
 public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 {
 	public PaymentId PaymentId { get; private set; } = null!;
-	public long SepayId { get; private set; }
+	public long? SepayId { get; private set; }
 	public string Gateway { get; private set; } = null!;
 	public string AccountNumber { get; private set; } = null!;
 	public DateTimeOffset TransactionDate { get; private set; }
@@ -16,6 +16,7 @@ public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 	public string? ReferenceCode { get; private set; }
 	public TransactionStatus Status { get; private set; }
 	public string? RawWebhookData { get; private set; }
+	public DateTimeOffset ExpiresAt { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -27,7 +28,7 @@ public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 	private PaymentTransaction(
 		PaymentTransactionId id,
 		PaymentId paymentId,
-		long sepayId,
+		long? sepayId,
 		string gateway,
 		string accountNumber,
 		DateTimeOffset transactionDate,
@@ -37,6 +38,7 @@ public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 		string? referenceCode,
 		TransactionStatus status,
 		string? rawWebhookData,
+		DateTimeOffset expiresAt,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt) : base(id)
 	{
@@ -51,13 +53,14 @@ public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 		ReferenceCode = referenceCode;
 		Status = status;
 		RawWebhookData = rawWebhookData;
+		ExpiresAt = expiresAt;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 	}
 
 	public static Result<PaymentTransaction> Create(
 		PaymentId paymentId,
-		long sepayId,
+		long? sepayId,
 		string gateway,
 		string accountNumber,
 		DateTimeOffset transactionDate,
@@ -67,6 +70,7 @@ public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 		string? referenceCode,
 		TransactionStatus status,
 		string? rawWebhookData,
+		DateTimeOffset expiresAt,
 		DateTimeOffset now)
 	{
 		var transaction = new PaymentTransaction(
@@ -82,14 +86,61 @@ public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 			referenceCode,
 			status,
 			rawWebhookData,
+			expiresAt,
 			now,
 			now);
 
 		return Result.Success(transaction);
 	}
 
-	public void MarkSuccess(DateTimeOffset now)
+	public static Result<PaymentTransaction> CreatePending(
+		PaymentId paymentId,
+		string gateway,
+		string accountNumber,
+		string content,
+		decimal transferAmount,
+		DateTimeOffset expiresAt,
+		DateTimeOffset now)
 	{
+		var transaction = new PaymentTransaction(
+			PaymentTransactionId.Create(),
+			paymentId,
+			sepayId: null,
+			gateway,
+			accountNumber,
+			transactionDate: now,
+			content,
+			transferType: "in",
+			transferAmount,
+			referenceCode: null,
+			TransactionStatus.Pending,
+			rawWebhookData: null,
+			expiresAt,
+			now,
+			now);
+
+		return Result.Success(transaction);
+	}
+
+	public void MarkSuccess(
+		long sepayId,
+		string gateway,
+		string accountNumber,
+		DateTimeOffset transactionDate,
+		string content,
+		decimal transferAmount,
+		string? referenceCode,
+		string? rawWebhookData,
+		DateTimeOffset now)
+	{
+		SepayId = sepayId;
+		Gateway = gateway;
+		AccountNumber = accountNumber;
+		TransactionDate = transactionDate;
+		Content = content;
+		TransferAmount = transferAmount;
+		ReferenceCode = referenceCode;
+		RawWebhookData = rawWebhookData;
 		Status = TransactionStatus.Success;
 		UpdatedAt = now;
 	}
@@ -104,5 +155,17 @@ public sealed class PaymentTransaction : Entity<PaymentTransactionId>
 	{
 		Status = TransactionStatus.Expired;
 		UpdatedAt = now;
+	}
+
+	public Result Cancel(DateTimeOffset now)
+	{
+		if (Status != TransactionStatus.Pending)
+		{
+			return Result.Failure(PaymentErrors.TransactionCannotBeCanceled);
+		}
+
+		Status = TransactionStatus.Canceled;
+		UpdatedAt = now;
+		return Result.Success();
 	}
 }

@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Rakushu.Infrastructure.Payment;
 
-public sealed class SepayService : ISepayService
+public sealed class SepayService : IPaymentService
 {
 	private readonly SepaySettings _sepaySettings;
 	private readonly PaymentSettings _paymentSettings;
@@ -21,6 +21,7 @@ public sealed class SepayService : ISepayService
 	}
 
 	public int PaymentTimeoutInMinutes => _paymentSettings.TimeoutInMinutes > 0 ? _paymentSettings.TimeoutInMinutes : 15;
+	public int TransactionTimeoutInMinutes => _paymentSettings.TransactionTimeoutInMinutes > 0 ? _paymentSettings.TransactionTimeoutInMinutes : 5;
 	public string BankName => _sepaySettings.Bank;
 	public string AccountNumber => _sepaySettings.AccountNumber;
 

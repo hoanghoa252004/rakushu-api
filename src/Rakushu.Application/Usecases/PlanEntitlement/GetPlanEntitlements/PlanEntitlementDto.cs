@@ -1,4 +1,4 @@
-namespace Rakushu.Application.Usecases.PlanEntitlement;
+namespace Rakushu.Application.Usecases.PlanEntitlement.GetPlanEntitlements;
 
 public sealed record PlanEntitlementDto(
 	Guid Id,

@@ -15,6 +15,7 @@ public sealed class PaymentRepository : BaseRepository<Payment, PaymentId>, IPay
 			.Include(p => p.Transactions)
 			.Include(p => p.Subscription)
 			.Include(p => p.Plan)
+				.ThenInclude(pl => pl.PlanEntitlements)
 			.SingleOrDefaultAsync(p => p.OrderCode == orderCode, cancellationToken);
 	}
 
@@ -24,6 +25,7 @@ public sealed class PaymentRepository : BaseRepository<Payment, PaymentId>, IPay
 			.Include(p => p.Transactions)
 			.Include(p => p.Subscription)
 			.Include(p => p.Plan)
+				.ThenInclude(pl => pl.PlanEntitlements)
 			.SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
 	}
 
@@ -41,4 +43,17 @@ public sealed class PaymentRepository : BaseRepository<Payment, PaymentId>, IPay
 			.Where(p => p.Status == PaymentStatus.Pending && p.ExpiresAt <= now)
 			.ToListAsync(cancellationToken);
 	}
+
+	public async Task<Payment?> GetActivePendingPaymentByUserIdAsync(Domain.Entities.User.UserId userId, DateTimeOffset now, CancellationToken cancellationToken = default)
+	{
+		return await _context.Payments
+			.Include(p => p.Plan)
+			.Include(p => p.Transactions)
+			.FirstOrDefaultAsync(p => 
+				p.UserId == userId && 
+				p.Status == PaymentStatus.Pending && 
+				p.ExpiresAt > now, 
+				cancellationToken);
+	}
 }
+

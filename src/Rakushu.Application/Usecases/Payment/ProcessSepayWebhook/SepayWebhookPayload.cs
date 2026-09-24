@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Rakushu.Application.Usecases.Payment.Webhook;
+namespace Rakushu.Application.Usecases.Payment.ProcessSepayWebhook;
 
 public sealed record SepayWebhookPayload(
 	[property: JsonPropertyName("id")] long Id,

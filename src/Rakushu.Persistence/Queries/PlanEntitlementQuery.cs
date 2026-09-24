@@ -1,6 +1,6 @@
 using Dapper;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.PlanEntitlement;
+using Rakushu.Application.Usecases.PlanEntitlement.GetPlanEntitlements;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Persistence.Connection;
 
