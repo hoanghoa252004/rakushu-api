@@ -4,6 +4,8 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Events.DomainEvent;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.Role;
@@ -34,6 +36,8 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
 	public DbSet<Subscription> Subscriptions => Set<Subscription>();
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();
+	public DbSet<Payment> Payments => Set<Payment>();
+	public DbSet<Transaction> Transactions => Set<Transaction>();
 
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
