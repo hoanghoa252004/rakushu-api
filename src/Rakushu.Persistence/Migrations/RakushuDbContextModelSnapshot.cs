@@ -68,6 +68,141 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("features", (string)null);
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("currency");
+
+                    b.Property<DateTimeOffset>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expired_at");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payments");
+
+                    b.HasIndex("PlanId")
+                        .HasDatabaseName("ix_payments_plan_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_payments_user_id");
+
+                    b.ToTable("payments", (string)null);
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Transaction.Transaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("currency");
+
+                    b.Property<DateTimeOffset>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expired_at");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_id");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("RawResponsePayload")
+                        .HasColumnType("text")
+                        .HasColumnName("raw_response_payload");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TransactionNo")
+                        .HasColumnType("text")
+                        .HasColumnName("transaction_no");
+
+                    b.Property<string>("TxnRef")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("txn_ref");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_transactions");
+
+                    b.HasIndex("PaymentId")
+                        .HasDatabaseName("ix_transactions_payment_id");
+
+                    b.HasIndex("TxnRef")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transactions_txn_ref");
+
+                    b.HasIndex("Url")
+                        .IsUnique()
+                        .HasDatabaseName("ix_transactions_url");
+
+                    b.ToTable("transactions", (string)null);
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Plan.Plan", b =>
                 {
                     b.Property<Guid>("Id")
@@ -455,6 +590,39 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Payment", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Plan.Plan", "Plan")
+                        .WithMany("Payments")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payments_plans_plan_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.User.User", "User")
+                        .WithMany("Payments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_payments_users_user_id");
+
+                    b.Navigation("Plan");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Transaction.Transaction", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Payment.Payment", "Payment")
+                        .WithMany("Transactions")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_transactions_payments_payment_id");
+
+                    b.Navigation("Payment");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Plan.PlanEntitlement.PlanEntitlement", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Feature.Feature", "Feature")
@@ -559,8 +727,15 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("SubscriptionUsages");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Payment", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Plan.Plan", b =>
                 {
+                    b.Navigation("Payments");
+
                     b.Navigation("PlanEntitlements");
 
                     b.Navigation("Subscriptions");
@@ -579,6 +754,8 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.User.User", b =>
                 {
                     b.Navigation("EmailVerificationTokens");
+
+                    b.Navigation("Payments");
 
                     b.Navigation("RefreshTokens");
 

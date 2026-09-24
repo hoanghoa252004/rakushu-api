@@ -1,4 +1,5 @@
 ﻿using Rakushu.Domain.Common.Errors;
+using Rakushu.Domain.Entities.Payment;
 using System;
 using System.Collections.Generic;
 using System.Linq;

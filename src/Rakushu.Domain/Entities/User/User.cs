@@ -36,6 +36,10 @@ public sealed class User : AggregateRoot<UserId>
 	private readonly List<Subscription.Subscription> _subscriptions = [];
 	public IReadOnlyCollection<Subscription.Subscription> Subscriptions => _subscriptions.AsReadOnly();
 
+	// Payments:
+	private readonly List<Payment.Payment> _payments = [];
+	public IReadOnlyCollection<Payment.Payment> Payments => _payments.AsReadOnly();
+
 	// CONSTRUCTORS & FACTORY METHODS----------
 	private User() { }
 
