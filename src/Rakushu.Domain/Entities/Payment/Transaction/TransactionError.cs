@@ -37,4 +37,7 @@ public static class TransactionError
 
 	public static readonly Error InvalidStatus =
 		Error.Validation("TRANSACTION.INVALID_STATUS", "Transaction status is invalid.");
+
+	public static readonly Error InvalidStatusTransition =
+	Error.Validation("TRANSACTION.INVALID_STATUS_TRANSITION", "Invalid status transition for transaction.");
 }

@@ -1,6 +1,5 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.User;
 using System;
@@ -102,17 +101,39 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		return Result.Success(payment);
 	}
 
-	public Result UpdateStatus(
+	private Result UpdateStatus(
 		PaymentStatus status,
 		DateTimeOffset updatedAt)
 	{
 		if (Enum.IsDefined(typeof(PaymentStatus), status) == false
 			&& PaymentStatusTransition.IsAllowed(Status, status) == false)
-			return Result.Failure(PaymentError.InvalidStatus);
+			return Result.Failure(PaymentError.InvalidStatusTransition);
 
 		Status = status;
 
 		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result CancelPayment(DateTimeOffset updatedAt)
+	{
+		var result = UpdateStatus(PaymentStatus.Cancelled, updatedAt);
+
+		if (result.IsFailure == true)
+		{
+			return result;
+		}
+
+		foreach (var transaction in _transactions)
+		{
+			var resultCancelTransaction = transaction.Cancel(updatedAt);
+
+			if (resultCancelTransaction.IsFailure)
+			{
+				return resultCancelTransaction;
+			}
+		}
 
 		return Result.Success();
 	}

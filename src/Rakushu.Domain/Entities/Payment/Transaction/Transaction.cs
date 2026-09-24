@@ -60,7 +60,7 @@ public sealed class Transaction : Entity<TransactionId>
 		UpdatedAt = updatedAt;
 	}
 
-	
+
 
 	public static Result<Transaction> Create(
 		PaymentId paymentId,
@@ -117,12 +117,12 @@ public sealed class Transaction : Entity<TransactionId>
 	}
 
 	public Result UpdateStatus(
-		TransactionStatus status, 
+		TransactionStatus status,
 		DateTimeOffset updatedAt,
 		string? transactionNo = null,
 		string? rawResponsePayload = null)
 	{
-		if (Enum.IsDefined(typeof(TransactionStatus), status) == false 
+		if (Enum.IsDefined(typeof(TransactionStatus), status) == false
 			&& TransactionStatusTransition.IsAllowed(Status, status) == false)
 			return Result.Failure(TransactionError.InvalidStatus);
 
@@ -142,5 +142,19 @@ public sealed class Transaction : Entity<TransactionId>
 
 		return Result.Success();
 	}
+
+	public Result Cancel(DateTimeOffset updatedAt)
+	{
+		if (TransactionStatusTransition.IsAllowed(Status, TransactionStatus.Cancelled) == false)
+		{
+			return Result.Failure(TransactionError.InvalidStatusTransition);
+		}
+
+		Status = TransactionStatus.Cancelled;
+
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	} 
 }
 

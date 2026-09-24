@@ -14,7 +14,8 @@ public static class PaymentError
 		Error.Validation("PAYMENT.INVALID_AMOUNT", "Amount must be greater than 0.");
 
 	public static readonly Error InvalidStatus =
-		Error.Validation("PAYMENT.INVALID_STATUS", "Payment status is invalid.");
+		Error.Validation("PAYMENT.INVALID_STATUS", "Payment status is invalid. " +
+			"Valid payment status: " + string.Join(", ", Enum.GetNames(typeof(PaymentStatus))));
 
 	public static readonly Error InvalidPlanId =
 		Error.Validation("PAYMENT.INVALID_PLAN_ID", "Plan ID is invalid.");
@@ -28,8 +29,8 @@ public static class PaymentError
 	public static readonly Error TransactionNotBelong =
 	Error.Validation("PAYMENT.TRANSACTION_NOT_BELONG", "Transaction does not belong to the specified payment.");
 
-	public static Error PaymentNotFound(PlanId plandId) =>
-		Error.NotFound("PAYMENT.NOT_FOUND", $"Payment for plan ID '{plandId}' was not found.");
+	public static Error PaymentNotFoundForPlan(PlanId plandId) =>
+		Error.NotFound("PAYMENT.NOT_FOUND_FOR_PLAN", $"Payment for plan ID '{plandId}' was not found.");
 
 	public static readonly Error PaymentExpired =
 		Error.Validation("PAYMENT.EXPIRED", "Payment has expired.");
@@ -46,6 +47,32 @@ public static class PaymentError
 
 	public static readonly Error PendingTransactionExists =
 		Error.Validation("PAYMENT.PENDING_TRANSACTION_EXISTS", "An pending transaction already exists. Please wait for it to expire before creating a new one.");
+
+	public static readonly Error PlanNotFound =
+		Error.NotFound("PAYMENT.PLAN_NOT_FOUND", "The specified plan was not found.");
+
+	public static readonly Error PlanNotActive =
+		Error.Validation("PAYMENT.PLAN_NOT_ACTIVE", "The specified plan is not active.");
+
+	public static readonly Error ActiveSubscriptionExists =
+		Error.Conflict("PAYMENT.ACTIVE_SUBSCRIPTION_EXISTS", "You may already have an active subscription in used currently. " +
+			"If you want to subscribe / change to another one, please cancel the current subsription.");
+
+	public static readonly Error ActiveSubscriptionWithSpecifiedPlanExists =
+		Error.Conflict("PAYMENT.ACTIVE_SUBSCRIPTION_WITH_SPECIFIED_PLAN_EXISTS", "You already have an active subscription for this plan."); 
+
+	public static readonly Error InvalidProvider =
+		Error.Validation("PAYMENT.INVALID_PROVIDER", "The specified provider is invalid. " +
+			"Valid provider: " + string.Join(", ", Enum.GetNames(typeof(Provider))));
+
+	public static readonly Error PaymentNotFound =
+		Error.NotFound("PAYMENT.NOT_FOUND", "The specified payment was not found.");
+
+	public static readonly Error PaymentNotBelong =
+		Error.Forbidden("PAYMENT.NOT_BELONG", "The specified payment does not belong to you.");
+
+	public static readonly Error InvalidStatusTransition =
+		Error.Validation("PAYMENT.INVALID_STATUS_TRANSITION", "Invalid status transition for payment.");
 
 	//public static Error PaymentConfigNotFound() =>
 	//	Error.NotFound("PAYMENT.PaymentConfigNotFound", "Payment configuration was not found.");
