@@ -5,7 +5,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Payment;
 
-namespace Rakushu.Application.Usecases.Payment.UpdatePaymentStatus;
+namespace Rakushu.Application.Usecases.Payment.CancelPaymentHandler;
 
 public sealed class CancelPaymentHandler : IRequestHandler<CancelPaymentCommand, Result>
 {
@@ -53,7 +53,7 @@ public sealed class CancelPaymentHandler : IRequestHandler<CancelPaymentCommand,
 			}
 
 			// Update payment status to Cancelled
-			var updateResult = payment.CancelPayment(_systemClock.UtcNow);
+			var updateResult = payment.Cancel(_systemClock.UtcNow);
 
 			if (updateResult.IsFailure)
 			{

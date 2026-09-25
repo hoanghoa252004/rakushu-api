@@ -116,7 +116,7 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		return Result.Success();
 	}
 
-	public Result CancelPayment(DateTimeOffset updatedAt)
+	public Result Cancel(DateTimeOffset updatedAt)
 	{
 		var result = UpdateStatus(PaymentStatus.Cancelled, updatedAt);
 
@@ -202,6 +202,20 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		}
 
 		Status = PaymentStatus.Completed;
+
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result Expire(DateTimeOffset updatedAt)
+	{
+		if (PaymentStatusTransition.IsAllowed(Status, PaymentStatus.Expired) == false)
+		{
+			return Result.Failure(PaymentError.InvalidStatusTransition);
+		}
+
+		Status = PaymentStatus.Expired;
 
 		UpdatedAt = updatedAt;
 

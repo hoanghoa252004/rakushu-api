@@ -3,7 +3,7 @@ using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
 
-namespace Rakushu.Application.Usecases.Transaction.GetTransactionsByPayment;
+namespace Rakushu.Application.Usecases.Transaction.GetTransactionsByPaymentId;
 
 public sealed record GetTransactionsByPaymentIdQuery(
 	Guid PaymentId,

@@ -1,7 +1,6 @@
 using FluentValidation;
-using Rakushu.Application.Usecases.Transaction.GetTransactionsByPayment;
 
-namespace Rakushu.Application.Usecases.Transaction.GetTransactionsByPayment;
+namespace Rakushu.Application.Usecases.Transaction.GetTransactionsByPaymentId;
 
 public sealed class GetTransactionsByPaymentValidator : AbstractValidator<GetTransactionsByPaymentIdQuery>
 {

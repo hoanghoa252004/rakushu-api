@@ -6,7 +6,7 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Application.Usecases.Transaction.GetTransactionsByPayment;
+namespace Rakushu.Application.Usecases.Transaction.GetTransactionsByPaymentId;
 
 public sealed class GetTransactionsByPaymentIdHandler : IRequestHandler<GetTransactionsByPaymentIdQuery, Result<IReadOnlyCollection<TransactionDto>>>
 {

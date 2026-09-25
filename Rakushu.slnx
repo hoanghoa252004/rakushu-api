@@ -8,6 +8,7 @@
     <Project Path="src/Rakushu.Domain/Rakushu.Domain.csproj" Id="12f49ed8-2776-4831-8b05-40e2f4405b43" />
     <Project Path="src/Rakushu.Infrastructure/Rakushu.Infrastructure.csproj" Id="b7144c08-2056-4620-95b6-3e4227789547" />
     <Project Path="src/Rakushu.Persistence/Rakushu.Persistence.csproj" Id="9df8566d-0d7a-4185-90b1-371720253ba2" />
+    <Project Path="src/Rakushu.Worker/Rakushu.Worker/Rakushu.Worker.csproj" Id="c1a11bf9-715d-4088-b141-62f3858cc11a" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Rakushu.IntegrationTest/Rakushu.IntegrationTest.csproj" Id="09ada921-cb84-4be5-96e0-b179592aa1a0" />

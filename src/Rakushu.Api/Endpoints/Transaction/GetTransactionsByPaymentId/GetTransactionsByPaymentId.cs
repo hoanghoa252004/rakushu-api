@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Transaction.GetTransactionsByPayment;
+using Rakushu.Application.Usecases.Transaction.GetTransactionsByPaymentId;
 
-namespace Rakushu.Api.Endpoints.Transaction.GetTransactionsByPayment;
+namespace Rakushu.Api.Endpoints.Transaction.GetTransactionsByPaymentId;
 
 internal sealed class GetTransactionsByPaymentId : IEndpoint
 {

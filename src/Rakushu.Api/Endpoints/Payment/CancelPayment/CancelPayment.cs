@@ -2,10 +2,10 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Payment.UpdatePaymentStatus;
+using Rakushu.Application.Usecases.Payment.CancelPaymentHandler;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Payment.UpdatePaymentStatus;
+namespace Rakushu.Api.Endpoints.Payment.CancelPayment;
 
 internal sealed class CancelPayment : IEndpoint
 {

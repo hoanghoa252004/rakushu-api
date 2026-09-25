@@ -44,11 +44,8 @@ internal static class AuthenticationExtention
 
 		services.AddAuthorization();
 
-
 		services.AddScoped<ICurrentUserContext, CurrentUserContext>();
-		services.AddScoped<IPasswordHasher, PasswordHasher>();
-		services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-		services.AddScoped<IVerificationCodeHasher, VerificationCodeHasher>();
+
 		return services;
 	}
 }

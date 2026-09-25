@@ -1,6 +1,6 @@
 using Dapper;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Transaction.GetTransactionsByPayment;
+using Rakushu.Application.Usecases.Transaction.GetTransactionsByPaymentId;
 using Rakushu.Persistence.Connection;
 using System.Text;
 

@@ -11,7 +11,7 @@ internal sealed class VnPayIpn : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app // 1. Endpoint
-			.MapGet("/vnpay-ipn", async (
+			.MapGet("/api/vnpay-ipn", async (
 				HttpContext httpContext,
 				ISender sender,
 				CancellationToken cancellationToken

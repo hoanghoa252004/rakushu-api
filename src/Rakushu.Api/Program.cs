@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 /// CONFIG SOFTWARE LAYERS:
 builder.Services.AddRakushuPersistence(builder.Configuration);
-builder.Services.AddRakushuInfrastructure(builder.Configuration);
+builder.Services.AddRakushuInfrastructureForApi(builder.Configuration);
 builder.Services.AddRakushuApplication();
 builder.Services.AddRakushuApi();
 
