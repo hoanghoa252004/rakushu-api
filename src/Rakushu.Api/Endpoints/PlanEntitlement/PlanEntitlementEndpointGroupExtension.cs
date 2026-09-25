@@ -5,7 +5,7 @@ internal static class PlanEntitlementEndpointGroupExtension
 	internal static RouteGroupBuilder MapPlanEntitlementEndpoints(this IEndpointRouteBuilder app)
 	{
 		return app.MapGroup("/api/plans/{planId:guid}/entitlements")
-			.WithTags("PlanEntitlement")
+			.WithTags("Entitlement")
 			.WithGroupName("subscription");
 	}
 }
