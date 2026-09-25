@@ -156,7 +156,7 @@ public sealed class Payment : AggregateRoot<PaymentId>
 		DateTimeOffset now)
 	{
 
-		if (Status != PaymentStatus.Pending || now <= ExpiredAt)
+		if (Status != PaymentStatus.Pending || now >= ExpiredAt)
 		{
 			return Result.Failure<Transaction.Transaction>
 				(PaymentError.Expired);

@@ -35,6 +35,7 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.Include(u => u.Role)
 			.Include(u => u.RefreshTokens)
 			.Include(u => u.Subscriptions)
+			.Include(u => u.Payments)
 			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
 	}
 }

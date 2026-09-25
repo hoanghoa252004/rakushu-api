@@ -50,6 +50,8 @@ public sealed class CreatePaymentHandler : IRequestHandler<CreatePaymentCommand,
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
+			var now = _systemClock.UtcNow;
+
 			// 1. Check if any plan exists and is active
 			var planId = PlanId.From(request.PlanId);
 
@@ -73,6 +75,13 @@ public sealed class CreatePaymentHandler : IRequestHandler<CreatePaymentCommand,
 				return Result.Failure<Guid>(PaymentError.InvalidUserId);
 			}
 
+			var isAnyPaymentInProcess = user.Payments.Any(p => p.Status == PaymentStatus.Pending);
+
+			if(isAnyPaymentInProcess == true)
+			{
+				return Result.Failure<Guid>(PaymentError.SomePaymentInProcess);
+			}
+
 			var hasActiveSubscriptionWithThisPlan = user.Subscriptions
 				.Any(s => s.PlanId == planId && s.Status == SubscriptionStatus.Active);
 
@@ -91,8 +100,6 @@ public sealed class CreatePaymentHandler : IRequestHandler<CreatePaymentCommand,
 			}
 
 			// 4. Create payment
-			var now = _systemClock.UtcNow;
-
 			var expiredAt = _paymentService.GetPaymentExpiration();
 
 			var paymentResult = Domain.Entities.Payment.Payment.Create(

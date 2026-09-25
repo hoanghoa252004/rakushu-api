@@ -81,5 +81,8 @@ public static class PaymentError
 		Error.Validation("PAYMENT.EXPIRED", "Payment has expired.");
 
 	public static readonly Error HasPendingTransaction =
-		Error.Validation("TRANSACTION.HAS_PENDING_TRANSACTION", "Cannot create transaction because payment is having a pending transaction.");
+		Error.Validation("PAYMENT.HAS_PENDING_TRANSACTION", "Cannot create transaction because payment is having a pending transaction."); 
+
+	public static readonly Error SomePaymentInProcess =
+	Error.Validation("PAYMENT.SOME_PAYMENT_IN_PROCESS", "Cannot create new payment because a payment is already in process."); 
 }
