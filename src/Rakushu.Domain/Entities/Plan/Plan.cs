@@ -2,6 +2,7 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Plan.ObjectValues;
 using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.User.Subscription;
@@ -33,6 +34,10 @@ public class Plan : AggregateRoot<PlanId>
 	// Subscriptions:
 	private readonly List<Subscription> _subscriptions = [];
 	public IReadOnlyCollection<Subscription> Subscriptions => _subscriptions.AsReadOnly();
+
+	// Payments:
+	private readonly List<Payment.Payment> _payments = [];
+	public IReadOnlyCollection<Payment.Payment> Payments => _payments.AsReadOnly();
 
 	private Plan() { }
 

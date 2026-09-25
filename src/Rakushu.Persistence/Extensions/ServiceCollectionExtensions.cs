@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
@@ -45,6 +47,8 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IRoleRepository, RoleRepository>();
 		services.AddScoped<IPlanRepository, PlanRepository>();
 		services.AddScoped<IFeatureRepository, FeatureRepository>();
+		services.AddScoped<IPaymentRepository, PaymentRepository>();
+		services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 		// DAPPER CONNECTION
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -56,6 +60,8 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IPlanQuery, PlanQuery>();
 		services.AddScoped<IFeatureQuery, FeatureQuery>();
 		services.AddScoped<IPlanEntitlementQuery, PlanEntitlementQuery>();
+		services.AddScoped<IPaymentQuery, PaymentQuery>();
+		services.AddScoped<ITransactionQuery, TransactionQuery>();
 		return services;
 	}
 }
