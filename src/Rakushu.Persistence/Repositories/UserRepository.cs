@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.RefreshToken;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
+using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -37,5 +38,13 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.Include(u => u.Subscriptions)
 			.Include(u => u.Payments)
 			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
+	}
+
+	public async Task<IEnumerable<User>> GetByRoleIdAsync(RoleId roleId, CancellationToken cancellationToken = default)
+	{
+		return await _context.Users
+			.Include(u => u.RefreshTokens)
+			.Where(u => u.RoleId == roleId)
+			.ToListAsync(cancellationToken);
 	}
 }
