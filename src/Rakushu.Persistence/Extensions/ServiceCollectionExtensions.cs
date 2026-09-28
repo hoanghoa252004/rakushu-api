@@ -49,6 +49,8 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IFeatureRepository, FeatureRepository>();
 		services.AddScoped<IPaymentRepository, PaymentRepository>();
 		services.AddScoped<ITransactionRepository, TransactionRepository>();
+		services.AddScoped<Domain.Entities.OovCandidate.IOovCandidateRepository, OovCandidateRepository>();
+		services.AddScoped<Domain.Entities.DictionaryEntry.IDictionaryEntryRepository, DictionaryEntryRepository>();
 
 		// DAPPER CONNECTION
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -62,6 +64,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IPlanEntitlementQuery, PlanEntitlementQuery>();
 		services.AddScoped<IPaymentQuery, PaymentQuery>();
 		services.AddScoped<ITransactionQuery, TransactionQuery>();
+		services.AddScoped<IOovCandidateQuery, OovCandidateQuery>();
 		return services;
 	}
 }

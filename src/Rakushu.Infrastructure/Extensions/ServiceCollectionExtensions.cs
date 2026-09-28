@@ -59,6 +59,9 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<VnPayService>();
 		services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
 
+		// AI SERVICE CLIENT
+		services.AddHttpClient<Rakushu.Application.Abstractions.Infrastructure.IAiServiceClient, Rakushu.Infrastructure.AiService.AiServiceClient>();
+
 		return services;
 	}
 }

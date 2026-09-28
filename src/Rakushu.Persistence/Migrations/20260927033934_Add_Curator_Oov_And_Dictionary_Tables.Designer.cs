@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rakushu.Persistence;
@@ -12,9 +13,11 @@ using Rakushu.Persistence;
 namespace Rakushu.Persistence.Migrations
 {
     [DbContext(typeof(RakushuDbContext))]
-    partial class RakushuDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260927033934_Add_Curator_Oov_And_Dictionary_Tables")]
+    partial class Add_Curator_Oov_And_Dictionary_Tables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -276,9 +279,13 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("id");
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("amount");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -286,23 +293,42 @@ namespace Rakushu.Persistence.Migrations
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("currency");
 
-                    b.Property<DateTimeOffset>("ExpiredAt")
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expired_at");
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("OrderCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("order_code");
 
                     b.Property<Guid>("PlanId")
                         .HasColumnType("uuid")
                         .HasColumnName("plan_id");
+
+                    b.Property<string>("QrCodeUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("qr_code_url");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
+
+                    b.Property<Guid?>("SubscriptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subscription_id");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -315,8 +341,15 @@ namespace Rakushu.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_payments");
 
+                    b.HasIndex("OrderCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payments_order_code");
+
                     b.HasIndex("PlanId")
                         .HasDatabaseName("ix_payments_plan_id");
+
+                    b.HasIndex("SubscriptionId")
+                        .HasDatabaseName("ix_payments_subscription_id");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_payments_user_id");
@@ -324,44 +357,53 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("payments", (string)null);
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Transaction.Transaction", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.PaymentTransaction.PaymentTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)")
-                        .HasColumnName("amount");
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("account_number");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("currency");
-
-                    b.Property<DateTimeOffset>("ExpiredAt")
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expired_at");
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Gateway")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("gateway");
 
                     b.Property<Guid>("PaymentId")
                         .HasColumnType("uuid")
                         .HasColumnName("payment_id");
 
-                    b.Property<string>("Provider")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("provider");
-
-                    b.Property<string>("RawResponsePayload")
+                    b.Property<string>("RawWebhookData")
                         .HasColumnType("text")
-                        .HasColumnName("raw_response_payload");
+                        .HasColumnName("raw_webhook_data");
+
+                    b.Property<string>("ReferenceCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("reference_code");
+
+                    b.Property<long?>("SepayId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("sepay_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -369,39 +411,37 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
 
-                    b.Property<string>("TransactionNo")
-                        .HasColumnType("text")
-                        .HasColumnName("transaction_no");
+                    b.Property<DateTimeOffset>("TransactionDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("transaction_date");
 
-                    b.Property<string>("TxnRef")
+                    b.Property<decimal>("TransferAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("transfer_amount");
+
+                    b.Property<string>("TransferType")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("txn_ref");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("transfer_type");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("url");
-
                     b.HasKey("Id")
-                        .HasName("pk_transactions");
+                        .HasName("pk_payment_transactions");
 
                     b.HasIndex("PaymentId")
-                        .HasDatabaseName("ix_transactions_payment_id");
+                        .HasDatabaseName("ix_payment_transactions_payment_id");
 
-                    b.HasIndex("TxnRef")
+                    b.HasIndex("SepayId")
                         .IsUnique()
-                        .HasDatabaseName("ix_transactions_txn_ref");
+                        .HasDatabaseName("ix_payment_transactions_sepay_id")
+                        .HasFilter("sepay_id IS NOT NULL");
 
-                    b.HasIndex("Url")
-                        .IsUnique()
-                        .HasDatabaseName("ix_transactions_url");
-
-                    b.ToTable("transactions", (string)null);
+                    b.ToTable("payment_transactions", (string)null);
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Plan.Plan", b =>
@@ -637,9 +677,25 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("CanceledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_at");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("CurrentPeriodEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("current_period_end");
+
+                    b.Property<DateTimeOffset>("CurrentPeriodStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("current_period_start");
+
+                    b.Property<DateTimeOffset>("EndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_date");
 
                     b.Property<Guid>("PlanId")
                         .HasColumnType("uuid")
@@ -821,6 +877,12 @@ namespace Rakushu.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_payments_plans_plan_id");
 
+                    b.HasOne("Rakushu.Domain.Entities.User.Subscription.Subscription", "Subscription")
+                        .WithMany("Payments")
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_payments_subscriptions_subscription_id");
+
                     b.HasOne("Rakushu.Domain.Entities.User.User", "User")
                         .WithMany("Payments")
                         .HasForeignKey("UserId")
@@ -830,17 +892,19 @@ namespace Rakushu.Persistence.Migrations
 
                     b.Navigation("Plan");
 
+                    b.Navigation("Subscription");
+
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.Transaction.Transaction", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Payment.PaymentTransaction.PaymentTransaction", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Payment.Payment", "Payment")
                         .WithMany("Transactions")
                         .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_transactions_payments_payment_id");
+                        .HasConstraintName("fk_payment_transactions_payments_payment_id");
 
                     b.Navigation("Payment");
                 });
@@ -975,6 +1039,8 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.User.Subscription.Subscription", b =>
                 {
+                    b.Navigation("Payments");
+
                     b.Navigation("SubscriptionUsages");
                 });
 
