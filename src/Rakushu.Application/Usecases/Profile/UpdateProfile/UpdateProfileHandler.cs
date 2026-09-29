@@ -4,7 +4,8 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
-using UserProfile = Rakushu.Domain.Entities.User.ValueObjects.Profile.Profile;
+using Rakushu.Domain.SupportedLanguage;
+using UserProfile = Rakushu.Domain.Entities.User.Profile.Profile;
 
 namespace Rakushu.Application.Usecases.Profile.UpdateProfile;
 
@@ -44,8 +45,8 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 
 			// 2. Replace the previous profile with new profile
 			var profileResult = UserProfile.Create(
-				request.FullName, 
-				request.NativeLanguage, 
+				request.FullName,
+				SupportedLanguageId.Create(), 
 				request.AvatarKey
 				);
 

@@ -30,9 +30,8 @@ public sealed class EmailVerificationToken : Entity<EmailVerificationTokenId>
 		UserId userId,
 		string codeHash,
 		DateTimeOffset createdAt,
-		DateTimeOffset expiresAt)
+		DateTimeOffset expiresAt) : base(id)
 	{
-		Id = id;
 		UserId = userId;
 		CodeHash = codeHash;
 		CreatedAt = createdAt;
