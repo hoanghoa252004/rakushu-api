@@ -72,6 +72,9 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();
 	public DbSet<Payment> Payments => Set<Payment>();
 	public DbSet<Transaction> Transactions => Set<Transaction>();
+	public DbSet<Domain.Entities.OovCandidate.OovCandidate> OovCandidates => Set<Domain.Entities.OovCandidate.OovCandidate>();
+	public DbSet<Domain.Entities.CuratorReview.CuratorReview> CuratorReviews => Set<Domain.Entities.CuratorReview.CuratorReview>();
+	public DbSet<Domain.Entities.DictionaryEntry.DictionaryEntry> DictionaryEntries => Set<Domain.Entities.DictionaryEntry.DictionaryEntry>();
 
 	// Proficiency Framework
 	public DbSet<ProficiencyFramework> ProficiencyFrameworks => Set<ProficiencyFramework>();

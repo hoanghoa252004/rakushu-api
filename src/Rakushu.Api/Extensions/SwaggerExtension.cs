@@ -43,6 +43,13 @@ internal static class SwaggerExtension
 				Description = "SUBSCRIPTION"
 			});
 
+			options.SwaggerDoc("curator", new OpenApiInfo
+			{
+				Title = "Curator API",
+				Version = "v1",
+				Description = "CURATOR OOV LIFECYCLE & DICTIONARY MANAGEMENT"
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -80,6 +87,7 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
+			options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
 
 		});
 
