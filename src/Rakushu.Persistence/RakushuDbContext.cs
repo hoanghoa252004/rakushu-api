@@ -3,17 +3,44 @@ using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Events.DomainEvent;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.ContentCategory;
 using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Knowledge.KnowledgePattern;
+using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternElement;
+using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternRelation;
+using Rakushu.Domain.Entities.Knowledge.LinguisticKnowledge;
+using Rakushu.Domain.Entities.LearningUnit;
+using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
+using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.BunsetsuDependencyRelationship;
+using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
+using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Plan.PlanEntitlement;
+using Rakushu.Domain.Entities.ProficiencyFramework;
+using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
+using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel.ProficiencyEquivalence;
 using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Series;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.EmailVerificationToken;
+using Rakushu.Domain.Entities.User.Profile;
+using Rakushu.Domain.Entities.User.Profile.Interest;
 using Rakushu.Domain.Entities.User.RefreshToken;
 using Rakushu.Domain.Entities.User.Subscription;
 using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
+using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Video.MediaAsset;
+using Rakushu.Domain.Entities.Video.Subtitle;
+using Rakushu.Domain.Entities.Video.Subtitle.SubtitleSegment;
+using Rakushu.Domain.Entities.Video.Transcript;
+using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
+using Rakushu.Domain.SupportedLanguage;
 
 namespace Rakushu.Persistence;
 
@@ -27,13 +54,20 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 		_publisher = publisher;
 	}
 
+	// User Management
 	public DbSet<Role> Roles => Set<Role>();
 	public DbSet<User> Users => Set<User>();
+	public DbSet<Profile> Profiles => Set<Profile>();
+	public DbSet<Interest> Interests => Set<Interest>();
 	public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 	public DbSet<EmailVerificationToken> EmailVerificationToken => Set<EmailVerificationToken>();
+
+	// Plans & Features
 	public DbSet<Plan> Plans => Set<Plan>();
 	public DbSet<Feature> Features => Set<Feature>();
 	public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
+
+	// Subscriptions & Payments
 	public DbSet<Subscription> Subscriptions => Set<Subscription>();
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();
 	public DbSet<Payment> Payments => Set<Payment>();
@@ -41,6 +75,45 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<Domain.Entities.OovCandidate.OovCandidate> OovCandidates => Set<Domain.Entities.OovCandidate.OovCandidate>();
 	public DbSet<Domain.Entities.CuratorReview.CuratorReview> CuratorReviews => Set<Domain.Entities.CuratorReview.CuratorReview>();
 	public DbSet<Domain.Entities.DictionaryEntry.DictionaryEntry> DictionaryEntries => Set<Domain.Entities.DictionaryEntry.DictionaryEntry>();
+
+	// Proficiency Framework
+	public DbSet<ProficiencyFramework> ProficiencyFrameworks => Set<ProficiencyFramework>();
+	public DbSet<ProficiencyLevel> ProficiencyLevels => Set<ProficiencyLevel>();
+	public DbSet<ProficiencyEquivalence> ProficiencyEquivalences => Set<ProficiencyEquivalence>();
+
+	// Video & Learning
+	public DbSet<Video> Videos => Set<Video>();
+	public DbSet<Series> Series => Set<Series>();
+	public DbSet<Transcript> Transcripts => Set<Transcript>();
+	public DbSet<TranscriptSegment> TranscriptSegments => Set<TranscriptSegment>();
+	public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
+	public DbSet<Subtitle> Subtitles => Set<Subtitle>();
+	public DbSet<SubtitleSegment> SubtitleItems => Set<SubtitleSegment>();
+
+	// Learning Units
+	public DbSet<LearningUnit> LearningUnits => Set<LearningUnit>();
+	public DbSet<Bunsetsu> Bunsetsu => Set<Bunsetsu>();
+	public DbSet<Token> Tokens => Set<Token>();
+	public DbSet<BunsetsuDependencyRelationship> BunsetsuDependencyRelationships => Set<BunsetsuDependencyRelationship>();
+
+	// Content & Categories
+	public DbSet<ContentCategory> ContentCategories => Set<ContentCategory>();
+
+	// Knowledge
+	public DbSet<LinguisticKnowledge> LinguisticKnowledges => Set<LinguisticKnowledge>();
+	public DbSet<KnowledgePattern> KnowledgePatterns => Set<KnowledgePattern>();
+	public DbSet<KnowledgePatternElement> KnowledgePatternElements => Set<KnowledgePatternElement>();
+	public DbSet<KnowledgePatternRelation> KnowledgePatternRelations => Set<KnowledgePatternRelation>();
+	public DbSet<KnowledgeMeaning> KnowledgeMeanings => Set<KnowledgeMeaning>();
+
+	// Linguistic Metadata
+	public DbSet<JapanesePartOfSpeech> JapanesePartOfSpeeches => Set<JapanesePartOfSpeech>();
+	public DbSet<UniversalPartOfSpeech> UniversalPartOfSpeeches => Set<UniversalPartOfSpeech>();
+	public DbSet<JapaneseConjugationForm> JapaneseConjugationForms => Set<JapaneseConjugationForm>();
+	public DbSet<DependencyRelationship> DependencyRelationships => Set<DependencyRelationship>();
+
+	// Supported Languages
+	public DbSet<SupportedLanguage> SupportedLanguages => Set<SupportedLanguage>();
 
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

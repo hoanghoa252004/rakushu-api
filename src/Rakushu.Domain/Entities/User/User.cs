@@ -3,9 +3,8 @@ using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User.DomainEvents;
-using Rakushu.Domain.Entities.User.EmailVerificationToken;
+using Rakushu.Domain.Entities.User.Profile;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
-using Rakushu.Domain.Entities.User.ValueObjects.Profile;
 
 namespace Rakushu.Domain.Entities.User;
 
@@ -16,7 +15,6 @@ public sealed class User : AggregateRoot<UserId>
 	public string PasswordHash { get; private set; } = null!;
 	public RoleId RoleId { get; private set; } = null!; // REF: USER * - 1 ROLE
 	public UserStatus Status { get; private set; }
-	public Profile Profile { get; private set; } = null!;
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -40,6 +38,13 @@ public sealed class User : AggregateRoot<UserId>
 	private readonly List<Payment.Payment> _payments = [];
 	public IReadOnlyCollection<Payment.Payment> Payments => _payments.AsReadOnly();
 
+	// Profile:
+	public Profile.Profile Profile { get; private set; } = null!;
+
+	// Videos:
+	private readonly List<Video.Video> _videos = [];
+	public IReadOnlyCollection<Video.Video> Videos => _videos.AsReadOnly();
+
 	// CONSTRUCTORS & FACTORY METHODS----------
 	private User() { }
 
@@ -49,7 +54,6 @@ public sealed class User : AggregateRoot<UserId>
 		string passwordHash,
 		RoleId roleId,
 		UserStatus status,
-		Profile profile,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt) : base(id)
 	{
@@ -57,7 +61,6 @@ public sealed class User : AggregateRoot<UserId>
 		PasswordHash = passwordHash;
 		RoleId = roleId;
 		Status = status;
-		Profile = profile;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 	}
@@ -67,7 +70,6 @@ public sealed class User : AggregateRoot<UserId>
 		string passwordHash,
 		RoleId roleId,
 		UserStatus status,
-		Profile profile,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt
 		)
@@ -80,7 +82,6 @@ public sealed class User : AggregateRoot<UserId>
 					passwordHash,
 					roleId,
 					status,
-					profile,
 					createdAt,
 					updatedAt
 					));
@@ -117,7 +118,7 @@ public sealed class User : AggregateRoot<UserId>
 		AddDomainEvent(new UserPasswordChangedDomainEvent(this));
 	}
 
-	public void UpdateProfile(Profile profile)
+	public void UpdateProfile(Profile.Profile profile)
 	{
 		Profile = profile;
 	}

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -24,6 +25,11 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 
 		// Description
 		builder.Property(r => r.Description);
+
+		// IsActive
+		builder.Property(r => r.IsActive)
+			.HasDefaultValue(false)
+			.IsRequired();
 
 		// CreatedAt
 		builder.Property(r => r.CreatedAt)
