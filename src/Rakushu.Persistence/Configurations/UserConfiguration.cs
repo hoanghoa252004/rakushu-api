@@ -31,26 +31,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 		builder.Property(u => u.PasswordHash)
 			.IsRequired();
 
-		// [VO] Profile
-		builder.ComplexProperty(
-			u => u.Profile,
-			profile =>
-			{
-				// FullName
-				profile.Property(p => p.FullName)
-					.HasMaxLength(50)
-					.IsRequired();
-
-				// AvatarKey
-				profile.Property(p => p.AvatarKey)
-					.HasMaxLength(100);
-
-				// NativeLanguage
-				profile.Property(p => p.NativeLanguage)
-					.HasMaxLength(50)
-					.IsRequired();
-			});
-
 		// RoleId
 		builder.Property(u => u.RoleId)
 			.HasConversion(

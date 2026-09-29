@@ -6,7 +6,8 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
-using UserProfile = Rakushu.Domain.Entities.User.ValueObjects.Profile.Profile;
+using Rakushu.Domain.SupportedLanguage;
+using UserProfile = Rakushu.Domain.Entities.User.Profile.Profile;
 
 namespace Rakushu.Application.Usecases.Users.CreateUser;
 
@@ -69,7 +70,7 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 				return Result.Failure<UserId>(emailResult.Error);
 			}	
 
-			var profileResult = UserProfile.Create(request.FullName, request.NativeLanguage, request.AvatarKey);
+			var profileResult = UserProfile.Create(request.FullName, SupportedLanguageId.Create(), request.AvatarKey);
 
 			if (profileResult.IsFailure)
 			{
@@ -89,7 +90,6 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 				passwordHash,
 				role!.Id,
 				initialStatus,
-				profileResult.Value,
 				utcNow,
 				utcNow);
 
