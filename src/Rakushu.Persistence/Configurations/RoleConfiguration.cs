@@ -25,6 +25,11 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 		// Description
 		builder.Property(r => r.Description);
 
+		// IsActive
+		builder.Property(r => r.IsActive)
+			.HasDefaultValue(false)
+			.IsRequired();
+
 		// CreatedAt
 		builder.Property(r => r.CreatedAt)
 			.IsRequired();

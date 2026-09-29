@@ -7,6 +7,7 @@ public sealed class Role : AggregateRoot<RoleId>
 	// MAIN PROPERTIES----------
 	public string Title { get; private set; } = null!;
 	public string? Description { get; private set; }
+	public bool IsActive { get; private set; } = true;
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -32,5 +33,12 @@ public sealed class Role : AggregateRoot<RoleId>
 	{
 		RoleId roleId = RoleId.Create();
 		return new Role(roleId, title, createdAt, updatedAt, description);
+	}
+
+	public void Update(string? description, bool isActive, DateTimeOffset updatedAt)
+	{
+		Description = description;
+		IsActive = isActive;
+		UpdatedAt = updatedAt;
 	}
 }
