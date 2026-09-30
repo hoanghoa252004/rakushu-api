@@ -4,6 +4,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Entities.ContentCategory;
+using Rakushu.Domain.Entities.ProficiencyFramework;
+using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Payment.Transaction;
@@ -22,7 +29,6 @@ public static class ServiceCollectionExtensions
 		this IServiceCollection services,
 		IConfiguration configuration)
 	{
-		// CONFIGURE DBCONTEXT EFCORE ---> POSTGRESQL
 		services.AddDbContext<RakushuDbContext>(options =>
 		{
 			var connectionString = configuration.GetConnectionString("DefaultConnection")
@@ -31,18 +37,12 @@ public static class ServiceCollectionExtensions
 			options.UseNpgsql(connectionString, npgsqlOptions =>
 			{
 				npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory");
-				npgsqlOptions.EnableRetryOnFailure(
-					maxRetryCount: 3,
-					maxRetryDelay: TimeSpan.FromSeconds(30),
-					errorCodesToAdd: null);
-			})
-			.UseSnakeCaseNamingConvention();
+				npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(30), null);
+			}).UseSnakeCaseNamingConvention();
 		});
 
-		// UNIT OF WORK
 		services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<RakushuDbContext>());
 
-		// REPOSITORIES
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IRoleRepository, RoleRepository>();
 		services.AddScoped<IPlanRepository, PlanRepository>();
@@ -51,12 +51,17 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<ITransactionRepository, TransactionRepository>();
 		services.AddScoped<Domain.Entities.OovCandidate.IOovCandidateRepository, OovCandidateRepository>();
 		services.AddScoped<Domain.Entities.DictionaryEntry.IDictionaryEntryRepository, DictionaryEntryRepository>();
+		services.AddScoped<IContentCategoryRepository, ContentCategoryRepository>();
+		services.AddScoped<IProficiencyFrameworkRepository, ProficiencyFrameworkRepository>();
+		services.AddScoped<IVideoRepository, VideoRepository>();
+		services.AddScoped<IJapaneseConjugationFormRepository, JapaneseConjugationFormRepository>();
+		services.AddScoped<IJapanesePartOfSpeechRepository, JapanesePartOfSpeechRepository>();
+		services.AddScoped<IUniversalPartOfSpeechRepository, UniversalPartOfSpeechRepository>();
+		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
 
-		// DAPPER CONNECTION
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
-		// QUERIES
 		services.AddScoped<IUserQuery, UserQuery>();
 		services.AddScoped<IRoleQuery, RoleQuery>();
 		services.AddScoped<IPlanQuery, PlanQuery>();
@@ -65,6 +70,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IPaymentQuery, PaymentQuery>();
 		services.AddScoped<ITransactionQuery, TransactionQuery>();
 		services.AddScoped<IOovCandidateQuery, OovCandidateQuery>();
+
 		return services;
 	}
 }

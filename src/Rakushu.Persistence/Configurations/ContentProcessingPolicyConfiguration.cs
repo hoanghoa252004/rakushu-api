@@ -9,6 +9,8 @@ internal sealed class ContentProcessingPolicyConfiguration : IEntityTypeConfigur
 {
 	public void Configure(EntityTypeBuilder<ContentProcessingPolicy> builder)
 	{
+		builder.ToTable("content_processing_policy");
+
 		// Id
 		builder.HasKey(c => c.Id);
 		builder.Property(c => c.Id)

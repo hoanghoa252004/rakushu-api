@@ -4,4 +4,7 @@ using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Application.Usecases.Users.ChangeUserStatus;
 
-public sealed record ChangeUserStatusCommand(Guid UserId, string Status) : IRequest<Result>;
+public sealed record ChangeUserStatusCommand(
+	Guid UserId,
+	string Status
+) : IRequest<Result>;

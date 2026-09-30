@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Rakushu.Domain.Common.Results;
 using System;
 using System.Collections.Generic;
@@ -8,4 +8,4 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Application.Usecases.Payment.ExpirePayments;
 
-public sealed record ExpirePaymentsCommand: IRequest<Result>;
+public sealed record ExpirePaymentsCommand : IRequest<Result>;

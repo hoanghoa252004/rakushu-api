@@ -1,7 +1,7 @@
+using MediatR;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Curator.Oov.Common;
 using Rakushu.Domain.Common.Results;
-using MediatR;
 
 namespace Rakushu.Application.Usecases.Curator.Oov.GetOovCandidates;
 

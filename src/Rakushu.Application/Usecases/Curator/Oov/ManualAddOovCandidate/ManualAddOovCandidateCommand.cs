@@ -1,5 +1,5 @@
-using Rakushu.Domain.Common.Results;
 using MediatR;
+using Rakushu.Domain.Common.Results;
 using System;
 
 namespace Rakushu.Application.Usecases.Curator.Oov.ManualAddOovCandidate;

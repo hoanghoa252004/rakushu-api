@@ -50,6 +50,13 @@ internal static class SwaggerExtension
 				Description = "CURATOR OOV LIFECYCLE & DICTIONARY MANAGEMENT"
 			});
 
+			options.SwaggerDoc("admin", new OpenApiInfo
+			{
+				Title = "Admin API",
+				Version = "v1",
+				Description = "ADMIN CRUD APIS FOR 16 RESOURCES"
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -83,6 +90,7 @@ internal static class SwaggerExtension
 
 		app.UseSwaggerUI(options =>
 		{
+			options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
 			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");

@@ -10,6 +10,8 @@ internal sealed class KnowledgeMeaningDetailConfiguration : IEntityTypeConfigura
 {
 	public void Configure(EntityTypeBuilder<KnowledgeMeaningDetail> builder)
 	{
+		builder.ToTable("knowledge_meaning_detail");
+
 		// Id
 		builder.HasKey(kmd => kmd.Id);
 		builder.Property(kmd => kmd.Id)

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Common.Errors;
 
 namespace Rakushu.Domain.Entities.Video.MediaAsset;
 
-internal class MediaAssetErrors
+public static class MediaAssetErrors
 {
+	public static readonly Error NotFound = Error.NotFound(
+		"MEDIA_ASSET.NOT_FOUND", "The media asset was not found.");
 }

@@ -14,7 +14,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 		builder.Property(r => r.Id)
 			.HasConversion(
 				id => id.Value,
-				value => RoleId.From(value)); ;
+				value => RoleId.From(value));
 
 		// Title
 		builder.Property(r => r.Title)
@@ -25,11 +25,6 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 
 		// Description
 		builder.Property(r => r.Description);
-
-		// IsActive
-		builder.Property(r => r.IsActive)
-			.HasDefaultValue(false)
-			.IsRequired();
 
 		// CreatedAt
 		builder.Property(r => r.CreatedAt)

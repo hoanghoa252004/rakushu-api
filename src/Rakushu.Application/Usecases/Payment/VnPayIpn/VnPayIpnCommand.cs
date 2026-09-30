@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Rakushu.Domain.Common.Results;
 using System;
 using System.Collections.Generic;
@@ -9,5 +9,6 @@ using System.Threading.Tasks;
 namespace Rakushu.Application.Usecases.Payment.VnPayIpn;
 
 public sealed record VnPayIpnCommand(
-	IReadOnlyDictionary<string, string> Parameters
+	IReadOnlyDictionary<string,
+	string> Parameters
 ) : IRequest<Result>;

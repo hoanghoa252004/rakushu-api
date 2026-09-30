@@ -29,15 +29,17 @@ internal class UserQuery : IUserQuery
 			SELECT 
 				u.id,
 				u.email,
-				u.profile_full_name AS FullName,
+				COALESCE(p.full_name, '') AS FullName,
 				r.title AS Role,
 				u.status,
 				u.created_at,
 				u.updated_at,
-				u.profile_avatar_key AS AvatarUrl,
-				u.profile_native_language AS NativeLanguage
+				p.avatar_key AS AvatarUrl,
+				sl.name AS NativeLanguage
 			FROM users u
 			INNER JOIN roles r ON r.id = u.role_id
+			LEFT JOIN profiles p ON p.user_id = u.id
+			LEFT JOIN supported_languages sl ON sl.id = p.native_language_id
 			WHERE u.id = @Id
 			""";
 
@@ -59,19 +61,21 @@ internal class UserQuery : IUserQuery
 		SELECT
 			u.id,
 			u.email,
-			u.profile_full_name AS FullName,
+			COALESCE(p.full_name, '') AS FullName,
 			r.title AS Role,
 			u.status,
 			u.created_at,
 			u.updated_at,
-			u.profile_avatar_key AS AvatarUrl,
-			u.profile_native_language AS NativeLanguage
+			p.avatar_key AS AvatarUrl,
+			sl.name AS NativeLanguage
 		FROM users u
 		INNER JOIN roles r ON r.id = u.role_id
+		LEFT JOIN profiles p ON p.user_id = u.id
+		LEFT JOIN supported_languages sl ON sl.id = p.native_language_id
 		WHERE 
 			(@Status IS NULL OR u.status = @Status)
 			AND
-			(@SearchTerm IS NULL OR u.email ILIKE @SearchTerm OR u.profile_full_name ILIKE @SearchTerm)
+			(@SearchTerm IS NULL OR u.email ILIKE @SearchTerm OR p.full_name ILIKE @SearchTerm)
 			AND
 			(@RoleId IS NULL OR u.role_id = @RoleId)
 		ORDER BY u.created_at DESC
@@ -80,10 +84,11 @@ internal class UserQuery : IUserQuery
 
 		SELECT COUNT(*)
 		FROM users u
+		LEFT JOIN profiles p ON p.user_id = u.id
 		WHERE 
 			(@Status IS NULL OR u.status = @Status)
 			AND
-			(@SearchTerm IS NULL OR u.email ILIKE @SearchTerm OR u.profile_full_name ILIKE @SearchTerm)
+			(@SearchTerm IS NULL OR u.email ILIKE @SearchTerm OR p.full_name ILIKE @SearchTerm)
 			AND
 			(@RoleId IS NULL OR u.role_id = @RoleId);
 		""";

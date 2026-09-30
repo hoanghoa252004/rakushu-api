@@ -1,14 +1,11 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel.ProficiencyEquivalence;
 using Rakushu.Domain.Entities.User.Profile;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
 
-public sealed class ProficiencyLevel : Entity<ProficiencyLevelId>
+public sealed partial class ProficiencyLevel : Entity<ProficiencyLevelId>
 {
 	public string Code { get; private set; } = null!;
 	public string Name { get; private set; } = null!;
@@ -56,5 +53,84 @@ public sealed class ProficiencyLevel : Entity<ProficiencyLevelId>
 		SortOrder = sortOrder;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
+	}
+
+	public static Result<ProficiencyLevel> Create(
+		string code,
+		string name,
+		int sortOrder,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? description = null)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			return Result.Failure<ProficiencyLevel>(ProficiencyLevelErrors.InvalidName);
+
+		if (string.IsNullOrWhiteSpace(code))
+			return Result.Failure<ProficiencyLevel>(ProficiencyLevelErrors.InvalidCode);
+
+		return Result.Success(new ProficiencyLevel(
+			ProficiencyLevelId.Create(),
+			code,
+			name,
+			sortOrder,
+			createdAt,
+			updatedAt,
+			description));
+	}
+
+	public Result Update(
+		string code,
+		string name,
+		int sortOrder,
+		DateTimeOffset updatedAt,
+		string? description = null)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			return Result.Failure(ProficiencyLevelErrors.InvalidName);
+
+		if (string.IsNullOrWhiteSpace(code))
+			return Result.Failure(ProficiencyLevelErrors.InvalidCode);
+
+		Code = code;
+		Name = name;
+		SortOrder = sortOrder;
+		Description = description;
+		UpdatedAt = updatedAt;
+		return Result.Success();
+	}
+
+	public Result<ProficiencyEquivalence.ProficiencyEquivalence> AddEquivalence(
+		ProficiencyLevelId targetLevelId,
+		EquivalenceType type,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? note = null,
+		string? reference = null)
+	{
+		var eq = ProficiencyEquivalence.ProficiencyEquivalence.Create(
+			Id,
+			targetLevelId,
+			type,
+			createdAt,
+			updatedAt,
+			note,
+			reference);
+
+		if (eq.IsFailure)
+			return eq;
+
+		_sourceLevelProficiencyEquivalences.Add(eq.Value);
+		return eq;
+	}
+
+	public Result RemoveEquivalence(ProficiencyEquivalence.ProficiencyEquivalenceId equivalenceId)
+	{
+		var eq = _sourceLevelProficiencyEquivalences.FirstOrDefault(e => e.Id == equivalenceId);
+		if (eq is null)
+			return Result.Failure(ProficiencyEquivalence.ProficiencyEquivalenceErrors.NotFound);
+
+		_sourceLevelProficiencyEquivalences.Remove(eq);
+		return Result.Success();
 	}
 }

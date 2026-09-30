@@ -22,8 +22,7 @@ internal sealed class UpdateRole : IEndpoint
 			{
 				var command = new UpdateRoleCommand(
 					id,
-					dto.Description,
-					dto.IsActive
+					dto.Description
 				);
 
 				var result = await sender.Send(command, cancellationToken);
@@ -32,7 +31,7 @@ internal sealed class UpdateRole : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdateRole")
-			.WithDescription("Updates an existing role with the provided description and active status. When deactivating a role, all refresh tokens of users in that role will be revoked.")
+			.WithDescription("Updates an existing role description.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(DefaultSystemRoles.SystemAdministrator.ToString()))
 			// 4. Response
@@ -46,6 +45,5 @@ internal sealed class UpdateRole : IEndpoint
 }
 
 internal sealed record UpdateRoleRequestDto(
-	string? Description = null,
-	bool? IsActive = null
+	string? Description = null
 );

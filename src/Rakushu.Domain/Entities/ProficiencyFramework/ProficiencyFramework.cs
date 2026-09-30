@@ -1,13 +1,10 @@
-﻿using Rakushu.Domain.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
 
 namespace Rakushu.Domain.Entities.ProficiencyFramework;
 
-public sealed class ProficiencyFramework : AggregateRoot<ProficiencyFrameworkId>
+public sealed partial class ProficiencyFramework : AggregateRoot<ProficiencyFrameworkId>
 {
 	public string Code { get; private set; } = null!;
 	public string Name { get; private set; } = null!;
@@ -40,5 +37,105 @@ public sealed class ProficiencyFramework : AggregateRoot<ProficiencyFrameworkId>
 		IsActive = isActive;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
+	}
+
+	public static Result<ProficiencyFramework> Create(
+		string code,
+		string name,
+		bool isActive,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? description = null)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			return Result.Failure<ProficiencyFramework>(ProficiencyFrameworkErrors.InvalidName);
+
+		if (string.IsNullOrWhiteSpace(code))
+			return Result.Failure<ProficiencyFramework>(ProficiencyFrameworkErrors.InvalidCode);
+
+		return Result.Success(new ProficiencyFramework(
+			ProficiencyFrameworkId.Create(),
+			code,
+			name,
+			isActive,
+			createdAt,
+			updatedAt,
+			description));
+	}
+
+	public Result Update(
+		string code,
+		string name,
+		bool isActive,
+		DateTimeOffset updatedAt,
+		string? description = null)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			return Result.Failure(ProficiencyFrameworkErrors.InvalidName);
+
+		if (string.IsNullOrWhiteSpace(code))
+			return Result.Failure(ProficiencyFrameworkErrors.InvalidCode);
+
+		Code = code;
+		Name = name;
+		Description = description;
+		IsActive = isActive;
+		UpdatedAt = updatedAt;
+		return Result.Success();
+	}
+
+	public Result<ProficiencyLevel.ProficiencyLevel> AddLevel(
+		string code,
+		string name,
+		int sortOrder,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? description = null)
+	{
+		var level = ProficiencyLevel.ProficiencyLevel.Create(
+			code,
+			name,
+			sortOrder,
+			createdAt,
+			updatedAt,
+			description);
+
+		if (level.IsFailure)
+			return level;
+
+		_proficiencyLevels.Add(level.Value);
+		UpdatedAt = updatedAt;
+		return level;
+	}
+
+	public Result UpdateLevel(
+		ProficiencyLevelId levelId,
+		string code,
+		string name,
+		int sortOrder,
+		DateTimeOffset updatedAt,
+		string? description = null)
+	{
+		var level = _proficiencyLevels.FirstOrDefault(l => l.Id == levelId);
+		if (level is null)
+			return Result.Failure(ProficiencyLevelErrors.NotFound);
+
+		var result = level.Update(code, name, sortOrder, updatedAt, description);
+		if (result.IsFailure)
+			return result;
+
+		UpdatedAt = updatedAt;
+		return Result.Success();
+	}
+
+	public Result RemoveLevel(ProficiencyLevelId levelId)
+	{
+		var level = _proficiencyLevels.FirstOrDefault(l => l.Id == levelId);
+		if (level is null)
+			return Result.Failure(ProficiencyLevelErrors.NotFound);
+
+		_proficiencyLevels.Remove(level);
+		UpdatedAt = DateTimeOffset.UtcNow;
+		return Result.Success();
 	}
 }

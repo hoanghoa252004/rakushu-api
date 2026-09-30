@@ -1,14 +1,10 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel.ProficiencyEquivalence;
 
-public sealed class ProficiencyEquivalence : Entity<ProficiencyEquivalenceId>
+public sealed partial class ProficiencyEquivalence : Entity<ProficiencyEquivalenceId>
 {
 	public ProficiencyLevelId SourceLevelId { get; private set; } = null!;
 	public ProficiencyLevelId TargetLevelId { get; private set; } = null!;
@@ -45,5 +41,42 @@ public sealed class ProficiencyEquivalence : Entity<ProficiencyEquivalenceId>
 		Reference = reference;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
+	}
+
+	public static Result<ProficiencyEquivalence> Create(
+		ProficiencyLevelId sourceLevelId,
+		ProficiencyLevelId targetLevelId,
+		EquivalenceType type,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? note = null,
+		string? reference = null)
+	{
+		return Result.Success(new ProficiencyEquivalence(
+			ProficiencyEquivalenceId.Create(),
+			sourceLevelId,
+			targetLevelId,
+			type,
+			createdAt,
+			updatedAt,
+			note,
+			reference));
+	}
+
+	public Result Update(
+		ProficiencyLevelId sourceLevelId,
+		ProficiencyLevelId targetLevelId,
+		EquivalenceType type,
+		DateTimeOffset updatedAt,
+		string? note = null,
+		string? reference = null)
+	{
+		SourceLevelId = sourceLevelId;
+		TargetLevelId = targetLevelId;
+		Type = type;
+		Note = note;
+		Reference = reference;
+		UpdatedAt = updatedAt;
+		return Result.Success();
 	}
 }

@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
-using Rakushu.Domain.Common.Results;
 using Rakushu.Application.Usecases.Feature.GetFeatureById;
+using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Application.Usecases.Feature.GetFeatures;
 
@@ -11,4 +11,3 @@ public sealed record GetFeaturesQuery(
 	string? SearchTerm = null,
 	string? Status = null
 ) : IRequest<Result<PaginatedList<FeatureDto>>>;
-

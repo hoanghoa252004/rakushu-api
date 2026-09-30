@@ -118,9 +118,22 @@ public sealed class User : AggregateRoot<UserId>
 		AddDomainEvent(new UserPasswordChangedDomainEvent(this));
 	}
 
+	public void SetProfile(Profile.Profile profile)
+	{
+		Profile = profile;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
 	public void UpdateProfile(Profile.Profile profile)
 	{
 		Profile = profile;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void RemoveProfile()
+	{
+		Profile = null!;
+		UpdatedAt = DateTimeOffset.UtcNow;
 	}
 
 	public Result ChangeStatus(UserStatus status)

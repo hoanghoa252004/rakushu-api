@@ -1,14 +1,10 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User.Profile.Interest;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.ContentCategory;
 
-public sealed class ContentCategory : AggregateRoot<ContentCategoryId>
+public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 {
 	public string Slug { get; private set; } = null!;
 	public string Code { get; private set; } = null!;
@@ -25,8 +21,7 @@ public sealed class ContentCategory : AggregateRoot<ContentCategoryId>
 	// ContentCategory (Self-referencing)
 	public ContentCategory? Parent { get; private set; }
 	private readonly List<ContentCategory> _children = new();
-	public IReadOnlyCollection<ContentCategory> Children
-		=> _children.AsReadOnly();
+	public IReadOnlyCollection<ContentCategory> Children => _children.AsReadOnly();
 
 	// ContentProcessingPolicies
 	private readonly List<ContentProcessingPolicy.ContentProcessingPolicy> _contentProcessingPolicies = new();
@@ -58,8 +53,7 @@ public sealed class ContentCategory : AggregateRoot<ContentCategoryId>
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
 		ContentCategoryId? parentId = null,
-		string? description = null
-		)
+		string? description = null)
 		: base(id)
 	{
 		Slug = slug;
@@ -74,4 +68,65 @@ public sealed class ContentCategory : AggregateRoot<ContentCategoryId>
 		ParentId = parentId;
 	}
 
+	public static Result<ContentCategory> Create(
+		string slug,
+		string code,
+		string name,
+		int level,
+		int displayOrder,
+		bool isActive,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		ContentCategoryId? parentId = null,
+		string? description = null)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidName);
+
+		if (string.IsNullOrWhiteSpace(code))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidCode);
+
+		return Result.Success(new ContentCategory(
+			ContentCategoryId.Create(),
+			slug,
+			code,
+			name,
+			level,
+			displayOrder,
+			isActive,
+			createdAt,
+			updatedAt,
+			parentId,
+			description));
+	}
+
+	public Result Update(
+		string slug,
+		string code,
+		string name,
+		int level,
+		int displayOrder,
+		bool isActive,
+		DateTimeOffset updatedAt,
+		ContentCategoryId? parentId = null,
+		string? description = null)
+	{
+		if (string.IsNullOrWhiteSpace(name))
+			return Result.Failure(ContentCategoryErrors.InvalidName);
+
+		if (string.IsNullOrWhiteSpace(code))
+			return Result.Failure(ContentCategoryErrors.InvalidCode);
+
+		Slug = slug;
+		Code = code;
+		Name = name;
+		Level = level;
+		DisplayOrder = displayOrder;
+		IsActive = isActive;
+		ParentId = parentId;
+		Description = description;
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
 }

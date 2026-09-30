@@ -4,8 +4,10 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Events.DomainEvent;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
+using Rakushu.Domain.Entities.ContentCategory.ContentProcessingPolicy;
 using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaningDetail;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternElement;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternRelation;
@@ -98,6 +100,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 
 	// Content & Categories
 	public DbSet<ContentCategory> ContentCategories => Set<ContentCategory>();
+	public DbSet<ContentProcessingPolicy> ContentProcessingPolicies => Set<ContentProcessingPolicy>();
 
 	// Knowledge
 	public DbSet<LinguisticKnowledge> LinguisticKnowledges => Set<LinguisticKnowledge>();
@@ -105,6 +108,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<KnowledgePatternElement> KnowledgePatternElements => Set<KnowledgePatternElement>();
 	public DbSet<KnowledgePatternRelation> KnowledgePatternRelations => Set<KnowledgePatternRelation>();
 	public DbSet<KnowledgeMeaning> KnowledgeMeanings => Set<KnowledgeMeaning>();
+	public DbSet<KnowledgeMeaningDetail> KnowledgeMeaningDetails => Set<KnowledgeMeaningDetail>();
 
 	// Linguistic Metadata
 	public DbSet<JapanesePartOfSpeech> JapanesePartOfSpeeches => Set<JapanesePartOfSpeech>();

@@ -37,6 +37,8 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.Include(u => u.RefreshTokens)
 			.Include(u => u.Subscriptions)
 			.Include(u => u.Payments)
+			.Include(u => u.Profile)
+				.ThenInclude(p => p.Interests)
 			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
 	}
 
@@ -45,6 +47,15 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 		return await _context.Users
 			.Include(u => u.RefreshTokens)
 			.Where(u => u.RoleId == roleId)
+			.ToListAsync(cancellationToken);
+	}
+
+	public override async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
+	{
+		return await _context.Users
+			.Include(u => u.Role)
+			.Include(u => u.Profile)
+				.ThenInclude(p => p.Interests)
 			.ToListAsync(cancellationToken);
 	}
 }

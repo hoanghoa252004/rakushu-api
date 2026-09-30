@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Common.Errors;
 
 namespace Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
 
-internal class TranscriptSegmentErrors
+public static class TranscriptSegmentErrors
 {
+	public static readonly Error NotFound = Error.NotFound(
+		"TRANSCRIPT_SEGMENT.NOT_FOUND", "The transcript segment was not found.");
 }
