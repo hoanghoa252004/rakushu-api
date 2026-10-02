@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Abstractions.Infrastructure.Payment;
@@ -16,29 +17,32 @@ public static class ServiceCollectionExtensions
 {
 	public static IServiceCollection AddRakushuInfrastructureForApi(
 		this IServiceCollection services,
-		IConfiguration configuration)
+		IConfiguration configuration,
+		IHostEnvironment environment)
 	{
 		services.AddAuthenticationServices(configuration);
 
-		services.AddRakushuInfrastructureForCommon(configuration);
+		services.AddRakushuInfrastructureForCommon(configuration, environment);
 
 		return services;
 	}
 
 	public static IServiceCollection AddRakushuInfrastructureForWorker(
 		this IServiceCollection services,
-		IConfiguration configuration)
+		IConfiguration configuration,
+		IHostEnvironment environment)
 	{
 		services.AddScoped<ICurrentUserContext, WorkerCurrentUserContext>();
 
-		services.AddRakushuInfrastructureForCommon(configuration);
+		services.AddRakushuInfrastructureForCommon(configuration, environment);
 
 		return services;
 	}
 
 	public static IServiceCollection AddRakushuInfrastructureForCommon(
 		this IServiceCollection services,
-		IConfiguration configuration)
+		IConfiguration configuration,
+		IHostEnvironment environment)
 	{
 		// VERIFICATION
 		services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -46,7 +50,7 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<IVerificationCodeHasher, VerificationCodeHasher>();
 
 		// AWS SERVICES
-		services.AddAwsServices(configuration);
+		services.AddAwsServices(configuration, environment);
 
 		// CLOCK
 		services.AddSingleton<ISystemClock, SystemClock>();
