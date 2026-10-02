@@ -21,32 +21,47 @@ internal static class AwsExtention
 {
 
 	internal static IServiceCollection AddAwsServices(
-			this IServiceCollection services, IConfiguration configuration)
+			this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
 	{
 		// ==========  Setting DI for Aws Ses========== 
 		var awsOptions = configuration.GetAWSOptions();
 
-		var chain = new CredentialProfileStoreChain();
-
-		if (!chain.TryGetAWSCredentials("default", out var awsCredentials))
-		{
-			throw new Exception("Cannot load AWS credentials");
-		}
-
 		services.AddDefaultAWSOptions(awsOptions);
 
-		services.AddSingleton<IAmazonSimpleEmailService>(sp =>
+		if (environment.IsProduction())
+		{
+			services.AddSingleton<IAmazonSimpleEmailService>(sp =>
 			new AmazonSimpleEmailServiceClient(
-				awsCredentials, 
 				Amazon.RegionEndpoint.APSoutheast1
 				));
 
-		services.AddSingleton<IAmazonS3>(sp =>
-			new AmazonS3Client(
-				awsCredentials,
-				Amazon.RegionEndpoint.APSoutheast1
-			));
-		
+			services.AddSingleton<IAmazonS3>(sp =>
+				new AmazonS3Client(
+					Amazon.RegionEndpoint.APSoutheast1
+				));
+		}
+		else
+		{
+			var chain = new CredentialProfileStoreChain();
+
+			if (!chain.TryGetAWSCredentials("default", out var awsCredentials))
+			{
+				throw new Exception("Cannot load AWS credentials");
+			}
+
+			services.AddSingleton<IAmazonSimpleEmailService>(sp =>
+				new AmazonSimpleEmailServiceClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1
+					));
+
+			services.AddSingleton<IAmazonS3>(sp =>
+				new AmazonS3Client(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1
+				));
+		}
+
 		services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
 
 		// SES
