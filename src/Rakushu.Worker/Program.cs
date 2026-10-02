@@ -8,7 +8,7 @@ using Rakushu.Worker.Workers;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddRakushuPersistence(builder.Configuration);
-builder.Services.AddRakushuInfrastructureForWorker(builder.Configuration);
+builder.Services.AddRakushuInfrastructureForWorker(builder.Configuration, builder.Environment);
 builder.Services.AddRakushuApplication();
 builder.Services.AddRakushuWorkerServices();
 
