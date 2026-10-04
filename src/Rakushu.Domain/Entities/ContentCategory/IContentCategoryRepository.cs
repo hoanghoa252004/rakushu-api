@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Common.Contract;
 
 namespace Rakushu.Domain.Entities.ContentCategory;
 
-internal interface IContentCategoryRepository
+public interface IContentCategoryRepository : IBaseRepository<ContentCategory, ContentCategoryId>
 {
+	Task<ContentCategory?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
 }

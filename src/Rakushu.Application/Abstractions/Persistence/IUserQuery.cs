@@ -1,5 +1,5 @@
-﻿using Rakushu.Application.Usecases.Users.GetUserById;
-using Rakushu.Application.Usecases.Users.GetUsers;
+﻿using Rakushu.Application.Usecases.User.User.GetUserById;
+using Rakushu.Application.Usecases.User.User.GetUsers;
 using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;
@@ -11,6 +11,6 @@ namespace Rakushu.Application.Abstractions.Persistence;
 
 public interface IUserQuery
 {
-	Task<UserDto?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default);
-	Task<(IReadOnlyCollection<UserDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default);
+	Task<UserDetailDto?> GetByIdAsync(UserId id, CancellationToken cancellationToken = default);
+	Task<(IReadOnlyCollection<UserListItemDto> Items, int TotalCount)> GetUsersAsync(GetUsersQuery query, CancellationToken cancellationToken = default);
 }

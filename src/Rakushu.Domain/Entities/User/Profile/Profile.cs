@@ -1,12 +1,7 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
-using Rakushu.Domain.SupportedLanguage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.SupportedLanguage;
 
 namespace Rakushu.Domain.Entities.User.Profile;
 
@@ -24,7 +19,7 @@ public sealed class Profile : Entity<ProfileId>
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
-	//NAVIGATION PROPERTIES
+	// NAVIGATION PROPERTIES
 	// User
 	public User User { get; private set; } = null!;
 
@@ -38,7 +33,7 @@ public sealed class Profile : Entity<ProfileId>
 	public ProficiencyLevel TargetLevel { get; private set; } = null!;
 
 	// Interests
-	private readonly List<Interest.Interest> _interests = new List<Interest.Interest>();
+	private readonly List<Interest.Interest> _interests = new();
 	public IReadOnlyCollection<Interest.Interest> Interests => _interests.AsReadOnly();
 
 	// CONSTRUCTORS & FACTORY METHODS----------
@@ -46,6 +41,7 @@ public sealed class Profile : Entity<ProfileId>
 
 	private Profile(
 		ProfileId id,
+		UserId userId,
 		string fullName,
 		SupportedLanguageId nativeLanguageId,
 		ProficiencyLevelId currentLevelId,
@@ -56,6 +52,7 @@ public sealed class Profile : Entity<ProfileId>
 		DateTimeOffset updatedAt,
 		string? avatarKey = null) : base(id)
 	{
+		UserId = userId;
 		FullName = fullName;
 		AvatarKey = avatarKey;
 		NativeLanguageId = nativeLanguageId;
@@ -67,20 +64,129 @@ public sealed class Profile : Entity<ProfileId>
 		UpdatedAt = updatedAt;
 	}
 
+
+
 	public static Result<Profile> Create(
+		UserId userId,
 		string fullName,
-		SupportedLanguageId? nativeLanguage = null,
+		SupportedLanguageId nativeLanguageId,
+		ProficiencyLevelId currentLevelId,
+		ProficiencyLevelId targetLevelId,
+		int dailyLearningMinutes,
+		int sessionDurationMinutes,
+		DateTimeOffset createdAt,
 		string? avatarKey = null)
 	{
 		if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 50)
 			return Result.Failure<Profile>(ProfileErrors.InvalidFullName);
 
-		Profile profile = new Profile(
-			//fullName,
-			//avatarKey,
-			//nativeLanguage
-			);
+		if (dailyLearningMinutes <= 0
+			|| sessionDurationMinutes <= 0
+			|| dailyLearningMinutes <= sessionDurationMinutes)
+			return Result.Failure<Profile>(ProfileErrors.InvalidLearningSettings);
 
-		return Result.Success(profile);
+		
+
+		return Result.Success(new Profile(
+			ProfileId.Create(),
+			userId,
+			fullName,
+			nativeLanguageId,
+			currentLevelId,
+			targetLevelId,
+			dailyLearningMinutes,
+			sessionDurationMinutes,
+			createdAt,
+			createdAt,
+			avatarKey
+		));
+	}
+
+	public Result AddInterests(IReadOnlyCollection<Interest.Interest> inputs)
+	{
+		if (inputs
+		.GroupBy(x => x.ContentCategoryId)
+		.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestCategory);
+
+		if (inputs.GroupBy(x => x.Priority)
+					.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestPriority);
+
+		if (inputs.Count == 0)
+			return Result.Failure(
+				ProfileErrors.ContainAtLeast1Interest);
+
+		_interests.AddRange(inputs);
+
+		return Result.Success();
+	}
+
+	public Result Update(
+		string fullName,
+		SupportedLanguageId nativeLanguageId,
+		ProficiencyLevelId currentLevelId,
+		ProficiencyLevelId targetLevelId,
+		int dailyLearningMinutes,
+		int sessionDurationMinutes,
+		DateTimeOffset updatedAt,
+		string? avatarKey = null)
+	{
+		if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 50)
+			return Result.Failure(ProfileErrors.InvalidFullName);
+
+		if (dailyLearningMinutes <= 0 
+			|| sessionDurationMinutes <= 0
+			|| dailyLearningMinutes <= sessionDurationMinutes)
+			return Result.Failure(ProfileErrors.InvalidLearningSettings);
+
+		FullName = fullName;
+		AvatarKey = avatarKey;
+		NativeLanguageId = nativeLanguageId;
+		CurrentLevelId = currentLevelId;
+		TargetLevelId = targetLevelId;
+		DailyLearningMinutes = dailyLearningMinutes;
+		SessionDurationMinutes = sessionDurationMinutes;
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result UpdateInterests(IReadOnlyCollection<Interest.Interest> inputs)
+	{
+		if (inputs
+		.GroupBy(x => x.ContentCategoryId)
+		.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestCategory);
+
+		if (inputs.GroupBy(x => x.Priority)
+					.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestPriority);
+
+		if(inputs.Count == 0)
+			return Result.Failure(
+				ProfileErrors.ContainAtLeast1Interest);
+
+		_interests.Clear();
+
+		_interests.AddRange(inputs);
+
+		return Result.Success();
+	}
+
+	private bool HasValidInterestPriorities()
+	{
+		var priorities = _interests
+			.Select(x => x.Priority)
+			.OrderBy(x => x)
+			.ToArray();
+
+		return priorities
+			.Select((priority, index) => priority == index + 1)
+			.All(x => x);
 	}
 }

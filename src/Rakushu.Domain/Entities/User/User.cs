@@ -5,6 +5,7 @@ using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User.DomainEvents;
 using Rakushu.Domain.Entities.User.Profile;
 using Rakushu.Domain.Entities.User.ValueObjects.Email;
+using System.Net.NetworkInformation;
 
 namespace Rakushu.Domain.Entities.User;
 
@@ -118,21 +119,24 @@ public sealed class User : AggregateRoot<UserId>
 		AddDomainEvent(new UserPasswordChangedDomainEvent(this));
 	}
 
-	public void UpdateProfile(Profile.Profile profile)
+	public void SetProfile(Profile.Profile profile)
 	{
 		Profile = profile;
+		UpdatedAt = DateTimeOffset.UtcNow;
 	}
 
-	public Result ChangeStatus(UserStatus status)
+	public Result ChangeStatus(UserStatus status, DateTimeOffset changedAt)
 	{
 		if(!UserStatusTransition.IsAllowed(Status, status))
 		{
-			return Result.Failure(CommonError.InvalidStatusTransition);
+			return Result.Failure(CommonErrors.InvalidStatusTransition);
 		}
 
 		Status = status;
 
-		if(Status == UserStatus.Banned)
+		UpdatedAt = changedAt;
+
+		if (Status == UserStatus.Banned)
 		{
 			AddDomainEvent(new UserBannedDomainEvent(this));
 		}
@@ -140,66 +144,22 @@ public sealed class User : AggregateRoot<UserId>
 		return Result.Success();
 	}
 
-	public EmailVerificationToken.EmailVerificationToken AddEmailVerificationToken(UserId userId, string hashedCode, DateTimeOffset createdAt, DateTimeOffset expiresAt)
-	{
-		var emailVerificationToken = EmailVerificationToken.EmailVerificationToken.Create(userId, hashedCode, createdAt, expiresAt);
-
-		_emailVerificationTokens.Add(emailVerificationToken);
-
-		return emailVerificationToken;
-	}
-
 	public void VerifyEmail()
 	{
 		Status = UserStatus.Active;
 	}
-	/*
-	public void SetProfile(Profile profile)
-	{
-		Profile = profile;
-	}
 
-	public void UpdatePassword(string newPasswordHash)
+	public Result IsActive()
 	{
-		PasswordHash = newPasswordHash;
-		UpdatedAt = DateTimeOffset.UtcNow;
-		AddDomainEvent(new UserPasswordChangedDomainEvent(Id));
-	}
+		return Status == UserStatus.Active
+			? Result.Success()
+			: Result.Failure(UserErrors.NotActive);
+	}	
 
-	public void ChangeStatus(UserStatus newStatus)
+	public Result Deactivate(DateTimeOffset deactivatedAt)
 	{
-		Status = newStatus;
-		UpdatedAt = DateTimeOffset.UtcNow;
+		ChangeStatus(UserStatus.Inactive, deactivatedAt);
+		RevokeAllActiveRefreshTokens();
+		return Result.Success();
 	}
-
-	public void UpdateAccount(string username, string email, Guid roleId, UserStatus status)
-	{
-		Username = username;
-		Email = email;
-		RoleId = roleId;
-		Status = status;
-		UpdatedAt = DateTimeOffset.UtcNow;
-	}
-
-	public RefreshToken AddRefreshToken(string token, DateTimeOffset expiresAt)
-	{
-		var refreshToken = RefreshToken.Create(Id, token, expiresAt);
-		_refreshTokens.Add(refreshToken);
-		return refreshToken;
-	}
-
-	public void RevokeRefreshToken(string token)
-	{
-		var existing = _refreshTokens.FirstOrDefault(t => t.Token == token);
-		existing?.Revoke();
-	}
-
-	public void RevokeAllRefreshTokens()
-	{
-		foreach (var token in _refreshTokens.Where(t => !t.IsRevoked))
-		{
-			token.Revoke();
-		}
-	}
-	*/
 }

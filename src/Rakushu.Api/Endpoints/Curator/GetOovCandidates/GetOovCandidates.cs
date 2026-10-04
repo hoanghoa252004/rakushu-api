@@ -39,8 +39,8 @@ internal sealed class GetOovCandidates : IEndpoint
 			.WithName("GetOovCandidates")
 			.WithDescription("Retrieves a paginated list of OOV candidates awaiting curator review.")
 			.RequireAuthorization(policy => policy.RequireRole(
-				DefaultSystemRoles.LinguisticCurator.ToString(),
-				DefaultSystemRoles.SystemAdministrator.ToString()
+				RoleCodes.LinguisticCurator,
+				RoleCodes.SystemAdministrator
 			))
 			.Produces<PaginatedList<OovCandidateDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

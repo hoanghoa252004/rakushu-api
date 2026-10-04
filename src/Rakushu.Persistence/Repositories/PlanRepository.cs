@@ -14,7 +14,7 @@ public sealed class PlanRepository : BaseRepository<Plan, PlanId>, IPlanReposito
 	public async Task<Plan?> GetByCodeAsync(PlanCode code, CancellationToken cancellationToken = default)
 	{
 		return await _context.Plans
-			.Include(p => p.PlanEntitlements)
+			.Include(p => p.Entitlements)
 			.Include(p => p.Subscriptions)
 			.SingleOrDefaultAsync(p => p.Code == code, cancellationToken);
 	}
@@ -22,7 +22,7 @@ public sealed class PlanRepository : BaseRepository<Plan, PlanId>, IPlanReposito
 	public override async Task<Plan?> GetByIdAsync(PlanId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.Plans
-			.Include(p => p.PlanEntitlements)
+			.Include(p => p.Entitlements)
 			.Include(p => p.Subscriptions)
 			.SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
 	}

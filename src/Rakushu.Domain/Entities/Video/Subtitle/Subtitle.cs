@@ -1,5 +1,5 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.SupportedLanguage;
+using Rakushu.Domain.Entities.SupportedLanguage;
 using System;
 using System.Collections.Generic;
 using System.Linq;

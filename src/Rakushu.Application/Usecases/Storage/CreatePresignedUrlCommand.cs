@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Rakushu.Domain.Common.Results;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,4 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Application.Usecases.Storage;
 
-public sealed record CreatePresignedUrlCommand(
-	string ContentType
-	) : IRequest<Result<CreatePresignedUrlResponseDto>>;
-
+public sealed record CreatePresignedUrlCommand(string ContentType) : IRequest<Result<CreatePresignedUrlResponseDto>>;

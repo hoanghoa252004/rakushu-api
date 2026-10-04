@@ -1,10 +1,6 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.User.Profile.Interest;
 
@@ -32,6 +28,28 @@ public sealed class Interest : Entity<InterestId>
 	{
 		ProfileId = profileId;
 		ContentCategoryId = contentCategoryId;
+		Priority = priority;
+	}
+
+	public static Result<Interest> Create(
+		ProfileId profileId,
+		ContentCategoryId contentCategoryId,
+		int priority)
+	{
+		if(priority <= 0)
+		{
+			return Result.Failure<Interest>(InterestErrors.InvalidPriority);
+		}
+
+		return Result.Success(new Interest(
+			InterestId.Create(),
+			profileId,
+			contentCategoryId,
+			priority));
+	}
+
+	public void Update(int priority)
+	{
 		Priority = priority;
 	}
 }

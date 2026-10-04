@@ -1,12 +1,14 @@
 using Rakushu.Api.Extensions;
 using Rakushu.Api.Middleware;
 using Rakushu.Application.Extensions;
+using Rakushu.Domain.Extentions;
 using Rakushu.Infrastructure.Extensions;
 using Rakushu.Persistence.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 /// CONFIG SOFTWARE LAYERS:
+builder.Services.AddRakushuDomain();
 builder.Services.AddRakushuPersistence(builder.Configuration);
 builder.Services.AddRakushuInfrastructureForApi(builder.Configuration, builder.Environment);
 builder.Services.AddRakushuApplication();

@@ -1,4 +1,4 @@
-﻿using Rakushu.Application.Usecases.Roles.GetRoles;
+﻿using Rakushu.Application.Usecases.User.Role.GetRoles;
 using System;
 using System.Collections;
 using System.Collections.Generic;

@@ -48,7 +48,7 @@ internal class AwsSesService : IEmailService
 		var response = await _ses.SendEmailAsync(request, cancellationToken);
 
 		if (response.HttpStatusCode != System.Net.HttpStatusCode.OK)
-			return Result.Failure(CommonError.FailedSendEmail);
+			return Result.Failure(CommonErrors.FailedSendEmail);
 
 		return Result.Success();
 	}

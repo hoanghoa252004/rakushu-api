@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel.ProficiencyEquivalence;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel.ProficiencyEquivalence;
 
 namespace Rakushu.Persistence.Configurations;
 

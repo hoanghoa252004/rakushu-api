@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternElement;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternRelation;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
 
 namespace Rakushu.Persistence.Configurations;
 

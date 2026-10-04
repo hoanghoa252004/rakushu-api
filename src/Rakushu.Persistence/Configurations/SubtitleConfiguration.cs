@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rakushu.Domain.Entities.SupportedLanguage;
 using Rakushu.Domain.Entities.Video;
 using Rakushu.Domain.Entities.Video.Subtitle;
-using Rakushu.Domain.SupportedLanguage;
 
 namespace Rakushu.Persistence.Configurations;
 

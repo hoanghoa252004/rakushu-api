@@ -1,4 +1,4 @@
-using Rakushu.Application.Usecases.Transaction.GetTransactionsByPaymentId;
+using Rakushu.Application.Usecases.Subscription.Transaction.GetTransactionsByPaymentId;
 
 namespace Rakushu.Application.Abstractions.Persistence;
 

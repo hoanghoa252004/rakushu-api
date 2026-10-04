@@ -1,8 +1,7 @@
 using Dapper;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Payment.GetMyPaymentHistory;
-using Rakushu.Application.Usecases.Payment.GetPayments;
-using Rakushu.Application.Usecases.Users.GetUserById;
+using Rakushu.Application.Usecases.Subscription.Payment.GetMyPaymentHistory;
+using Rakushu.Application.Usecases.Subscription.Payment.GetPayments;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Persistence.Connection;

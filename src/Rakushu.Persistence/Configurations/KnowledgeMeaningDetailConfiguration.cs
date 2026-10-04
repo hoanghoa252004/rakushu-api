@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaningDetail;
-using Rakushu.Domain.SupportedLanguage;
+using Rakushu.Domain.Entities.SupportedLanguage;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -10,6 +10,8 @@ internal sealed class KnowledgeMeaningDetailConfiguration : IEntityTypeConfigura
 {
 	public void Configure(EntityTypeBuilder<KnowledgeMeaningDetail> builder)
 	{
+		builder.ToTable("knowledge_meaning_detail");
+
 		// Id
 		builder.HasKey(kmd => kmd.Id);
 		builder.Property(kmd => kmd.Id)

@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternElement;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
 
 namespace Rakushu.Persistence.Configurations;
 

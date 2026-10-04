@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Auth.Register;
+using Rakushu.Application.Usecases.Authentication.Register;
 
 namespace Rakushu.Api.Endpoints.Authentication.Register;
 
@@ -20,10 +20,7 @@ internal sealed class Register : IEndpoint
 			{
 				var command = new RegisterCommand(
 					dto.Email,
-					dto.Password,
-					dto.FullName,
-					dto.NativeLanguage,
-					dto.AvatarKey
+					dto.Password
 					);
 
 				var result = await sender.Send(command, cancellationToken);
@@ -45,8 +42,5 @@ internal sealed class Register : IEndpoint
 
 internal record RegisterRequestDto(
 	string Email,
-	string Password,
-	string FullName,
-	string NativeLanguage,
-	string? AvatarKey = null
+	string Password
 );

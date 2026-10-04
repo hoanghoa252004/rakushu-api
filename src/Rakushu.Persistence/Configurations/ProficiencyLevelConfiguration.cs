@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.ProficiencyFramework;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -31,8 +31,22 @@ internal sealed class ProficiencyLevelConfiguration : IEntityTypeConfiguration<P
 			.IsRequired();
 
 		// Description
-		builder.Property(pl => pl.Description)
-			.HasMaxLength(1000);
+		builder.Property(pl => pl.Description);
+
+		// ProficiencyFrameworkId
+		builder.Property(i => i.ProficiencyFrameworkId)
+			.HasConversion(
+				id => id.Value,
+				value => ProficiencyFrameworkId.From(value))
+			.IsRequired();
+		builder.HasOne(i => i.Framework)
+			.WithMany(p => p.ProficiencyLevels)
+			.HasForeignKey(i => i.ProficiencyFrameworkId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		// IsActive
+		builder.Property(pl => pl.IsActive)
+			.IsRequired();
 
 		// CreatedAt
 		builder.Property(pl => pl.CreatedAt)

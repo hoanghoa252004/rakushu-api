@@ -1,6 +1,6 @@
+using MediatR;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.CuratorReview;
-using MediatR;
 using System;
 
 namespace Rakushu.Application.Usecases.Curator.Oov.ReviewOovCandidate;

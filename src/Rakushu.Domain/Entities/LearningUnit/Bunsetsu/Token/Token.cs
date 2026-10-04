@@ -1,16 +1,12 @@
-﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
 
 namespace Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
 
-public sealed class Token : Entity<TokenId>
+public sealed partial class Token : Entity<TokenId>
 {
 	public BunsetsuId BunsetsuId { get; private set; } = null!;
 	public string Surface { get; private set; } = null!;
@@ -25,7 +21,6 @@ public sealed class Token : Entity<TokenId>
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
-
 	// NAVIGATION PROPERTIES
 	// Bunsetsu
 	public Bunsetsu Bunsetsu { get; private set; } = null!;
@@ -39,12 +34,8 @@ public sealed class Token : Entity<TokenId>
 	// DependencyRelationship
 	public DependencyRelationship DependencyRelationship { get; private set; } = null!;
 
-
 	// CONSTRUCTORS & FACTORY METHODS
-
-	private Token()
-	{
-	}
+	private Token() { }
 
 	private Token(
 		TokenId id,
@@ -74,5 +65,60 @@ public sealed class Token : Entity<TokenId>
 		Sequence = sequence;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
+	}
+
+	public static Result<Token> Create(
+		BunsetsuId bunsetsuId,
+		string surface,
+		string lemma,
+		string reading,
+		JapanesePartOfSpeechId japanesePartOfSpeechId,
+		UniversalPartOfSpeechId universalPartOfSpeechId,
+		DependencyRelationshipId dependencyRelationshipId,
+		int startIndex,
+		int endIndex,
+		int sequence,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt)
+	{
+		return Result.Success(new Token(
+			TokenId.Create(),
+			bunsetsuId,
+			surface,
+			lemma,
+			reading,
+			japanesePartOfSpeechId,
+			universalPartOfSpeechId,
+			dependencyRelationshipId,
+			startIndex,
+			endIndex,
+			sequence,
+			createdAt,
+			updatedAt));
+	}
+
+	public Result Update(
+		string surface,
+		string lemma,
+		string reading,
+		JapanesePartOfSpeechId japanesePartOfSpeechId,
+		UniversalPartOfSpeechId universalPartOfSpeechId,
+		DependencyRelationshipId dependencyRelationshipId,
+		int startIndex,
+		int endIndex,
+		int sequence,
+		DateTimeOffset updatedAt)
+	{
+		Surface = surface;
+		Lemma = lemma;
+		Reading = reading;
+		JapanesePartOfSpeechId = japanesePartOfSpeechId;
+		UniversalPartOfSpeechId = universalPartOfSpeechId;
+		DependencyRelationshipId = dependencyRelationshipId;
+		StartIndex = startIndex;
+		EndIndex = endIndex;
+		Sequence = sequence;
+		UpdatedAt = updatedAt;
+		return Result.Success();
 	}
 }

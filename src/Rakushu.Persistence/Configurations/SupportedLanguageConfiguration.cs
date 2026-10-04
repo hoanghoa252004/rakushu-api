@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.SupportedLanguage;
+using Rakushu.Domain.Entities.SupportedLanguage;
 
 namespace Rakushu.Persistence.Configurations;
 

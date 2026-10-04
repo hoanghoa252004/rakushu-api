@@ -39,6 +39,13 @@ internal sealed class InterestConfiguration : IEntityTypeConfiguration<Interest>
 			.HasForeignKey(i => i.ContentCategoryId)
 			.OnDelete(DeleteBehavior.Cascade);
 
+		builder.HasIndex(i => new
+		{
+			i.ProfileId,
+			i.ContentCategoryId
+		})
+			.IsUnique();
+
 		// Priority
 		builder.Property(i => i.Priority)
 			.IsRequired();

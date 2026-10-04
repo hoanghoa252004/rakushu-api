@@ -14,22 +14,22 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 		builder.Property(r => r.Id)
 			.HasConversion(
 				id => id.Value,
-				value => RoleId.From(value)); ;
+				value => RoleId.From(value));
 
-		// Title
-		builder.Property(r => r.Title)
+		// Code
+		builder.Property(r => r.Code)
 			.HasMaxLength(50)
 			.IsRequired();
-		builder.HasIndex(r => r.Title)
+		builder.HasIndex(r => r.Code)
 			.IsUnique();
+
+		// Name
+		builder.Property(r => r.Name)
+			.HasMaxLength(100)
+			.IsRequired();
 
 		// Description
 		builder.Property(r => r.Description);
-
-		// IsActive
-		builder.Property(r => r.IsActive)
-			.HasDefaultValue(false)
-			.IsRequired();
 
 		// CreatedAt
 		builder.Property(r => r.CreatedAt)

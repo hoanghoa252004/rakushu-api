@@ -2,8 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Auth.Login;
-using Rakushu.Application.Usecases.Auth.RefreshToken;
+using Rakushu.Application.Usecases.Authentication.Login;
+using Rakushu.Application.Usecases.Authentication.RefreshToken;
 
 namespace Rakushu.Api.Endpoints.Authentication.RefreshToken;
 

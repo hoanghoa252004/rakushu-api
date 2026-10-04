@@ -1,6 +1,6 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternElement;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
 using System;
 using System.Collections.Generic;
 using System.Linq;

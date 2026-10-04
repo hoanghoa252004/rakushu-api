@@ -1,9 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Authentication.Register;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Auth.SendEmailVerificationCode;
+using Rakushu.Application.Usecases.Authentication.SendEmailVerificationCode;
 
 namespace Rakushu.Api.Endpoints.Authentication.SendEmailVerificationCode;
 

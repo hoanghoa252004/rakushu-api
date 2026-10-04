@@ -1,16 +1,12 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
 using Rakushu.Domain.Entities.Series;
 using Rakushu.Domain.Entities.User;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.Video;
 
-public sealed class Video : AggregateRoot<VideoId>
+public sealed partial class Video : AggregateRoot<VideoId>
 {
 	public string Slug { get; private set; } = null!;
 	public string Title { get; private set; } = null!;
@@ -40,11 +36,11 @@ public sealed class Video : AggregateRoot<VideoId>
 	public Series.Series Series { get; private set; } = null!;
 
 	// MediaAssets
-	private readonly List<MediaAsset.MediaAsset> _mediaAssets = new List<MediaAsset.MediaAsset>();
+	private readonly List<MediaAsset.MediaAsset> _mediaAssets = new();
 	public IReadOnlyCollection<MediaAsset.MediaAsset> MediaAssets => _mediaAssets.AsReadOnly();
 
 	// Subtitles
-	private readonly List<Subtitle.Subtitle> _subtitles = new List<Subtitle.Subtitle>();
+	private readonly List<Subtitle.Subtitle> _subtitles = new();
 	public IReadOnlyCollection<Subtitle.Subtitle> Subtitles => _subtitles.AsReadOnly();
 
 	// CONSTRUCTORS & FACTORY METHODS
@@ -79,5 +75,101 @@ public sealed class Video : AggregateRoot<VideoId>
 		CreatedBy = createdBy;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
+	}
+
+	public static Result<Video> Create(
+		string slug,
+		string title,
+		TimeSpan duration,
+		ContentCategoryId contentCategoryId,
+		SeriesId seriesId,
+		int sortOrder,
+		VideoSource sourceType,
+		VideoStatus status,
+		UserId createdBy,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
+		string? description = null,
+		string? sourceUrl = null)
+	{
+		if (string.IsNullOrWhiteSpace(title))
+			return Result.Failure<Video>(VideoErrors.InvalidTitle);
+
+		if (string.IsNullOrWhiteSpace(slug))
+			return Result.Failure<Video>(VideoErrors.InvalidSlug);
+
+		return Result.Success(new Video(
+			VideoId.Create(),
+			slug,
+			title,
+			duration,
+			contentCategoryId,
+			seriesId,
+			sortOrder,
+			sourceType,
+			status,
+			createdBy,
+			createdAt,
+			updatedAt,
+			description,
+			sourceUrl));
+	}
+
+	public Result Update(
+		string slug,
+		string title,
+		TimeSpan duration,
+		ContentCategoryId contentCategoryId,
+		SeriesId seriesId,
+		int sortOrder,
+		VideoSource sourceType,
+		VideoStatus status,
+		DateTimeOffset updatedAt,
+		string? description = null,
+		string? sourceUrl = null)
+	{
+		if (string.IsNullOrWhiteSpace(title))
+			return Result.Failure(VideoErrors.InvalidTitle);
+
+		if (string.IsNullOrWhiteSpace(slug))
+			return Result.Failure(VideoErrors.InvalidSlug);
+
+		Slug = slug;
+		Title = title;
+		Duration = duration;
+		ContentCategoryId = contentCategoryId;
+		SeriesId = seriesId;
+		SortOrder = sortOrder;
+		SourceType = sourceType;
+		Status = status;
+		Description = description;
+		SourceUrl = sourceUrl;
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public void AddMediaAsset(MediaAsset.MediaAsset asset)
+	{
+		_mediaAssets.Add(asset);
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void RemoveMediaAsset(MediaAsset.MediaAsset asset)
+	{
+		_mediaAssets.Remove(asset);
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void SetTranscript(Transcript.Transcript transcript)
+	{
+		Transcript = transcript;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void RemoveTranscript()
+	{
+		Transcript = null!;
+		UpdatedAt = DateTimeOffset.UtcNow;
 	}
 }

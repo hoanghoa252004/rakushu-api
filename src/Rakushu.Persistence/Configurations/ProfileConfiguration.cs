@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.SupportedLanguage;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.Profile;
-using Rakushu.Domain.SupportedLanguage;
 
 namespace Rakushu.Persistence.Configurations;
 

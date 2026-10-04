@@ -2,7 +2,7 @@
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature.ObjectValues;
-using Rakushu.Domain.Entities.Plan.PlanEntitlement;
+using Rakushu.Domain.Entities.Plan.Entitlement;
 using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
 using System;
 using System.Collections.Generic;
@@ -22,9 +22,9 @@ public sealed class Feature : AggregateRoot<FeatureId>
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
-	// PlanEntitlements:
-	private readonly List<PlanEntitlement> _planEntitlements = [];
-	public IReadOnlyCollection<PlanEntitlement> PlanEntitlements => _planEntitlements.AsReadOnly();
+	// Entitlements:
+	private readonly List<Entitlement> _entitlements = [];
+	public IReadOnlyCollection<Entitlement> Entitlements => _entitlements.AsReadOnly();
 
 	// SubscriptionUsages:
 	private readonly List<SubscriptionUsage> _subscriptionUsages = [];
@@ -93,7 +93,7 @@ public sealed class Feature : AggregateRoot<FeatureId>
 	{
 		if (!FeatureStatusTransition.IsAllowed(Status, status))
 		{
-			return Result.Failure(CommonError.InvalidStatusTransition);
+			return Result.Failure(CommonErrors.InvalidStatusTransition);
 		}
 
 		Status = status;

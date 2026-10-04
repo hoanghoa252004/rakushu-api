@@ -1,20 +1,14 @@
-﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.Plan.PlanEntitlement;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Domain.Entities.Video.Transcript;
 
-public sealed class Transcript : Entity<TranscriptId>
+public sealed partial class Transcript : Entity<TranscriptId>
 {
 	public VideoId VideoId { get; private set; } = null!;
 	public string FullText { get; private set; } = null!;
 	public DateTimeOffset CreatedAt { get; private set; }
-	public DateTimeOffset UpdatedAt { get;private set; }
-
+	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// Video
@@ -25,9 +19,7 @@ public sealed class Transcript : Entity<TranscriptId>
 	public IReadOnlyCollection<TranscriptSegment.TranscriptSegment> TranscriptSegments => _transcriptSegments.AsReadOnly();
 
 	// CONSTRUCTORS & FACTORY METHODS
-	private Transcript()
-	{
-	}
+	private Transcript() { }
 
 	private Transcript(
 		TranscriptId id,
@@ -43,4 +35,60 @@ public sealed class Transcript : Entity<TranscriptId>
 		UpdatedAt = updatedAt;
 	}
 
+	public static Result<Transcript> Create(
+		VideoId videoId,
+		string fullText,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt)
+	{
+		return Result.Success(new Transcript(
+			TranscriptId.Create(),
+			videoId,
+			fullText,
+			createdAt,
+			updatedAt));
+	}
+
+	public Result Update(string fullText, DateTimeOffset updatedAt)
+	{
+		FullText = fullText;
+		UpdatedAt = updatedAt;
+		return Result.Success();
+	}
+
+	public Result<TranscriptSegment.TranscriptSegment> AddSegment(
+		string text,
+		TimeSpan startTime,
+		TimeSpan endTime,
+		int sequence,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt)
+	{
+		var segmentResult = TranscriptSegment.TranscriptSegment.Create(
+			Id,
+			text,
+			startTime,
+			endTime,
+			sequence,
+			createdAt,
+			updatedAt);
+
+		if (segmentResult.IsFailure)
+			return segmentResult;
+
+		_transcriptSegments.Add(segmentResult.Value);
+		UpdatedAt = updatedAt;
+		return segmentResult;
+	}
+
+	public Result RemoveSegment(TranscriptSegment.TranscriptSegmentId segmentId)
+	{
+		var segment = _transcriptSegments.FirstOrDefault(s => s.Id == segmentId);
+		if (segment is null)
+			return Result.Failure(TranscriptSegment.TranscriptSegmentErrors.NotFound);
+
+		_transcriptSegments.Remove(segment);
+		UpdatedAt = DateTimeOffset.UtcNow;
+		return Result.Success();
+	}
 }
