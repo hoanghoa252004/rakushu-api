@@ -1,7 +1,7 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
 using System;
 using System.Collections.Generic;
 using System.Linq;

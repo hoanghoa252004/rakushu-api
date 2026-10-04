@@ -1,7 +1,7 @@
 using Dapper;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Feature.GetFeatureById;
-using Rakushu.Application.Usecases.Feature.GetFeatures;
+using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
+using Rakushu.Application.Usecases.Subscription.Feature.GetFeatures;
 using Rakushu.Domain.Entities.Feature;
 using Rakushu.Persistence.Connection;
 

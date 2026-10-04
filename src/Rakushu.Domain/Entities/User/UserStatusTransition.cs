@@ -13,7 +13,8 @@ public static class UserStatusTransition
 		{
 			UserStatus.Inactive, new HashSet<UserStatus>
 			{
-				UserStatus.Unverified
+
+				UserStatus.Active
 			}
 		},
 		{
@@ -25,7 +26,7 @@ public static class UserStatusTransition
 		{
 			UserStatus.Active , new HashSet<UserStatus>
 			{
-				UserStatus.Banned
+				UserStatus.Banned, UserStatus.Inactive
 			}
 		},
 		{

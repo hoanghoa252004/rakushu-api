@@ -12,4 +12,7 @@ public static class ContentCategoryErrors
 
 	public static readonly Error InvalidCode = Error.Validation(
 		"CONTENT_CATEGORY.INVALID_CODE", "Category code is required and cannot exceed 50 characters.");
+
+	public static readonly Error NotActive = Error.Validation(
+		"CONTENT_CATEGORY.NOT_ACTIVE", "Category is not active.");
 }

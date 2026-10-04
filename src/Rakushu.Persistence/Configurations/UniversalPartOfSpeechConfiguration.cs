@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
 
 namespace Rakushu.Persistence.Configurations;
 

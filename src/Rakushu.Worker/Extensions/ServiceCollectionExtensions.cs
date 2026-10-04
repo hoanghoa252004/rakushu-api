@@ -1,4 +1,4 @@
-﻿using Rakushu.Worker.Workers.Payment;
+﻿using Rakushu.Worker.Jobs.Payment;
 using System;
 using System.Collections.Generic;
 using System.Linq;

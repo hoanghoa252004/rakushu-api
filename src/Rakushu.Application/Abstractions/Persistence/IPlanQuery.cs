@@ -1,5 +1,5 @@
-using Rakushu.Application.Usecases.Plan.GetPlanById;
-using Rakushu.Application.Usecases.Plan.GetPlans;
+using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
+using Rakushu.Application.Usecases.Subscription.Plan.GetPlans;
 using Rakushu.Domain.Entities.Plan;
 
 namespace Rakushu.Application.Abstractions.Persistence;

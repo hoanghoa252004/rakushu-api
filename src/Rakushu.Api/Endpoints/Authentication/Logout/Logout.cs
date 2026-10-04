@@ -1,8 +1,7 @@
 using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Auth.Logout;
+using Rakushu.Application.Usecases.Authentication.Logout;
 
 namespace Rakushu.Api.Endpoints.Authentication.Logout;
 

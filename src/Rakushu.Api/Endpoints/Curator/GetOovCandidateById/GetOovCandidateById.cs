@@ -30,8 +30,8 @@ internal sealed class GetOovCandidateById : IEndpoint
 			.WithName("GetOovCandidateById")
 			.WithDescription("Retrieves detailed information and review history of an OOV candidate.")
 			.RequireAuthorization(policy => policy.RequireRole(
-				DefaultSystemRoles.LinguisticCurator.ToString(),
-				DefaultSystemRoles.SystemAdministrator.ToString()
+				RoleCodes.LinguisticCurator,
+				RoleCodes.SystemAdministrator
 			))
 			.Produces<OovCandidateDetailDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

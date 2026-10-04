@@ -16,19 +16,20 @@ using Rakushu.Domain.Entities.LearningUnit;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.BunsetsuDependencyRelationship;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel.ProficiencyEquivalence;
+using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.Plan.PlanEntitlement;
-using Rakushu.Domain.Entities.ProficiencyFramework;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel.ProficiencyEquivalence;
+using Rakushu.Domain.Entities.Plan.Entitlement;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.Series;
+using Rakushu.Domain.Entities.SupportedLanguage;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.EmailVerificationToken;
 using Rakushu.Domain.Entities.User.Profile;
@@ -42,7 +43,6 @@ using Rakushu.Domain.Entities.Video.Subtitle;
 using Rakushu.Domain.Entities.Video.Subtitle.SubtitleSegment;
 using Rakushu.Domain.Entities.Video.Transcript;
 using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
-using Rakushu.Domain.SupportedLanguage;
 
 namespace Rakushu.Persistence;
 
@@ -67,7 +67,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	// Plans & Features
 	public DbSet<Plan> Plans => Set<Plan>();
 	public DbSet<Feature> Features => Set<Feature>();
-	public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
+	public DbSet<Entitlement> Entitlements => Set<Entitlement>();
 
 	// Subscriptions & Payments
 	public DbSet<Subscription> Subscriptions => Set<Subscription>();

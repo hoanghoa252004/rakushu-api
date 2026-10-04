@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
 
 namespace Rakushu.Persistence.Repositories;
 

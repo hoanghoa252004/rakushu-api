@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Roles.GetRoles;
+using Rakushu.Application.Usecases.User.Role.GetRoles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,8 +23,10 @@ internal class RoleQuery : IRoleQuery
 			.AsNoTracking()
 			.Select(role => new GetRolesDto(
 				role.Id.Value,
-				role.Title, 
+				role.Code,
+				role.Name, 
 				role.Description,
+				role.IsActive,
 				role.CreatedAt,
 				role.UpdatedAt))
 			.ToListAsync(cancellationToken);

@@ -1,9 +1,7 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
-using Rakushu.Domain.Entities.User.Profile.Interest;
-using Rakushu.Domain.SupportedLanguage;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.SupportedLanguage;
 
 namespace Rakushu.Domain.Entities.User.Profile;
 
@@ -66,6 +64,8 @@ public sealed class Profile : Entity<ProfileId>
 		UpdatedAt = updatedAt;
 	}
 
+
+
 	public static Result<Profile> Create(
 		UserId userId,
 		string fullName,
@@ -75,11 +75,17 @@ public sealed class Profile : Entity<ProfileId>
 		int dailyLearningMinutes,
 		int sessionDurationMinutes,
 		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt,
 		string? avatarKey = null)
 	{
 		if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 50)
 			return Result.Failure<Profile>(ProfileErrors.InvalidFullName);
+
+		if (dailyLearningMinutes <= 0
+			|| sessionDurationMinutes <= 0
+			|| dailyLearningMinutes <= sessionDurationMinutes)
+			return Result.Failure<Profile>(ProfileErrors.InvalidLearningSettings);
+
+		
 
 		return Result.Success(new Profile(
 			ProfileId.Create(),
@@ -91,31 +97,31 @@ public sealed class Profile : Entity<ProfileId>
 			dailyLearningMinutes,
 			sessionDurationMinutes,
 			createdAt,
-			updatedAt,
-			avatarKey));
+			createdAt,
+			avatarKey
+		));
 	}
 
-	public static Result<Profile> Create(
-		string fullName,
-		SupportedLanguageId? nativeLanguage = null,
-		string? avatarKey = null)
+	public Result AddInterests(IReadOnlyCollection<Interest.Interest> inputs)
 	{
-		if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 50)
-			return Result.Failure<Profile>(ProfileErrors.InvalidFullName);
+		if (inputs
+		.GroupBy(x => x.ContentCategoryId)
+		.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestCategory);
 
-		var now = DateTimeOffset.UtcNow;
-		return Result.Success(new Profile(
-			ProfileId.Create(),
-			UserId.Create(),
-			fullName,
-			nativeLanguage ?? SupportedLanguageId.Create(),
-			ProficiencyLevelId.Create(),
-			ProficiencyLevelId.Create(),
-			0,
-			0,
-			now,
-			now,
-			avatarKey));
+		if (inputs.GroupBy(x => x.Priority)
+					.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestPriority);
+
+		if (inputs.Count == 0)
+			return Result.Failure(
+				ProfileErrors.ContainAtLeast1Interest);
+
+		_interests.AddRange(inputs);
+
+		return Result.Success();
 	}
 
 	public Result Update(
@@ -131,6 +137,11 @@ public sealed class Profile : Entity<ProfileId>
 		if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 50)
 			return Result.Failure(ProfileErrors.InvalidFullName);
 
+		if (dailyLearningMinutes <= 0 
+			|| sessionDurationMinutes <= 0
+			|| dailyLearningMinutes <= sessionDurationMinutes)
+			return Result.Failure(ProfileErrors.InvalidLearningSettings);
+
 		FullName = fullName;
 		AvatarKey = avatarKey;
 		NativeLanguageId = nativeLanguageId;
@@ -143,33 +154,39 @@ public sealed class Profile : Entity<ProfileId>
 		return Result.Success();
 	}
 
-	public Result<Interest.Interest> AddInterest(ContentCategoryId categoryId, int priority)
+	public Result UpdateInterests(IReadOnlyCollection<Interest.Interest> inputs)
 	{
-		var interest = Interest.Interest.Create(Id, categoryId, priority);
-		if (interest.IsFailure)
-			return interest;
+		if (inputs
+		.GroupBy(x => x.ContentCategoryId)
+		.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestCategory);
 
-		_interests.Add(interest.Value);
-		return interest;
-	}
+		if (inputs.GroupBy(x => x.Priority)
+					.Any(x => x.Count() > 1))
+			return Result.Failure(
+				ProfileErrors.DuplicateInterestPriority);
 
-	public Result UpdateInterest(InterestId interestId, int priority)
-	{
-		var interest = _interests.FirstOrDefault(i => i.Id == interestId);
-		if (interest is null)
-			return Result.Failure(ProfileErrors.InterestNotFound);
+		if(inputs.Count == 0)
+			return Result.Failure(
+				ProfileErrors.ContainAtLeast1Interest);
 
-		interest.Update(priority);
+		_interests.Clear();
+
+		_interests.AddRange(inputs);
+
 		return Result.Success();
 	}
 
-	public Result RemoveInterest(InterestId interestId)
+	private bool HasValidInterestPriorities()
 	{
-		var interest = _interests.FirstOrDefault(i => i.Id == interestId);
-		if (interest is null)
-			return Result.Failure(ProfileErrors.InterestNotFound);
+		var priorities = _interests
+			.Select(x => x.Priority)
+			.OrderBy(x => x)
+			.ToArray();
 
-		_interests.Remove(interest);
-		return Result.Success();
+		return priorities
+			.Select((priority, index) => priority == index + 1)
+			.All(x => x);
 	}
 }

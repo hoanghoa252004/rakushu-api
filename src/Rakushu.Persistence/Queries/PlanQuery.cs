@@ -1,7 +1,7 @@
 using Dapper;
 using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Usecases.Plan.GetPlanById;
-using Rakushu.Application.Usecases.Plan.GetPlans;
+using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
+using Rakushu.Application.Usecases.Subscription.Plan.GetPlans;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Persistence.Connection;
 
@@ -137,53 +137,5 @@ internal sealed class PlanQuery : IPlanQuery
 		var totalCount = await multi.ReadSingleAsync<int>();
 
 		return (items,  totalCount);
-		/*
-		IQueryable<Plan> plans = _dbContext.Plans.AsNoTracking();
-
-		// Filter by status
-		if (query.Status != null)
-		{
-			plans = plans.Where(u => u.Status == query.Status);
-		}
-
-		// Filter by Features
-		if (query.FeatureIds != null && query.FeatureIds.Any() == true)
-		{
-			//Collection<FeatureId> featIds = new();
-			//foreach (var featureId in query.FeatureIds)
-			//{
-			//	featIds.Add(FeatureId.From(featureId));
-			//}
-			//plans = plans.Where(
-			//	p => featIds.All(
-			//		id => p.PlanEntitlements.Any(
-			//			pe => pe.FeatureId == id)));
-		}
-
-		// Count BEFORE pagination
-		var totalCount = await plans
-			.CountAsync(cancellationToken);
-
-		// Pagination + Projection
-		var items = await plans
-			.OrderBy(u => u.Id)
-			.Skip((query.PageNumber - 1) * query.PageSize)
-			.Take(query.PageSize)
-			.Select(p => new PlanDto(
-				p.Id.Value,
-				p.Code.Value,
-				p.Name,
-				p.Price,
-				p.Currency.ToString(),
-				p.BillingCycle.ToString(),
-				p.Status.ToString(),
-				p.CreatedAt,
-				p.UpdatedAt,
-				p.Description))
-			.ToListAsync(cancellationToken);
-
-		return (items, totalCount);
-
-		*/
 	}
 }

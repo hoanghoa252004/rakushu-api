@@ -13,7 +13,7 @@ public sealed class FeatureRepository : BaseRepository<Feature, FeatureId>, IFea
 	public async Task<Feature?> GetByCodeAsync(FeatureCode code, CancellationToken cancellationToken = default)
 	{
 		return await _context.Features
-			.Include(f => f.PlanEntitlements)
+			.Include(f => f.Entitlements)
 			.Include(f => f.SubscriptionUsages)
 			.SingleOrDefaultAsync(f => f.Code == code, cancellationToken);
 	}
@@ -21,7 +21,7 @@ public sealed class FeatureRepository : BaseRepository<Feature, FeatureId>, IFea
 	public override async Task<Feature?> GetByIdAsync(FeatureId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.Features
-			.Include(f => f.PlanEntitlements)
+			.Include(f => f.Entitlements)
 			.Include(f => f.SubscriptionUsages)
 			.SingleOrDefaultAsync(f => f.Id == id, cancellationToken);
 	}

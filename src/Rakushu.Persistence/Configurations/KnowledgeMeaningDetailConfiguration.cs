@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaningDetail;
-using Rakushu.Domain.SupportedLanguage;
+using Rakushu.Domain.Entities.SupportedLanguage;
 
 namespace Rakushu.Persistence.Configurations;
 

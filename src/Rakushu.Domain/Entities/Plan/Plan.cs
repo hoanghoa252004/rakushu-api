@@ -3,8 +3,8 @@ using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Plan.Entitlement;
 using Rakushu.Domain.Entities.Plan.ObjectValues;
-using Rakushu.Domain.Entities.Plan.PlanEntitlement;
 using Rakushu.Domain.Entities.User.Subscription;
 using System;
 using System.Collections.Generic;
@@ -27,9 +27,9 @@ public class Plan : AggregateRoot<PlanId>
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
-	// PlanEntitlements:
-	private readonly List<PlanEntitlement.PlanEntitlement> _planEntitlements = [];
-	public IReadOnlyCollection<PlanEntitlement.PlanEntitlement> PlanEntitlements => _planEntitlements.AsReadOnly();
+	// Entitlements:
+	private readonly List<Entitlement.Entitlement> _entitlements = new List<Entitlement.Entitlement>();
+	public IReadOnlyCollection<Entitlement.Entitlement> Entitlements => _entitlements.AsReadOnly();
 
 	// Subscriptions:
 	private readonly List<Subscription> _subscriptions = [];
@@ -150,7 +150,7 @@ public class Plan : AggregateRoot<PlanId>
 	{
 		if (!PlanStatusTransition.IsAllowed(Status, status))
 		{
-			return Result.Failure(CommonError.InvalidStatusTransition);
+			return Result.Failure(CommonErrors.InvalidStatusTransition);
 		}
 
 		Status = status;
@@ -158,7 +158,7 @@ public class Plan : AggregateRoot<PlanId>
 		return Result.Success();
 	}
 
-	public Result<PlanEntitlement.PlanEntitlement> AddEntitlement(
+	public Result<Entitlement.Entitlement> AddEntitlement(
 		FeatureId featureId,
 		bool isEnabled,
 		int limitValue,
@@ -168,15 +168,15 @@ public class Plan : AggregateRoot<PlanId>
 	{
 		if (Status == PlanStatus.Archived)
 		{
-			return Result.Failure<PlanEntitlement.PlanEntitlement>(PlanEntitlementErrors.PlanArchived);
+			return Result.Failure<Entitlement.Entitlement>(EntitlementErrors.PlanArchived);
 		}
 
-		if (_planEntitlements.Any(pe => pe.FeatureId == featureId))
+		if (_entitlements.Any(e => e.FeatureId == featureId))
 		{
-			return Result.Failure<PlanEntitlement.PlanEntitlement>(PlanEntitlementErrors.DuplicateFeature);
+			return Result.Failure<Entitlement.Entitlement>(EntitlementErrors.DuplicateFeature);
 		}
 
-		var entitlementResult = PlanEntitlement.PlanEntitlement.Create(
+		var entitlementResult = Entitlement.Entitlement.Create(
 			Id,
 			featureId,
 			isEnabled,
@@ -189,14 +189,14 @@ public class Plan : AggregateRoot<PlanId>
 			return entitlementResult;
 		}
 
-		_planEntitlements.Add(entitlementResult.Value);
+		_entitlements.Add(entitlementResult.Value);
 		UpdatedAt = updatedAt;
 
 		return entitlementResult;
 	}
 
 	public Result UpdateEntitlement(
-		PlanEntitlementId entitlementId,
+		EntitlementId entitlementId,
 		bool isEnabled,
 		int limitValue,
 		LimitUnit limitUnit,
@@ -205,13 +205,13 @@ public class Plan : AggregateRoot<PlanId>
 	{
 		if (Status == PlanStatus.Archived)
 		{
-			return Result.Failure(PlanEntitlementErrors.PlanArchived);
+			return Result.Failure(EntitlementErrors.PlanArchived);
 		}
 
-		var entitlement = _planEntitlements.FirstOrDefault(pe => pe.Id == entitlementId);
+		var entitlement = _entitlements.FirstOrDefault(e => e.Id == entitlementId);
 		if (entitlement is null)
 		{
-			return Result.Failure(PlanEntitlementErrors.NotFound);
+			return Result.Failure(EntitlementErrors.NotFound);
 		}
 
 		var updateResult = entitlement.Update(isEnabled, limitValue, limitUnit, limitPeriod);
@@ -225,25 +225,25 @@ public class Plan : AggregateRoot<PlanId>
 		return Result.Success();
 	}
 
-	public Result RemoveEntitlement(PlanEntitlementId entitlementId, DateTimeOffset updatedAt)
+	public Result RemoveEntitlement(EntitlementId entitlementId, DateTimeOffset updatedAt)
 	{
 		if (Status == PlanStatus.Archived)
 		{
-			return Result.Failure(PlanEntitlementErrors.PlanArchived);
+			return Result.Failure(EntitlementErrors.PlanArchived);
 		}
 
 		if (_subscriptions.Any(s => s.Status == SubscriptionStatus.Active))
 		{
-			return Result.Failure(PlanEntitlementErrors.CannotDeleteEntitlementWithSubscriptions);
+			return Result.Failure(EntitlementErrors.CannotDeleteEntitlementWithSubscriptions);
 		}
 
-		var entitlement = _planEntitlements.FirstOrDefault(pe => pe.Id == entitlementId);
+		var entitlement = _entitlements.FirstOrDefault(e => e.Id == entitlementId);
 		if (entitlement is null)
 		{
-			return Result.Failure(PlanEntitlementErrors.NotFound);
+			return Result.Failure(EntitlementErrors.NotFound);
 		}
 
-		_planEntitlements.Remove(entitlement);
+		_entitlements.Remove(entitlement);
 		UpdatedAt = updatedAt;
 
 		return Result.Success();

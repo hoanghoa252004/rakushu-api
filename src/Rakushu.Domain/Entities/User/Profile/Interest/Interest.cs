@@ -36,6 +36,11 @@ public sealed class Interest : Entity<InterestId>
 		ContentCategoryId contentCategoryId,
 		int priority)
 	{
+		if(priority <= 0)
+		{
+			return Result.Failure<Interest>(InterestErrors.InvalidPriority);
+		}
+
 		return Result.Success(new Interest(
 			InterestId.Create(),
 			profileId,

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
 
 namespace Rakushu.Persistence.Configurations;
 

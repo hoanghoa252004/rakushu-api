@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Auth.ChangePassword;
+using Rakushu.Application.Usecases.Authentication.ChangePassword;
 
 namespace Rakushu.Api.Endpoints.Authentication.ChangePassword;
 

@@ -43,8 +43,8 @@ internal sealed class ManualAddOovCandidate : IEndpoint
 			.WithName("ManualAddOovCandidate")
 			.WithDescription("Allows curator to reject AI proposal and manually input verified vocabulary attributes.")
 			.RequireAuthorization(policy => policy.RequireRole(
-				DefaultSystemRoles.LinguisticCurator.ToString(),
-				DefaultSystemRoles.SystemAdministrator.ToString()
+				RoleCodes.LinguisticCurator,
+				RoleCodes.SystemAdministrator
 			))
 			.Produces<Guid>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

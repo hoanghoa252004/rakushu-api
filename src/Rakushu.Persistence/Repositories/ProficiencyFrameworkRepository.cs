@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.ProficiencyFramework;
-using Rakushu.Domain.Entities.ProficiencyFramework.ProficiencyLevel;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
 
 namespace Rakushu.Persistence.Repositories;
 

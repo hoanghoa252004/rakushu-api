@@ -45,8 +45,8 @@ internal sealed class ReviewOovCandidate : IEndpoint
 			.WithName("ReviewOovCandidate")
 			.WithDescription("Submits curator review (ADAPT with adjustments or REJECT) for an OOV candidate.")
 			.RequireAuthorization(policy => policy.RequireRole(
-				DefaultSystemRoles.LinguisticCurator.ToString(),
-				DefaultSystemRoles.SystemAdministrator.ToString()
+				RoleCodes.LinguisticCurator,
+				RoleCodes.SystemAdministrator
 			))
 			.Produces<Guid>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

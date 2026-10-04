@@ -1,6 +1,5 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Entities.Knowledge.LinguisticKnowledge;
-using Rakushu.Domain.SupportedLanguage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
