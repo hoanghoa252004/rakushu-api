@@ -20,6 +20,22 @@ internal sealed class CreateContentCategoryHandler : IRequestHandler<CreateConte
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
+			// Validate parent if provided
+			if (request.parentId.HasValue)
+			{
+				var parent = await _repository.GetByIdAsync(ContentCategoryId.From(request.parentId.Value), cancellationToken);
+				if (parent is null)
+					return Result.Failure<Guid>(ContentCategoryErrors.ParentNotFound);
+
+				// Validate parent level is less than current level
+				if (parent.Level >= request.level)
+					return Result.Failure<Guid>(ContentCategoryErrors.InvalidParentLevel);
+			}
+
+			// Validate display order is unique within the level
+			if (await _repository.ExistsDisplayOrderInLevelAsync(request.level, request.displayOrder, null, cancellationToken))
+				return Result.Failure<Guid>(ContentCategoryErrors.DuplicateDisplayOrder);
+
 			var now = DateTimeOffset.UtcNow;
 			ContentCategoryId? parentId = request.parentId.HasValue ? ContentCategoryId.From(request.parentId.Value) : null;
 
@@ -27,9 +43,10 @@ internal sealed class CreateContentCategoryHandler : IRequestHandler<CreateConte
 				request.slug,
 				request.code,
 				request.name,
+				request.japaneseName,
 				request.level,
 				request.displayOrder,
-				request.isActive,
+				request.status,
 				now,
 				now,
 				parentId,

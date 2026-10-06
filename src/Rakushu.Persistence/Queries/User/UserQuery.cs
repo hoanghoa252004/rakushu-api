@@ -27,21 +27,21 @@ internal class UserQuery : IUserQuery
 
 		const string sql = """
 			SELECT
-			    u.id AS "Id",
-			    u.email AS "Email",
-			    u.status AS "Status",
-			    u.created_at AS "CreatedAt",
-			    u.updated_at AS "UpdatedAt",
+				u.id AS "Id",
+				u.full_name AS "FullName",
+				u.email AS "Email",
+				u.status AS "Status",
+				u.created_at AS "CreatedAt",
+				u.updated_at AS "UpdatedAt",
 
 				r.id AS "RoleId",
 				r.code AS "RoleCode",
 				r.name AS "RoleName",
 
-			    p.id AS "ProfileId",
-			    p.full_name AS "FullName",
-			    p.avatar_key AS "Avatar",
-			    p.daily_learning_minutes AS "DailyLearningMinutes",
-			    p.session_duration_minutes AS "SessionDurationMinutes",
+				p.id AS "ProfileId",
+				p.avatar_key AS "Avatar",
+				p.daily_learning_minutes AS "DailyLearningMinutes",
+				p.session_duration_minutes AS "SessionDurationMinutes",
 
 			    sl.id AS "NativeLanguageId",
 			    sl.code AS "NativeLanguageCode",
@@ -136,46 +136,44 @@ internal class UserQuery : IUserQuery
 
 		const string sql = """
 			SELECT
-		        u.id AS "Id",
-		        u.email AS "Email",
-		        u.status AS "Status",
-		        p.full_name AS "FullName",
-		        p.avatar_key AS "Avatar",
-		        u.created_at AS "CreatedAt",
+				u.id AS "Id",
+				u.full_name AS "FullName",
+				u.email AS "Email",
+				u.status AS "Status",
+				p.avatar_key AS "Avatar",
+				u.created_at AS "CreatedAt",
 				u.updated_at AS "UpdatedAt",
 
 				r.id AS "RoleId",
-		        r.code AS "RoleCode",
-		        r.name AS "RoleName"
-		    FROM users u
-		    INNER JOIN roles r
-		        ON r.id = u.role_id
-		    LEFT JOIN profiles p
-		        ON p.user_id = u.id
-		    WHERE
-		        (@Status IS NULL OR u.status = @Status)
-		        AND (
-		            @SearchTerm IS NULL
-		            OR u.email ILIKE @SearchTerm
-		            OR p.full_name ILIKE @SearchTerm
-		        )
-		        AND (@RoleId IS NULL OR u.role_id = @RoleId)
-		    ORDER BY u.created_at DESC, u.id
-		    LIMIT @PageSize
-		    OFFSET @Offset;
+				r.code AS "RoleCode",
+				r.name AS "RoleName"
+			FROM users u
+			INNER JOIN roles r
+				ON r.id = u.role_id
+			LEFT JOIN profiles p
+				ON p.user_id = u.id
+			WHERE
+				(@Status IS NULL OR u.status = @Status)
+				AND (
+					@SearchTerm IS NULL
+					OR u.email ILIKE @SearchTerm
+					OR u.full_name ILIKE @SearchTerm
+				)
+				AND (@RoleId IS NULL OR u.role_id = @RoleId)
+			ORDER BY u.created_at DESC, u.id
+			LIMIT @PageSize
+			OFFSET @Offset;
 
-		    SELECT COUNT(*)
-		    FROM users u
-		    LEFT JOIN profiles p
-		        ON p.user_id = u.id
-		    WHERE
-		        (@Status IS NULL OR u.status = @Status)
-		        AND (
-		            @SearchTerm IS NULL
-		            OR u.email ILIKE @SearchTerm
-		            OR p.full_name ILIKE @SearchTerm
-		        )
-		        AND (@RoleId IS NULL OR u.role_id = @RoleId);
+			SELECT COUNT(*)
+			FROM users u
+			WHERE
+				(@Status IS NULL OR u.status = @Status)
+				AND (
+					@SearchTerm IS NULL
+					OR u.email ILIKE @SearchTerm
+					OR u.full_name ILIKE @SearchTerm
+				)
+				AND (@RoleId IS NULL OR u.role_id = @RoleId);
 		""";
 
 		var parameters = new
@@ -228,7 +226,6 @@ internal class UserQuery : IUserQuery
 		{
 			profile = new ProfileDto(
 				row.ProfileId.Value,
-				row.FullName!,
 				row.Avatar,
 				row.DailyLearningMinutes!.Value,
 				row.SessionDurationMinutes!.Value,
@@ -258,6 +255,7 @@ internal class UserQuery : IUserQuery
 
 		return new UserDetailDto(
 			row.Id,
+			row.FullName,
 			row.Email,
 			row.Status,
 			row.CreatedAt,

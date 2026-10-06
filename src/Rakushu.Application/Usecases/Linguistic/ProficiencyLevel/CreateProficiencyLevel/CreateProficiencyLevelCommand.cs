@@ -1,4 +1,3 @@
-using Entity = Rakushu.Domain.Entities.Linguistic.ProficiencyLevel.ProficiencyLevel;
 using MediatR;
 using Rakushu.Domain.Common.Results;
 

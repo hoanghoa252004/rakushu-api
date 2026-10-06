@@ -9,9 +9,11 @@ public sealed record CreateContentCategoryCommand(
 	string slug,
 	string code,
 	string name,
+	string japaneseName,
 	string? description,
 	Guid? parentId,
 	int level,
 	int displayOrder,
-	bool isActive
+	bool isActive,
+	ContentCategoryStatus status = ContentCategoryStatus.Draft
 ) : IRequest<Result<Guid>>;

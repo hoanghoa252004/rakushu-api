@@ -24,6 +24,14 @@ internal sealed class DeleteContentCategoryHandler : IRequestHandler<DeleteConte
 			if (category is null)
 				return Result.Failure(ContentCategoryErrors.NotFound);
 
+			// If not draft, check if it's in use (has related content in processes, videos, series)
+			if (category.Status != ContentCategoryStatus.Draft)
+			{
+				var hasRelatedContent = await _repository.HasRelatedContentAsync(category.Id, cancellationToken);
+				if (hasRelatedContent)
+					return Result.Failure(ContentCategoryErrors.IsInUse);
+			}
+
 			_repository.Delete(category);
 			return Result.Success();
 		}, cancellationToken);

@@ -8,6 +8,7 @@ namespace Rakushu.Persistence.Queries.User;
 
 internal sealed record UserDetailRow(
 	Guid Id,
+	string FullName,
 	string Email,
 	string Status,
 	DateTime CreatedAt,
@@ -21,7 +22,6 @@ internal sealed record UserDetailRow(
 
 	// Profile data
 	Guid? ProfileId,
-	string? FullName,
 	string? Avatar,
 	int? DailyLearningMinutes,
 	int? SessionDurationMinutes,

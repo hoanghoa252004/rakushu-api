@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 
 namespace Rakushu.Application.Usecases.Linguistic.UniversalPartOfSpeech.CreateUniversalPartOfSpeech;
 
@@ -20,7 +20,7 @@ internal sealed class CreateUniversalPartOfSpeechHandler : IRequestHandler<Creat
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var pos = Domain.Entities.Linguistic.UniversalPartOfSpeech.UniversalPartOfSpeech.Create(
+			var pos = Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech.UniversalPartOfSpeech.Create(
 				UniversalPartOfSpeechId.Create(),
 				request.code,
 				request.name,

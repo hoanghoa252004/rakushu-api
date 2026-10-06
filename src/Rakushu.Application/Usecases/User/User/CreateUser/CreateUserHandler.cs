@@ -57,40 +57,41 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 			if (role == null) 
 			{
 				return Result.Failure<UserId>(RoleErrors.NotFound);
+					}
+
+					// 4. Create User
+					var emailResult = Email.Create(request.Email);
+
+					if (emailResult.IsFailure)
+					{
+						//return emailResult;
+						return Result.Failure<UserId>(emailResult.Error);
+					}	
+
+					var passwordHash = _passwordHasher.HashPassword(request.Password);
+
+					var initialStatus = UserStatus.Unverified;
+
+					var utcNow = _systemClock.UtcNow;
+
+					var userResult = Rakushu.Domain.Entities.User.User.Create(
+						request.FullName,
+						emailResult.Value,
+						passwordHash,
+						role!.Id,
+						initialStatus,
+						utcNow,
+						utcNow);
+
+					if (userResult.IsFailure)
+					{
+						//return emailResult;
+						return Result.Failure<UserId>(userResult.Error);
+					}
+
+					_userRepository.Add(userResult.Value);
+
+					return Result.Success(userResult.Value.Id);
+				}, cancellationToken);
 			}
-
-			// 4. Create User
-			var emailResult = Email.Create(request.Email);
-
-			if (emailResult.IsFailure)
-			{
-				//return emailResult;
-				return Result.Failure<UserId>(emailResult.Error);
-			}	
-
-			var passwordHash = _passwordHasher.HashPassword(request.Password);
-
-			var initialStatus = UserStatus.Unverified;
-
-			var utcNow = _systemClock.UtcNow;
-
-			var userResult = Rakushu.Domain.Entities.User.User.Create(
-				emailResult.Value,
-				passwordHash,
-				role!.Id,
-				initialStatus,
-				utcNow,
-				utcNow);
-
-			if (userResult.IsFailure)
-			{
-				//return emailResult;
-				return Result.Failure<UserId>(userResult.Error);
-			}
-
-			_userRepository.Add(userResult.Value);
-
-			return Result.Success(userResult.Value.Id);
-		}, cancellationToken);
-	}
 }

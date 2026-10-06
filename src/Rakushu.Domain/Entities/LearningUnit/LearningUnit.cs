@@ -1,5 +1,5 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.Knowledge.LinguisticKnowledge;
+using Rakushu.Domain.Entities.LinguisticKnowledge;
 using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ public sealed class LearningUnit : AggregateRoot<LearningUnitId>
 
 	// NAVIGATION PROPERTIES
 	// LinguisticKnowledge
-	public LinguisticKnowledge LinguisticKnowledge { get; private set; } = null!;
+	public LinguisticKnowledge.LinguisticKnowledge LinguisticKnowledge { get; private set; } = null!;
 
 	// TranscriptSegment
 	public TranscriptSegment TranscriptSegment { get; private set; } = null!;

@@ -3,8 +3,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
-using Rakushu.Domain.Entities.SupportedLanguage;
+using Rakushu.Domain.Entities.ProficiencyLevel;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.Profile.Policies;
 
@@ -17,7 +16,6 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 
 	// REPOSITORIES
 	private readonly IUserRepository _userRepository;
-	private readonly ISupportedLanguageRepository _supportedLanguageRepository;
 	private readonly IProficiencyLevelRepository _proficiencyLevelRepository;
 	private readonly IContentCategoryRepository _contentCategoryRepository;
 	private readonly IUnitOfWork _unitOfWork;
@@ -28,7 +26,6 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 	public UpdateProfileHandler(
 		ICurrentUserContext currentUserContext,
 		IUserRepository userRepository,
-		ISupportedLanguageRepository supportedLanguageRepository,
 		IProficiencyLevelRepository proficiencyLevelRepository,
 		IContentCategoryRepository contentCategoryRepository,
 		IUnitOfWork unitOfWork,
@@ -37,7 +34,6 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 	{
 		_currentUserContext = currentUserContext;
 		_userRepository = userRepository;
-		_supportedLanguageRepository = supportedLanguageRepository;
 		_proficiencyLevelRepository = proficiencyLevelRepository;
 		_contentCategoryRepository = contentCategoryRepository;
 		_unitOfWork = unitOfWork;
@@ -69,40 +65,19 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 			}
 
 			// 1.2. VALIDATE: resource existence
-			// 1.2.1 Native Language
-			var nativeLanguageId = SupportedLanguageId.From(request.NativeLanguageId);
+			// 1.2.1 Level
+			var levelId = ProficiencyLevelId.From(request.CurrentLevelId);
 
-			var nativeLanguage = await _supportedLanguageRepository.GetByIdAsync(nativeLanguageId, cancellationToken);
+			var level = await _proficiencyLevelRepository.GetByIdAsync(levelId, cancellationToken);
 
-			if (nativeLanguage == null)
-			{
-				return Result.Failure(SupportedLanguageErrors.NotFound);
-			}
-
-			// 1.2.2 Current Level
-			var currentLevelId = ProficiencyLevelId.From(request.CurrentLevelId);
-
-			var currentLevel = await _proficiencyLevelRepository.GetByIdAsync(currentLevelId, cancellationToken);
-
-			if (currentLevel == null)
+			if (level == null)
 			{
 				return Result.Failure(ProficiencyLevelErrors.NotFound);
 			}
 
-			// 1.2.3 Target Level
-			var targetLevelId = ProficiencyLevelId.From(request.TargetLevelId);
-
-			var targetLevel = await _proficiencyLevelRepository.GetByIdAsync(targetLevelId, cancellationToken);
-
-			if (targetLevel == null)
-			{
-				return Result.Failure(ProficiencyLevelErrors.NotFound);
-			}
-
-			// 1.2.4 Content Category if interests are provided
+			// 1.2.2 Content Category if interests are provided
 			var contentCategories = new List<ContentCategory>();
 
-			
 			var categoryIds = request.Interests.Select(i => i.ContentCategoryId).ToList();
 
 			foreach (var categoryId in categoryIds)
@@ -123,9 +98,7 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 			// 2. BUSINESS RULES VALIDATION
 			var policyResult = _profileUpdatePolicy.Validate(
 				user,
-				nativeLanguage,
-				currentLevel,
-				targetLevel,
+				level,
 				contentCategories
 			);
 
@@ -136,10 +109,7 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 
 			// 3. Update the profile with all fields
 			var updateResult = user.Profile.Update(
-				request.FullName,
-				nativeLanguageId,
-				currentLevelId,
-				targetLevelId,
+				levelId,
 				request.DailyLearningMinutes,
 				request.SessionDurationMinutes,
 				DateTimeOffset.UtcNow,
@@ -175,7 +145,6 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 				return result;
 			}
 			
-
 			return Result.Success();
 		}, cancellationToken);
 	}

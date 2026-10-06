@@ -24,19 +24,23 @@ internal sealed class ContentCategoryConfiguration : IEntityTypeConfiguration<Co
 
 		// Code
 		builder.Property(c => c.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(c => c.Code)
 			.IsUnique();
 
 		// Name
 		builder.Property(c => c.Name)
-			.HasMaxLength(200)
+			.HasMaxLength(100)
+			.IsRequired();
+
+		// JapaneseName
+		builder.Property(c => c.JapaneseName)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// Description
-		builder.Property(c => c.Description)
-			.HasMaxLength(1000);
+		builder.Property(c => c.Description);
 
 		// ParentId (Self-referencing foreign key)
 		builder.Property(c => c.ParentId)
@@ -56,8 +60,9 @@ internal sealed class ContentCategoryConfiguration : IEntityTypeConfiguration<Co
 		builder.Property(c => c.DisplayOrder)
 			.IsRequired();
 
-		// IsActive
-		builder.Property(c => c.IsActive)
+		// Status
+		builder.Property(c => c.Status)
+			.HasConversion<int>()
 			.IsRequired();
 
 		// CreatedAt

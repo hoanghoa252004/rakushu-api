@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 namespace Rakushu.Application.Usecases.User.Profile.CreateProfile;
 
 public sealed record CreateProfileCommand(
-	string FullName,
 	Guid NativeLanguageId,
 	Guid CurrentLevelId,
 	Guid TargetLevelId,

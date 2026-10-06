@@ -18,7 +18,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 
 		// Code
 		builder.Property(r => r.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(r => r.Code)
 			.IsUnique();

@@ -10,7 +10,7 @@ internal sealed record UserListRow(
 	Guid Id,
 	string Email,
 	string Status,
-	string? FullName,
+	string FullName,
 	string? Avatar,
 	DateTime CreatedAt,
 	DateTime UpdatedAt,

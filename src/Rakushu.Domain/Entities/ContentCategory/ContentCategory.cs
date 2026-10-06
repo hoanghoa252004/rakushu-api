@@ -9,11 +9,12 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 	public string Slug { get; private set; } = null!;
 	public string Code { get; private set; } = null!;
 	public string Name { get; private set; } = null!;
+	public string JapaneseName { get; private set; } = null!;
 	public string? Description { get; private set; }
 	public ContentCategoryId? ParentId { get; private set; }
 	public int Level { get; private set; }
 	public int DisplayOrder { get; private set; }
-	public bool IsActive { get; private set; }
+	public ContentCategoryStatus Status { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -47,11 +48,12 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		string slug,
 		string code,
 		string name,
+		string japaneseName,
 		int level,
 		int displayOrder,
-		bool isActive,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
+		ContentCategoryStatus status,
 		ContentCategoryId? parentId = null,
 		string? description = null)
 		: base(id)
@@ -59,11 +61,12 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		Slug = slug;
 		Code = code;
 		Name = name;
+		JapaneseName = japaneseName;
 		Level = level;
 		DisplayOrder = displayOrder;
-		IsActive = isActive;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
+		Status = status;
 		Description = description;
 		ParentId = parentId;
 	}
@@ -72,9 +75,10 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		string slug,
 		string code,
 		string name,
+		string japaneseName,
 		int level,
 		int displayOrder,
-		bool isActive,
+		ContentCategoryStatus status,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
 		ContentCategoryId? parentId = null,
@@ -83,19 +87,26 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		if (string.IsNullOrWhiteSpace(name))
 			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidName);
 
+		if (string.IsNullOrWhiteSpace(japaneseName))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidName);
+
 		if (string.IsNullOrWhiteSpace(code))
 			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidCode);
+
+		if (level < 1)
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidLevel);
 
 		return Result.Success(new ContentCategory(
 			ContentCategoryId.Create(),
 			slug,
 			code,
 			name,
+			japaneseName,
 			level,
 			displayOrder,
-			isActive,
 			createdAt,
 			updatedAt,
+			status,
 			parentId,
 			description));
 	}
@@ -104,9 +115,10 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		string slug,
 		string code,
 		string name,
+		string japaneseName,
 		int level,
 		int displayOrder,
-		bool isActive,
+		ContentCategoryStatus status,
 		DateTimeOffset updatedAt,
 		ContentCategoryId? parentId = null,
 		string? description = null)
@@ -114,19 +126,40 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		if (string.IsNullOrWhiteSpace(name))
 			return Result.Failure(ContentCategoryErrors.InvalidName);
 
+		if (string.IsNullOrWhiteSpace(japaneseName))
+			return Result.Failure(ContentCategoryErrors.InvalidName);
+
 		if (string.IsNullOrWhiteSpace(code))
 			return Result.Failure(ContentCategoryErrors.InvalidCode);
+
+		if (level < 1)
+			return Result.Failure(ContentCategoryErrors.InvalidLevel);
+
+		// Validate status transition
+		if (!ContentCategoryStatusTransition.IsAllowed(Status, status))
+			return Result.Failure(ContentCategoryErrors.InvalidStatusTransition);
 
 		Slug = slug;
 		Code = code;
 		Name = name;
+		JapaneseName = japaneseName;
 		Level = level;
 		DisplayOrder = displayOrder;
-		IsActive = isActive;
+		Status = status;
 		ParentId = parentId;
 		Description = description;
 		UpdatedAt = updatedAt;
 
+		return Result.Success();
+	}
+
+	public Result ChangeStatus(ContentCategoryStatus newStatus, DateTimeOffset updatedAt)
+	{
+		if (!ContentCategoryStatusTransition.IsAllowed(Status, newStatus))
+			return Result.Failure(ContentCategoryErrors.InvalidStatusTransition);
+
+		Status = newStatus;
+		UpdatedAt = updatedAt;
 		return Result.Success();
 	}
 }

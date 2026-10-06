@@ -19,6 +19,7 @@ internal sealed class CreateUser : IEndpoint
 				CancellationToken cancellationToken) =>
 			{
 				var command = new CreateUserCommand(
+					dto.FullName,
 					dto.Email,
 					dto.Password,
 					dto.RoleId
@@ -44,6 +45,7 @@ internal sealed class CreateUser : IEndpoint
 }
 
 internal record CreateUserRequestDto(
+	string FullName,
 	string Email,
 	string Password,
 	Guid RoleId

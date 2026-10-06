@@ -4,7 +4,6 @@ using Rakushu.Domain.Common.Results;
 namespace Rakushu.Application.Usecases.User.Profile.UpdateProfile;
 
 public sealed record UpdateProfileCommand(
-	string FullName,
 	Guid NativeLanguageId,
 	Guid CurrentLevelId,
 	Guid TargetLevelId,

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -17,23 +17,22 @@ internal sealed class DependencyRelationshipConfiguration : IEntityTypeConfigura
 
 		// Code (from LinguisticMetadata base)
 		builder.Property(dr => dr.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(dr => dr.Code)
 			.IsUnique();
 
 		// Name (from LinguisticMetadata base)
 		builder.Property(dr => dr.Name)
-			.HasMaxLength(200)
+			.HasMaxLength(100)
 			.IsRequired();
 
-		// VietnameseName (from LinguisticMetadata base)
-		builder.Property(dr => dr.VietnameseName)
-			.HasMaxLength(200)
+		// JapaneseName (from LinguisticMetadata base)
+		builder.Property(dr => dr.JapaneseName)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// Description (from LinguisticMetadata base)
-		builder.Property(dr => dr.Description)
-			.HasMaxLength(1000);
+		builder.Property(dr => dr.Description);
 	}
 }

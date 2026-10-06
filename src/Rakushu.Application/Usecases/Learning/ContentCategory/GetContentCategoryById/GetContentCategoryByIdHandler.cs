@@ -20,6 +20,10 @@ internal sealed class GetContentCategoryByIdHandler : IRequestHandler<GetContent
 		if (category is null)
 			return Result.Failure<ContentCategoryDto>(ContentCategoryErrors.NotFound);
 
+		// Learners can only access active categories
+		// Note: Authorization should be enforced at the endpoint level via policies
+		// Here we just ensure the category exists
+
 		return Result.Success(ContentCategoryDto.FromEntity(category));
 	}
 }

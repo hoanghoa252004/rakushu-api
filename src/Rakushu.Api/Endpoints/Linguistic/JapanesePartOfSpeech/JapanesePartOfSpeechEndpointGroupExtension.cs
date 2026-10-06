@@ -8,9 +8,9 @@ internal static class JapanesePartOfSpeechEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapJapanesePartOfSpeechEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/japanese-part-of-speech")
+		return app.MapGroup("/api/linguistic/japanese-parts-of-speech")
 			.WithTags("JapanesePartOfSpeech")
-			.WithGroupName("admin")
+			.WithGroupName("linguistic")
 			.AllowAnonymous();
 	}
 }

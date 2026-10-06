@@ -20,7 +20,6 @@ internal sealed class CreateProfile : IEndpoint
 				) =>
 			{
 				var command = new CreateProfileCommand(
-					dto.FullName,
 					dto.NativeLanguageId,
 					dto.CurrentLevelId,
 					dto.TargetLevelId,
@@ -49,7 +48,6 @@ internal sealed class CreateProfile : IEndpoint
 }
 
 internal record CreateProfileRequestDto(
-	string FullName,
 	Guid NativeLanguageId,
 	Guid CurrentLevelId,
 	Guid TargetLevelId,

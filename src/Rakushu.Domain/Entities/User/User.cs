@@ -12,6 +12,7 @@ namespace Rakushu.Domain.Entities.User;
 public sealed class User : AggregateRoot<UserId>
 {
 	// MAIN PROPERTIES----------
+	public string FullName { get; private set; } = null!;
 	public Email Email { get; private set; } = null!;
 	public string PasswordHash { get; private set; } = null!;
 	public RoleId RoleId { get; private set; } = null!; // REF: USER * - 1 ROLE
@@ -51,6 +52,7 @@ public sealed class User : AggregateRoot<UserId>
 
 	private User(
 		UserId id,
+		string fullName,
 		Email email,
 		string passwordHash,
 		RoleId roleId,
@@ -58,6 +60,7 @@ public sealed class User : AggregateRoot<UserId>
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt) : base(id)
 	{
+		FullName = fullName;
 		Email = email;
 		PasswordHash = passwordHash;
 		RoleId = roleId;
@@ -67,6 +70,7 @@ public sealed class User : AggregateRoot<UserId>
 	}
 
 	public static Result<User> Create(
+		string fullName,
 		Email email,
 		string passwordHash,
 		RoleId roleId,
@@ -79,6 +83,7 @@ public sealed class User : AggregateRoot<UserId>
 
 		return Result.Success(new User(
 					userId,
+					fullName,
 					email,
 					passwordHash,
 					roleId,

@@ -8,6 +8,7 @@ namespace Rakushu.Application.Usecases.User.User.GetUserById;
 
 public sealed record UserDetailDto(
 	Guid Id,
+	string FullName,
 	string Email,
 	string Status,
 	DateTime CreatedAt,
@@ -24,7 +25,6 @@ public sealed record RoleDto(
 
 public sealed record ProfileDto(
 	Guid Id,
-	string FullName,
 	string? Avatar,
 	int DailyLearningMinutes,
 	int SessionDurationMinutes,

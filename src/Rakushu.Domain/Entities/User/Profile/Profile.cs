@@ -1,7 +1,6 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
-using Rakushu.Domain.Entities.SupportedLanguage;
+using Rakushu.Domain.Entities.ProficiencyLevel;
 
 namespace Rakushu.Domain.Entities.User.Profile;
 
@@ -9,11 +8,8 @@ public sealed class Profile : Entity<ProfileId>
 {
 	// MAIN PROPERTIES
 	public UserId UserId { get; private set; } = null!;
-	public string FullName { get; private set; } = null!;
 	public string? AvatarKey { get; private set; }
-	public SupportedLanguageId NativeLanguageId { get; private set; } = null!;
-	public ProficiencyLevelId CurrentLevelId { get; private set; } = null!;
-	public ProficiencyLevelId TargetLevelId { get; private set; } = null!;
+	public ProficiencyLevelId LevelId { get; private set; } = null!;
 	public int DailyLearningMinutes { get; private set; }
 	public int SessionDurationMinutes { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
@@ -23,14 +19,8 @@ public sealed class Profile : Entity<ProfileId>
 	// User
 	public User User { get; private set; } = null!;
 
-	// NativeLanguage
-	public SupportedLanguage.SupportedLanguage NativeLanguage { get; private set; } = null!;
-
-	// CurrentLevel
-	public ProficiencyLevel CurrentLevel { get; private set; } = null!;
-
-	// TargetLevel
-	public ProficiencyLevel TargetLevel { get; private set; } = null!;
+	// Level
+	public ProficiencyLevel.ProficiencyLevel Level { get; private set; } = null!;
 
 	// Interests
 	private readonly List<Interest.Interest> _interests = new();
@@ -42,10 +32,7 @@ public sealed class Profile : Entity<ProfileId>
 	private Profile(
 		ProfileId id,
 		UserId userId,
-		string fullName,
-		SupportedLanguageId nativeLanguageId,
-		ProficiencyLevelId currentLevelId,
-		ProficiencyLevelId targetLevelId,
+		ProficiencyLevelId levelId,
 		int dailyLearningMinutes,
 		int sessionDurationMinutes,
 		DateTimeOffset createdAt,
@@ -53,11 +40,8 @@ public sealed class Profile : Entity<ProfileId>
 		string? avatarKey = null) : base(id)
 	{
 		UserId = userId;
-		FullName = fullName;
 		AvatarKey = avatarKey;
-		NativeLanguageId = nativeLanguageId;
-		CurrentLevelId = currentLevelId;
-		TargetLevelId = targetLevelId;
+		LevelId = levelId;
 		DailyLearningMinutes = dailyLearningMinutes;
 		SessionDurationMinutes = sessionDurationMinutes;
 		CreatedAt = createdAt;
@@ -68,32 +52,21 @@ public sealed class Profile : Entity<ProfileId>
 
 	public static Result<Profile> Create(
 		UserId userId,
-		string fullName,
-		SupportedLanguageId nativeLanguageId,
-		ProficiencyLevelId currentLevelId,
-		ProficiencyLevelId targetLevelId,
+		ProficiencyLevelId levelId,
 		int dailyLearningMinutes,
 		int sessionDurationMinutes,
 		DateTimeOffset createdAt,
 		string? avatarKey = null)
 	{
-		if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 50)
-			return Result.Failure<Profile>(ProfileErrors.InvalidFullName);
-
 		if (dailyLearningMinutes <= 0
 			|| sessionDurationMinutes <= 0
 			|| dailyLearningMinutes <= sessionDurationMinutes)
 			return Result.Failure<Profile>(ProfileErrors.InvalidLearningSettings);
 
-		
-
 		return Result.Success(new Profile(
 			ProfileId.Create(),
 			userId,
-			fullName,
-			nativeLanguageId,
-			currentLevelId,
-			targetLevelId,
+			levelId,
 			dailyLearningMinutes,
 			sessionDurationMinutes,
 			createdAt,
@@ -125,28 +98,19 @@ public sealed class Profile : Entity<ProfileId>
 	}
 
 	public Result Update(
-		string fullName,
-		SupportedLanguageId nativeLanguageId,
-		ProficiencyLevelId currentLevelId,
-		ProficiencyLevelId targetLevelId,
+		ProficiencyLevelId levelId,
 		int dailyLearningMinutes,
 		int sessionDurationMinutes,
 		DateTimeOffset updatedAt,
 		string? avatarKey = null)
 	{
-		if (string.IsNullOrWhiteSpace(fullName) || fullName.Length > 50)
-			return Result.Failure(ProfileErrors.InvalidFullName);
-
 		if (dailyLearningMinutes <= 0 
 			|| sessionDurationMinutes <= 0
 			|| dailyLearningMinutes <= sessionDurationMinutes)
 			return Result.Failure(ProfileErrors.InvalidLearningSettings);
 
-		FullName = fullName;
 		AvatarKey = avatarKey;
-		NativeLanguageId = nativeLanguageId;
-		CurrentLevelId = currentLevelId;
-		TargetLevelId = targetLevelId;
+		LevelId = levelId;
 		DailyLearningMinutes = dailyLearningMinutes;
 		SessionDurationMinutes = sessionDurationMinutes;
 		UpdatedAt = updatedAt;
@@ -176,17 +140,5 @@ public sealed class Profile : Entity<ProfileId>
 		_interests.AddRange(inputs);
 
 		return Result.Success();
-	}
-
-	private bool HasValidInterestPriorities()
-	{
-		var priorities = _interests
-			.Select(x => x.Priority)
-			.OrderBy(x => x)
-			.ToArray();
-
-		return priorities
-			.Select((priority, index) => priority == index + 1)
-			.All(x => x);
 	}
 }

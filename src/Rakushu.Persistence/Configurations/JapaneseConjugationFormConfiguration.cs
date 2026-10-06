@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -17,19 +17,19 @@ internal sealed class JapaneseConjugationFormConfiguration : IEntityTypeConfigur
 
 		// Code (from LinguisticMetadata base)
 		builder.Property(jcf => jcf.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(jcf => jcf.Code)
 			.IsUnique();
 
 		// Name (from LinguisticMetadata base)
 		builder.Property(jcf => jcf.Name)
-			.HasMaxLength(200)
+			.HasMaxLength(100)
 			.IsRequired();
 
-		// VietnameseName (from LinguisticMetadata base)
-		builder.Property(jcf => jcf.VietnameseName)
-			.HasMaxLength(200)
+		// JapaneseName (from LinguisticMetadata base)
+		builder.Property(jcf => jcf.JapaneseName)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// Description (from LinguisticMetadata base)

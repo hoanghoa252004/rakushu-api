@@ -86,7 +86,7 @@ public sealed class CreateTransactionHandler : IRequestHandler<CreateTransaction
 			var paymentUrlParams = new CreatePaymentUrlParams(
 				request.IpAddress,
 				payment.Amount,
-				$"{payment.User.Profile.FullName} subscribes {payment.Plan.Name}",
+				$"{payment.User.FullName} subscribes {payment.Plan.Name}",
 				transactionRef,
 				now,
 				expiredAt);

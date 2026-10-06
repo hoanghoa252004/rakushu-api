@@ -8,9 +8,9 @@ internal static class JapaneseConjugationFormEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapJapaneseConjugationFormEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/japanese-conjugation-forms")
+		return app.MapGroup("/api/linguistic/japanese-conjugation-forms")
 			.WithTags("JapaneseConjugationForm")
-			.WithGroupName("admin")
+			.WithGroupName("linguistic")
 			.AllowAnonymous();
 	}
 }

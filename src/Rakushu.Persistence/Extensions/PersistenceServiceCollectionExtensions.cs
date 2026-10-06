@@ -16,13 +16,11 @@ using Rakushu.Persistence.Connection;
 using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
 using Rakushu.Persistence.Queries.User;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
-using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
-using Rakushu.Domain.Entities.SupportedLanguage;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.ProficiencyLevel;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 
 namespace Rakushu.Persistence.Extensions;
 
@@ -55,13 +53,11 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<Domain.Entities.OovCandidate.IOovCandidateRepository, OovCandidateRepository>();
 		services.AddScoped<Domain.Entities.DictionaryEntry.IDictionaryEntryRepository, DictionaryEntryRepository>();
 		services.AddScoped<IContentCategoryRepository, ContentCategoryRepository>();
-		services.AddScoped<IProficiencyFrameworkRepository, ProficiencyFrameworkRepository>();
 		services.AddScoped<IVideoRepository, VideoRepository>();
 		services.AddScoped<IJapaneseConjugationFormRepository, JapaneseConjugationFormRepository>();
 		services.AddScoped<IJapanesePartOfSpeechRepository, JapanesePartOfSpeechRepository>();
 		services.AddScoped<IUniversalPartOfSpeechRepository, UniversalPartOfSpeechRepository>();
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
-		services.AddScoped<ISupportedLanguageRepository, SupportedLanguageRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

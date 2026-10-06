@@ -6,10 +6,6 @@ internal sealed class UpdateProfileValidator : AbstractValidator<UpdateProfileCo
 {
 	public UpdateProfileValidator()
 	{
-		RuleFor(x => x.FullName)
-			.NotEmpty().WithMessage("FullName is required.")
-			.MaximumLength(50).WithMessage("FullName cannot exceed 50 characters.");
-
 		RuleFor(x => x.NativeLanguageId)
 			.NotEmpty().WithMessage("NativeLanguageId is required.");
 

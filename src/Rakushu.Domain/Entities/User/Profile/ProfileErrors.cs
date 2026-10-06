@@ -4,9 +4,6 @@ namespace Rakushu.Domain.Entities.User.Profile;
 
 public static class ProfileErrors
 {
-	public static readonly Error InvalidFullName = Error.Validation(
-		"PROFILE.INVALID_FULLNAME", "FullName is required & cannot exceed 50 characters.");
-
 	public static readonly Error NotFound = Error.NotFound(
 		"PROFILE.NOT_FOUND", "Profile was not found.");
 
@@ -17,8 +14,8 @@ public static class ProfileErrors
 		"PROFILE.INTEREST_NOT_FOUND", "Interest was not found.");
 
 	public static readonly Error InvalidLearningSettings = Error.Validation(
-		"PROFILE.INVALID_LEARNING_SETTINGS", "Learning session minutes must be greater than 0 and " +
-		"daily learning minutes must be greater than session duration minutes.");
+		"PROFILE.INVALID_LEARNING_SETTINGS", 
+		"Learning session minutes must be greater than 0 and daily learning minutes must be greater than session duration minutes.");
 
 	public static readonly Error CurrentNotHigherThanTargetLevel = Error.Validation(
 		"PROFILE.CURRENT_NOT_HIGHER_THAN_TARGET_LEVEL", "Current not higher than target level.");

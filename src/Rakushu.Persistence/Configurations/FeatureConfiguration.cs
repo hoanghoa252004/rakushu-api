@@ -26,13 +26,14 @@ internal sealed class FeatureConfiguration : IEntityTypeConfiguration<Feature>
 			.HasConversion(
 				code => code.Value,
 				value => FeatureCode.Create(value).Value)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(u => u.Code)
 			.IsUnique();
 
 		// Name
 		builder.Property(u => u.Name)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// Description

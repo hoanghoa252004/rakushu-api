@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.ProficiencyLevel;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -18,12 +17,17 @@ internal sealed class ProficiencyLevelConfiguration : IEntityTypeConfiguration<P
 
 		// Code
 		builder.Property(pl => pl.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 
 		// Name
 		builder.Property(pl => pl.Name)
-			.HasMaxLength(200)
+			.HasMaxLength(100)
+			.IsRequired();
+
+		// JapaneseName
+		builder.Property(pl => pl.JapaneseName)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// SortOrder
@@ -32,17 +36,6 @@ internal sealed class ProficiencyLevelConfiguration : IEntityTypeConfiguration<P
 
 		// Description
 		builder.Property(pl => pl.Description);
-
-		// ProficiencyFrameworkId
-		builder.Property(i => i.ProficiencyFrameworkId)
-			.HasConversion(
-				id => id.Value,
-				value => ProficiencyFrameworkId.From(value))
-			.IsRequired();
-		builder.HasOne(i => i.Framework)
-			.WithMany(p => p.ProficiencyLevels)
-			.HasForeignKey(i => i.ProficiencyFrameworkId)
-			.OnDelete(DeleteBehavior.Cascade);
 
 		// IsActive
 		builder.Property(pl => pl.IsActive)

@@ -19,6 +19,7 @@ internal sealed class Register : IEndpoint
 				) =>
 			{
 				var command = new RegisterCommand(
+					dto.FullName,
 					dto.Email,
 					dto.Password
 					);
@@ -41,6 +42,7 @@ internal sealed class Register : IEndpoint
 }
 
 internal record RegisterRequestDto(
+	string FullName,
 	string Email,
 	string Password
 );

@@ -1,4 +1,4 @@
-using Entity = Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech.UniversalPartOfSpeech;
+using Entity = Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech.UniversalPartOfSpeech;
 using MediatR;
 using Rakushu.Domain.Common.Results;
 

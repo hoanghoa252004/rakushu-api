@@ -3,9 +3,9 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Token.CreateToken;

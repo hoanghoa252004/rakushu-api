@@ -58,32 +58,33 @@ internal sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result>
 			// 4. Create User
 			var emailResult = Email.Create(request.Email);
 
-			if (emailResult.IsFailure)
-				return emailResult;
+					if (emailResult.IsFailure)
+						return emailResult;
 
-			var passwordHash = _passwordHasher.HashPassword(request.Password);
+					var passwordHash = _passwordHasher.HashPassword(request.Password);
 
-			var initialStatus = UserStatus.Unverified;
+					var initialStatus = UserStatus.Unverified;
 
-			var utcNow = _systemClock.UtcNow;
+					var utcNow = _systemClock.UtcNow;
 
-			var userResult = Rakushu.Domain.Entities.User.User.Create(
-				emailResult.Value,
-				passwordHash,
-				role!.Id,
-				initialStatus,
-				utcNow,
-				utcNow);
+					var userResult = Rakushu.Domain.Entities.User.User.Create(
+						request.FullName,
+						emailResult.Value,
+						passwordHash,
+						role!.Id,
+						initialStatus,
+						utcNow,
+						utcNow);
 
-			if(userResult.IsFailure)
-			{
-				return userResult;
+					if(userResult.IsFailure)
+					{
+						return userResult;
+					}
+
+					_userRepository.Add(userResult.Value);
+
+					await _unitOfWork.SaveChangesAsync();
+					return Result.Success();
+				}, cancellationToken);
 			}
-
-			_userRepository.Add(userResult.Value);
-
-			await _unitOfWork.SaveChangesAsync();
-			return Result.Success();
-		}, cancellationToken);
-	}
 }

@@ -44,6 +44,13 @@ internal sealed class EntitlementConfiguration : IEntityTypeConfiguration<Entitl
 			.HasForeignKey(pe => pe.FeatureId)
 			.OnDelete(DeleteBehavior.Restrict);
 
+		// *** COMPOSITION UNIQUE KEY ***
+		builder.HasIndex(x => new
+		{
+			x.PlanId,
+			x.FeatureId,
+		}).IsUnique();
+
 		// IsEnabled
 		builder.Property(u => u.IsEnabled)
 			.HasDefaultValue(false)
@@ -64,13 +71,5 @@ internal sealed class EntitlementConfiguration : IEntityTypeConfiguration<Entitl
 			.HasMaxLength(30)
 			.HasConversion<string>()
 			.IsRequired();
-
-		// *** COMPOSITION UNIQUE KEY ***
-		builder.HasIndex(x => new
-		{
-			x.PlanId,
-			x.FeatureId,
-		})
-		.IsUnique();
 	}
 }

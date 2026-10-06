@@ -17,6 +17,11 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 				id => id.Value,
 				value => UserId.From(value));
 
+		// FullName
+		builder.Property(u => u.FullName)
+			.HasMaxLength(50)
+			.IsRequired();
+
 		// Email
 		builder.Property(u => u.Email)
 			.HasConversion(

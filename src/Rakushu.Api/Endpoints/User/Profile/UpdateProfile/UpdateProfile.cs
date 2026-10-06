@@ -20,7 +20,6 @@ internal sealed class UpdateProfile : IEndpoint
 				) =>
 			{				
 				var command = new UpdateProfileCommand(
-					dto.FullName,
 					dto.NativeLanguageId,
 					dto.CurrentLevelId,
 					dto.TargetLevelId,
@@ -49,7 +48,6 @@ internal sealed class UpdateProfile : IEndpoint
 }
 
 internal record UpdateProfileRequestDto(
-	string FullName,
 	Guid NativeLanguageId,
 	Guid CurrentLevelId,
 	Guid TargetLevelId,
