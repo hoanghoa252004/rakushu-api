@@ -19,42 +19,63 @@ internal static class SwaggerExtension
 			{
 				Title = "Authentication API",
 				Version = "v1",
-				Description = "AUTHENTICATION"
+				Description = "APIs for authentication and token management."
 			});
 
 			options.SwaggerDoc("user", new OpenApiInfo
 			{
 				Title = "User API",
 				Version = "v1",
-				Description = "ROLE - USER - PROFILE"
+				Description = "APIs for user accounts, profiles, and roles."
 			});
 
 			options.SwaggerDoc("storage", new OpenApiInfo
 			{
 				Title = "Storage API",
 				Version = "v1",
-				Description = "STORAGE"
-			}); 
+				Description = "APIs for file storage and media management."
+			});
 
 			options.SwaggerDoc("subscription", new OpenApiInfo
 			{
 				Title = "Subscription API",
 				Version = "v1",
-				Description = "SUBSCRIPTION"
+				Description = "APIs for subscription plans and entitlements."
 			});
 
 			options.SwaggerDoc("curator", new OpenApiInfo
 			{
 				Title = "Curator API",
 				Version = "v1",
-				Description = "CURATOR OOV LIFECYCLE & DICTIONARY MANAGEMENT"
+				Description = "APIs for OOV curation and dictionary management."
+			});
+
+			options.SwaggerDoc("linguistic", new OpenApiInfo
+			{
+				Title = "Linguistic API",
+				Version = "v1",
+				Description = "APIs for Japanese linguistic and proficiency metadata."
+			});
+
+			options.SwaggerDoc("learning", new OpenApiInfo
+			{
+				Title = "Learning API",
+				Version = "v1",
+				Description = "APIs for learning content."
+			});
+
+			options.SwaggerDoc("payment", new OpenApiInfo
+			{
+				Title = "Payment API",
+				Version = "v1",
+				Description = "APIs for payment."
 			});
 
 			options.SwaggerDoc("admin", new OpenApiInfo
 			{
 				Title = "Admin API",
 				Version = "v1",
-				Description = "ADMIN CRUD APIS FOR 16 RESOURCES"
+				Description = "APIs for administrative resource management."
 			});
 
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -90,12 +111,15 @@ internal static class SwaggerExtension
 
 		app.UseSwaggerUI(options =>
 		{
-			options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+			//options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
 			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
-			options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
+			//options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
+			options.SwaggerEndpoint("/swagger/linguistic/swagger.json", "Linguistic API");
+			options.SwaggerEndpoint("/swagger/learning/swagger.json", "Learning API");
+			options.SwaggerEndpoint("/swagger/payment/swagger.json", "Payment API");
 
 		});
 

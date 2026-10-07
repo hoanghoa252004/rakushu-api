@@ -1,5 +1,4 @@
 using MediatR;
-using Rakushu.Application.Usecases.Learning.ContentCategory;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
 
@@ -16,10 +15,24 @@ internal sealed class GetContentCategoryByIdHandler : IRequestHandler<GetContent
 
 	public async Task<Result<ContentCategoryDto>> Handle(GetContentCategoryByIdQuery request, CancellationToken cancellationToken)
 	{
-		var category = await _repository.GetByIdAsync(ContentCategoryId.From(request.ContentCategoryId), cancellationToken);
+		var id = ContentCategoryId.From(request.ContentCategoryId);
+
+		var category = await _repository.GetByIdAsync(id, cancellationToken);
+
 		if (category is null)
 			return Result.Failure<ContentCategoryDto>(ContentCategoryErrors.NotFound);
 
-		return Result.Success(ContentCategoryDto.FromEntity(category));
+		return Result.Success(new ContentCategoryDto(
+			category.Id.Value,
+			category.Slug,
+			category.Code,
+			category.Name,
+			category.JapaneseName,
+			category.Description,
+			category.DisplayOrder,
+			category.IsActive,
+			category.CreatedAt,
+			category.UpdatedAt
+		));
 	}
 }

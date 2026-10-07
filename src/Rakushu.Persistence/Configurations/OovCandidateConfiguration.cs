@@ -46,7 +46,7 @@ internal sealed class OovCandidateConfiguration : IEntityTypeConfiguration<OovCa
 			.IsRequired();
 
 		builder.Property(o => o.Status)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.HasConversion<string>()
 			.HasColumnName("status")
 			.IsRequired();

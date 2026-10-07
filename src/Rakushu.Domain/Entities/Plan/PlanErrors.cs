@@ -11,7 +11,7 @@ namespace Rakushu.Domain.Entities.Plan;
 public static class PlanErrors
 {
 	public static readonly Error InvalidCode = Error.Validation(
-		"PLAN.INVALID_CODE", "The plan code is invalid, it must have value, not exceed 50 chars, all uppercase, and concat with '_'. For example: FREE_PLAN ; PREMIUM_PLAN.");
+		"PLAN.INVALID_CODE", "The plan code is invalid, it must have value, not exceed 100 chars, all uppercase, and concat with '_'. For example: FREE_PLAN ; PREMIUM_PLAN.");
 
 	public static readonly Error NotFound = Error.NotFound(
 		"PLAN.NOT_FOUND", "The specified plan was not found.");
@@ -38,9 +38,11 @@ public static class PlanErrors
 		"PLAN.INVALID_BILLING_CYCLE",
 		"The specified billing cycle is invalid. Valid billing cycle: "
 		+ string.Join(", ", Enum.GetNames<BillingCycle>()) + ".");
+	public static readonly Error InvalidJapaneseName = Error.Validation(
+		"PLAN.INVALID_JAPANESE_NAME",
+		"Plan Japanese name is required and must not exceed 100 characters.");
 
-	public static readonly Error InvalidStatus = Error.Validation(
-		"PLAN.INVALID_STATUS",
-		"The specified plan status is invalid. Valid plan status: "
-		+ PlanStatusTransition.GetPlanStatuses() + ".");
+	public static readonly Error DuplicateFreePlan = Error.Conflict(
+		"PLAN.DUPLICATE_FREE_PLAN",
+		"Only one free plan is allowed.");
 }

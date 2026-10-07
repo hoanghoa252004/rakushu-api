@@ -19,6 +19,7 @@ internal sealed class CreateUser : IEndpoint
 				CancellationToken cancellationToken) =>
 			{
 				var command = new CreateUserCommand(
+					dto.FullName,
 					dto.Email,
 					dto.Password,
 					dto.RoleId
@@ -30,6 +31,7 @@ internal sealed class CreateUser : IEndpoint
 			})
 			// 2. Description
 			.WithName("CreateUser")
+			.WithSummary("Admin")
 			.WithDescription("Creates a new user account directly with specified Role and default status = Inactive.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
@@ -44,6 +46,7 @@ internal sealed class CreateUser : IEndpoint
 }
 
 internal record CreateUserRequestDto(
+	string FullName,
 	string Email,
 	string Password,
 	Guid RoleId

@@ -24,6 +24,7 @@ internal sealed class Logout : IEndpoint
 			})
 			// 2. Description
 			.WithName("Logout")
+			.WithSummary("Authenticated User")
 			.WithDescription("Logs out the user and revokes the refresh token.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization()

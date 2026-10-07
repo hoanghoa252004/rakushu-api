@@ -1,7 +1,6 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Usecases.User.User.GetUserById;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User;
@@ -14,18 +13,18 @@ internal sealed class GetProfileHandler : IRequestHandler<GetProfileQuery, Resul
 	private readonly ICurrentUserContext _currentUserContext;
 
 	// DAOs
-	private readonly IUserQuery _userQuery;
+	private readonly IUserRepository _userRepository;
 
 	// SERVICES
 	private readonly IStorageService _storageService;
 
 	public GetProfileHandler(
 		ICurrentUserContext currentUserContext,
-		IUserQuery userQuery,
+		IUserRepository userRepository,
 		IStorageService storageService)
 	{
 		_currentUserContext = currentUserContext;
-		_userQuery = userQuery;
+		_userRepository = userRepository;
 		_storageService = storageService;
 	}
 
@@ -38,25 +37,66 @@ internal sealed class GetProfileHandler : IRequestHandler<GetProfileQuery, Resul
 			return Result.Failure<UserDetailDto>(UserErrors.NotFound);
 		}
 
-		var user = await _userQuery.GetByIdAsync(userId, cancellationToken);
+		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
 
 		if (user == null)
 		{
 			return Result.Failure<UserDetailDto>(UserErrors.NotFound);
 		}
 
+		var userDetailDto = new UserDetailDto
+		(
+			Id: user.Id.Value,
+			FullName: user.FullName,
+			Email: user.Email,
+			Status: user.Status.ToString(),
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Role: new RoleDto(
+				user.Role.Id.Value,
+				user.Role.Code,
+				user.Role.Name
+			),
+			Profile: user.Profile != null ? new ProfileDto
+			(
+				Id: user.Profile.Id.Value,
+				Avatar: user.Profile.AvatarKey,
+				DailyLearningMinutes: user.Profile.DailyLearningMinutes,
+				SessionDurationMinutes: user.Profile.SessionDurationMinutes,
+				Level: new LevelDto(
+					Id: user.Profile.Level.Id.Value,
+					Code: user.Profile.Level.Code,
+					Name: user.Profile.Level.Name,
+					JapaneseName: user.Profile.Level.JapaneseName,
+					Description: user.Profile.Level.Description
+				),
+				Interests: user.Profile.Interests.Select(i => new InterestDto
+				(
+					Id: i.Id.Value,
+					Priority: i.Priority,
+					Content: new InterestedContentDto(
+						Id: i.ContentCategory.Id.Value,
+						Slug: i.ContentCategory.Slug,
+						Code: i.ContentCategory.Code,
+						Name: i.ContentCategory.Name,
+						JapaneseName: i.ContentCategory.JapaneseName,
+						ThemeColor: i.ContentCategory.ThemeColor,
+						Description: i.ContentCategory.Description
+					)
+				)).ToList()
+			) : null
+		);
+
 		// Process avatar URL if profile exists
-		if (user.Profile?.Avatar != null)
+		if (userDetailDto.Profile?.Avatar != null)
 		{
-			var avatarUrl = await _storageService.CreatePresignedReadUrlAsync(user.Profile.Avatar, cancellationToken);
+			var avatarUrl = await _storageService.CreatePresignedReadUrlAsync(userDetailDto.Profile.Avatar, cancellationToken);
 
-			var updatedProfile = user.Profile with { Avatar = avatarUrl };
+			var updatedProfile = userDetailDto.Profile with { Avatar = avatarUrl };
 
-			var updatedUser = user with { Profile = updatedProfile };
-
-			return Result.Success(updatedUser);
+			userDetailDto = userDetailDto with { Profile = updatedProfile };
 		}
 
-		return Result.Success(user);
+		return Result.Success(userDetailDto);
 	}
 }

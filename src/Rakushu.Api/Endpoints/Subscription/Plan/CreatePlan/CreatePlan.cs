@@ -22,9 +22,11 @@ internal sealed class CreatePlan : IEndpoint
 				var command = new CreatePlanCommand(
 					dto.Code,
 					dto.Name,
+					dto.JapaneseName,
 					dto.Price,
 					dto.Currency,
 					dto.BillingCycle,
+					dto.IsActive,
 					dto.Description
 				);
 
@@ -34,6 +36,7 @@ internal sealed class CreatePlan : IEndpoint
 			})
 			// 2. Description
 			.WithName("CreatePlan")
+			.WithSummary("Admin")
 			.WithDescription("Creates a new subscription plan with the specified details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
@@ -48,8 +51,10 @@ internal sealed class CreatePlan : IEndpoint
 internal record CreatePlanRequestDto(
 	string Code = "PLAN_NAME_A",
 	string Name = "Plan Name A",
+	string JapaneseName = "プラン名A",
 	decimal Price = 50000,
 	string Currency = "VND",
 	string BillingCycle = "Monthly",
+	bool IsActive = true,
 	string? Description = null
 );

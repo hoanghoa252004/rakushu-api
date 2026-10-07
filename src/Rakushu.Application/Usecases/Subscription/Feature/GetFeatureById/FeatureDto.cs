@@ -4,8 +4,8 @@ public sealed record FeatureDto(
 	Guid Id,
 	string Code,
 	string Name,
-	string Status,
-	DateTime CreatedAt,
-	DateTime UpdatedAt,
+	bool IsActive,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset UpdatedAt,
 	string? Description = null
 );

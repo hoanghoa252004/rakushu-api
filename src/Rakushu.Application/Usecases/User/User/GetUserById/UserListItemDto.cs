@@ -8,12 +8,12 @@ namespace Rakushu.Application.Usecases.User.User.GetUserById;
 
 public sealed record UserListItemDto(
 	Guid Id,
+	string FullName,
 	string Email,
 	string Status,
-	string? FullName,
 	string? Avatar,
-	DateTime CreatedAt,
-	DateTime UpdatedAt,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset UpdatedAt,
 	RoleDto Role
 );
 

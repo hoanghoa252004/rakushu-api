@@ -4,7 +4,6 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.Plan.ObjectValues;
 
 namespace Rakushu.Application.Usecases.Subscription.Plan.CreatePlan;
 
@@ -35,14 +34,7 @@ public sealed class CreatePlanHandler : IRequestHandler<CreatePlanCommand, Resul
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			// 1. Create PlanCode
-			var planCodeResult = PlanCode.Create(request.Code);
-
-			if (planCodeResult.IsFailure)
-			{
-				return Result.Failure<Guid>(planCodeResult.Error);
-			}
-
-			var existingPlan = await _planRepository.GetByCodeAsync(planCodeResult.Value, cancellationToken);
+			var existingPlan = await _planRepository.GetByCodeAsync(request.Code, cancellationToken);
 
 			if (existingPlan != null) // Check if code already exists
 			{
@@ -60,18 +52,28 @@ public sealed class CreatePlanHandler : IRequestHandler<CreatePlanCommand, Resul
 				return Result.Failure<Guid>(PlanErrors.InvalidBillingCycle);
 			}
 
-			var now = _systemClock.UtcNow;
+			// 3. Check any plan with price = 0 ( only allow 1 free plan )
+			if(request.Price == 0)
+			{
+				var freePlan = (await _planRepository.GetAllAsync(cancellationToken))
+					.SingleOrDefault(p => p.Price == 0);
+				if (freePlan is not null)
+				{
+					return Result.Failure<Guid>(PlanErrors.DuplicateFreePlan);
+				}
+			}
 
-			var initialStatus = PlanStatus.Draft;
+			var now = _systemClock.UtcNow;
 
 			// 3. Create plan
 			var planResult = Domain.Entities.Plan.Plan.Create(
-				planCodeResult.Value,
+				request.Code,
 				request.Name,
+				request.JapaneseName,
 				request.Price,
 				currency,
 				billingCycle,
-				initialStatus,
+				request.IsActive,
 				now,
 				now,
 				request.Description

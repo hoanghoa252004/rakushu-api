@@ -6,18 +6,8 @@ internal sealed class UpdateProfileValidator : AbstractValidator<UpdateProfileCo
 {
 	public UpdateProfileValidator()
 	{
-		RuleFor(x => x.FullName)
-			.NotEmpty().WithMessage("FullName is required.")
-			.MaximumLength(50).WithMessage("FullName cannot exceed 50 characters.");
-
-		RuleFor(x => x.NativeLanguageId)
-			.NotEmpty().WithMessage("NativeLanguageId is required.");
-
-		RuleFor(x => x.CurrentLevelId)
-			.NotEmpty().WithMessage("CurrentLevelId is required.");
-
-		RuleFor(x => x.TargetLevelId)
-			.NotEmpty().WithMessage("TargetLevelId is required.");
+		RuleFor(x => x.LevelId)
+			.NotEmpty().WithMessage("LevelId is required.");
 
 		RuleFor(x => x.DailyLearningMinutes)
 			.GreaterThanOrEqualTo(0).WithMessage("DailyLearningMinutes must be greater than or equal to 0.");

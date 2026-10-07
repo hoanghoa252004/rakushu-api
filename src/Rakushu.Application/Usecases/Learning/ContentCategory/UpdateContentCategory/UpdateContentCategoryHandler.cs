@@ -1,4 +1,5 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
@@ -9,34 +10,37 @@ internal sealed class UpdateContentCategoryHandler : IRequestHandler<UpdateConte
 {
 	private readonly IContentCategoryRepository _repository;
 	private readonly IUnitOfWork _unitOfWork;
-
-	public UpdateContentCategoryHandler(IContentCategoryRepository repository, IUnitOfWork unitOfWork)
+	private readonly ISystemClock _systemClock;
+	public UpdateContentCategoryHandler(IContentCategoryRepository repository, IUnitOfWork unitOfWork,
+		ISystemClock systemClock)
 	{
 		_repository = repository;
 		_unitOfWork = unitOfWork;
+		_systemClock = systemClock;
 	}
 
 	public async Task<Result> Handle(UpdateContentCategoryCommand request, CancellationToken cancellationToken)
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var category = await _repository.GetByIdAsync(ContentCategoryId.From(request.ContentCategoryId), cancellationToken);
+			var categoryId = ContentCategoryId.From(request.ContentCategoryId);
+
+			var category = await _repository.GetByIdAsync(categoryId, cancellationToken);
+
 			if (category is null)
 				return Result.Failure(ContentCategoryErrors.NotFound);
 
-			var now = DateTimeOffset.UtcNow;
-			ContentCategoryId? parentId = request.parentId.HasValue ? ContentCategoryId.From(request.parentId.Value) : null;
+
+			var now = _systemClock.UtcNow;
 
 			var updateResult = category.Update(
-				request.slug,
-				request.code,
-				request.name,
-				request.level,
-				request.displayOrder,
-				request.isActive,
+				request.Name,
+				request.JapaneseName,
+				request.DisplayOrder,
+				request.ThemeColor,
+				request.IsActive,
 				now,
-				parentId,
-				request.description);
+				request.Description);
 
 			if (updateResult.IsFailure)
 				return updateResult;

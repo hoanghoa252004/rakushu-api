@@ -20,11 +20,18 @@ internal sealed class DeleteContentCategoryHandler : IRequestHandler<DeleteConte
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var category = await _repository.GetByIdAsync(ContentCategoryId.From(request.ContentCategoryId), cancellationToken);
+			var id = ContentCategoryId.From(request.ContentCategoryId);
+
+			var category = await _repository.GetByIdAsync(id, cancellationToken);
+
 			if (category is null)
 				return Result.Failure(ContentCategoryErrors.NotFound);
 
+			if(category.Videos.Any() || category.Series.Any() || category.ContentProcessingPolicies.Any() || category.Interests.Any())
+				return Result.Failure(ContentCategoryErrors.IsInUse);
+
 			_repository.Delete(category);
+
 			return Result.Success();
 		}, cancellationToken);
 	}

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
+using Rakushu.Application.Usecases.User.User.ChangeUserStatus;
 using Rakushu.Application.Usecases.User.User.DeleteUser;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
@@ -21,20 +22,17 @@ internal sealed class DeleteUser : IEndpoint
 				CancellationToken cancellationToken
 				) =>
 			{
-				//var command = new DeleteUserCommand(id);
-				//var result = await sender.Send(command, cancellationToken);
-				return Result.Failure(CommonErrors.FeatureNotSupport).MatchOk();
+				var command = new DeleteUserCommand(id);
+
+				var result = await sender.Send(command, cancellationToken);
+
+				return result.MatchOk();
 			})
 			// 2. Description
 			.WithName("DeleteUser")
+			.WithSummary("Admin")
 			.WithDescription("Permanently deletes a user account and associated profile.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
-			// 4. Response
-			.Produces(StatusCodes.Status200OK)
-			.ProducesProblem(StatusCodes.Status401Unauthorized)
-			.ProducesProblem(StatusCodes.Status403Forbidden)
-			.ProducesProblem(StatusCodes.Status404NotFound)
-			.ProducesProblem(StatusCodes.Status500InternalServerError);
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator));
 	}
 }

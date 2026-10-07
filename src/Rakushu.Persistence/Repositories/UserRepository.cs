@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.RefreshToken;
-using Rakushu.Domain.Entities.User.ValueObjects.Email;
 using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Persistence.Repositories;
@@ -14,13 +12,11 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 
 	public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
 	{
-		var normalizedEmail = Email.NormalizeEmail(email);
-
 		return await _context.Users
 			.Include(u => u.Role)
 			.Include(u => u.RefreshTokens)
 			.Include(u => u.EmailVerificationTokens)
-			.SingleOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
+			.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
 	}
 
 	public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
@@ -35,10 +31,23 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 		return await _context.Users
 			.Include(u => u.Role)
 			.Include(u => u.RefreshTokens)
+
 			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.Plan)
+
+			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.SubscriptionUsages)
+					.ThenInclude(su => su.Feature)
+
 			.Include(u => u.Payments)
+
 			.Include(u => u.Profile)
 				.ThenInclude(p => p.Interests)
+					.ThenInclude(i => i.ContentCategory)
+
+			.Include(u => u.Profile)
+				.ThenInclude(p => p.Level)
+
 			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
 	}
 
@@ -54,8 +63,22 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 	{
 		return await _context.Users
 			.Include(u => u.Role)
+			.Include(u => u.RefreshTokens)
+
+			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.Plan)
+
+			.Include(u => u.Subscriptions)
+				.ThenInclude(s => s.SubscriptionUsages)
+
+			.Include(u => u.Payments)
+
 			.Include(u => u.Profile)
 				.ThenInclude(p => p.Interests)
+					.ThenInclude(i => i.ContentCategory)
+
+			.Include(u => u.Profile)
+				.ThenInclude(p => p.Level)
 			.ToListAsync(cancellationToken);
 	}
 }

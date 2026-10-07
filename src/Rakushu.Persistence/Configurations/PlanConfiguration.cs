@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.Plan.ObjectValues;
-using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,17 +22,20 @@ internal sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
 				value => PlanId.From(value));
 
 		// Code
-		builder.Property(u => u.Code)
-			.HasConversion(
-				code => code.Value,
-				value => PlanCode.Create(value).Value)
-			.HasMaxLength(50)
+		builder.Property(pl => pl.Code)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(u => u.Code)
 			.IsUnique();
 
 		// Name
 		builder.Property(u => u.Name)
+			.HasMaxLength(100)
+			.IsRequired();
+
+		// JapaneseName
+		builder.Property(u => u.JapaneseName)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// Description
@@ -57,10 +58,8 @@ internal sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
 			.HasConversion<string>()
 			.IsRequired();
 
-		// Status
-		builder.Property(u => u.Status)
-			.HasMaxLength(30)
-			.HasConversion<string>()
+		// IsActive
+		builder.Property(u => u.IsActive)
 			.IsRequired();
 
 		// CreatedAt

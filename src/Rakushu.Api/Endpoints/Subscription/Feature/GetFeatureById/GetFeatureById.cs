@@ -27,6 +27,7 @@ internal sealed class GetFeatureById : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetFeatureById")
+			.WithSummary("Admin")
 			.WithDescription("Retrieves a specific feature by its ID.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
 			// 4. Response

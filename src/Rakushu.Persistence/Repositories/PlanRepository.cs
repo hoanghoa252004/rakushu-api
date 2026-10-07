@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.Plan.ObjectValues;
-using Rakushu.Persistence.Repositories;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -11,10 +9,11 @@ public sealed class PlanRepository : BaseRepository<Plan, PlanId>, IPlanReposito
 	{
 	}
 
-	public async Task<Plan?> GetByCodeAsync(PlanCode code, CancellationToken cancellationToken = default)
+	public async Task<Plan?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
 	{
 		return await _context.Plans
 			.Include(p => p.Entitlements)
+				.ThenInclude(e => e.Feature)
 			.Include(p => p.Subscriptions)
 			.SingleOrDefaultAsync(p => p.Code == code, cancellationToken);
 	}
@@ -23,7 +22,18 @@ public sealed class PlanRepository : BaseRepository<Plan, PlanId>, IPlanReposito
 	{
 		return await _context.Plans
 			.Include(p => p.Entitlements)
+				.ThenInclude(e => e.Feature)
 			.Include(p => p.Subscriptions)
 			.SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
+	}
+
+	public override async Task<IEnumerable<Plan>> GetAllAsync(CancellationToken cancellationToken = default)
+	{
+		return await _context.Plans
+			.Include(f => f.Entitlements)
+				.ThenInclude(e => e.Feature)
+			.Include(f => f.Subscriptions)
+			.OrderByDescending(f => f.UpdatedAt)
+			.ToListAsync(cancellationToken);
 	}
 }

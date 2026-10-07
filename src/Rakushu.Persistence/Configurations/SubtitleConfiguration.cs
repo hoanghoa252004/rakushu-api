@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.SupportedLanguage;
 using Rakushu.Domain.Entities.Video;
 using Rakushu.Domain.Entities.Video.Subtitle;
 
@@ -19,8 +18,10 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 
 		// Code
 		builder.Property(s => s.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
+		builder.HasIndex(s => s.Code)
+			.IsUnique();
 
 		// VideoId
 		builder.Property(s => s.VideoId)
@@ -32,17 +33,6 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 			.WithMany(v => v.Subtitles)
 			.HasForeignKey(s => s.VideoId)
 			.OnDelete(DeleteBehavior.Cascade);
-
-		// SupportedLanguageId
-		builder.Property(s => s.SupportedLanguageId)
-			.HasConversion(
-				id => id.Value,
-				value => SupportedLanguageId.From(value))
-			.IsRequired();
-		builder.HasOne(s => s.SupportedLanguage)
-			.WithMany(sl => sl.Subtitles)
-			.HasForeignKey(s => s.SupportedLanguageId)
-			.OnDelete(DeleteBehavior.Restrict);
 
 		// SourceType
 		builder.Property(s => s.SourceType)

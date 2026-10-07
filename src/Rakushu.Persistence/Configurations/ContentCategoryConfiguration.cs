@@ -24,40 +24,35 @@ internal sealed class ContentCategoryConfiguration : IEntityTypeConfiguration<Co
 
 		// Code
 		builder.Property(c => c.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(c => c.Code)
 			.IsUnique();
 
 		// Name
 		builder.Property(c => c.Name)
-			.HasMaxLength(200)
+			.HasMaxLength(100)
+			.IsRequired();
+
+		// JapaneseName
+		builder.Property(c => c.JapaneseName)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// Description
-		builder.Property(c => c.Description)
-			.HasMaxLength(1000);
-
-		// ParentId (Self-referencing foreign key)
-		builder.Property(c => c.ParentId)
-			.HasConversion(
-				id => (Guid?)id!.Value,
-				value => value.HasValue ? ContentCategoryId.From(value.Value) : null);
-		builder.HasOne(c => c.Parent)
-			.WithMany(c => c.Children)
-			.HasForeignKey(c => c.ParentId)
-			.OnDelete(DeleteBehavior.Restrict);
-
-		// Level
-		builder.Property(c => c.Level)
-			.IsRequired();
+		builder.Property(c => c.Description);
 
 		// DisplayOrder
 		builder.Property(c => c.DisplayOrder)
 			.IsRequired();
 
+		// ThemeColor
+		builder.Property(c => c.ThemeColor)
+			.HasMaxLength(10)
+			.IsRequired();
+
 		// IsActive
-		builder.Property(c => c.IsActive)
+		builder.Property(pl => pl.IsActive)
 			.IsRequired();
 
 		// CreatedAt

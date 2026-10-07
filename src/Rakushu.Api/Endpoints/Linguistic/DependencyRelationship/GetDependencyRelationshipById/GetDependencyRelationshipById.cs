@@ -1,20 +1,33 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
-using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.GetDependencyRelationshipById;
+using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.GetById;
+using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetDependencyRelationshipById;
+namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetById;
 
 internal sealed class GetDependencyRelationshipById : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapDependencyRelationshipEndpoints()
-			.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+			.MapGet("/{id:guid}", async ([FromRoute] Guid id, ISender sender, CancellationToken cancellationToken) =>
 			{
-				var result = await sender.Send(new GetDependencyRelationshipByIdQuery(id), cancellationToken);
-				return result.MatchOk();
+				var query = new GetDependencyRelationshipByIdQuery(id);
+				var result = await sender.Send(query, cancellationToken);
+				return result is null ? Results.NotFound() : Results.Ok(result);
 			})
-			.WithName("GetDependencyRelationshipById");
+			.WithName("GetDependencyRelationshipById")
+			.WithSummary("Admin")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			// 4. Response
+			.Produces(StatusCodes.Status201Created)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+			.ProducesProblem(StatusCodes.Status409Conflict)
+			.ProducesProblem(StatusCodes.Status500InternalServerError); ;
 	}
 }

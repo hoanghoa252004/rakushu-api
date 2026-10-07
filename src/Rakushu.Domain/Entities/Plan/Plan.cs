@@ -1,10 +1,8 @@
 using Rakushu.Domain.Common;
-using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Plan.Entitlement;
-using Rakushu.Domain.Entities.Plan.ObjectValues;
 using Rakushu.Domain.Entities.User.Subscription;
 using System;
 using System.Collections.Generic;
@@ -16,13 +14,14 @@ namespace Rakushu.Domain.Entities.Plan;
 
 public class Plan : AggregateRoot<PlanId>
 {
-	public PlanCode Code { get; private set; } = null!;
+	public string Code { get; private set; } = null!;
 	public string Name { get; private set; } = null!;
-	public string? Description { get; private set;  }
+	public string JapaneseName { get; private set; } = null!;
+	public string? Description { get; private set; }
 	public decimal Price { get; private set; }
-	public Currency Currency { get; private set; } 
+	public Currency Currency { get; private set; }
 	public BillingCycle BillingCycle { get; private set; }
-	public PlanStatus Status { get; private set; }
+	public bool IsActive { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -43,67 +42,66 @@ public class Plan : AggregateRoot<PlanId>
 
 	private Plan(
 		PlanId planId,
-		PlanCode planCode,
+		string planCode,
 		string name,
+		string japaneseName,
 		decimal price,
 		Currency currency,
 		BillingCycle billingCycle,
-		PlanStatus status,
+		bool isActive,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
 		string? description = null
-		) : base(planId)
+	) : base(planId)
 	{
 		Name = name;
+		JapaneseName = japaneseName;
 		Code = planCode;
 		Price = price;
 		Currency = currency;
 		BillingCycle = billingCycle;
-		Status = status;
+		IsActive = isActive;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 		Description = description;
 	}
 
 	public static Result<Plan> Create(
-	PlanCode planCode,
-	string name,
-	decimal price,
-	Currency currency,
-	BillingCycle billingCycle,
-	PlanStatus status,
-	DateTimeOffset createdAt,
-	DateTimeOffset updatedAt,
+		string planCode,
+		string name,
+		string japaneseName,
+		decimal price,
+		Currency currency,
+		BillingCycle billingCycle,
+		bool isActive,
+		DateTimeOffset createdAt,
+		DateTimeOffset updatedAt,
 	string? description = null)
 	{
-		if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
-			return Result.Failure<Plan>(
-				PlanErrors.InvalidName);
+		if (string.IsNullOrWhiteSpace(name) || name.Length > 100)
+			return Result.Failure<Plan>(PlanErrors.InvalidName);
 
-		if (price <= 0)
-			return Result.Failure<Plan>(
-				PlanErrors.InvalidPrice);
+		if (string.IsNullOrWhiteSpace(japaneseName) || japaneseName.Length > 100)
+			return Result.Failure<Plan>(PlanErrors.InvalidJapaneseName);
+
+		if (price < 0)
+			return Result.Failure<Plan>(PlanErrors.InvalidPrice);
 
 		if (!Enum.IsDefined(currency))
-			return Result.Failure<Plan>(
-				PlanErrors.InvalidCurrency);
+			return Result.Failure<Plan>(PlanErrors.InvalidCurrency);
 
 		if (!Enum.IsDefined(billingCycle))
-			return Result.Failure<Plan>(
-				PlanErrors.InvalidBillingCycle);
-
-		if (!Enum.IsDefined(status))
-			return Result.Failure<Plan>(
-				PlanErrors.InvalidStatus);
+			return Result.Failure<Plan>(PlanErrors.InvalidBillingCycle);
 
 		var plan = new Plan(
 			PlanId.Create(),
 			planCode,
 			name,
+			japaneseName,
 			price,
 			currency,
 			billingCycle,
-			status,
+			isActive,
 			createdAt,
 			updatedAt,
 			description
@@ -113,47 +111,38 @@ public class Plan : AggregateRoot<PlanId>
 	}
 
 	public Result Update(
-	string name,
-	decimal price,
-	Currency currency,
-	BillingCycle billingCycle,
-	DateTimeOffset updatedAt,
-	string? description = null)
+		string name,
+		string japaneseName,
+		decimal price,
+		Currency currency,
+		BillingCycle billingCycle,
+		bool isActive,
+		DateTimeOffset updatedAt,
+		string? description = null)
 	{
-		if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
-			return Result.Failure(
-				PlanErrors.InvalidName);
+		if (string.IsNullOrWhiteSpace(name) || name.Length > 100)
+			return Result.Failure<Plan>(PlanErrors.InvalidName);
 
-		if (price <= 0)
-			return Result.Failure(
-				PlanErrors.InvalidPrice);
+		if (string.IsNullOrWhiteSpace(japaneseName) || japaneseName.Length > 100)
+			return Result.Failure<Plan>(PlanErrors.InvalidJapaneseName);
+
+		if (price < 0)
+			return Result.Failure<Plan>(PlanErrors.InvalidPrice);
 
 		if (!Enum.IsDefined(currency))
-			return Result.Failure(
-				PlanErrors.InvalidCurrency);
+			return Result.Failure(PlanErrors.InvalidCurrency);
 
 		if (!Enum.IsDefined(billingCycle))
-			return Result.Failure(
-				PlanErrors.InvalidBillingCycle);
+			return Result.Failure(PlanErrors.InvalidBillingCycle);
 
 		Name = name;
 		Price = price;
 		Currency = currency;
 		BillingCycle = billingCycle;
+		IsActive = isActive;
 		Description = description;
+		JapaneseName = japaneseName;
 		UpdatedAt = updatedAt;
-
-		return Result.Success();
-	}
-
-	public Result ChangeStatus(PlanStatus status)
-	{
-		if (!PlanStatusTransition.IsAllowed(Status, status))
-		{
-			return Result.Failure(CommonErrors.InvalidStatusTransition);
-		}
-
-		Status = status;
 
 		return Result.Success();
 	}
@@ -161,35 +150,31 @@ public class Plan : AggregateRoot<PlanId>
 	public Result<Entitlement.Entitlement> AddEntitlement(
 		FeatureId featureId,
 		bool isEnabled,
-		int limitValue,
 		LimitUnit limitUnit,
+		int limitValue,
 		LimitPeriod limitPeriod,
 		DateTimeOffset updatedAt)
 	{
-		if (Status == PlanStatus.Archived)
-		{
-			return Result.Failure<Entitlement.Entitlement>(EntitlementErrors.PlanArchived);
-		}
+		if (!IsActive)
+			return Result.Failure<Entitlement.Entitlement>(EntitlementErrors.PlanNotActive);
 
 		if (_entitlements.Any(e => e.FeatureId == featureId))
-		{
 			return Result.Failure<Entitlement.Entitlement>(EntitlementErrors.DuplicateFeature);
-		}
 
 		var entitlementResult = Entitlement.Entitlement.Create(
 			Id,
 			featureId,
 			isEnabled,
-			limitValue,
 			limitUnit,
-			limitPeriod);
+			limitValue,
+			limitPeriod
+		);
 
 		if (entitlementResult.IsFailure)
-		{
 			return entitlementResult;
-		}
 
 		_entitlements.Add(entitlementResult.Value);
+
 		UpdatedAt = updatedAt;
 
 		return entitlementResult;
@@ -198,23 +183,21 @@ public class Plan : AggregateRoot<PlanId>
 	public Result UpdateEntitlement(
 		EntitlementId entitlementId,
 		bool isEnabled,
-		int limitValue,
 		LimitUnit limitUnit,
+		int limitValue,
 		LimitPeriod limitPeriod,
 		DateTimeOffset updatedAt)
 	{
-		if (Status == PlanStatus.Archived)
-		{
-			return Result.Failure(EntitlementErrors.PlanArchived);
-		}
+		if (!IsActive)
+			return Result.Failure(EntitlementErrors.PlanNotActive);
 
 		var entitlement = _entitlements.FirstOrDefault(e => e.Id == entitlementId);
-		if (entitlement is null)
-		{
-			return Result.Failure(EntitlementErrors.NotFound);
-		}
 
-		var updateResult = entitlement.Update(isEnabled, limitValue, limitUnit, limitPeriod);
+		if (entitlement is null)
+			return Result.Failure(EntitlementErrors.NotFound);
+
+		var updateResult = entitlement.Update(isEnabled, limitUnit, limitValue, limitPeriod);
+
 		if (updateResult.IsFailure)
 		{
 			return updateResult;
@@ -227,10 +210,6 @@ public class Plan : AggregateRoot<PlanId>
 
 	public Result RemoveEntitlement(EntitlementId entitlementId, DateTimeOffset updatedAt)
 	{
-		if (Status == PlanStatus.Archived)
-		{
-			return Result.Failure(EntitlementErrors.PlanArchived);
-		}
 
 		if (_subscriptions.Any(s => s.Status == SubscriptionStatus.Active))
 		{
@@ -238,12 +217,14 @@ public class Plan : AggregateRoot<PlanId>
 		}
 
 		var entitlement = _entitlements.FirstOrDefault(e => e.Id == entitlementId);
+
 		if (entitlement is null)
 		{
 			return Result.Failure(EntitlementErrors.NotFound);
 		}
 
 		_entitlements.Remove(entitlement);
+
 		UpdatedAt = updatedAt;
 
 		return Result.Success();

@@ -1,4 +1,4 @@
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.ProficiencyLevel;
 
 namespace Rakushu.Persistence.Repositories;
 

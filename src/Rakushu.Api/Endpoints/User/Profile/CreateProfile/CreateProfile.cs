@@ -20,10 +20,7 @@ internal sealed class CreateProfile : IEndpoint
 				) =>
 			{
 				var command = new CreateProfileCommand(
-					dto.FullName,
-					dto.NativeLanguageId,
-					dto.CurrentLevelId,
-					dto.TargetLevelId,
+					dto.LevelId,
 					dto.DailyLearningMinutes,
 					dto.SessionDurationMinutes,
 					dto.Interests,
@@ -36,6 +33,7 @@ internal sealed class CreateProfile : IEndpoint
 			})
 			// 2. Description
 			.WithName("CreateProfile")
+			.WithSummary("Learner")
 			.WithDescription("Creates a new profile for the currently authenticated user including personal info, language preferences, proficiency levels, learning goals, and interests.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
@@ -49,10 +47,7 @@ internal sealed class CreateProfile : IEndpoint
 }
 
 internal record CreateProfileRequestDto(
-	string FullName,
-	Guid NativeLanguageId,
-	Guid CurrentLevelId,
-	Guid TargetLevelId,
+	Guid LevelId,
 	int DailyLearningMinutes,
 	int SessionDurationMinutes,
 	IReadOnlyCollection<CreateInterestDto> Interests,

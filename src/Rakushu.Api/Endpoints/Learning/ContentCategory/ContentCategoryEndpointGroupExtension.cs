@@ -8,9 +8,8 @@ internal static class ContentCategoryEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapContentCategoryEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/content-categories")
+		return app.MapGroup("/api/content-categories")
 			.WithTags("ContentCategory")
-			.WithGroupName("admin")
-			.AllowAnonymous();
+			.WithGroupName("learning");
 	}
 }

@@ -2,7 +2,7 @@ using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 
 namespace Rakushu.Application.Usecases.Linguistic.UniversalPartOfSpeech.DeleteUniversalPartOfSpeech;
 

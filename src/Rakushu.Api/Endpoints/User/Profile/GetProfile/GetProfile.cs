@@ -19,7 +19,8 @@ internal sealed class GetProfile : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetProfile")
-			.WithDescription("Retrieves the currently authenticated user's profile details.")
+			.WithSummary("Authenticated User")
+			.WithDescription("Retrieves my profile details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization()
 			// 4. Response 

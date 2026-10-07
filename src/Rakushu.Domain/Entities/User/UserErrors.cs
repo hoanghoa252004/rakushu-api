@@ -51,6 +51,9 @@ public static class UserErrors
 		return Error.Failure("AUTH.REMAIN_ACTIVE_VERIFICATION_CODE",message);
 	}
 
+	public static readonly Error InvalidFullName = Error.Validation(
+		"USER.INVALID_FULLNAME", "FullName is required and cannot exceed 50 characters.");
+
 	public static readonly Error InvalidStatus = Error.Validation(
 		"USER.INVALID_STATUS",
 		"The specified user status is invalid. Valid user status: "
@@ -62,4 +65,7 @@ public static class UserErrors
 
 	public static readonly Error ProfileAlreadyExists = Error.Conflict(
 		"USER.PROFILE_ALREADY_EXISTS", "The user already has a profile.");
+
+	public static readonly Error CannotBeDeleted = Error.Validation(
+		"USER.CANNOT_BE_DELETED", "The user cannot be deleted because it is either active.");
 }

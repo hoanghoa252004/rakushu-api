@@ -1,10 +1,11 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
-using Rakushu.Domain.Entities.SupportedLanguage;
+using Rakushu.Domain.Entities.Plan;
+using Rakushu.Domain.Entities.ProficiencyLevel;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.Profile.Policies;
 using System;
@@ -22,31 +23,37 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 
 	// REPOSITORIES
 	private readonly IUserRepository _userRepository;
-	private readonly ISupportedLanguageRepository _supportedLanguageRepository;
 	private readonly IProficiencyLevelRepository _proficiencyLevelRepository;
 	private readonly IContentCategoryRepository _contentCategoryRepository;
+	private readonly IPlanRepository _planRepository;
 	private readonly IUnitOfWork _unitOfWork;
 
 	// POLICY
 	private readonly ProfileUpdatePolicy _profileUpdatePolicy;
 
+	// SERVICES
+	private readonly ISystemClock _systemClock;
+
+
 	public CreateProfileHandler(
 		ICurrentUserContext currentUserContext,
 		IUserRepository userRepository,
-		ISupportedLanguageRepository supportedLanguageRepository,
 		IProficiencyLevelRepository proficiencyLevelRepository,
 		IContentCategoryRepository contentCategoryRepository,
+		IPlanRepository planRepository,
+		ISystemClock systemClock,
 		IUnitOfWork unitOfWork,
 		ProfileUpdatePolicy profileUpdatePolicy
 		)
 	{
 		_currentUserContext = currentUserContext;
 		_userRepository = userRepository;
-		_supportedLanguageRepository = supportedLanguageRepository;
 		_proficiencyLevelRepository = proficiencyLevelRepository;
 		_contentCategoryRepository = contentCategoryRepository;
+		_planRepository = planRepository;
 		_unitOfWork = unitOfWork;
 		_profileUpdatePolicy = profileUpdatePolicy;
+		_systemClock = systemClock;
 	}
 
 	public async Task<Result<Guid>> Handle(CreateProfileCommand request, CancellationToken cancellationToken)
@@ -74,37 +81,18 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 			}
 
 			// 1.2. VALIDATE: resource existence
-			// 1.2.1 Native Language
-			var nativeLanguageId = SupportedLanguageId.From(request.NativeLanguageId);
 
-			var nativeLanguage = await _supportedLanguageRepository.GetByIdAsync(nativeLanguageId, cancellationToken);
+			// 1.2.1 Level
+			var levelId = ProficiencyLevelId.From(request.LevelId);
 
-			if (nativeLanguage == null)
-			{
-				return Result.Failure<Guid>(SupportedLanguageErrors.NotFound);
-			}
+			var level = await _proficiencyLevelRepository.GetByIdAsync(levelId, cancellationToken);
 
-			// 1.2.2 Current Level
-			var currentLevelId = ProficiencyLevelId.From(request.CurrentLevelId);
-
-			var currentLevel = await _proficiencyLevelRepository.GetByIdAsync(currentLevelId, cancellationToken);
-
-			if (currentLevel == null)
+			if (level == null)
 			{
 				return Result.Failure<Guid>(ProficiencyLevelErrors.NotFound);
 			}
 
-			// 1.2.3 Target Level
-			var targetLevelId = ProficiencyLevelId.From(request.TargetLevelId);
-
-			var targetLevel = await _proficiencyLevelRepository.GetByIdAsync(targetLevelId, cancellationToken);
-
-			if (targetLevel == null)
-			{
-				return Result.Failure<Guid>(ProficiencyLevelErrors.NotFound);
-			}
-
-			// 1.2.4 Content Category if interests are provided
+			// 1.2.2 Content Category if interests are provided
 			var contentCategories = new List<ContentCategory>();
 
 
@@ -128,9 +116,7 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 			// 2. BUSINESS RULES VALIDATION
 			var policyResult = _profileUpdatePolicy.Validate(
 				user,
-				nativeLanguage,
-				currentLevel,
-				targetLevel,
+				level,
 				contentCategories
 			);
 
@@ -142,10 +128,7 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 			// 3. Update the profile with all fields
 			var createProfileResult = Rakushu.Domain.Entities.User.Profile.Profile.Create(
 				user.Id,
-				request.FullName,
-				nativeLanguageId,
-				currentLevelId,
-				targetLevelId,
+				levelId,
 				request.DailyLearningMinutes,
 				request.SessionDurationMinutes,
 				DateTimeOffset.UtcNow,
@@ -181,6 +164,24 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 			if (result.IsFailure)
 			{
 				return Result.Failure<Guid>(result.Error);
+			}
+
+			// 5. If have any free plan, set usr to free plan
+			var freePlan = (await _planRepository.GetAllAsync(cancellationToken))
+							.SingleOrDefault(p => p.Price == 0);
+
+			if(freePlan != null)
+			{
+				DateTimeOffset endAt;
+				if (freePlan.BillingCycle == BillingCycle.Monthly)
+					endAt = _systemClock.UtcNow.AddMonths(1);
+
+				else if (freePlan.BillingCycle == BillingCycle.Weekly)
+					endAt = _systemClock.UtcNow.AddDays(7);
+
+				else
+					endAt = _systemClock.UtcNow.AddYears(1);
+				user.AddSubscription(user.Id, freePlan.Id, _systemClock.UtcNow, endAt, null);
 			}
 
 			return Result.Success(createProfileResult.Value.Id.Value);

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.ValueObjects.Email;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -17,11 +16,13 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 				id => id.Value,
 				value => UserId.From(value));
 
+		// FullName
+		builder.Property(u => u.FullName)
+			.HasMaxLength(100)
+			.IsRequired();
+
 		// Email
 		builder.Property(u => u.Email)
-			.HasConversion(
-				email => email.Value,
-				value => Email.Create(value).Value)
 			.HasMaxLength(256)
 			.IsRequired();
 		builder.HasIndex(u => u.Email)

@@ -33,6 +33,7 @@ internal sealed class UpdateRole : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdateRole")
+			.WithSummary("Admin")
 			.WithDescription("Updates an existing role description.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

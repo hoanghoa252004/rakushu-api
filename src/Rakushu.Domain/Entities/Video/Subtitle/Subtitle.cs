@@ -1,5 +1,4 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.SupportedLanguage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,6 @@ public sealed class Subtitle : Entity<SubtitleId>
 {
 	public string Code { get; private set; } = null!;
 	public VideoId VideoId { get; private set; } = null!;
-	public SupportedLanguageId SupportedLanguageId { get; private set; } = null!;
 	public SubtitleSource SourceType { get; private set; }
 	public string? StorageKey { get; private set; }
 	public SubtitleStatus Status { get; private set; }
@@ -28,10 +26,6 @@ public sealed class Subtitle : Entity<SubtitleId>
 	private readonly List<SubtitleSegment.SubtitleSegment> _subtitleItems = new();
 	public IReadOnlyCollection<SubtitleSegment.SubtitleSegment> Items => _subtitleItems.AsReadOnly();
 
-
-	// SupportedLanguage
-	public SupportedLanguage.SupportedLanguage SupportedLanguage { get; private set; } = null!;
-
 	// CONSTRUCTORS & FACTORY METHODS
 
 	private Subtitle()
@@ -42,7 +36,6 @@ public sealed class Subtitle : Entity<SubtitleId>
 		SubtitleId id,
 		string code,
 		VideoId videoId,
-		SupportedLanguageId supportedLanguageId,
 		SubtitleSource sourceType,
 		SubtitleStatus status,
 		DateTimeOffset createdAt,
@@ -52,7 +45,6 @@ public sealed class Subtitle : Entity<SubtitleId>
 	{
 		Code = code;
 		VideoId = videoId;
-		SupportedLanguageId = supportedLanguageId;
 		SourceType = sourceType;
 		Status = status;
 		StorageKey = storageKey;

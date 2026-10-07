@@ -7,7 +7,7 @@ public sealed record UpdateEntitlementCommand(
 	Guid PlanId,
 	Guid EntitlementId,
 	bool IsEnabled,
-	int LimitValue,
 	string LimitUnit,
+	int LimitValue,
 	string LimitPeriod
 ) : IRequest<Result>;

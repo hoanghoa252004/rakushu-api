@@ -21,7 +21,8 @@ internal class CreatePresignedUrl : IEndpoint
 			.WithGroupName("storage")
 			.WithTags("Storage")
 			.WithName("CreatePresignedUrl")
-			.AllowAnonymous()
+			.WithSummary("Authenticated User")
+			.RequireAuthorization()
 			.Produces<CreatePresignedUrlResponseDto>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);

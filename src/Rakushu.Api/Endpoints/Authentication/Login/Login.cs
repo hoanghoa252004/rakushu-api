@@ -26,6 +26,7 @@ internal sealed class Login : IEndpoint
 			})
 			// 2. Description
 			.WithName("Login")
+			.WithSummary("Allow Anonymous")
 			.WithDescription("Authenticates user with Email and Password, returns JWT Access Token & Refresh Token with their expiration")
 			// 3. Authentication & Authorization
 			.AllowAnonymous()

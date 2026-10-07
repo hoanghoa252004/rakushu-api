@@ -27,6 +27,7 @@ internal sealed class DeletePlan : IEndpoint
 			})
 			// 2. Description
 			.WithName("DeletePlan")
+			.WithSummary("Admin")
 			.WithDescription("Deletes a plan. Cannot delete a plan that has subscriptions.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

@@ -44,14 +44,20 @@ internal sealed class EntitlementConfiguration : IEntityTypeConfiguration<Entitl
 			.HasForeignKey(pe => pe.FeatureId)
 			.OnDelete(DeleteBehavior.Restrict);
 
+		// *** COMPOSITION UNIQUE KEY ***
+		builder.HasIndex(x => new
+		{
+			x.PlanId,
+			x.FeatureId,
+		}).IsUnique();
+
 		// IsEnabled
 		builder.Property(u => u.IsEnabled)
 			.HasDefaultValue(false)
 			.IsRequired();
 
 		// LimitValue
-		builder.Property(u => u.LimitValue)
-			.IsRequired();
+		builder.Property(u => u.LimitValue);
 
 		// LimitUnit
 		builder.Property(u => u.LimitUnit)
@@ -64,13 +70,5 @@ internal sealed class EntitlementConfiguration : IEntityTypeConfiguration<Entitl
 			.HasMaxLength(30)
 			.HasConversion<string>()
 			.IsRequired();
-
-		// *** COMPOSITION UNIQUE KEY ***
-		builder.HasIndex(x => new
-		{
-			x.PlanId,
-			x.FeatureId,
-		})
-		.IsUnique();
 	}
 }

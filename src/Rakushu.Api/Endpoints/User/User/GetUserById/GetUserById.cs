@@ -28,6 +28,7 @@ internal sealed class GetUserById : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetUserById")
+			.WithSummary("Admin")
 			.WithDescription("Retrieves detailed user profile and account details by user ID.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

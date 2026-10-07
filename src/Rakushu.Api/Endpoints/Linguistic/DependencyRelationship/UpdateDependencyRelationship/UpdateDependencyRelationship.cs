@@ -1,25 +1,41 @@
 using MediatR;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Linguistic.DependencyRelationship;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.UpdateDependencyRelationship;
+using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Update;
+using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.UpdateDependencyRelationship;
+namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.Update;
 
 internal sealed class UpdateDependencyRelationship : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapDependencyRelationshipEndpoints()
-			.MapPut("/{id:guid}", async (Guid id, [FromBody] UpdateDependencyRelationshipCommand command, ISender sender, CancellationToken cancellationToken) =>
+			.MapPut("/{id:guid}", async (
+				[FromRoute] Guid id, 
+				[FromBody] UpdateDependencyRelationshipRequestDto dto, 
+				ISender sender, 
+				CancellationToken cancellationToken) =>
 			{
-				var result = await sender.Send(command with { DependencyRelationshipId = id }, cancellationToken);
-				return result.MatchOk();
+				var command = new UpdateDependencyRelationshipCommand(id, dto.Name, dto.JapaneseName, dto.Description);
+				var result = await sender.Send(command, cancellationToken);
+				return result.MatchNoContent();
 			})
-			.WithName("UpdateDependencyRelationship");
+			.WithName("UpdateDependencyRelationship")
+			.WithSummary("Admin")
+			.WithDescription("Updates an existing dependency relationship.")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			// 4. Response
+			.Produces(StatusCodes.Status201Created)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+			.ProducesProblem(StatusCodes.Status409Conflict)
+			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
+
+internal sealed record UpdateDependencyRelationshipRequestDto(
+	string Name,
+	string JapaneseName,
+	string? Description);

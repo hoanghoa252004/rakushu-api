@@ -26,6 +26,7 @@ internal sealed class Verify : IEndpoint
 			})
 			// 2.Description
 			.WithName("Verify")
+			.WithSummary("Allow Anonymous")
 			.WithDescription("Send  6-digit code to verify account.")
 			// 3. Authentication & Authorization
 			.AllowAnonymous()

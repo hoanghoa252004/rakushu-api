@@ -20,10 +20,7 @@ internal sealed class UpdateProfile : IEndpoint
 				) =>
 			{				
 				var command = new UpdateProfileCommand(
-					dto.FullName,
-					dto.NativeLanguageId,
-					dto.CurrentLevelId,
-					dto.TargetLevelId,
+					dto.LevelId,
 					dto.DailyLearningMinutes,
 					dto.SessionDurationMinutes,
 					dto.Interests,
@@ -36,6 +33,7 @@ internal sealed class UpdateProfile : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdateProfile")
+			.WithSummary("Learner")
 			.WithDescription("Updates the currently authenticated user's profile details including personal info, language preferences, proficiency levels, learning goals, and interests.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
@@ -49,10 +47,7 @@ internal sealed class UpdateProfile : IEndpoint
 }
 
 internal record UpdateProfileRequestDto(
-	string FullName,
-	Guid NativeLanguageId,
-	Guid CurrentLevelId,
-	Guid TargetLevelId,
+	Guid LevelId,
 	int DailyLearningMinutes,
 	int SessionDurationMinutes,
 	IReadOnlyCollection<UpdateInterestDto> Interests,

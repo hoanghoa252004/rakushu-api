@@ -2,7 +2,6 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.ContentCategory;
 using Rakushu.Domain.Entities.Video;
@@ -12,17 +11,15 @@ using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.Subscription;
 using Rakushu.Persistence.Connection;
 using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
-using Rakushu.Persistence.Queries.User;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
-using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
-using Rakushu.Domain.Entities.SupportedLanguage;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.ProficiencyLevel;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 
 namespace Rakushu.Persistence.Extensions;
 
@@ -52,30 +49,21 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IFeatureRepository, FeatureRepository>();
 		services.AddScoped<IPaymentRepository, PaymentRepository>();
 		services.AddScoped<ITransactionRepository, TransactionRepository>();
+		services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 		services.AddScoped<Domain.Entities.OovCandidate.IOovCandidateRepository, OovCandidateRepository>();
 		services.AddScoped<Domain.Entities.DictionaryEntry.IDictionaryEntryRepository, DictionaryEntryRepository>();
 		services.AddScoped<IContentCategoryRepository, ContentCategoryRepository>();
-		services.AddScoped<IProficiencyFrameworkRepository, ProficiencyFrameworkRepository>();
 		services.AddScoped<IVideoRepository, VideoRepository>();
-		services.AddScoped<IJapaneseConjugationFormRepository, JapaneseConjugationFormRepository>();
 		services.AddScoped<IJapanesePartOfSpeechRepository, JapanesePartOfSpeechRepository>();
 		services.AddScoped<IUniversalPartOfSpeechRepository, UniversalPartOfSpeechRepository>();
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
-		services.AddScoped<ISupportedLanguageRepository, SupportedLanguageRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
 
-		services.AddScoped<IUserQuery, UserQuery>();
-		services.AddScoped<IRoleQuery, RoleQuery>();
-		services.AddScoped<IPlanQuery, PlanQuery>();
-		services.AddScoped<IFeatureQuery, FeatureQuery>();
-		services.AddScoped<IEntitlementQuery, EntitlementQuery>();
-		services.AddScoped<IPaymentQuery, PaymentQuery>();
-		services.AddScoped<ITransactionQuery, TransactionQuery>();
 		services.AddScoped<IOovCandidateQuery, OovCandidateQuery>();
-
 		return services;
 	}
 }
+

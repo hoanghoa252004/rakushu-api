@@ -9,20 +9,15 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 	public string Slug { get; private set; } = null!;
 	public string Code { get; private set; } = null!;
 	public string Name { get; private set; } = null!;
+	public string JapaneseName { get; private set; } = null!;
 	public string? Description { get; private set; }
-	public ContentCategoryId? ParentId { get; private set; }
-	public int Level { get; private set; }
 	public int DisplayOrder { get; private set; }
+	public string ThemeColor { get; private set; } = null!;
 	public bool IsActive { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
-	// ContentCategory (Self-referencing)
-	public ContentCategory? Parent { get; private set; }
-	private readonly List<ContentCategory> _children = new();
-	public IReadOnlyCollection<ContentCategory> Children => _children.AsReadOnly();
-
 	// ContentProcessingPolicies
 	private readonly List<ContentProcessingPolicy.ContentProcessingPolicy> _contentProcessingPolicies = new();
 	public IReadOnlyCollection<ContentProcessingPolicy.ContentProcessingPolicy> ContentProcessingPolicies => _contentProcessingPolicies.AsReadOnly();
@@ -47,84 +42,97 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		string slug,
 		string code,
 		string name,
-		int level,
+		string japaneseName,
 		int displayOrder,
-		bool isActive,
+		string themeColor,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
-		ContentCategoryId? parentId = null,
+		bool isActive,
 		string? description = null)
 		: base(id)
 	{
 		Slug = slug;
 		Code = code;
 		Name = name;
-		Level = level;
+		JapaneseName = japaneseName;
 		DisplayOrder = displayOrder;
-		IsActive = isActive;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
+		IsActive = isActive;
 		Description = description;
-		ParentId = parentId;
+		ThemeColor = themeColor;
 	}
 
 	public static Result<ContentCategory> Create(
 		string slug,
 		string code,
 		string name,
-		int level,
+		string japaneseName,
 		int displayOrder,
+		string themeColor,
 		bool isActive,
 		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt,
-		ContentCategoryId? parentId = null,
 		string? description = null)
 	{
 		if (string.IsNullOrWhiteSpace(name))
 			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidName);
 
+		if (string.IsNullOrWhiteSpace(japaneseName))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidName);
+
 		if (string.IsNullOrWhiteSpace(code))
 			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidCode);
+
+		if(displayOrder <= 0)
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidDisplayOrder);
+
+		if (string.IsNullOrWhiteSpace(slug))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidThemeColor);
+
+		if (string.IsNullOrWhiteSpace(themeColor))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidThemeColor);
 
 		return Result.Success(new ContentCategory(
 			ContentCategoryId.Create(),
 			slug,
 			code,
 			name,
-			level,
+			japaneseName,
 			displayOrder,
-			isActive,
+			themeColor,
 			createdAt,
-			updatedAt,
-			parentId,
+			createdAt,
+			isActive,
 			description));
 	}
 
 	public Result Update(
-		string slug,
-		string code,
 		string name,
-		int level,
+		string japaneseName,
 		int displayOrder,
+		string themeColor,
 		bool isActive,
 		DateTimeOffset updatedAt,
-		ContentCategoryId? parentId = null,
 		string? description = null)
 	{
+		if (string.IsNullOrWhiteSpace(themeColor))
+			return Result.Failure(ContentCategoryErrors.InvalidThemeColor);
+
 		if (string.IsNullOrWhiteSpace(name))
 			return Result.Failure(ContentCategoryErrors.InvalidName);
 
-		if (string.IsNullOrWhiteSpace(code))
-			return Result.Failure(ContentCategoryErrors.InvalidCode);
+		if (string.IsNullOrWhiteSpace(japaneseName))
+			return Result.Failure(ContentCategoryErrors.InvalidName);
 
-		Slug = slug;
-		Code = code;
+		if (displayOrder <= 0)
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidDisplayOrder);
+
 		Name = name;
-		Level = level;
+		JapaneseName = japaneseName;
 		DisplayOrder = displayOrder;
-		IsActive = isActive;
-		ParentId = parentId;
 		Description = description;
+		ThemeColor = themeColor;
+		IsActive = isActive;
 		UpdatedAt = updatedAt;
 
 		return Result.Success();

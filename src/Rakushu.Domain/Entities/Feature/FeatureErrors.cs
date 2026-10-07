@@ -22,9 +22,4 @@ public static class FeatureErrors
 
 	public static readonly Error CannotDeleteFeatureHasBeenAtachedToAPlan = Error.Conflict(
 		"FEATURE.CANNOT_DELETE_WITH_PLAN", "Cannot delete a feature that has been attached to a plan. Please detach from plan first.");
-
-	public static readonly Error InvalidStatus = Error.Validation(
-		"FEATURE.INVALID_STATUS",
-		"The specified feature status is invalid. Valid feature status: "
-		+ FeatureStatusTransition.GetFeatureStatuses() + ".");
 }

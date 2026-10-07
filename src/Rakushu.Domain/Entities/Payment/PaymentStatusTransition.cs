@@ -14,16 +14,12 @@ public static class PaymentStatusTransition
 			PaymentStatus.Pending, new HashSet<PaymentStatus>
 			{
 				PaymentStatus.Completed,
-				PaymentStatus.Failed,
 				PaymentStatus.Cancelled,
 				PaymentStatus.Expired
 			}
 		},
 		{
 			PaymentStatus.Completed, new HashSet<PaymentStatus>()
-		},
-		{
-			PaymentStatus.Failed , new HashSet<PaymentStatus>()
 		},
 		{
 			PaymentStatus.Cancelled , new HashSet<PaymentStatus>()

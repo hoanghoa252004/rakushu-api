@@ -1,20 +1,22 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.ProficiencyLevel;
 
 namespace Rakushu.Application.Usecases.Linguistic.ProficiencyLevel.UpdateProficiencyLevel;
 
 internal sealed class UpdateProficiencyLevelHandler : IRequestHandler<UpdateProficiencyLevelCommand, Result>
 {
-	private readonly IProficiencyFrameworkRepository _frameworkRepository;
+	private readonly IProficiencyLevelRepository _proficiencyLevelRepository;
 	private readonly IUnitOfWork _unitOfWork;
+	private readonly ISystemClock _systemClock;
 
-	public UpdateProficiencyLevelHandler(IProficiencyFrameworkRepository frameworkRepository, IUnitOfWork unitOfWork)
+	public UpdateProficiencyLevelHandler(IUnitOfWork unitOfWork, IProficiencyLevelRepository proficiencyLevelRepository, ISystemClock systemClock)
 	{
-		_frameworkRepository = frameworkRepository;
 		_unitOfWork = unitOfWork;
+		_proficiencyLevelRepository = proficiencyLevelRepository;
+		_systemClock = systemClock;
 	}
 
 	public async Task<Result> Handle(UpdateProficiencyLevelCommand request, CancellationToken cancellationToken)
@@ -22,14 +24,24 @@ internal sealed class UpdateProficiencyLevelHandler : IRequestHandler<UpdateProf
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			var levelId = ProficiencyLevelId.From(request.ProficiencyLevelId);
-			var framework = await _frameworkRepository.GetByIdAsync(ProficiencyFrameworkId.From(request.frameworkId), cancellationToken)
-				?? await _frameworkRepository.GetByLevelIdAsync(levelId, cancellationToken);
 
-			if (framework is null)
-				return Result.Failure(ProficiencyFrameworkErrors.NotFound);
+			var level =  await _proficiencyLevelRepository.GetByIdAsync(levelId);
 
-			var now = DateTimeOffset.UtcNow;
-			return framework.UpdateLevel(levelId, request.code, request.name, request.sortOrder, now, request.description);
+			if(level is null)
+			{
+				return Result.Failure(ProficiencyLevelErrors.NotFound);
+			}
+
+			level.Update(
+				name: request.Name,
+				japaneseName: request.JapaneseName,
+				sortOrder: request.SortOrder,
+				isActive: request.IsActive,
+				updatedAt: _systemClock.UtcNow,
+				description: request.Description
+			);
+
+			return Result.Success();
 		}, cancellationToken);
 	}
 }

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Knowledge.LinguisticKnowledge;
 using Rakushu.Domain.Entities.LearningUnit;
+using Rakushu.Domain.Entities.LinguisticKnowledge;
 using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
 
 namespace Rakushu.Persistence.Configurations;

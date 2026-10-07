@@ -54,10 +54,11 @@ internal sealed class UpdateEntitlementHandler : IRequestHandler<UpdateEntitleme
 			var result = plan.UpdateEntitlement(
 				EntitlementId.From(request.EntitlementId),
 				request.IsEnabled,
-				request.LimitValue,
 				limitUnit,
+				request.LimitValue,
 				limitPeriod,
-				now);
+				now
+			);
 
 			if (result.IsFailure)
 			{

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 
 namespace Rakushu.Persistence.Repositories;
 

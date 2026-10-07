@@ -1,10 +1,8 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
-using Rakushu.Domain.Entities.Feature.ObjectValues;
 
 namespace Rakushu.Application.Usecases.Subscription.Feature.CreateFeature;
 
@@ -31,17 +29,9 @@ internal sealed class CreateFeatureHandler : IRequestHandler<CreateFeatureComman
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			// Validate code format
-			var codeResult = FeatureCode.Create(request.Code);
-			if (codeResult.IsFailure)
-			{
-				return Result.Failure<Guid>(codeResult.Error);
-			}
-
-			var code = codeResult.Value;
-
 			// Check if feature with same code already exists
-			var existingFeature = await _featureRepository.GetByCodeAsync(code, cancellationToken);
+			var existingFeature = await _featureRepository.GetByCodeAsync(request.Code, cancellationToken);
+
 			if (existingFeature is not null)
 			{
 				return Result.Failure<Guid>(FeatureErrors.DuplicateCode);
@@ -50,13 +40,10 @@ internal sealed class CreateFeatureHandler : IRequestHandler<CreateFeatureComman
 			// Create feature
 			var now = _systemClock.UtcNow;
 
-			var initialStatus = FeatureStatus.Draft;
-
 			var featureResult = Domain.Entities.Feature.Feature.Create(
-				code,
+				request.Code,
 				request.Name,
-				initialStatus,
-				now,
+				request.IsActive,
 				now,
 				request.Description);
 

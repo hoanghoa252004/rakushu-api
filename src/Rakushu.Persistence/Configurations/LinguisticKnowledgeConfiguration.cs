@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Knowledge.LinguisticKnowledge;
+using Rakushu.Domain.Entities.LinguisticKnowledge;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -17,6 +17,7 @@ internal sealed class LinguisticKnowledgeConfiguration : IEntityTypeConfiguratio
 
 		// KnowledgeType (enum)
 		builder.Property(lk => lk.KnowledgeType)
+			.HasMaxLength(30)
 			.HasConversion<string>()
 			.IsRequired();
 
@@ -32,11 +33,13 @@ internal sealed class LinguisticKnowledgeConfiguration : IEntityTypeConfiguratio
 
 		// SourceType (enum)
 		builder.Property(lk => lk.SourceType)
+			.HasMaxLength(30)
 			.HasConversion<string>()
 			.IsRequired();
 
 		// Status (enum)
 		builder.Property(lk => lk.Status)
+			.HasMaxLength(30)
 			.HasConversion<string>()
 			.IsRequired();
 

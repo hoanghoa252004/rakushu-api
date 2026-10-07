@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Subscription.Entitlement;
 using Rakushu.Application.Usecases.Subscription.Entitlement.GetEntitlements;
 using Rakushu.Domain.Entities.Role;
 
@@ -28,6 +27,7 @@ internal sealed class GetEntitlements : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetEntitlements")
+			.WithSummary("Admin")
 			.WithDescription("Retrieves all feature entitlements for the specified plan.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
 			// 4. Response

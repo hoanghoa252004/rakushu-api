@@ -4,7 +4,6 @@ using Rakushu.Application.Abstractions.Infrastructure.Email;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.ValueObjects.Email;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,14 +43,7 @@ internal sealed class VerifyHandler : IRequestHandler<VerifyCommand, Result>
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			// 1. Find user by email 
-			var emailResult = Email.Create(request.Email);
-
-			if (emailResult.IsFailure)
-			{
-				return emailResult;
-			}
-
-			var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+			var user = await _userRepository.GetByEmailAsync(request.Email.ToLower(), cancellationToken);
 
 			// Don't reveal whether email exists.
 			if (user == null)

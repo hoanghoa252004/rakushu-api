@@ -1,5 +1,4 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
 
@@ -8,24 +7,31 @@ namespace Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 internal sealed class GetFeatureByIdHandler : IRequestHandler<GetFeatureByIdQuery, Result<FeatureDto>>
 {
 	// DAOs
-	private readonly IFeatureQuery _featureQuery;
+	private readonly IFeatureRepository _featureRepository;
 
-	public GetFeatureByIdHandler(IFeatureQuery featureQuery)
+	public GetFeatureByIdHandler(IFeatureRepository featureRepository)
 	{
-		_featureQuery = featureQuery;
+		_featureRepository = featureRepository;
 	}
 
 	public async Task<Result<FeatureDto>> Handle(GetFeatureByIdQuery request, CancellationToken cancellationToken)
 	{
-		var feature = await _featureQuery.GetByIdAsync(
-			FeatureId.From(request.FeatureId),
-			cancellationToken);
+		var id = FeatureId.From(request.FeatureId);
 
-		if (feature == null)
+		var f = await _featureRepository.GetByIdAsync(id, cancellationToken);
+
+		if (f == null)
 		{
 			return Result.Failure<FeatureDto>(FeatureErrors.NotFound);
 		}
 
-		return Result.Success(feature);
+		return Result.Success(new FeatureDto(
+			f.Id.Value,
+			f.Code,
+			f.Name,
+			f.IsActive,
+			f.CreatedAt,
+			f.UpdatedAt,
+			f.Description));
 	}
 }

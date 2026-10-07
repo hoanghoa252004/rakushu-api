@@ -6,30 +6,22 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
 using Rakushu.Domain.Entities.ContentCategory.ContentProcessingPolicy;
 using Rakushu.Domain.Entities.Feature;
-using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
-using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaningDetail;
-using Rakushu.Domain.Entities.Knowledge.KnowledgePattern;
-using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternElement;
-using Rakushu.Domain.Entities.Knowledge.KnowledgePattern.KnowledgePatternRelation;
-using Rakushu.Domain.Entities.Knowledge.LinguisticKnowledge;
 using Rakushu.Domain.Entities.LearningUnit;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.BunsetsuDependencyRelationship;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapaneseConjugationForm;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyFramework;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel.ProficiencyEquivalence;
-using Rakushu.Domain.Entities.Linguistic.UniversalPartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticKnowledge;
+using Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgeMeaning;
+using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Plan.Entitlement;
+using Rakushu.Domain.Entities.ProficiencyLevel;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.Series;
-using Rakushu.Domain.Entities.SupportedLanguage;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.EmailVerificationToken;
 using Rakushu.Domain.Entities.User.Profile;
@@ -78,12 +70,10 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<Domain.Entities.CuratorReview.CuratorReview> CuratorReviews => Set<Domain.Entities.CuratorReview.CuratorReview>();
 	public DbSet<Domain.Entities.DictionaryEntry.DictionaryEntry> DictionaryEntries => Set<Domain.Entities.DictionaryEntry.DictionaryEntry>();
 
-	// Proficiency Framework
-	public DbSet<ProficiencyFramework> ProficiencyFrameworks => Set<ProficiencyFramework>();
+	// Proficiency Levels
 	public DbSet<ProficiencyLevel> ProficiencyLevels => Set<ProficiencyLevel>();
-	public DbSet<ProficiencyEquivalence> ProficiencyEquivalences => Set<ProficiencyEquivalence>();
 
-	// Video & Learning
+	// Learning Contents
 	public DbSet<Video> Videos => Set<Video>();
 	public DbSet<Series> Series => Set<Series>();
 	public DbSet<Transcript> Transcripts => Set<Transcript>();
@@ -104,21 +94,12 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 
 	// Knowledge
 	public DbSet<LinguisticKnowledge> LinguisticKnowledges => Set<LinguisticKnowledge>();
-	public DbSet<KnowledgePattern> KnowledgePatterns => Set<KnowledgePattern>();
-	public DbSet<KnowledgePatternElement> KnowledgePatternElements => Set<KnowledgePatternElement>();
-	public DbSet<KnowledgePatternRelation> KnowledgePatternRelations => Set<KnowledgePatternRelation>();
-	public DbSet<KnowledgeMeaning> KnowledgeMeanings => Set<KnowledgeMeaning>();
-	public DbSet<KnowledgeMeaningDetail> KnowledgeMeaningDetails => Set<KnowledgeMeaningDetail>();
+	public DbSet<LinguisticKnowledgeMeaning> KnowledgeMeanings => Set<LinguisticKnowledgeMeaning>();
 
 	// Linguistic Metadata
 	public DbSet<JapanesePartOfSpeech> JapanesePartOfSpeeches => Set<JapanesePartOfSpeech>();
 	public DbSet<UniversalPartOfSpeech> UniversalPartOfSpeeches => Set<UniversalPartOfSpeech>();
-	public DbSet<JapaneseConjugationForm> JapaneseConjugationForms => Set<JapaneseConjugationForm>();
 	public DbSet<DependencyRelationship> DependencyRelationships => Set<DependencyRelationship>();
-
-	// Supported Languages
-	public DbSet<SupportedLanguage> SupportedLanguages => Set<SupportedLanguage>();
-
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

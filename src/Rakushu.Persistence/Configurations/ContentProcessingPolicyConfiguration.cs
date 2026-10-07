@@ -9,8 +9,6 @@ internal sealed class ContentProcessingPolicyConfiguration : IEntityTypeConfigur
 {
 	public void Configure(EntityTypeBuilder<ContentProcessingPolicy> builder)
 	{
-		builder.ToTable("content_processing_policy");
-
 		// Id
 		builder.HasKey(c => c.Id);
 		builder.Property(c => c.Id)
@@ -31,17 +29,18 @@ internal sealed class ContentProcessingPolicyConfiguration : IEntityTypeConfigur
 
 		// Code
 		builder.Property(c => c.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
+		builder.HasIndex(c => c.Code)
+			.IsUnique();
 
 		// Name
 		builder.Property(c => c.Name)
-			.HasMaxLength(200)
+			.HasMaxLength(100)
 			.IsRequired();
 
 		// Description
-		builder.Property(c => c.Description)
-			.HasMaxLength(1000);
+		builder.Property(c => c.Description);
 
 		// IsActive
 		builder.Property(c => c.IsActive)

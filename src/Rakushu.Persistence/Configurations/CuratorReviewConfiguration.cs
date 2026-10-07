@@ -34,7 +34,7 @@ internal sealed class CuratorReviewConfiguration : IEntityTypeConfiguration<Cura
 			.IsRequired();
 
 		builder.Property(r => r.Decision)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.HasConversion<string>()
 			.HasColumnName("decision")
 			.IsRequired();

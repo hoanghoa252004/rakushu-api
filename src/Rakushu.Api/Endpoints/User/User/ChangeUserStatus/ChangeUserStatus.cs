@@ -28,6 +28,7 @@ internal sealed class ChangeUserStatus : IEndpoint
 			})
 			// 2. Description
 			.WithName("AdminChangeUserStatus")
+			.WithSummary("Admin")
 			.WithDescription("Updates account status (Active, Inactive, Banned) of a user.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

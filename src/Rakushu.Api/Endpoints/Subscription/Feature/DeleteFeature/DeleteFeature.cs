@@ -27,6 +27,7 @@ internal sealed class DeleteFeature : IEndpoint
 			})
 			// 2. Description
 			.WithName("DeleteFeature")
+			.WithSummary("Admin")
 			.WithDescription("Deletes a feature. Cannot delete a feature that has subscription usage.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

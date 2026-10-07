@@ -1,17 +1,13 @@
-using Entity = Rakushu.Domain.Entities.Linguistic.ProficiencyLevel.ProficiencyLevel;
-
 namespace Rakushu.Application.Usecases.Linguistic.ProficiencyLevel;
 
 public sealed record ProficiencyLevelDto(
+	Guid Id,
 	string Code,
 	string Name,
+	string JapaneseName,
 	int SortOrder,
-	string? Description)
-{
-	public static ProficiencyLevelDto FromEntity(Entity e) =>
-		new(
-			e.Code,
-			e.Name,
-			e.SortOrder,
-			e.Description);
-}
+	bool IsActive,
+	string? Description,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset UpdatedAt
+	);

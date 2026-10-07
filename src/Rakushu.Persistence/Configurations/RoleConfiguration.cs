@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -18,7 +17,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 
 		// Code
 		builder.Property(r => r.Code)
-			.HasMaxLength(50)
+			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(r => r.Code)
 			.IsUnique();

@@ -14,7 +14,7 @@ public static class EntitlementErrors
 
 	public static readonly Error InvalidLimitValue = Error.Validation(
 		"PLAN_ENTITLEMENT.INVALID_LIMIT_VALUE",
-		"Limit value must be greater than or equal to 0.");
+		"Limit value must be greater than 0.");
 
 	public static readonly Error InvalidLimitUnit = Error.Validation(
 		"PLAN_ENTITLEMENT.INVALID_LIMIT_UNIT",
@@ -26,9 +26,9 @@ public static class EntitlementErrors
 		"The specified limit period is invalid. Valid limit periods: "
 		+ string.Join(", ", Enum.GetNames<LimitPeriod>()) + ".");
 
-	public static readonly Error PlanArchived = Error.Conflict(
-		"PLAN_ENTITLEMENT.PLAN_ARCHIVED",
-		"Cannot modify entitlements of an archived plan.");
+	public static readonly Error PlanNotActive = Error.Conflict(
+		"PLAN_ENTITLEMENT.PLAN_NOT_ACTIVE",
+		"Cannot modify entitlements of a plan that is not active.");
 
 	public static readonly Error FeatureNotActive = Error.Conflict(
 		"PLAN_ENTITLEMENT.FEATURE_NOT_ACTIVE",

@@ -1,5 +1,5 @@
 using Dapper;
-using Rakushu.Application.Abstractions.Persistence;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Application.Usecases.Curator.Oov.Common;
 using Rakushu.Application.Usecases.Curator.Oov.GetOovCandidates;
 using Rakushu.Domain.Entities.OovCandidate;

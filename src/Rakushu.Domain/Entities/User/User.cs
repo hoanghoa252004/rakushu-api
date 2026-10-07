@@ -1,18 +1,19 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User.DomainEvents;
-using Rakushu.Domain.Entities.User.Profile;
-using Rakushu.Domain.Entities.User.ValueObjects.Email;
-using System.Net.NetworkInformation;
+using Rakushu.Domain.Entities.User.Subscription;
 
 namespace Rakushu.Domain.Entities.User;
 
 public sealed class User : AggregateRoot<UserId>
 {
 	// MAIN PROPERTIES----------
-	public Email Email { get; private set; } = null!;
+	public string FullName { get; private set; } = null!;
+	public string Email { get; private set; } = null!;
 	public string PasswordHash { get; private set; } = null!;
 	public RoleId RoleId { get; private set; } = null!; // REF: USER * - 1 ROLE
 	public UserStatus Status { get; private set; }
@@ -40,7 +41,7 @@ public sealed class User : AggregateRoot<UserId>
 	public IReadOnlyCollection<Payment.Payment> Payments => _payments.AsReadOnly();
 
 	// Profile:
-	public Profile.Profile Profile { get; private set; } = null!;
+	public Profile.Profile? Profile { get; private set; }
 
 	// Videos:
 	private readonly List<Video.Video> _videos = [];
@@ -51,13 +52,15 @@ public sealed class User : AggregateRoot<UserId>
 
 	private User(
 		UserId id,
-		Email email,
+		string fullName,
+		string email,
 		string passwordHash,
 		RoleId roleId,
 		UserStatus status,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt) : base(id)
 	{
+		FullName = fullName;
 		Email = email;
 		PasswordHash = passwordHash;
 		RoleId = roleId;
@@ -67,7 +70,8 @@ public sealed class User : AggregateRoot<UserId>
 	}
 
 	public static Result<User> Create(
-		Email email,
+		string fullName,
+		string email,
 		string passwordHash,
 		RoleId roleId,
 		UserStatus status,
@@ -79,7 +83,8 @@ public sealed class User : AggregateRoot<UserId>
 
 		return Result.Success(new User(
 					userId,
-					email,
+					fullName,
+					email.ToLower(),
 					passwordHash,
 					roleId,
 					status,
@@ -161,5 +166,21 @@ public sealed class User : AggregateRoot<UserId>
 		ChangeStatus(UserStatus.Inactive, deactivatedAt);
 		RevokeAllActiveRefreshTokens();
 		return Result.Success();
+	}
+
+	public Result<Subscription.Subscription> AddSubscription(
+		UserId userId, 
+		PlanId planId, 
+		DateTimeOffset startAt,
+		DateTimeOffset endAt,
+		PaymentId? paymentId = null)
+	{
+		var initialStatus = SubscriptionStatus.Active;
+		
+		var subscriptionResult = Subscription.Subscription.Create(userId, planId, initialStatus, startAt, endAt, paymentId);
+
+		_subscriptions.Add(subscriptionResult.Value);
+
+		return Result.Success(subscriptionResult.Value);
 	}
 }

@@ -54,14 +54,27 @@ public sealed class UpdatePlanHandler : IRequestHandler<UpdatePlanCommand, Resul
 				return Result.Failure<Guid>(PlanErrors.InvalidBillingCycle);
 			}
 
+			// 3. Check any plan with price = 0 ( only allow 1 free plan )
+			if (request.Price == 0)
+			{
+				var freePlan = (await _planRepository.GetAllAsync(cancellationToken))
+					.SingleOrDefault(p => p.Price == 0);
+				if (freePlan is not null)
+				{
+					return Result.Failure<Guid>(PlanErrors.DuplicateFreePlan);
+				}
+			}
+
 			var now = _systemClock.UtcNow;
 
 			// 4. Update domain
 			var result = plan.Update(
 				request.Name,
+				request.JapaneseName,
 				request.Price,
 				currency,
 				billingCycle,
+				request.IsActive,
 				now,
 				request.Description);
 
