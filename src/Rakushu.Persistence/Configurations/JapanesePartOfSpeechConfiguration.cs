@@ -16,10 +16,10 @@ internal sealed class JapanesePartOfSpeechConfiguration : IEntityTypeConfigurati
 				value => JapanesePartOfSpeechId.From(value));
 
 		// Code (from LinguisticMetadata base)
-		builder.Property(j => j.Code)
+		builder.Property(pl => pl.Code)
 			.HasMaxLength(30)
 			.IsRequired();
-		builder.HasIndex(j => j.Code)
+		builder.HasIndex(u => u.Code)
 			.IsUnique();
 
 		// Name (from LinguisticMetadata base)

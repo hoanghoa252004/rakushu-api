@@ -31,6 +31,8 @@ internal sealed class ContentProcessingPolicyConfiguration : IEntityTypeConfigur
 		builder.Property(c => c.Code)
 			.HasMaxLength(30)
 			.IsRequired();
+		builder.HasIndex(c => c.Code)
+			.IsUnique();
 
 		// Name
 		builder.Property(c => c.Name)

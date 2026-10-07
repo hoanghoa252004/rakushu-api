@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Persistence.Configurations;
 

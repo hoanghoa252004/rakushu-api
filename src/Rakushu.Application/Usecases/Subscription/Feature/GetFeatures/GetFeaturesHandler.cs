@@ -1,39 +1,36 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Common.Pagination;
+using Rakushu.Application.Usecases.Linguistic.ProficiencyLevel;
 using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
 
 namespace Rakushu.Application.Usecases.Subscription.Feature.GetFeatures;
 
-internal sealed class GetFeaturesHandler : IRequestHandler<GetFeaturesQuery, Result<PaginatedList<FeatureDto>>>
+internal sealed class GetFeaturesHandler : IRequestHandler<GetFeaturesQuery, Result<IReadOnlyCollection<FeatureDto>>>
 {
 	// DAOs
-	private readonly IFeatureQuery _featureQuery;
+	private readonly IFeatureRepository _featureRepository;
 
 	public GetFeaturesHandler(
-		IFeatureQuery featureQuery)
+		IFeatureRepository featureRepository)
 	{
-		_featureQuery = featureQuery;
+		_featureRepository = featureRepository;
 	}
 
-	public async Task<Result<PaginatedList<FeatureDto>>> Handle(GetFeaturesQuery request, CancellationToken cancellationToken)
+	public async Task<Result<IReadOnlyCollection<FeatureDto>>> Handle(GetFeaturesQuery request, CancellationToken cancellationToken)
 	{
-		// Parse status
-		if (string.IsNullOrWhiteSpace(request.Status) == false && !Enum.TryParse<FeatureStatus>(request.Status, true, out var status))
-		{
-			return Result.Failure<PaginatedList<FeatureDto>>(FeatureErrors.InvalidStatus);
-		}
+		var features = await _featureRepository.GetAllAsync();
 
-		var (items, totalCount) = await _featureQuery.GetFeaturesAsync(request, cancellationToken);
+		var featureDtos = features.Select(f => new FeatureDto(
+			f.Id.Value,
+			f.Code,
+			f.Name,
+			f.IsActive,
+			f.CreatedAt,
+			f.UpdatedAt,
+			f.Description
+		)).ToList();
 
-		var paginatedList = new PaginatedList<FeatureDto>(
-			items.ToList(),
-			totalCount,
-			request.PageNumber,
-			request.PageSize);
-
-		return Result.Success(paginatedList);
+		return Result.Success<IReadOnlyCollection<FeatureDto>>(featureDtos);
 	}
 }

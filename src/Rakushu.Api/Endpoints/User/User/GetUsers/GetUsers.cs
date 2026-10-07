@@ -38,6 +38,7 @@ internal sealed class GetUsers : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetUsers")
+			.WithSummary("Admin")
 			.WithDescription("Retrieves a paginated list of users with optional filtering and search.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

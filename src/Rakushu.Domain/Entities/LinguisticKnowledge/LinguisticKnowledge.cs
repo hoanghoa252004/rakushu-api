@@ -18,9 +18,6 @@ public sealed class LinguisticKnowledge : AggregateRoot<LinguisticKnowledgeId>
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
-	// KnowledgePattern
-	public LinguisticKnowledgePattern.LinguisticKnowledgePattern? KnowledgePattern { get; private set; }
-
 	// KnowledgeMeanings
 	private readonly List<LinguisticKnowledgeMeaning.LinguisticKnowledgeMeaning> _meanings = new();
 	public IReadOnlyCollection<LinguisticKnowledgeMeaning.LinguisticKnowledgeMeaning> Meanings => _meanings.AsReadOnly();

@@ -8,6 +8,6 @@ namespace Rakushu.Domain.Entities.Plan;
 
 public enum BillingCycle
 {
-	Monthly = 0,
-	Yearly = 1
+	Weekly = 1,
+	Monthly = 2,
 }

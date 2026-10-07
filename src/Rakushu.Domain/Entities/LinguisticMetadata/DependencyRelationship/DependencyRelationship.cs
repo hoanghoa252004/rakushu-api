@@ -1,6 +1,5 @@
 ﻿using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.BunsetsuDependencyRelationship;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
-using Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgePattern.LinguisticKnowledgePatternRelation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +18,6 @@ public sealed class DependencyRelationship : Linguistic<DependencyRelationshipId
 	// Tokens
 	private readonly List<Token> _tokens = new();
 	public IReadOnlyCollection<Token> Tokens => _tokens.AsReadOnly();
-
-	// KnowledgePatternRelations
-	private readonly List<LinguisticKnowledgePatternRelation> _knowledgePatternRelations = new();
-	public IReadOnlyCollection<LinguisticKnowledgePatternRelation> KnowledgePatternRelations => _knowledgePatternRelations.AsReadOnly();
 
 	// CONSTRUCTORS & FACTORY METHODS
 	private DependencyRelationship()
@@ -57,13 +52,5 @@ public sealed class DependencyRelationship : Linguistic<DependencyRelationshipId
 			name,
 			japaneseName,
 			description);
-	}
-
-	public void Update(
-		string name,
-		string japaneseName,
-		string? description)
-	{
-		base.Update(name, japaneseName, description);
 	}
 }

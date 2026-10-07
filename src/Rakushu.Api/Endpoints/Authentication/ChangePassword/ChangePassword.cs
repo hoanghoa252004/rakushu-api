@@ -26,6 +26,7 @@ internal sealed class ChangePassword : IEndpoint
 			})
 			// 2. Description
 			.WithName("ChangePassword")
+			.WithSummary("Authenticated User")
 			.WithDescription("Changes the password of the authenticated user.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization()

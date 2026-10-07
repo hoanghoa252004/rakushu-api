@@ -4,9 +4,7 @@ using Rakushu.Domain.Common.Results;
 namespace Rakushu.Application.Usecases.User.Profile.UpdateProfile;
 
 public sealed record UpdateProfileCommand(
-	Guid NativeLanguageId,
-	Guid CurrentLevelId,
-	Guid TargetLevelId,
+	Guid LevelId,
 	int DailyLearningMinutes,
 	int SessionDurationMinutes,
 	IReadOnlyCollection<UpdateInterestDto> Interests,

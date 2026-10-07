@@ -30,6 +30,7 @@ internal sealed class Register : IEndpoint
 			})
 			// 2.Description
 			.WithName("Register")
+			.WithSummary("Allow Anonymous")
 			.WithDescription("Registers a new user account with default User role and creates an associated Profile.")
 			// 3. Authentication & Authorization
 			.AllowAnonymous()

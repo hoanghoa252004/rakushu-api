@@ -1,7 +1,9 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
+using Rakushu.Domain.Entities.Feature;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.CreateContentCategory;
 
@@ -9,53 +11,45 @@ internal sealed class CreateContentCategoryHandler : IRequestHandler<CreateConte
 {
 	private readonly IContentCategoryRepository _repository;
 	private readonly IUnitOfWork _unitOfWork;
+	private readonly ISystemClock _systemClock;
 
-	public CreateContentCategoryHandler(IContentCategoryRepository repository, IUnitOfWork unitOfWork)
+	public CreateContentCategoryHandler(IContentCategoryRepository repository, IUnitOfWork unitOfWork, ISystemClock systemClock)
 	{
 		_repository = repository;
 		_unitOfWork = unitOfWork;
+		_systemClock = systemClock;
 	}
 
 	public async Task<Result<Guid>> Handle(CreateContentCategoryCommand request, CancellationToken cancellationToken)
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			// Validate parent if provided
-			if (request.parentId.HasValue)
-			{
-				var parent = await _repository.GetByIdAsync(ContentCategoryId.From(request.parentId.Value), cancellationToken);
-				if (parent is null)
-					return Result.Failure<Guid>(ContentCategoryErrors.ParentNotFound);
+			// Check if Category with same code already exists
+			var existingCategory = await _repository.GetByCodeAsync(request.Code, cancellationToken);
 
-				// Validate parent level is less than current level
-				if (parent.Level >= request.level)
-					return Result.Failure<Guid>(ContentCategoryErrors.InvalidParentLevel);
+			if (existingCategory is not null)
+			{
+				return Result.Failure<Guid>(ContentCategoryErrors.DuplicateCode);
 			}
 
-			// Validate display order is unique within the level
-			if (await _repository.ExistsDisplayOrderInLevelAsync(request.level, request.displayOrder, null, cancellationToken))
-				return Result.Failure<Guid>(ContentCategoryErrors.DuplicateDisplayOrder);
-
-			var now = DateTimeOffset.UtcNow;
-			ContentCategoryId? parentId = request.parentId.HasValue ? ContentCategoryId.From(request.parentId.Value) : null;
+			var now = _systemClock.UtcNow;
 
 			var categoryResult = Domain.Entities.ContentCategory.ContentCategory.Create(
-				request.slug,
-				request.code,
-				request.name,
-				request.japaneseName,
-				request.level,
-				request.displayOrder,
-				request.status,
+				request.Slug,
+				request.Code,
+				request.Name,
+				request.JapaneseName,
+				request.DisplayOrder,
+				request.ThemeColor,
+				request.IsActive,
 				now,
-				now,
-				parentId,
-				request.description);
+				request.Description);
 
 			if (categoryResult.IsFailure)
 				return Result.Failure<Guid>(categoryResult.Error);
 
 			_repository.Add(categoryResult.Value);
+
 			return Result.Success(categoryResult.Value.Id.Value);
 		}, cancellationToken);
 	}

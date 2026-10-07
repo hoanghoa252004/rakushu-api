@@ -1,7 +1,5 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Feature.ObjectValues;
 using Rakushu.Domain.Entities.Plan.Entitlement;
 using Rakushu.Domain.Entities.User.Subscription.SubscriptionUsage;
 using System;
@@ -14,10 +12,10 @@ namespace Rakushu.Domain.Entities.Feature;
 
 public sealed class Feature : AggregateRoot<FeatureId>
 {
-	public FeatureCode Code { get; private set; } = null!;
+	public string Code { get; private set; } = null!;
 	public string Name { get; private set; } = null!;
 	public string? Description { get; private set; }
-	public FeatureStatus Status { get; private set; }
+	public bool IsActive { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -34,9 +32,9 @@ public sealed class Feature : AggregateRoot<FeatureId>
 
 	private Feature(
 		FeatureId featureId,
-		FeatureCode code,
+		string code,
 		string name,
-		FeatureStatus status,
+		bool isActive,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
 		string? description = null
@@ -44,18 +42,17 @@ public sealed class Feature : AggregateRoot<FeatureId>
 	{
 		Code = code;
 		Name = name;
-		Status = status;
+		IsActive = isActive;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 		Description = description;
 	}
 
 	public static Result<Feature> Create(
-		FeatureCode code,
+		string code,
 		string name,
-		FeatureStatus status,
+		bool isActive,
 		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt,
 		string? description = null
 		)
 	{
@@ -67,37 +64,26 @@ public sealed class Feature : AggregateRoot<FeatureId>
 			FeatureId.Create(),
 			code,
 			name,
-			status,
+			isActive,
 			createdAt,
-			updatedAt,
+			createdAt,
 			description
 			);
 
 		return Result.Success(feature);
 	}
 
-	public Result Update(string name, string? description, DateTimeOffset updatedAt)
+	public Result Update(string name, bool isActive, DateTimeOffset updatedAt, string? description = null)
 	{
-		if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
-			return Result.Failure(
-				FeatureErrors.InvalidName);
+		if (string.IsNullOrWhiteSpace(name) || name.Length > 100)
+			return Result.Failure( FeatureErrors.InvalidName);
 
 		Name = name;
 		Description = description;
+		IsActive = isActive;
 		UpdatedAt = updatedAt;
 
 		return Result.Success();
 	}
 
-	public Result ChangeStatus(FeatureStatus status)
-	{
-		if (!FeatureStatusTransition.IsAllowed(Status, status))
-		{
-			return Result.Failure(CommonErrors.InvalidStatusTransition);
-		}
-
-		Status = status;
-
-		return Result.Success();
-	}
 }

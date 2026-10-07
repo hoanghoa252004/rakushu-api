@@ -11,6 +11,10 @@ public sealed class TransactionRepository : BaseRepository<Transaction, Transact
 	{
 		return await _context.Transactions
 			.Include(t => t.Payment)
+				.ThenInclude(p => p.Plan)
+			.Include(t => t.Payment)
+				.ThenInclude(p => p.User)
+					.ThenInclude(u => u.Subscriptions)
 			.SingleOrDefaultAsync(t => t.TxnRef == txnRef, cancellationToken);
 	}
 }

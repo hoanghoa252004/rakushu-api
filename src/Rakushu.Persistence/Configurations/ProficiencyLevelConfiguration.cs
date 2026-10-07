@@ -19,6 +19,8 @@ internal sealed class ProficiencyLevelConfiguration : IEntityTypeConfiguration<P
 		builder.Property(pl => pl.Code)
 			.HasMaxLength(30)
 			.IsRequired();
+		builder.HasIndex(u => u.Code)
+			.IsUnique();
 
 		// Name
 		builder.Property(pl => pl.Name)

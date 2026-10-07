@@ -53,7 +53,12 @@ internal sealed class SubscriptionUsageConfiguration : IEntityTypeConfiguration<
 			.IsRequired();
 
 		// UsedValue
+		builder.Property(u => u.UsedValue)
+			.IsRequired();
 
+		// MaxValue
+		builder.Property(u => u.MaxValue)
+			.IsRequired();
 
 		// CreatedAt
 		builder.Property(u => u.CreatedAt)

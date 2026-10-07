@@ -11,19 +11,13 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 	public string Name { get; private set; } = null!;
 	public string JapaneseName { get; private set; } = null!;
 	public string? Description { get; private set; }
-	public ContentCategoryId? ParentId { get; private set; }
-	public int Level { get; private set; }
 	public int DisplayOrder { get; private set; }
-	public ContentCategoryStatus Status { get; private set; }
+	public string ThemeColor { get; private set; } = null!;
+	public bool IsActive { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
-	// ContentCategory (Self-referencing)
-	public ContentCategory? Parent { get; private set; }
-	private readonly List<ContentCategory> _children = new();
-	public IReadOnlyCollection<ContentCategory> Children => _children.AsReadOnly();
-
 	// ContentProcessingPolicies
 	private readonly List<ContentProcessingPolicy.ContentProcessingPolicy> _contentProcessingPolicies = new();
 	public IReadOnlyCollection<ContentProcessingPolicy.ContentProcessingPolicy> ContentProcessingPolicies => _contentProcessingPolicies.AsReadOnly();
@@ -49,12 +43,11 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		string code,
 		string name,
 		string japaneseName,
-		int level,
 		int displayOrder,
+		string themeColor,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
-		ContentCategoryStatus status,
-		ContentCategoryId? parentId = null,
+		bool isActive,
 		string? description = null)
 		: base(id)
 	{
@@ -62,13 +55,12 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		Code = code;
 		Name = name;
 		JapaneseName = japaneseName;
-		Level = level;
 		DisplayOrder = displayOrder;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
-		Status = status;
+		IsActive = isActive;
 		Description = description;
-		ParentId = parentId;
+		ThemeColor = themeColor;
 	}
 
 	public static Result<ContentCategory> Create(
@@ -76,12 +68,10 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		string code,
 		string name,
 		string japaneseName,
-		int level,
 		int displayOrder,
-		ContentCategoryStatus status,
+		string themeColor,
+		bool isActive,
 		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt,
-		ContentCategoryId? parentId = null,
 		string? description = null)
 	{
 		if (string.IsNullOrWhiteSpace(name))
@@ -93,8 +83,14 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 		if (string.IsNullOrWhiteSpace(code))
 			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidCode);
 
-		if (level < 1)
-			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidLevel);
+		if(displayOrder <= 0)
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidDisplayOrder);
+
+		if (string.IsNullOrWhiteSpace(slug))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidThemeColor);
+
+		if (string.IsNullOrWhiteSpace(themeColor))
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidThemeColor);
 
 		return Result.Success(new ContentCategory(
 			ContentCategoryId.Create(),
@@ -102,64 +98,43 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 			code,
 			name,
 			japaneseName,
-			level,
 			displayOrder,
+			themeColor,
 			createdAt,
-			updatedAt,
-			status,
-			parentId,
+			createdAt,
+			isActive,
 			description));
 	}
 
 	public Result Update(
-		string slug,
-		string code,
 		string name,
 		string japaneseName,
-		int level,
 		int displayOrder,
-		ContentCategoryStatus status,
+		string themeColor,
+		bool isActive,
 		DateTimeOffset updatedAt,
-		ContentCategoryId? parentId = null,
 		string? description = null)
 	{
+		if (string.IsNullOrWhiteSpace(themeColor))
+			return Result.Failure(ContentCategoryErrors.InvalidThemeColor);
+
 		if (string.IsNullOrWhiteSpace(name))
 			return Result.Failure(ContentCategoryErrors.InvalidName);
 
 		if (string.IsNullOrWhiteSpace(japaneseName))
 			return Result.Failure(ContentCategoryErrors.InvalidName);
 
-		if (string.IsNullOrWhiteSpace(code))
-			return Result.Failure(ContentCategoryErrors.InvalidCode);
+		if (displayOrder <= 0)
+			return Result.Failure<ContentCategory>(ContentCategoryErrors.InvalidDisplayOrder);
 
-		if (level < 1)
-			return Result.Failure(ContentCategoryErrors.InvalidLevel);
-
-		// Validate status transition
-		if (!ContentCategoryStatusTransition.IsAllowed(Status, status))
-			return Result.Failure(ContentCategoryErrors.InvalidStatusTransition);
-
-		Slug = slug;
-		Code = code;
 		Name = name;
 		JapaneseName = japaneseName;
-		Level = level;
 		DisplayOrder = displayOrder;
-		Status = status;
-		ParentId = parentId;
 		Description = description;
+		ThemeColor = themeColor;
+		IsActive = isActive;
 		UpdatedAt = updatedAt;
 
-		return Result.Success();
-	}
-
-	public Result ChangeStatus(ContentCategoryStatus newStatus, DateTimeOffset updatedAt)
-	{
-		if (!ContentCategoryStatusTransition.IsAllowed(Status, newStatus))
-			return Result.Failure(ContentCategoryErrors.InvalidStatusTransition);
-
-		Status = newStatus;
-		UpdatedAt = updatedAt;
 		return Result.Success();
 	}
 }

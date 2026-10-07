@@ -8,8 +8,6 @@ namespace Rakushu.Domain.Entities.Plan.Entitlement;
 
 public enum LimitPeriod
 {
-	Day = 0,
-	Week = 1,
-	Month = 2,
-	Total = 3
+	Day = 1, // Video - Character - Chat - Quiz
+	Total = 2,
 }

@@ -28,6 +28,7 @@ internal sealed class DeleteEntitlement : IEndpoint
 			})
 			// 2. Description
 			.WithName("DeleteEntitlement")
+			.WithSummary("Admin")
 			.WithDescription("Deletes an entitlement ( Detach a feature ) from the specified plan.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

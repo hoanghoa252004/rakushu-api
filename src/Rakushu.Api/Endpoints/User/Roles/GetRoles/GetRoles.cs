@@ -20,6 +20,7 @@ internal sealed class GetRoles : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetRoles")
+			.WithSummary("Admin")
 			.WithDescription("Retrieves the list of available user roles.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

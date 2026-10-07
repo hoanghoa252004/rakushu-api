@@ -1,5 +1,6 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Persistence;
+using Rakushu.Application.Usecases.Subscription.Entitlement.GetEntitlements;
+using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Plan;
 
@@ -8,16 +9,16 @@ namespace Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 public sealed class GetPlanByIdHandler : IRequestHandler<GetPlanByIdQuery, Result<PlanDto>>
 {
 	// DAOs
-	private readonly IPlanQuery _planQuery;
+	private readonly IPlanRepository _planRepository;
 
-	public GetPlanByIdHandler(IPlanQuery planQuery)
+	public GetPlanByIdHandler(IPlanRepository planRepository)
 	{
-		_planQuery = planQuery;
+		_planRepository = planRepository;
 	}
 
 	public async Task<Result<PlanDto>> Handle(GetPlanByIdQuery request, CancellationToken cancellationToken)
 	{
-		var plan = await _planQuery.GetByIdAsync(
+		var plan = await _planRepository.GetByIdAsync(
 			PlanId.From(request.PlanId),
 			cancellationToken);
 
@@ -26,6 +27,34 @@ public sealed class GetPlanByIdHandler : IRequestHandler<GetPlanByIdQuery, Resul
 			return Result.Failure<PlanDto>(PlanErrors.NotFound);
 		}
 
-		return Result.Success(plan);
+		var planDto = new PlanDto(
+			plan.Id.Value,
+			plan.Code,
+			plan.Name,
+			plan.JapaneseName,
+			plan.Price,
+			plan.Currency.ToString(),
+			plan.BillingCycle.ToString(),
+			plan.IsActive,
+			plan.CreatedAt,
+			plan.UpdatedAt,
+			plan.Entitlements.Select(e => new EntitlementDto(
+				e.Id.Value,
+				e.IsEnabled,
+				e.LimitUnit.ToString(),
+				e.LimitValue,
+				e.LimitPeriod.ToString(),
+				new FeatureDto(
+					e.Feature.Id.Value,
+					e.Feature.Code,
+					e.Feature.Name,
+					e.Feature.IsActive,
+					e.Feature.CreatedAt,
+					e.Feature.UpdatedAt,
+					e.Feature.Description))).ToList(),
+			plan.Description
+		);
+
+		return Result.Success(planDto);
 	}
 }

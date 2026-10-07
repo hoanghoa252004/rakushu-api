@@ -15,5 +15,8 @@ internal sealed class UpdateFeatureValidator : AbstractValidator<UpdateFeatureCo
 			.WithMessage("Feature name is required")
 			.MaximumLength(50)
 			.WithMessage("Feature name must not exceed 50 characters");
+
+		RuleFor(x => x.IsActive)
+			.NotNull().WithMessage("Feature IsActive is required");
 	}
 }

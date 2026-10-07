@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Rakushu.Application.Usecases.Subscription.Payment.ExpirePayments;
+using Rakushu.Application.Usecases.Payment.Payment.ExpirePayments;
 using System;
 using System.Collections.Generic;
 using System.Linq;

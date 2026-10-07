@@ -1,8 +1,13 @@
 namespace Rakushu.Application.Usecases.Linguistic.ProficiencyLevel;
 
 public sealed record ProficiencyLevelDto(
-	//string Code,
-	//string Name,
-	//int SortOrder,
-	//string? Description
+	Guid Id,
+	string Code,
+	string Name,
+	string JapaneseName,
+	int SortOrder,
+	bool IsActive,
+	string? Description,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset UpdatedAt
 	);

@@ -65,4 +65,7 @@ public static class UserErrors
 
 	public static readonly Error ProfileAlreadyExists = Error.Conflict(
 		"USER.PROFILE_ALREADY_EXISTS", "The user already has a profile.");
+
+	public static readonly Error CannotBeDeleted = Error.Validation(
+		"USER.CANNOT_BE_DELETED", "The user cannot be deleted because it is either active.");
 }

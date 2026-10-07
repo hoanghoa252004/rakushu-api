@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Feature;
-using Rakushu.Domain.Entities.Feature.ObjectValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,10 +21,7 @@ internal sealed class FeatureConfiguration : IEntityTypeConfiguration<Feature>
 				value => FeatureId.From(value));
 
 		// Code
-		builder.Property(u => u.Code)
-			.HasConversion(
-				code => code.Value,
-				value => FeatureCode.Create(value).Value)
+		builder.Property(pl => pl.Code)
 			.HasMaxLength(30)
 			.IsRequired();
 		builder.HasIndex(u => u.Code)
@@ -39,10 +35,8 @@ internal sealed class FeatureConfiguration : IEntityTypeConfiguration<Feature>
 		// Description
 		builder.Property(u => u.Description);
 
-		// Status
-		builder.Property(u => u.Status)
-			.HasMaxLength(30)
-			.HasConversion<string>()
+		// IsActive
+		builder.Property(pl => pl.IsActive)
 			.IsRequired();
 
 		// CreatedAt

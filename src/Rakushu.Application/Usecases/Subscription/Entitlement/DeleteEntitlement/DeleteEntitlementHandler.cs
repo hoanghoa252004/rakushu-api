@@ -38,9 +38,9 @@ internal sealed class DeleteEntitlementHandler : IRequestHandler<DeleteEntitleme
 
 			var now = _systemClock.UtcNow;
 
-			var result = plan.RemoveEntitlement(
-				EntitlementId.From(request.EntitlementId),
-				now);
+			var entitlementId = EntitlementId.From(request.EntitlementId);
+
+			var result = plan.RemoveEntitlement(entitlementId, now);
 
 			if (result.IsFailure)
 			{

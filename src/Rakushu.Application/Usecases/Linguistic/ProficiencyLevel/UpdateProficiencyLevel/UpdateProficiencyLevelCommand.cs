@@ -5,9 +5,9 @@ namespace Rakushu.Application.Usecases.Linguistic.ProficiencyLevel.UpdateProfici
 
 public sealed record UpdateProficiencyLevelCommand(
 	Guid ProficiencyLevelId,
-	Guid frameworkId,
-	string code,
-	string name,
-	int sortOrder,
-	string? description
+	string Name,
+	string JapaneseName,
+	int SortOrder,
+	bool IsActive,
+	string? Description = null
 ) : IRequest<Result>;

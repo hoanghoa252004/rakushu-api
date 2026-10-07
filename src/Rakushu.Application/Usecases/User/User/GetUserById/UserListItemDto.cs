@@ -12,8 +12,8 @@ public sealed record UserListItemDto(
 	string Email,
 	string Status,
 	string? Avatar,
-	DateTime CreatedAt,
-	DateTime UpdatedAt,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset UpdatedAt,
 	RoleDto Role
 );
 

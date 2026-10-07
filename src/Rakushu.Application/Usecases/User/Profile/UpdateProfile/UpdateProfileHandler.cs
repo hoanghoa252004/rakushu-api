@@ -66,7 +66,7 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 
 			// 1.2. VALIDATE: resource existence
 			// 1.2.1 Level
-			var levelId = ProficiencyLevelId.From(request.CurrentLevelId);
+			var levelId = ProficiencyLevelId.From(request.LevelId);
 
 			var level = await _proficiencyLevelRepository.GetByIdAsync(levelId, cancellationToken);
 

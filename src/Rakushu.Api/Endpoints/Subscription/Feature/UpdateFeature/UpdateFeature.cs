@@ -23,6 +23,7 @@ internal sealed class UpdateFeature : IEndpoint
 				var command = new UpdateFeatureCommand(
 					id,
 					dto.Name,
+					dto.IsActive,
 					dto.Description
 				);
 
@@ -32,6 +33,7 @@ internal sealed class UpdateFeature : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdateFeature")
+			.WithSummary("Admin")
 			.WithDescription("Updates an existing feature with the provided details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
@@ -45,6 +47,7 @@ internal sealed class UpdateFeature : IEndpoint
 
 internal sealed record UpdateFeatureRequestDto(
 	string Name,
+	bool IsActive,
 	string? Description = null
 );
 

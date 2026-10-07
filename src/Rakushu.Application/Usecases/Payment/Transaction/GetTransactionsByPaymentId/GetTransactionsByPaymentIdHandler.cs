@@ -1,0 +1,103 @@
+using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Persistence.Queries;
+using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Payment.Transaction;
+using Rakushu.Domain.Entities.Role;
+
+namespace Rakushu.Application.Usecases.Payment.Transaction.GetTransactionsByPaymentId;
+
+public sealed class GetTransactionsByPaymentIdHandler : IRequestHandler<GetTransactionsByPaymentIdQuery, Result<IReadOnlyCollection<TransactionDto>>>
+{
+	private readonly ICurrentUserContext _currentUserContext;
+	private readonly IPaymentRepository _paymentRepository;
+	private readonly ITransactionRepository _transactionRepository;
+
+	public GetTransactionsByPaymentIdHandler(
+		ICurrentUserContext currentUserContext,
+		IPaymentRepository paymentRepository,
+		ITransactionRepository transactionRepository)
+	{
+		_currentUserContext = currentUserContext;
+		_paymentRepository = paymentRepository;
+		_transactionRepository = transactionRepository;
+	}
+
+	public async Task<Result<IReadOnlyCollection<TransactionDto>>> Handle(GetTransactionsByPaymentIdQuery request, CancellationToken cancellationToken)
+	{
+		var paymentId = PaymentId.From(request.PaymentId);
+
+		var payment = await _paymentRepository.GetByIdAsync(paymentId, cancellationToken);
+
+		if (payment == null)
+		{
+			return Result.Failure<IReadOnlyCollection<TransactionDto>>(PaymentError.PaymentNotFound);
+		}
+
+		// Check authorization: if learner, must own the payment
+		var currentUserId = _currentUserContext.UserId;
+
+		var currentRole = _currentUserContext.Role;
+
+		if (currentRole != RoleCodes.SystemAdministrator)
+		{
+			if (currentUserId == null || payment.UserId != currentUserId)
+			{
+				return Result.Failure<IReadOnlyCollection<TransactionDto>>(PaymentError.PaymentNotBelong);
+			}
+		}
+
+		// Validate status if provided
+		if (!string.IsNullOrWhiteSpace(request.Status) && 
+			!Enum.TryParse<Domain.Entities.Payment.Transaction.TransactionStatus>(request.Status, true, out _))
+		{
+			return Result.Failure<IReadOnlyCollection<TransactionDto>>(PaymentError.InvalidStatus);
+		}
+
+		// Validate provider if provided
+		if (!string.IsNullOrWhiteSpace(request.Provider) && 
+			!Enum.TryParse<Provider>(request.Provider, true, out _))
+		{
+			return Result.Failure<IReadOnlyCollection<TransactionDto>>(PaymentError.InvalidProvider);
+		}
+
+		var transactions = payment.Transactions.AsEnumerable();
+
+		if (!string.IsNullOrWhiteSpace(request.Status))
+		{
+			transactions = transactions.Where(t => t.Status.ToString().ToLower() == request.Status.ToLower());
+		}
+
+		if(!string.IsNullOrWhiteSpace(request.Provider))
+		{
+			transactions = transactions.Where(t => t.Provider.ToString().ToLower() == request.Provider.ToLower());
+		}
+
+		// Hide RawResponsePayload for learners
+		var items = transactions.Select(t => new TransactionDto(
+			t.Id.Value,
+			t.PaymentId.Value,
+			t.Provider.ToString(),
+			t.Amount,
+			t.Currency.ToString(),
+			t.TxnRef,
+			t.Url,
+			t.TransactionNo,
+			t.RawResponsePayload,
+			t.Status.ToString(),
+			t.ExpiredAt,
+			t.CreatedAt,
+			t.UpdatedAt
+		)).ToList();
+
+		var isAdmin = currentRole == RoleCodes.SystemAdministrator;
+
+		if (!isAdmin)
+		{
+			items = items.Select(t => t with { RawResponsePayload = null }).ToList();
+		}
+
+		return Result.Success<IReadOnlyCollection<TransactionDto>>(items);
+	}
+}

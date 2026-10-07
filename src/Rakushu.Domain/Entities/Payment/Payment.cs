@@ -2,6 +2,7 @@
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.User.Subscription;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,9 @@ public sealed class Payment : AggregateRoot<PaymentId>
 
 	// Plan:
 	public Plan.Plan Plan { get; private set; } = null!;
+
+	// Subscription:
+	public Subscription Subscription { get; private set; } = null!;
 
 	// Transactions:
 	private readonly List<Transaction.Transaction> _transactions = [];

@@ -1,5 +1,4 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Plan;
@@ -36,13 +35,10 @@ public sealed class DeletePlanHandler : IRequestHandler<DeletePlanCommand, Resul
 				return Result.Failure(PlanErrors.NotFound);
 			}
 
-			if (plan.Status != PlanStatus.Draft) // if not draft then continue to check
+			// Prevent deletion if plan has active subscriptions
+			if (plan.Subscriptions.Any() == true)
 			{
-				// Prevent deletion if plan has active subscriptions
-				if (plan.Subscriptions.Any() == true)
-				{
-					return Result.Failure(PlanErrors.CannotDeletePlanWithSubscriptions);
-				}
+				return Result.Failure(PlanErrors.CannotDeletePlanWithSubscriptions);
 			}
 
 			_planRepository.Delete(plan);

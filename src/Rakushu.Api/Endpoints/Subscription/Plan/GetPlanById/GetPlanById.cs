@@ -28,6 +28,7 @@ internal sealed class GetPlanById : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetPlanById")
+			.WithSummary("AllowAnonymous")
 			.WithDescription("Retrieves a specific plan by its ID.")
 			// 3. Authentication & Authorization
 			.AllowAnonymous()

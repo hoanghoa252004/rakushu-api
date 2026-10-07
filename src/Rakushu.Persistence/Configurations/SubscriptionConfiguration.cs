@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.Subscription;
@@ -34,6 +35,16 @@ internal sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subsc
 			.HasForeignKey(s => s.UserId)
 			.OnDelete(DeleteBehavior.Restrict);
 
+		// PaymentId
+		builder.Property(u => u.PaymentId)
+			.HasConversion(
+				id => id.Value,
+				value => PaymentId.From(value));
+		builder.HasOne(s => s.Payment)
+			.WithOne(p => p.Subscription)
+			.HasForeignKey<Subscription>(s => s.PaymentId)
+			.OnDelete(DeleteBehavior.Restrict);
+
 		// PlanId
 		builder.Property(u => u.PlanId)
 			.HasConversion(
@@ -45,22 +56,18 @@ internal sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subsc
 			.HasForeignKey(pe => pe.PlanId)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		// StartDate
-		builder.Property(u => u.StartDate)
-			.IsRequired();
-
 		// Status
 		builder.Property(u => u.Status)
 			.HasMaxLength(30)
 			.HasConversion<string>()
 			.IsRequired();
 
-		// CreatedAt
-		builder.Property(u => u.CreatedAt)
+		// StartAt
+		builder.Property(u => u.StartAt)
 			.IsRequired();
 
-		// UpdatedAt
-		builder.Property(u => u.UpdatedAt)
+		// EndAt
+		builder.Property(u => u.EndAt)
 			.IsRequired();
 	}
 }

@@ -5,7 +5,6 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.EmailVerificationToken;
-using Rakushu.Domain.Entities.User.ValueObjects.Email;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,14 +43,7 @@ internal sealed class SendEmailVerificationCodeHandler : IRequestHandler<SendEma
 		return await _unitOfWork.ExecuteAsync( async () =>
 		{
 			// 1. Find user by email
-			var emailResult = Email.Create(request.Email);
-
-			if (emailResult.IsFailure)
-			{
-				return emailResult;
-			}	
-
-			var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+			var user = await _userRepository.GetByEmailAsync(request.Email.ToLower(), cancellationToken);
 
 			// Don't reveal whether email exists.
 			if (user == null)
@@ -93,7 +85,7 @@ internal sealed class SendEmailVerificationCodeHandler : IRequestHandler<SendEma
 			user.AddEmailVerificationToken(token);
 
 			await _emailSender.SendAsync(
-				user.Email.Value,
+				user.Email.ToLower(),
 				"VERIFY EMAIL RAKUSHU SYSTEM",
 				code,
 				cancellationToken);

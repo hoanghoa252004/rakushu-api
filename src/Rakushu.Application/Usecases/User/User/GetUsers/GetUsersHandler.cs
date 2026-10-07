@@ -1,6 +1,5 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.User.User.GetUserById;
 using Rakushu.Domain.Common.Results;
@@ -12,17 +11,17 @@ namespace Rakushu.Application.Usecases.User.User.GetUsers;
 internal sealed class GetUsersHandler : IRequestHandler<GetUsersQuery, Result<PaginatedList<UserListItemDto>>>
 {
 	// DAOs
-	private readonly IUserQuery _userQuery;
+	private readonly IUserRepository _userRepository;
 
 
 	// SERVICES
 	private readonly IStorageService _storageService;
 	public GetUsersHandler(
-		IUserQuery userQuery,
+		IUserRepository userRepository,
 		IStorageService storageService
 		)
 	{
-		_userQuery = userQuery;
+		_userRepository = userRepository;
 		_storageService = storageService;
 	}
 
@@ -33,9 +32,51 @@ internal sealed class GetUsersHandler : IRequestHandler<GetUsersQuery, Result<Pa
 			return Result.Failure<PaginatedList<UserListItemDto>>(UserErrors.InvalidStatus);
 		}
 
-		var (items, totalCount) = await _userQuery.GetUsersAsync(request, cancellationToken);
+		var list = (await _userRepository.GetAllAsync(cancellationToken))
+			.Where(u => u.Role.Code != RoleCodes.SystemAdministrator);
 
-		var users = new List<UserListItemDto>();
+		if (request.RoleId.HasValue)
+		{
+			list = list.Where(p => p.RoleId.Value == request.RoleId);
+		}
+
+		if (!string.IsNullOrWhiteSpace(request.Status))
+		{
+			list = list.Where(p => p.Status.ToString().ToLower() == request.Status.ToLower());
+		}
+
+		if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+		{
+			var key = request.SearchTerm.Trim();
+			list = list.Where(p => p.FullName.Contains(key, StringComparison.OrdinalIgnoreCase)
+									|| p.Email.Contains(key, StringComparison.OrdinalIgnoreCase)
+									|| p.Role.Name.Contains(key, StringComparison.OrdinalIgnoreCase));
+		}
+
+		// Calculate total count before paging
+		var totalCount = list.Count();
+
+		// Apply paging
+		var items = list
+			.OrderBy(c => c.UpdatedAt)
+			.Skip((request.PageNumber - 1) * request.PageSize)
+			.Take(request.PageSize)
+			.Select(c => new UserListItemDto(
+				c.Id.Value,
+				c.FullName,
+				c.Email,
+				c.Status.ToString(),
+				c.Profile?.AvatarKey,
+				c.CreatedAt,
+				c.UpdatedAt,
+				new RoleDto(
+					c.Role.Id.Value,
+					c.Role.Name,
+					c.Role.Code
+				)
+			)).ToList();
+
+		List<UserListItemDto> users = new List<UserListItemDto>();
 
 		foreach (var user in items)
 		{
@@ -43,7 +84,9 @@ internal sealed class GetUsersHandler : IRequestHandler<GetUsersQuery, Result<Pa
 			if(user.Avatar != null)
 			{
 				var avatarUrl = await _storageService.CreatePresignedReadUrlAsync(user.Avatar, cancellationToken);
+
 				var updatedUser = user with { Avatar = avatarUrl };
+
 				users.Add(updatedUser);
 			}
 			else
@@ -52,10 +95,8 @@ internal sealed class GetUsersHandler : IRequestHandler<GetUsersQuery, Result<Pa
 			}
 		}
 
-		var removedAdminLists = users.Where(p => p.Role.Code != RoleCodes.SystemAdministrator).ToList();
-
 		var result = PaginatedList<UserListItemDto>.Create(
-			removedAdminLists,
+			users,
 			totalCount,
 			request.PageNumber,
 			request.PageSize

@@ -1,8 +1,10 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
+using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.ProficiencyLevel;
 using Rakushu.Domain.Entities.User;
 using Rakushu.Domain.Entities.User.Profile.Policies;
@@ -23,16 +25,23 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 	private readonly IUserRepository _userRepository;
 	private readonly IProficiencyLevelRepository _proficiencyLevelRepository;
 	private readonly IContentCategoryRepository _contentCategoryRepository;
+	private readonly IPlanRepository _planRepository;
 	private readonly IUnitOfWork _unitOfWork;
 
 	// POLICY
 	private readonly ProfileUpdatePolicy _profileUpdatePolicy;
+
+	// SERVICES
+	private readonly ISystemClock _systemClock;
+
 
 	public CreateProfileHandler(
 		ICurrentUserContext currentUserContext,
 		IUserRepository userRepository,
 		IProficiencyLevelRepository proficiencyLevelRepository,
 		IContentCategoryRepository contentCategoryRepository,
+		IPlanRepository planRepository,
+		ISystemClock systemClock,
 		IUnitOfWork unitOfWork,
 		ProfileUpdatePolicy profileUpdatePolicy
 		)
@@ -41,8 +50,10 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 		_userRepository = userRepository;
 		_proficiencyLevelRepository = proficiencyLevelRepository;
 		_contentCategoryRepository = contentCategoryRepository;
+		_planRepository = planRepository;
 		_unitOfWork = unitOfWork;
 		_profileUpdatePolicy = profileUpdatePolicy;
+		_systemClock = systemClock;
 	}
 
 	public async Task<Result<Guid>> Handle(CreateProfileCommand request, CancellationToken cancellationToken)
@@ -72,7 +83,7 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 			// 1.2. VALIDATE: resource existence
 
 			// 1.2.1 Level
-			var levelId = ProficiencyLevelId.From(request.CurrentLevelId);
+			var levelId = ProficiencyLevelId.From(request.LevelId);
 
 			var level = await _proficiencyLevelRepository.GetByIdAsync(levelId, cancellationToken);
 
@@ -153,6 +164,24 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 			if (result.IsFailure)
 			{
 				return Result.Failure<Guid>(result.Error);
+			}
+
+			// 5. If have any free plan, set usr to free plan
+			var freePlan = (await _planRepository.GetAllAsync(cancellationToken))
+							.SingleOrDefault(p => p.Price == 0);
+
+			if(freePlan != null)
+			{
+				DateTimeOffset endAt;
+				if (freePlan.BillingCycle == BillingCycle.Monthly)
+					endAt = _systemClock.UtcNow.AddMonths(1);
+
+				else if (freePlan.BillingCycle == BillingCycle.Weekly)
+					endAt = _systemClock.UtcNow.AddDays(7);
+
+				else
+					endAt = _systemClock.UtcNow.AddYears(1);
+				user.AddSubscription(user.Id, freePlan.Id, _systemClock.UtcNow, endAt, null);
 			}
 
 			return Result.Success(createProfileResult.Value.Id.Value);

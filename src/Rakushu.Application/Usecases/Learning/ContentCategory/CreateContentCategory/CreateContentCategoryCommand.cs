@@ -1,19 +1,15 @@
-using Entity = Rakushu.Domain.Entities.ContentCategory.ContentCategory;
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.CreateContentCategory;
 
 public sealed record CreateContentCategoryCommand(
-	string slug,
-	string code,
-	string name,
-	string japaneseName,
-	string? description,
-	Guid? parentId,
-	int level,
-	int displayOrder,
-	bool isActive,
-	ContentCategoryStatus status = ContentCategoryStatus.Draft
+	string Slug,
+	string Code,
+	string Name,
+	string JapaneseName,
+	int DisplayOrder,
+	string ThemeColor,
+	bool IsActive,
+	string? Description = null
 ) : IRequest<Result<Guid>>;

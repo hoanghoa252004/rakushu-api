@@ -13,7 +13,7 @@ public sealed class ActiveContentCategorySpecification
 {
 	public Result IsSatisfiedBy(ContentCategory category)
 	{
-		return category.Status == ContentCategoryStatus.Active
+		return category.IsActive
 			? Result.Success()
 			: Result.Failure(ContentCategoryErrors.NotActive);
 	}

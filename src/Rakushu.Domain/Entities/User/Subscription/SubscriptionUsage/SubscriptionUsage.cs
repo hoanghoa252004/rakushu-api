@@ -15,7 +15,11 @@ public sealed class SubscriptionUsage : Entity<SubscriptionUsageId>
 	public FeatureId FeatureId { get; private set; } = null!;
 	public DateTimeOffset PeriodStart { get; private set; }
 	public DateTimeOffset PeriodEnd { get; private set; }
+	public int MaxValue { get; private set; }
 	public int UsedValue { get; private set; }
+	public bool IsOverLimit { get; private set; }
+	public bool IsExpired { get; private set; }
+	public bool IsCanceled { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -34,7 +38,11 @@ public sealed class SubscriptionUsage : Entity<SubscriptionUsageId>
 		FeatureId featureId,
 		DateTimeOffset periodStart,
 		DateTimeOffset periodEnd,
+		int maxValue,
 		int usedValue,
+		bool isOverLimit,
+		bool isExpired,
+		bool isCanceled,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt
 		) : base(subscriptionUsageId)
@@ -43,7 +51,11 @@ public sealed class SubscriptionUsage : Entity<SubscriptionUsageId>
 		FeatureId = featureId;
 		PeriodStart = periodStart;
 		PeriodEnd = periodEnd;
+		MaxValue = maxValue;
 		UsedValue = usedValue;
+		IsOverLimit = isOverLimit;
+		IsExpired = isExpired;
+		IsCanceled = isCanceled;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 	}
@@ -53,7 +65,11 @@ public sealed class SubscriptionUsage : Entity<SubscriptionUsageId>
 		FeatureId featureId,
 		DateTimeOffset periodStart,
 		DateTimeOffset periodEnd,
+		int maxValue,
 		int usedValue,
+		bool isOverLimit,
+		bool isExpired,
+		bool isCanceled,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt
 		)
@@ -64,11 +80,37 @@ public sealed class SubscriptionUsage : Entity<SubscriptionUsageId>
 			featureId,
 			periodStart,
 			periodEnd,
+			maxValue,
 			usedValue,
+			isOverLimit,
+			isExpired,
+			isCanceled,
 			createdAt,
 			updatedAt
 			);
 
 		return Result.Success(subscriptionUsage);
+	}
+
+	public Result Expire(DateTimeOffset now)
+	{
+		if (IsExpired == true)
+			return Result.Failure(SubscriptionUsageErrors.AlreadyExpired);
+
+		IsExpired = true;
+		UpdatedAt = now;
+
+		return Result.Success();
+	}
+
+	public Result Cancel(DateTimeOffset now)
+	{
+		if (IsCanceled == true)
+			return Result.Failure(SubscriptionUsageErrors.AlreadyCanceled);
+
+		IsCanceled = true;
+		UpdatedAt = now;
+
+		return Result.Success();
 	}
 }

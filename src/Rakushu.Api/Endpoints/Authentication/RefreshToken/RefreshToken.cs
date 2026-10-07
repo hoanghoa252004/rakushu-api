@@ -27,6 +27,7 @@ internal sealed class RefreshToken : IEndpoint
 			})
 			// 2. Description
 			.WithName("RefreshToken")
+			.WithSummary("Allow Anonymous")
 			.WithDescription("Issues a new Access Token and rotates Refresh Token.")
 			// 3. Authentication & Authorization
 			.AllowAnonymous()

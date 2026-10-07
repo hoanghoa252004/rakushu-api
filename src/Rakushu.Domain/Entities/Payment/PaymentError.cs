@@ -85,4 +85,7 @@ public static class PaymentError
 
 	public static readonly Error SomePaymentInProcess =
 	Error.Validation("PAYMENT.SOME_PAYMENT_IN_PROCESS", "Cannot create new payment because a payment is already in process."); 
+
+	public static readonly Error FreePlanNotNeedToPay =
+		Error.Validation("PAYMENT.FREE_PLAN_NOT_NEED_TO_PAY", "Cannot create payment for free plan because it does not require payment.");
 }

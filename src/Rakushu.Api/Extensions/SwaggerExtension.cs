@@ -57,6 +57,20 @@ internal static class SwaggerExtension
 				Description = "APIs for Japanese linguistic and proficiency metadata."
 			});
 
+			options.SwaggerDoc("learning", new OpenApiInfo
+			{
+				Title = "Learning API",
+				Version = "v1",
+				Description = "APIs for learning content."
+			});
+
+			options.SwaggerDoc("payment", new OpenApiInfo
+			{
+				Title = "Payment API",
+				Version = "v1",
+				Description = "APIs for payment."
+			});
+
 			options.SwaggerDoc("admin", new OpenApiInfo
 			{
 				Title = "Admin API",
@@ -97,13 +111,15 @@ internal static class SwaggerExtension
 
 		app.UseSwaggerUI(options =>
 		{
-			options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
+			//options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
 			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
-			options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
+			//options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
 			options.SwaggerEndpoint("/swagger/linguistic/swagger.json", "Linguistic API");
+			options.SwaggerEndpoint("/swagger/learning/swagger.json", "Learning API");
+			options.SwaggerEndpoint("/swagger/payment/swagger.json", "Payment API");
 
 		});
 

@@ -16,14 +16,8 @@ public static class ContentCategoryErrors
 	public static readonly Error NotActive = Error.Validation(
 		"CONTENT_CATEGORY.NOT_ACTIVE", "Category is not active.");
 
-	public static readonly Error InvalidLevel = Error.Validation(
-		"CONTENT_CATEGORY.INVALID_LEVEL", "Category level must be a positive integer.");
-
 	public static readonly Error ParentNotFound = Error.Validation(
 		"CONTENT_CATEGORY.PARENT_NOT_FOUND", "Parent category not found.");
-
-	public static readonly Error InvalidParentLevel = Error.Validation(
-		"CONTENT_CATEGORY.INVALID_PARENT_LEVEL", "Parent level must be less than current level.");
 
 	public static readonly Error DuplicateDisplayOrder = Error.Validation(
 		"CONTENT_CATEGORY.DUPLICATE_DISPLAY_ORDER", "Display order must be unique within each level.");
@@ -31,10 +25,12 @@ public static class ContentCategoryErrors
 	public static readonly Error IsInUse = Error.Conflict(
 		"CONTENT_CATEGORY.IN_USE", "Cannot delete category that is currently in use (has related content).");
 
-	public static readonly Error InvalidStatusTransition = Error.Failure(
-		"CONTENT_CATEGORY.INVALID_STATUS_TRANSITION", "Invalid status transition. " +
-		"From Draft: can go to Active or Inactive. " +
-		"From Active: can go to Inactive. " +
-		"From Inactive: can go to Active or Archived. " +
-		"From Archived: no transitions allowed.");
+	public static readonly Error InvalidThemeColor = Error.Validation(
+		"CONTENT_CATEGORY.INVALID_THEME_COLOR", "Theme color is required and must be a valid hex color code.");
+
+	public static readonly Error InvalidDisplayOrder = Error.Validation(
+		"CONTENT_CATEGORY.INVALID_DISPLAY_ORDER", "Display order must be a positive integer. 1,2,3...)");
+
+	public static readonly Error DuplicateCode = Error.Conflict(
+		"CONTENT_CATEGORY.DUPLICATE_CODE", "A content category with this code already exists.");
 }

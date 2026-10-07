@@ -5,7 +5,6 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.ValueObjects.Email;
 
 namespace Rakushu.Application.Usecases.User.User.CreateUser;
 
@@ -60,14 +59,6 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 					}
 
 					// 4. Create User
-					var emailResult = Email.Create(request.Email);
-
-					if (emailResult.IsFailure)
-					{
-						//return emailResult;
-						return Result.Failure<UserId>(emailResult.Error);
-					}	
-
 					var passwordHash = _passwordHasher.HashPassword(request.Password);
 
 					var initialStatus = UserStatus.Unverified;
@@ -76,7 +67,7 @@ internal sealed class CreateUserHandler : IRequestHandler<CreateUserCommand, Res
 
 					var userResult = Rakushu.Domain.Entities.User.User.Create(
 						request.FullName,
-						emailResult.Value,
+						request.Email.ToLower(),
 						passwordHash,
 						role!.Id,
 						initialStatus,

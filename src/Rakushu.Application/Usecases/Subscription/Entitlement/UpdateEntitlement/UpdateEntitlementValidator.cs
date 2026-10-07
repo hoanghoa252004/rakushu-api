@@ -15,8 +15,8 @@ internal sealed class UpdateEntitlementValidator : AbstractValidator<UpdateEntit
 			.WithMessage("Entitlement ID is required");
 
 		RuleFor(x => x.LimitValue)
-			.GreaterThanOrEqualTo(0)
-			.WithMessage("Limit value must be greater than or equal to 0");
+			.GreaterThan(0)
+			.WithMessage("Limit value must be greater than 0");
 
 		RuleFor(x => x.LimitUnit)
 			.NotEmpty()
@@ -25,5 +25,8 @@ internal sealed class UpdateEntitlementValidator : AbstractValidator<UpdateEntit
 		RuleFor(x => x.LimitPeriod)
 			.NotEmpty()
 			.WithMessage("Limit period is required");
+
+		RuleFor(x => x.IsEnabled)
+			.NotNull().WithMessage("Entitlement IsEnabled is required");
 	}
 }

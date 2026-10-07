@@ -23,12 +23,7 @@ internal sealed class GetFeatures : IEndpoint
 				CancellationToken cancellationToken = default
 				) =>
 			{
-				var query = new GetFeaturesQuery(
-					pagination.PageNumber,
-					pagination.PageSize,
-					searchTerm,
-					status
-				);
+				var query = new GetFeaturesQuery();
 
 				var result = await sender.Send(query, cancellationToken);
 
@@ -36,6 +31,7 @@ internal sealed class GetFeatures : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetFeatures")
+			.WithSummary("Admin")
 			.WithDescription("Retrieves a paginated list of features with optional filtering.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
 			// 4. Response

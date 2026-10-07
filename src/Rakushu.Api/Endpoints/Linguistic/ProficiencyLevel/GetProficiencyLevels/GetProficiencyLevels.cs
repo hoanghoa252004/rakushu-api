@@ -10,11 +10,26 @@ internal sealed class GetProficiencyLevels : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapProficiencyLevelEndpoints()
-			.MapGet("/", async (ISender sender, CancellationToken cancellationToken) =>
+			// 1. Endpoint
+			.MapGet("/", async (
+				ISender sender, 
+				CancellationToken cancellationToken
+				) =>
 			{
 				var result = await sender.Send(new GetProficiencyLevelsQuery(), cancellationToken);
+
 				return result.MatchOk();
 			})
-			.WithName("GetProficiencyLevels");
+			// 2. Description
+			.WithName("GetProficiencyLevels")
+			.WithSummary("Allow Anonymous")
+			.WithDescription("Gets a list of all proficiency levels for linguistic skills.")
+			// 3. Authentication & Authorization
+			.AllowAnonymous()
+			// 4. Response
+			.Produces(StatusCodes.Status201Created)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+			.ProducesProblem(StatusCodes.Status409Conflict)
+			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }

@@ -1,7 +1,9 @@
-using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Linguistic.ProficiencyLevel.DeleteProficiencyLevel;
+using Rakushu.Domain.Common.Errors;
+using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Api.Endpoints.Linguistic.ProficiencyLevel.DeleteProficiencyLevel;
 
@@ -10,11 +12,22 @@ internal sealed class DeleteProficiencyLevel : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapProficiencyLevelEndpoints()
-			.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken cancellationToken) =>
+			// 1. Endpoint
+			.MapDelete("/{id:guid}", async ([FromRoute] Guid id, CancellationToken cancellationToken) =>
 			{
-				var result = await sender.Send(new DeleteProficiencyLevelCommand(id), cancellationToken);
-				return result.MatchOk();
+				return Result.Failure(CommonErrors.FeatureNotSupport).MatchOk();
 			})
-			.WithName("DeleteProficiencyLevel");
+			// 2. Description
+			.WithName("DeleteProficiencyLevel")
+			.WithSummary("Admin")
+			.WithDescription("Deletes an existing proficiency level for linguistic skills.")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			// 4. Response
+			.Produces(StatusCodes.Status201Created)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+			.ProducesProblem(StatusCodes.Status409Conflict)
+			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
+

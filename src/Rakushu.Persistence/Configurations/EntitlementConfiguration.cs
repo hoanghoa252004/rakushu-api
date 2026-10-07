@@ -57,8 +57,7 @@ internal sealed class EntitlementConfiguration : IEntityTypeConfiguration<Entitl
 			.IsRequired();
 
 		// LimitValue
-		builder.Property(u => u.LimitValue)
-			.IsRequired();
+		builder.Property(u => u.LimitValue);
 
 		// LimitUnit
 		builder.Property(u => u.LimitUnit)

@@ -41,7 +41,7 @@ internal sealed class UpdateFeatureHandler : IRequestHandler<UpdateFeatureComman
 				return Result.Failure(FeatureErrors.NotFound);
 			}
 
-			var result = feature.Update(request.Name, request.Description, _systemClock.UtcNow);
+			var result = feature.Update(request.Name, request.IsActive, _systemClock.UtcNow, request.Description);
 
 			if (result.IsFailure)
 			{

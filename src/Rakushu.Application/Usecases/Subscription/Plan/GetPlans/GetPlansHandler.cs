@@ -1,56 +1,70 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
-using Rakushu.Application.Abstractions.Persistence;
-using Rakushu.Application.Common.Pagination;
+using Rakushu.Application.Usecases.Subscription.Entitlement.GetEntitlements;
+using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Plan;
 using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
-using System.Numerics;
 
 namespace Rakushu.Application.Usecases.Subscription.Plan.GetPlans;
 
-public sealed class GetPlansHandler : IRequestHandler<GetPlansQuery, Result<PaginatedList<PlanDto>>>
+internal sealed class GetPlansHandler : IRequestHandler<GetPlansQuery, Result<IReadOnlyCollection<PlanDto>>>
 {
-	// USER CONTEXT
+	// DAOs
+	private readonly IPlanRepository _planRepository;
+
+	// Context
 	private readonly ICurrentUserContext _currentUserContext;
 
-	// QUERY
-	private readonly IPlanQuery _planQuery;
-
 	public GetPlansHandler(
-		ICurrentUserContext currentUserContext,
-		IPlanQuery planQuery)
+		IPlanRepository planRepository,
+		ICurrentUserContext currentUserContext)
 	{
+		_planRepository = planRepository;
 		_currentUserContext = currentUserContext;
-		_planQuery = planQuery;
 	}
 
-	public async Task<Result<PaginatedList<PlanDto>>> Handle(GetPlansQuery request, CancellationToken cancellationToken)
+	public async Task<Result<IReadOnlyCollection<PlanDto>>> Handle(GetPlansQuery request, CancellationToken cancellationToken)
 	{
-		// Parse status
-		if (string.IsNullOrWhiteSpace(request.Status) == false && !Enum.TryParse<PlanStatus>(request.Status, true, out var status))
+		var plans = await _planRepository.GetAllAsync(cancellationToken);
+
+		// If not admin, only return active plans
+		var isAdmin = _currentUserContext.Role == RoleCodes.SystemAdministrator;
+
+		if (!isAdmin)
 		{
-			return Result.Failure<PaginatedList<PlanDto>>(PlanErrors.InvalidStatus);
+			plans = plans.Where(p => p.IsActive).ToList();
 		}
 
-		var (items, totalCount) = await _planQuery.GetPlansAsync(request, cancellationToken);
+		var planDtos = plans.Select(plan => new PlanDto(
+			plan.Id.Value,
+			plan.Code,
+			plan.Name,
+			plan.JapaneseName,
+			plan.Price,
+			plan.Currency.ToString(),
+			plan.BillingCycle.ToString(),
+			plan.IsActive,
+			plan.CreatedAt,
+			plan.UpdatedAt,
+			plan.Entitlements.Select(e => new EntitlementDto(
+				e.Id.Value,
+				e.IsEnabled,
+				e.LimitUnit.ToString(),
+				e.LimitValue,
+				e.LimitPeriod.ToString(),
+				new FeatureDto(
+					e.Feature.Id.Value,
+					e.Feature.Code,
+					e.Feature.Name,
+					e.Feature.IsActive,
+					e.Feature.CreatedAt,
+					e.Feature.UpdatedAt,
+					e.Feature.Description))).ToList(),
+			plan.Description
+		)).ToList();
 
-		// Authorize resource
-		var isAdmin =_currentUserContext.Role == RoleCodes.SystemAdministrator;
-
-		var filteredByRolePlans = !isAdmin
-			? items.Where(p => p.Status == PlanStatus.Active.ToString()).ToList()
-			: items.ToList();
-
-		var result = PaginatedList<PlanDto>.Create(
-			filteredByRolePlans,
-			totalCount,
-			request.PageNumber,
-			request.PageSize
-			);
-
-		return Result.Success(result);
+		return Result.Success<IReadOnlyCollection<PlanDto>>(planDtos);
 	}
 }

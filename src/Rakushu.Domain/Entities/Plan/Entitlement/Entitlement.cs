@@ -27,8 +27,8 @@ public sealed class Entitlement : Entity<EntitlementId>
 		PlanId planId,
 		FeatureId featureId,
 		bool isEnabled,
-		int limitValue,
 		LimitUnit limitUnit,
+		int limitValue,
 		LimitPeriod limitPeriod
 		) : base(entitlementId)
 	{
@@ -44,12 +44,12 @@ public sealed class Entitlement : Entity<EntitlementId>
 		PlanId planId,
 		FeatureId featureId,
 		bool isEnabled,
-		int limitValue,
 		LimitUnit limitUnit,
+		int limitValue,
 		LimitPeriod limitPeriod
 		)
 	{
-		if (limitValue < 0)
+		if (limitValue <= 0)
 		{
 			return Result.Failure<Entitlement>(EntitlementErrors.InvalidLimitValue);
 		}
@@ -69,8 +69,8 @@ public sealed class Entitlement : Entity<EntitlementId>
 			planId,
 			featureId,
 			isEnabled,
-			limitValue,
 			limitUnit,
+			limitValue,
 			limitPeriod
 			);
 
@@ -79,12 +79,12 @@ public sealed class Entitlement : Entity<EntitlementId>
 
 	public Result Update(
 		bool isEnabled,
-		int limitValue,
 		LimitUnit limitUnit,
+		int limitValue,
 		LimitPeriod limitPeriod
 		)
 	{
-		if (limitValue < 0)
+		if (limitValue <= 0)
 		{
 			return Result.Failure(EntitlementErrors.InvalidLimitValue);
 		}

@@ -12,11 +12,7 @@ using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.BunsetsuDependencyRelationsh
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
 using Rakushu.Domain.Entities.LinguisticKnowledge;
 using Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgeMeaning;
-using Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgePattern;
-using Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgePattern.LinguisticKnowledgePatternElement;
-using Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgePattern.LinguisticKnowledgePatternRelation;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapaneseConjugationForm;
 using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Payment;
@@ -98,15 +94,11 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 
 	// Knowledge
 	public DbSet<LinguisticKnowledge> LinguisticKnowledges => Set<LinguisticKnowledge>();
-	public DbSet<LinguisticKnowledgePattern> KnowledgePatterns => Set<LinguisticKnowledgePattern>();
-	public DbSet<LinguisticKnowledgePatternElement> KnowledgePatternElements => Set<LinguisticKnowledgePatternElement>();
-	public DbSet<LinguisticKnowledgePatternRelation> KnowledgePatternRelations => Set<LinguisticKnowledgePatternRelation>();
 	public DbSet<LinguisticKnowledgeMeaning> KnowledgeMeanings => Set<LinguisticKnowledgeMeaning>();
 
 	// Linguistic Metadata
 	public DbSet<JapanesePartOfSpeech> JapanesePartOfSpeeches => Set<JapanesePartOfSpeech>();
 	public DbSet<UniversalPartOfSpeech> UniversalPartOfSpeeches => Set<UniversalPartOfSpeech>();
-	public DbSet<JapaneseConjugationForm> JapaneseConjugationForms => Set<JapaneseConjugationForm>();
 	public DbSet<DependencyRelationship> DependencyRelationships => Set<DependencyRelationship>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

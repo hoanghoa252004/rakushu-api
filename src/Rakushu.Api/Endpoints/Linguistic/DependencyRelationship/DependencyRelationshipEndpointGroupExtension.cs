@@ -8,9 +8,8 @@ internal static class DependencyRelationshipEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapDependencyRelationshipEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/linguistic/dependency-relationships")
+		return app.MapGroup("/api/dependency-relationships")
 			.WithTags("DependencyRelationship")
-			.WithGroupName("linguistic")
-			.AllowAnonymous();
+			.WithGroupName("linguistic");
 	}
 }

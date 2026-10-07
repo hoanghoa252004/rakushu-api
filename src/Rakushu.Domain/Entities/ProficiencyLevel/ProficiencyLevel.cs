@@ -78,28 +78,26 @@ public sealed partial class ProficiencyLevel : Entity<ProficiencyLevelId>
 	}
 
 	public Result Update(
-		string code,
 		string name,
 		string japaneseName,
 		int sortOrder,
+		bool isActive,
 		DateTimeOffset updatedAt,
 		string? description = null)
 	{
 		if (string.IsNullOrWhiteSpace(name))
 			return Result.Failure(ProficiencyLevelErrors.InvalidName);
 
-		if (string.IsNullOrWhiteSpace(code))
-			return Result.Failure(ProficiencyLevelErrors.InvalidCode);
-
 		if (string.IsNullOrWhiteSpace(japaneseName))
 			return Result.Failure(ProficiencyLevelErrors.InvalidName);
 
-		Code = code;
 		Name = name;
 		JapaneseName = japaneseName;
 		SortOrder = sortOrder;
 		Description = description;
+		IsActive = isActive;
 		UpdatedAt = updatedAt;
+
 		return Result.Success();
 	}
 

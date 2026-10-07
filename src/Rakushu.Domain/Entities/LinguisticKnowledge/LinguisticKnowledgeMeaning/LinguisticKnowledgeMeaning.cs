@@ -1,5 +1,4 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.LinguisticKnowledge;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +10,9 @@ namespace Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgeMeaning
 public sealed class LinguisticKnowledgeMeaning : Entity<LinguisticKnowledgeMeaningId>
 {
 	public int SortOrder { get; private set; }
+	public string Meaning { get; private set; } = null!;
+	public string? Description { get; private set; }
 	public LinguisticKnowledgeId LinguisticKnowledgeId { get; private set; } = null!;
-	public string UniversalMeaning { get; private set; } = null!;
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -30,14 +30,16 @@ public sealed class LinguisticKnowledgeMeaning : Entity<LinguisticKnowledgeMeani
 		LinguisticKnowledgeMeaningId id,
 		LinguisticKnowledgeId linguisticKnowledgeId,
 		int sortOrder,
-		string universalMeaning,
+		string meaning,
+		string? description,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt)
 		: base(id)
 	{
 		LinguisticKnowledgeId = linguisticKnowledgeId;
+		Meaning = meaning;
+		Description = description;
 		SortOrder = sortOrder;
-		UniversalMeaning = universalMeaning;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 	}

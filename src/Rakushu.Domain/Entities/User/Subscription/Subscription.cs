@@ -1,5 +1,7 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Plan;
 using System;
 using System.Collections.Generic;
@@ -12,15 +14,18 @@ namespace Rakushu.Domain.Entities.User.Subscription;
 public sealed class Subscription : Entity<SubscriptionId>
 {
 	public UserId UserId { get; private set; } = null!;
+	public PaymentId? PaymentId { get; private set; } = null!;
 	public PlanId PlanId { get; private set; } = null!;
-	public DateTimeOffset StartDate { get; private set; }
 	public SubscriptionStatus Status { get; private set; }
-	public DateTimeOffset CreatedAt { get; private set; }
-	public DateTimeOffset UpdatedAt { get; private set; }
+	public DateTimeOffset StartAt { get; private set; }
+	public DateTimeOffset EndAt { get; private set; }
 
-	// MAVOGATION PROPERTIES
+	// NAVIGATION PROPERTIES
 	// User
 	public User User { get; private set; } = null!;
+
+	// Payment
+	public Payment.Payment? Payment { get; private set; }
 
 	// Plan
 	public Plan.Plan Plan { get; private set; } = null!;
@@ -35,39 +40,97 @@ public sealed class Subscription : Entity<SubscriptionId>
 		SubscriptionId subscriptionId,
 		UserId userId,
 		PlanId planId,
-		DateTimeOffset startDate,
 		SubscriptionStatus status,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt
+		DateTimeOffset startAt,
+		DateTimeOffset endAt,
+		PaymentId? paymentId = null
 		) : base(subscriptionId)
 	{
 		UserId = userId;
+		PaymentId = paymentId;
 		PlanId = planId;
-		StartDate = startDate;
 		Status = status;
-		CreatedAt = createdAt;
-		UpdatedAt = updatedAt;
+		StartAt = startAt;
+		EndAt = endAt;
 	}
 
 	public static Result<Subscription> Create(
 		UserId userId,
 		PlanId planId,
-		DateTimeOffset startDate,
 		SubscriptionStatus status,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt
+		DateTimeOffset startAt,
+		DateTimeOffset endAt,
+		PaymentId? paymentId = null
 		)
 	{
 		var subscription = new Subscription(
 			SubscriptionId.Create(),
 			userId,
 			planId,
-			startDate,
 			status,
-			createdAt,
-			updatedAt
+			startAt,
+			endAt,
+			paymentId
 			);
 
 		return Result.Success(subscription);
+	}
+
+	public Result<SubscriptionUsage.SubscriptionUsage> AddUsage(
+		FeatureId featureId,
+		DateTimeOffset periodStart,
+		DateTimeOffset periodEnd,
+		int maxValue,
+		int usedValue,
+		bool isOverLimit,
+		bool isExpired,
+		bool isCanceled,
+		DateTimeOffset now
+		)
+	{
+		var usageResult = SubscriptionUsage.SubscriptionUsage.Create(
+			Id,
+			featureId,
+			periodStart,
+			periodEnd,
+			maxValue,
+			usedValue,
+			isOverLimit,
+			isExpired,
+			isCanceled,
+			now,
+			now
+			);
+
+		if (usageResult.IsFailure)
+			return Result.Failure<SubscriptionUsage.SubscriptionUsage>(usageResult.Error);
+
+		var usage = usageResult.Value;
+
+		_subscriptionUsages.Add(usage);
+
+		return Result.Success(usage);
+	}
+
+	public Result Expire(DateTimeOffset now)
+	{
+		if (Status == SubscriptionStatus.Expired)
+			return Result.Failure(SubscriptionErrors.AlreadyExpired);
+
+		Status = SubscriptionStatus.Expired;
+		EndAt = now;
+
+		return Result.Success();
+	}
+
+	public Result Cancel(DateTimeOffset now)
+	{
+		if (Status == SubscriptionStatus.Canceled)
+			return Result.Failure(SubscriptionErrors.AlreadyCanceled);
+
+		Status = SubscriptionStatus.Canceled;
+		EndAt = now;
+
+		return Result.Success();
 	}
 }

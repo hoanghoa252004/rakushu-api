@@ -5,7 +5,6 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Role;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.ValueObjects.Email;
 
 namespace Rakushu.Application.Usecases.Authentication.Register;
 
@@ -14,7 +13,7 @@ internal sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result>
 	// DAOs
 	private readonly IUserRepository _userRepository;
 	private readonly IRoleRepository _roleRepository;
-	
+
 	// UNIT OF WORK
 	private readonly IUnitOfWork _unitOfWork;
 
@@ -55,36 +54,30 @@ internal sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result>
 			// 3. Find role LEARNER
 			var role = await _roleRepository.GetByCodeAsync(RoleCodes.Learner, cancellationToken);
 
-			// 4. Create User
-			var emailResult = Email.Create(request.Email);
+			var passwordHash = _passwordHasher.HashPassword(request.Password);
 
-					if (emailResult.IsFailure)
-						return emailResult;
+			var initialStatus = UserStatus.Unverified;
 
-					var passwordHash = _passwordHasher.HashPassword(request.Password);
+			var utcNow = _systemClock.UtcNow;
 
-					var initialStatus = UserStatus.Unverified;
+			var userResult = Rakushu.Domain.Entities.User.User.Create(
+				request.FullName,
+				request.Email.ToLower(),
+				passwordHash,
+				role!.Id,
+				initialStatus,
+				utcNow,
+				utcNow);
 
-					var utcNow = _systemClock.UtcNow;
-
-					var userResult = Rakushu.Domain.Entities.User.User.Create(
-						request.FullName,
-						emailResult.Value,
-						passwordHash,
-						role!.Id,
-						initialStatus,
-						utcNow,
-						utcNow);
-
-					if(userResult.IsFailure)
-					{
-						return userResult;
-					}
-
-					_userRepository.Add(userResult.Value);
-
-					await _unitOfWork.SaveChangesAsync();
-					return Result.Success();
-				}, cancellationToken);
+			if (userResult.IsFailure)
+			{
+				return userResult;
 			}
+
+			_userRepository.Add(userResult.Value);
+
+			await _unitOfWork.SaveChangesAsync();
+			return Result.Success();
+		}, cancellationToken);
+	}
 }

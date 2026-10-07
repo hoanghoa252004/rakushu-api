@@ -31,6 +31,7 @@ internal sealed class CreateUser : IEndpoint
 			})
 			// 2. Description
 			.WithName("CreateUser")
+			.WithSummary("Admin")
 			.WithDescription("Creates a new user account directly with specified Role and default status = Inactive.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))

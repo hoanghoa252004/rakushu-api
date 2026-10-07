@@ -22,6 +22,7 @@ internal sealed class CreateFeature : IEndpoint
 				var command = new CreateFeatureCommand(
 					dto.Code,
 					dto.Name,
+					dto.IsActive,
 					dto.Description
 				);
 
@@ -31,6 +32,7 @@ internal sealed class CreateFeature : IEndpoint
 			})
 			// 2. Description
 			.WithName("CreateFeature")
+			.WithSummary("Admin")
 			.WithDescription("Creates a new feature with the specified details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
@@ -43,8 +45,9 @@ internal sealed class CreateFeature : IEndpoint
 }
 
 internal sealed record CreateFeatureRequestDto(
-	string Code = "AI_CHAT",
-	string Name = "AI Chat Feature",
+	string Code,
+	string Name,
+	bool IsActive,
 	string? Description = null
 );
 

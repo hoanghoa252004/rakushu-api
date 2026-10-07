@@ -36,7 +36,12 @@ internal sealed class DeleteUserHandler : IRequestHandler<DeleteUserCommand, Res
 
 			if (user.Role.Code == RoleCodes.SystemAdministrator)
 			{
-				return Result.Failure<UserDetailDto>(UserErrors.UnauthorizedResourceAccess);
+				return Result.Failure(UserErrors.UnauthorizedResourceAccess);
+			}
+
+			if(user.Status != UserStatus.Unverified || user.Role.Code == RoleCodes.SystemAdministrator)
+			{
+				return Result.Failure(UserErrors.CannotBeDeleted);
 			}
 
 			_userRepository.Delete(user);

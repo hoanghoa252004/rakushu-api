@@ -23,9 +23,11 @@ internal sealed class UpdatePlan : IEndpoint
 				var command = new UpdatePlanCommand(
 					id,
 					dto.Name,
+					dto.JapaneseName,
 					dto.Price,
 					dto.Currency,
 					dto.BillingCycle,
+					dto.IsActive,
 					dto.Description
 				);
 
@@ -35,6 +37,7 @@ internal sealed class UpdatePlan : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdatePlan")
+			.WithSummary("Admin")
 			.WithDescription("Updates an existing plan with the provided details.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
@@ -48,8 +51,10 @@ internal sealed class UpdatePlan : IEndpoint
 
 internal sealed record UpdatePlanRequestDto(
 	string Name,
+	string JapaneseName,
 	decimal Price,
 	string Currency,
 	string BillingCycle,
+	bool IsActive,
 	string? Description = null
 );

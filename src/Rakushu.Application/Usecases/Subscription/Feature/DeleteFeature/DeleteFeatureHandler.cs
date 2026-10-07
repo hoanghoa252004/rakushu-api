@@ -1,5 +1,4 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Feature;
@@ -26,28 +25,18 @@ internal sealed class DeleteFeatureHandler : IRequestHandler<DeleteFeatureComman
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var feature = await _featureRepository.GetByIdAsync(
-				FeatureId.From(request.FeatureId),
-				cancellationToken);
+			var id = FeatureId.From(request.FeatureId);
+
+			var feature = await _featureRepository.GetByIdAsync(id, cancellationToken);
 
 			if (feature is null)
 			{
 				return Result.Failure(FeatureErrors.NotFound);
 			}
 
-			if(feature.Status != FeatureStatus.Draft) // if not draft then continue to check
+			if (feature.Entitlements.Any() || feature.SubscriptionUsages.Any())
 			{
-				// Check if feature has subscription usage
-				if (feature.SubscriptionUsages.Any() == true)
-				{
-					return Result.Failure(FeatureErrors.CannotDeleteFeatureWithSubscriptionUsage);
-				}
-
-				// Check if feature has attached to any plan
-				if (feature.Entitlements.Any() == true)
-				{
-					return Result.Failure(FeatureErrors.CannotDeleteFeatureHasBeenAtachedToAPlan);
-				}
+				return Result.Failure(FeatureErrors.CannotDeleteFeatureHasBeenAtachedToAPlan);
 			}
 
 			_featureRepository.Delete(feature);

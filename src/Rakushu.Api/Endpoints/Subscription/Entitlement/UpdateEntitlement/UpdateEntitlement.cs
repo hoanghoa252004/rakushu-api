@@ -25,9 +25,10 @@ internal sealed class UpdateEntitlement : IEndpoint
 					planId,
 					id,
 					dto.IsEnabled,
-					dto.LimitValue,
 					dto.LimitUnit,
+					dto.LimitValue,
 					dto.LimitPeriod
+					
 				);
 
 				var result = await sender.Send(command, cancellationToken);
@@ -36,6 +37,7 @@ internal sealed class UpdateEntitlement : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdateEntitlement")
+			.WithSummary("Admin")
 			.WithDescription("Updates a feature entitlement for the specified subscription plan.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
@@ -49,8 +51,8 @@ internal sealed class UpdateEntitlement : IEndpoint
 }
 
 internal sealed record UpdateEntitlementRequestDto(
-	bool IsEnabled = true,
-	int LimitValue = 200,
-	string LimitUnit = "Request",
-	string LimitPeriod = "Month"
+	bool IsEnabled,
+	string LimitUnit,
+	int LimitValue,
+	string LimitPeriod
 );

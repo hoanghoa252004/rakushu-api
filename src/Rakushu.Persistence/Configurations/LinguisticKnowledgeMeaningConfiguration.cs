@@ -31,10 +31,13 @@ internal sealed class LinguisticKnowledgeMeaningConfiguration : IEntityTypeConfi
 		builder.Property(km => km.SortOrder)
 			.IsRequired();
 
-		// UniversalMeaning
-		builder.Property(km => km.UniversalMeaning)
-			.HasMaxLength(500)
+		// Meaning
+		builder.Property(km => km.Meaning)
+			.HasMaxLength(100)
 			.IsRequired();
+
+		// Description
+		builder.Property(km => km.Description);
 
 		// CreatedAt
 		builder.Property(km => km.CreatedAt)

@@ -20,6 +20,8 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 		builder.Property(s => s.Code)
 			.HasMaxLength(30)
 			.IsRequired();
+		builder.HasIndex(s => s.Code)
+			.IsUnique();
 
 		// VideoId
 		builder.Property(s => s.VideoId)

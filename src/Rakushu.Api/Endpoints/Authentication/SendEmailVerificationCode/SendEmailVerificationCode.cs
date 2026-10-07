@@ -26,6 +26,7 @@ internal sealed class SendEmailVerificationCode : IEndpoint
 			})
 			// 2.Description
 			.WithName("SendEmailVerificationCode")
+			.WithSummary("Allow Anonymous")
 			.WithDescription("Create a hash code then send to user email to confirm.")
 			// 3. Authentication & Authorization
 			.AllowAnonymous()

@@ -8,9 +8,8 @@ internal static class ProficiencyLevelEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapProficiencyLevelEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/proficiency-levels")
+		return app.MapGroup("/api/proficiency-levels")
 			.WithTags("ProficiencyLevel")
-			.WithGroupName("admin")
-			.AllowAnonymous();
+			.WithGroupName("linguistic");
 	}
 }

@@ -6,10 +6,11 @@ using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Linguistic.JapanesePartOfSpeech.Create;
+using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Api.Endpoints.Linguistic.JapanesePartOfSpeech.Create;
 
-internal sealed class CreateJapanesePartOfSpeechEndpoint : IEndpoint
+internal sealed class CreateJapanesePartOfSpeech : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
@@ -29,8 +30,12 @@ internal sealed class CreateJapanesePartOfSpeechEndpoint : IEndpoint
 				return result.MatchCreated("GetJapanesePartOfSpeechById", id => new { id });
 			})
 			.WithName("CreateJapanesePartOfSpeech")
+			.WithSummary("Admin")
 			.WithDescription("Creates a new Japanese part of speech with Vietnamese and Japanese names.")
-			.Produces(StatusCodes.Status201Created)
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			// 4. Response
+			.Produces<Guid>(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
