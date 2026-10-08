@@ -8,9 +8,8 @@ internal static class UniversalPartOfSpeechEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapUniversalPartOfSpeechEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/universal-part-of-speech")
+		return app.MapGroup("/api/universal-part-of-speech")
 			.WithTags("UniversalPartOfSpeech")
-			.WithGroupName("admin")
-			.AllowAnonymous();
+			.WithGroupName("linguistic");
 	}
 }
