@@ -5,7 +5,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Update;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.Update;
+namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.UpdateDependencyRelationship;
 
 internal sealed class UpdateDependencyRelationship : IEndpoint
 {

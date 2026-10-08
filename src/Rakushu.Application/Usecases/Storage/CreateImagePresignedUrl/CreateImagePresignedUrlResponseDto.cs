@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Application.Usecases.Storage;
+namespace Rakushu.Application.Usecases.Storage.CreateImagePresignedUrl;
 
-public sealed record CreatePresignedUrlResponseDto(
+public sealed record CreateImagePresignedUrlResponseDto(
 	string Key,
 	string PresignUrl
 	);

@@ -3,7 +3,7 @@ using Rakushu.Api.Common;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.GetAll;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetAll;
+namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetAllDependencyRelationships;
 
 internal sealed class GetAllDependencyRelationshipsEndpoint : IEndpoint
 {

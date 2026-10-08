@@ -8,7 +8,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Delete;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.Delete;
+namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.DeleteDependencyRelationship;
 
 internal sealed class DeleteDependencyRelationship : IEndpoint
 {

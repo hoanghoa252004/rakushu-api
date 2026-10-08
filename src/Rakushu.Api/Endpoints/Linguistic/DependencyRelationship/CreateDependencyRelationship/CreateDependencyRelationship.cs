@@ -8,7 +8,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Create;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.Create;
+namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.CreateDependencyRelationship;
 
 internal sealed class CreateDependencyRelationship : IEndpoint
 {
