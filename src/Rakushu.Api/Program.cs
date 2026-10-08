@@ -26,6 +26,9 @@ var app = builder.Build();
 /// USE GLOBAL EXCEPTION MIDDLEWARE:
 app.UseExceptionHandler();
 
+/// CORS:
+app.UseCors("Frontend");
+
 /// USE SWAGGER DOCS:
 app.UseSwaggerDocs();
 

@@ -37,6 +37,20 @@ public static class EndpointExtention
 				new JsonStringEnumConverter());
 		});
 
+		services.AddCors(options =>
+		{
+			options.AddPolicy("Frontend", policy =>
+			{
+				policy
+					.WithOrigins(
+						"http://localhost:5500",
+						"https://fptu-rakushu.com"
+					)
+					.AllowAnyHeader()
+					.AllowAnyMethod();
+			});
+		});
+
 		return services;
 	}
 }
