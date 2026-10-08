@@ -43,7 +43,7 @@ public static class EndpointExtention
 			{
 				policy
 					.WithOrigins(
-						"http://localhost:5500",
+						"http://localhost:3000",
 						"https://fptu-rakushu.com"
 					)
 					.AllowAnyHeader()
