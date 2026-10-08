@@ -19,4 +19,8 @@
     <ProjectReference Include="..\Rakushu.Domain\Rakushu.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Usecases\Storage\Videos\" />
+  </ItemGroup>
+
 </Project>

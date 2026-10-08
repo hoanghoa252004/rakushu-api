@@ -7,7 +7,7 @@ using Rakushu.Api.Common;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.GetById;
 using Rakushu.Domain.Entities.Role;
 
-namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetById;
+namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetDependencyRelationshipById;
 
 internal sealed class GetDependencyRelationshipById : IEndpoint
 {

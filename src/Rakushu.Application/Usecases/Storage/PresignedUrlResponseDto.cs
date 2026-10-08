@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Application.Usecases.Storage;
 
-public sealed record CreatePresignedUrlResponseDto(
+public sealed record PresignedUrlResponseDto(
 	string Key,
 	string PresignUrl
 	);

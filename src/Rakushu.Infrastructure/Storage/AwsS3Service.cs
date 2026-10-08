@@ -22,9 +22,8 @@ internal class AwsS3Service : IStorageService
 		_s3Settings = options.Value;
 	}
 
-	public async Task<(string Key, string PresignUrl)> CreatePresignedUrlAsync(string contentType, CancellationToken cancellationToken)
+	public async Task<string> CreateImagePresignedUrlAsync(string key, string contentType, CancellationToken cancellationToken)
 	{
-		var key = Guid.NewGuid().ToString();
 		var request = new GetPreSignedUrlRequest
 		{
 			BucketName = _s3Settings.BucketName,
@@ -36,7 +35,7 @@ internal class AwsS3Service : IStorageService
 
 		var presignUrl = await _s3.GetPreSignedURLAsync(request);
 
-		return (key, presignUrl) ;
+		return presignUrl;
 	}
 
 	public async Task<string> CreatePresignedReadUrlAsync(string key, CancellationToken cancellationToken)
