@@ -116,7 +116,7 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
-			//options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
+			options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
 			options.SwaggerEndpoint("/swagger/linguistic/swagger.json", "Linguistic API");
 			options.SwaggerEndpoint("/swagger/learning/swagger.json", "Learning API");
 			options.SwaggerEndpoint("/swagger/payment/swagger.json", "Payment API");
