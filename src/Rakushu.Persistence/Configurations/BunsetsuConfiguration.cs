@@ -42,13 +42,5 @@ internal sealed class BunsetsuConfiguration : IEntityTypeConfiguration<Bunsetsu>
 			.WithMany(ts => ts.Bunsetsu)
 			.HasForeignKey(b => b.TranscriptSegmentId)
 			.OnDelete(DeleteBehavior.Cascade);
-
-		// CreatedAt
-		builder.Property(b => b.CreatedAt)
-			.IsRequired();
-
-		// UpdatedAt
-		builder.Property(b => b.UpdatedAt)
-			.IsRequired();
 	}
 }

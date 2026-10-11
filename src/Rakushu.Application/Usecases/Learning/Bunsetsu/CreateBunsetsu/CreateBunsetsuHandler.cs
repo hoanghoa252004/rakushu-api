@@ -31,14 +31,11 @@ internal sealed class CreateBunsetsuHandler : IRequestHandler<CreateBunsetsuComm
 			if (segment is null)
 				return Result.Failure<Guid>(TranscriptSegmentErrors.NotFound);
 
-			var now = DateTimeOffset.UtcNow;
 			var result = segment.AddBunsetsu(
 				request.text,
 				request.startIndex,
 				request.endIndex,
-				request.sequence,
-				now,
-				now);
+				request.sequence);
 
 			if (result.IsFailure)
 				return Result.Failure<Guid>(result.Error);

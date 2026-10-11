@@ -18,8 +18,6 @@ public sealed class SubtitleSegment : Entity<SubtitleSegmentId>
 	public int Sequence { get; private set; }
 	public TimeSpan StartTime { get; private set; }
 	public TimeSpan EndTime { get; private set; }
-	public DateTimeOffset CreatedAt { get; private set; }
-	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// Subtitle
@@ -43,9 +41,7 @@ public sealed class SubtitleSegment : Entity<SubtitleSegmentId>
 		string translatedText,
 		TimeSpan startTime,
 		TimeSpan endTime,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 		: base(id)
 	{
 		SubtitleId = subtitleId;
@@ -55,7 +51,5 @@ public sealed class SubtitleSegment : Entity<SubtitleSegmentId>
 		StartTime = startTime;
 		EndTime = endTime;
 		Sequence = sequence;
-		CreatedAt = createdAt;
-		UpdatedAt = updatedAt;
 	}
 }

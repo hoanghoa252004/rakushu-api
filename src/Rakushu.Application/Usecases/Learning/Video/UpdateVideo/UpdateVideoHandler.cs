@@ -1,4 +1,5 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.ContentCategory;
@@ -11,11 +12,16 @@ internal sealed class UpdateVideoHandler : IRequestHandler<UpdateVideoCommand, R
 {
 	private readonly IVideoRepository _repository;
 	private readonly IUnitOfWork _unitOfWork;
+	private readonly ISystemClock _systemClock;
 
-	public UpdateVideoHandler(IVideoRepository repository, IUnitOfWork unitOfWork)
+	public UpdateVideoHandler(
+		IVideoRepository repository,
+		IUnitOfWork unitOfWork,
+		ISystemClock systemClock)
 	{
 		_repository = repository;
 		_unitOfWork = unitOfWork;
+		_systemClock = systemClock;
 	}
 
 	public async Task<Result> Handle(UpdateVideoCommand request, CancellationToken cancellationToken)
@@ -26,19 +32,14 @@ internal sealed class UpdateVideoHandler : IRequestHandler<UpdateVideoCommand, R
 			if (video is null)
 				return Result.Failure(VideoErrors.NotFound);
 
-			var now = DateTimeOffset.UtcNow;
-			var updateResult = video.Update(
-				request.slug,
-				request.title,
-				request.duration,
-				ContentCategoryId.From(request.contentCategoryId),
-				SeriesId.From(request.seriesId),
-				request.sortOrder,
-				request.sourceType,
-				request.status,
-				now,
-				request.description,
-				request.sourceUrl);
+			var now = _systemClock.UtcNow;
+			var updateResult = video.UpdateBasicInfo(
+				request.Title,
+				request.Description,
+				ContentCategoryId.From(request.ContentCategoryId),
+				request.SeriesId.HasValue ? SeriesId.From(request.SeriesId.Value) : null,
+				request.SortOrder,
+				now);
 
 			if (updateResult.IsFailure)
 				return updateResult;

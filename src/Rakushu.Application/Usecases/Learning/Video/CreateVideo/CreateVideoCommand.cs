@@ -6,15 +6,15 @@ using Rakushu.Domain.Entities.Video;
 namespace Rakushu.Application.Usecases.Learning.Video.CreateVideo;
 
 public sealed record CreateVideoCommand(
-	string slug,
-	string title,
-	string? description,
-	TimeSpan duration,
-	Guid contentCategoryId,
-	Guid seriesId,
-	int sortOrder,
-	VideoSource sourceType,
-	string? sourceUrl,
-	VideoStatus status,
-	Guid createdBy
+	string Slug,
+	string Title,
+	string? Description,
+	TimeSpan Duration,
+	Guid ContentCategoryId,
+	Guid? SeriesId,
+	int SortOrder,
+	VideoSource SourceType,
+	string? SourceUrl,
+	string StorageKeyOfVideo
 ) : IRequest<Result<Guid>>;
+

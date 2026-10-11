@@ -8,7 +8,7 @@ namespace Rakushu.Domain.Entities.Video;
 
 public enum VideoSource
 {
-	Curated = 1,
-	UploadedByLearner = 2,
-	ImportedFromExternal = 3
+	Curated = 1, // Video upload by Linguistic Curator
+	UploadedByLearner = 2, // Video upload by Learner
+	ImportedFromExternal = 3 // Video imported by Learner from external source (e.g., YouTube, Vimeo, etc.)
 }

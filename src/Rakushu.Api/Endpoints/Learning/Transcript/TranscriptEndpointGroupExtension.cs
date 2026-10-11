@@ -4,13 +4,12 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Rakushu.Api.Endpoints.Learning.Transcript;
 
-internal static class TranscriptEndpointGroupExtension
+internal static class TranscriptSegmentEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapTranscriptEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/transcripts")
+		return app.MapGroup("/api/videos/{videoId:guid}/transcript")
 			.WithTags("Transcript")
-			.WithGroupName("admin")
-			.AllowAnonymous();
+			.WithGroupName("learning");
 	}
 }

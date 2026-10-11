@@ -86,13 +86,5 @@ internal sealed class TokenConfiguration : IEntityTypeConfiguration<Token>
 		// Sequence
 		builder.Property(t => t.Sequence)
 			.IsRequired();
-
-		// CreatedAt
-		builder.Property(t => t.CreatedAt)
-			.IsRequired();
-
-		// UpdatedAt
-		builder.Property(t => t.UpdatedAt)
-			.IsRequired();
 	}
 }

@@ -12,8 +12,6 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	public TimeSpan StartTime { get; private set; }
 	public TimeSpan EndTime { get; private set; }
 	public TranscriptId TranscriptId { get; private set; } = null!;
-	public DateTimeOffset CreatedAt { get; private set; }
-	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// Transcript
@@ -39,9 +37,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		string text,
 		TimeSpan startTime,
 		TimeSpan endTime,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 		: base(id)
 	{
 		TranscriptId = transcriptId;
@@ -49,8 +45,6 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		StartTime = startTime;
 		EndTime = endTime;
 		Sequence = sequence;
-		CreatedAt = createdAt;
-		UpdatedAt = updatedAt;
 	}
 
 	public static Result<TranscriptSegment> Create(
@@ -58,9 +52,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		string text,
 		TimeSpan startTime,
 		TimeSpan endTime,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 	{
 		return Result.Success(new TranscriptSegment(
 			TranscriptSegmentId.Create(),
@@ -68,9 +60,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 			text,
 			startTime,
 			endTime,
-			sequence,
-			createdAt,
-			updatedAt));
+			sequence));
 	}
 
 	public Result Update(
@@ -84,7 +74,6 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		StartTime = startTime;
 		EndTime = endTime;
 		Sequence = sequence;
-		UpdatedAt = updatedAt;
 		return Result.Success();
 	}
 
@@ -92,24 +81,19 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		string text,
 		int startIndex,
 		int endIndex,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 	{
 		var result = LearningUnit.Bunsetsu.Bunsetsu.Create(
 			Id,
 			text,
 			startIndex,
 			endIndex,
-			sequence,
-			createdAt,
-			updatedAt);
+			sequence);
 
 		if (result.IsFailure)
 			return result;
 
 		_bunsetsu.Add(result.Value);
-		UpdatedAt = updatedAt;
 		return result;
 	}
 
@@ -120,7 +104,21 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 			return Result.Failure(LearningUnit.Bunsetsu.BunsetsuErrors.NotFound);
 
 		_bunsetsu.Remove(item);
-		UpdatedAt = DateTimeOffset.UtcNow;
 		return Result.Success();
+	}
+
+	internal void SetSequence(int newSequence)
+	{
+		Sequence = newSequence;
+	}
+
+	internal void IncrementSequence()
+	{
+		Sequence++;
+	}
+
+	internal void DecrementSequence()
+	{
+		Sequence--;
 	}
 }

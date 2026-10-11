@@ -13,7 +13,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	public string? Description { get; private set; }
 	public TimeSpan Duration { get; private set; }
 	public ContentCategoryId ContentCategoryId { get; private set; } = null!;
-	public SeriesId SeriesId { get; private set; } = null!;
+	public SeriesId? SeriesId { get; private set; } = null!;
 	public int SortOrder { get; private set; }
 	public VideoSource SourceType { get; private set; }
 	public string? SourceUrl { get; private set; }
@@ -33,7 +33,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	public Transcript.Transcript Transcript { get; private set; } = null!;
 
 	// Serie
-	public Series.Series Series { get; private set; } = null!;
+	public Series.Series? Series { get; private set; } = null!;
 
 	// MediaAssets
 	private readonly List<MediaAsset.MediaAsset> _mediaAssets = new();
@@ -52,7 +52,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		string title,
 		TimeSpan duration,
 		ContentCategoryId contentCategoryId,
-		SeriesId seriesId,
+		SeriesId? seriesId,
 		int sortOrder,
 		VideoSource sourceType,
 		VideoStatus status,
@@ -82,7 +82,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		string title,
 		TimeSpan duration,
 		ContentCategoryId contentCategoryId,
-		SeriesId seriesId,
+		SeriesId? seriesId,
 		int sortOrder,
 		VideoSource sourceType,
 		VideoStatus status,
@@ -120,7 +120,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		string title,
 		TimeSpan duration,
 		ContentCategoryId contentCategoryId,
-		SeriesId seriesId,
+		SeriesId? seriesId,
 		int sortOrder,
 		VideoSource sourceType,
 		VideoStatus status,
@@ -146,6 +146,37 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		SourceUrl = sourceUrl;
 		UpdatedAt = updatedAt;
 
+		return Result.Success();
+	}
+
+	public Result UpdateBasicInfo(
+		string title,
+		string? description,
+		ContentCategoryId contentCategoryId,
+		SeriesId? seriesId,
+		int sortOrder,
+		DateTimeOffset updatedAt)
+	{
+		if (string.IsNullOrWhiteSpace(title))
+			return Result.Failure(VideoErrors.InvalidTitle);
+
+		Title = title;
+		Description = description;
+		ContentCategoryId = contentCategoryId;
+		SeriesId = seriesId;
+		SortOrder = sortOrder;
+		UpdatedAt = updatedAt;
+
+		return Result.Success();
+	}
+
+	public Result UpdateStatus(VideoStatus newStatus)
+	{
+		if (!VideoStatusTransition.IsAllowed(Status, newStatus))
+			return Result.Failure(VideoErrors.InvalidStatusTransition);
+
+		Status = newStatus;
+		UpdatedAt = DateTimeOffset.UtcNow;
 		return Result.Success();
 	}
 

@@ -8,9 +8,8 @@ internal static class VideoEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapVideoEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/videos")
+		return app.MapGroup("/api/videos")
 			.WithTags("Video")
-			.WithGroupName("admin")
-			.AllowAnonymous();
+			.WithGroupName("learning");
 	}
 }

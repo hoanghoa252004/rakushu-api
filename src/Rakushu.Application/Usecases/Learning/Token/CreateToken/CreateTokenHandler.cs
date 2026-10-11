@@ -37,7 +37,6 @@ internal sealed class CreateTokenHandler : IRequestHandler<CreateTokenCommand, R
 			if (bunsetsu is null)
 				return Result.Failure<Guid>(BunsetsuErrors.NotFound);
 
-			var now = DateTimeOffset.UtcNow;
 			var result = bunsetsu.AddToken(
 				request.surface,
 				request.lemma,
@@ -47,9 +46,7 @@ internal sealed class CreateTokenHandler : IRequestHandler<CreateTokenCommand, R
 				DependencyRelationshipId.From(request.dependencyRelationshipId),
 				request.startIndex,
 				request.endIndex,
-				request.sequence,
-				now,
-				now);
+				request.sequence);
 
 			if (result.IsFailure)
 				return Result.Failure<Guid>(result.Error);

@@ -18,7 +18,6 @@ public sealed class ContentCategoryRepository : BaseRepository<ContentCategory, 
 	{
 		return await _context.ContentCategories
 			.Include(c => c.Videos)
-			.Include(c => c.Series)
 			.Include(c => c.Interests)
 			.Include(c => c.ContentProcessingPolicies)
 			.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);

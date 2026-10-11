@@ -15,15 +15,11 @@ public sealed class Series : AggregateRoot<SeriesId>
 	public string? Description { get; private set; }
 	public int DisplayOrder { get; private set; }
 	public SeriesSource SourceType { get; private set; }
-	public ContentCategoryId ContentCategoryId { get; private set; } = null!;
 	public bool IsActive { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
-	// ContentCategory:
-	public ContentCategory.ContentCategory ContentCategory { get; private set; } = null!;
-
 	// Videos:
 	private readonly List<Video.Video> _videos = new();
 	public IReadOnlyCollection<Video.Video> Videos => _videos.AsReadOnly();
@@ -37,7 +33,6 @@ public sealed class Series : AggregateRoot<SeriesId>
 		string name,
 		int displayOrder,
 		SeriesSource sourceType,
-		ContentCategoryId contentCategoryId,
 		bool isActive,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
@@ -48,11 +43,42 @@ public sealed class Series : AggregateRoot<SeriesId>
 		Name = name;
 		DisplayOrder = displayOrder;
 		SourceType = sourceType;
-		ContentCategoryId = contentCategoryId;
 		Description = description;
 		IsActive = isActive;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 	}
 
+	public static Series Create(
+		string slug,
+		string name,
+		int displayOrder,
+		SeriesSource sourceType,
+		string? description = null)
+	{
+		var now = DateTimeOffset.UtcNow;
+		return new Series(
+			SeriesId.Create(),
+			slug,
+			name,
+			displayOrder,
+			sourceType,
+			isActive: true,
+			now,
+			now,
+			description);
+	}
+
+	public void Update(
+		string name,
+		string? description,
+		int displayOrder,
+		bool isActive)
+	{
+		Name = name;
+		Description = description;
+		DisplayOrder = displayOrder;
+		IsActive = isActive;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
 }

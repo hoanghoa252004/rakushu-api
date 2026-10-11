@@ -11,9 +11,6 @@ public sealed class Subtitle : Entity<SubtitleId>
 {
 	public string Code { get; private set; } = null!;
 	public VideoId VideoId { get; private set; } = null!;
-	public SubtitleSource SourceType { get; private set; }
-	public string? StorageKey { get; private set; }
-	public SubtitleStatus Status { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -36,8 +33,6 @@ public sealed class Subtitle : Entity<SubtitleId>
 		SubtitleId id,
 		string code,
 		VideoId videoId,
-		SubtitleSource sourceType,
-		SubtitleStatus status,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
 		string? storageKey = null)
@@ -45,9 +40,6 @@ public sealed class Subtitle : Entity<SubtitleId>
 	{
 		Code = code;
 		VideoId = videoId;
-		SourceType = sourceType;
-		Status = status;
-		StorageKey = storageKey;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 	}

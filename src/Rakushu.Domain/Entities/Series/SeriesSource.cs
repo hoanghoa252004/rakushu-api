@@ -9,5 +9,5 @@ namespace Rakushu.Domain.Entities.Series;
 public enum SeriesSource
 {
 	Curated = 0,
-	CreatedByLearner = 1
+	Learner = 1
 }

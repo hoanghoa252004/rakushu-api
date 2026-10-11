@@ -34,22 +34,6 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 			.HasForeignKey(s => s.VideoId)
 			.OnDelete(DeleteBehavior.Cascade);
 
-		// SourceType
-		builder.Property(s => s.SourceType)
-			.HasMaxLength(30)
-			.HasConversion<string>()
-			.IsRequired();
-
-		// StorageKey
-		builder.Property(s => s.StorageKey)
-			.HasMaxLength(500);
-
-		// Status
-		builder.Property(s => s.Status)
-			.HasMaxLength(30)
-			.HasConversion<string>()
-			.IsRequired();
-
 		// CreatedAt
 		builder.Property(s => s.CreatedAt)
 			.IsRequired();

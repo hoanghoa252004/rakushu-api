@@ -30,10 +30,6 @@ public sealed partial class ContentCategory : AggregateRoot<ContentCategoryId>
 	private readonly List<Video.Video> _videos = new();
 	public IReadOnlyCollection<Video.Video> Videos => _videos.AsReadOnly();
 
-	// Series:
-	private readonly List<Series.Series> _series = new();
-	public IReadOnlyCollection<Series.Series> Series => _series.AsReadOnly();
-
 	// CONSTRUCTORS & FACTORY METHODS----------
 	private ContentCategory() { }
 

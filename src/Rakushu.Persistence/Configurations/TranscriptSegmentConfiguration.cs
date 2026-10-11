@@ -44,13 +44,5 @@ internal sealed class TranscriptSegmentConfiguration : IEntityTypeConfiguration<
 			.WithMany(t => t.TranscriptSegments)
 			.HasForeignKey(ts => ts.TranscriptId)
 			.OnDelete(DeleteBehavior.Cascade);
-
-		// CreatedAt
-		builder.Property(ts => ts.CreatedAt)
-			.IsRequired();
-
-		// UpdatedAt
-		builder.Property(ts => ts.UpdatedAt)
-			.IsRequired();
 	}
 }

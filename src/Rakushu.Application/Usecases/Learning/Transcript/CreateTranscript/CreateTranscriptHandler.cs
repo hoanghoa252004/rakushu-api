@@ -3,10 +3,11 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Video;
 using Rakushu.Domain.Entities.Video.Transcript;
+using TranscriptEntity = Rakushu.Domain.Entities.Video.Transcript.Transcript;
 
 namespace Rakushu.Application.Usecases.Learning.Transcript.CreateTranscript;
 
-internal sealed class CreateTranscriptHandler : IRequestHandler<CreateTranscriptCommand, Result<Guid>>
+internal sealed class CreateTranscriptHandler : IRequestHandler<CreateTranscriptCommand, Result>
 {
 	private readonly IVideoRepository _videoRepository;
 	private readonly IUnitOfWork _unitOfWork;
@@ -17,26 +18,40 @@ internal sealed class CreateTranscriptHandler : IRequestHandler<CreateTranscript
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<Result<Guid>> Handle(CreateTranscriptCommand request, CancellationToken cancellationToken)
+	public async Task<Result> Handle(
+		CreateTranscriptCommand request,
+		CancellationToken cancellationToken)
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var video = await _videoRepository.GetByIdAsync(VideoId.From(request.videoId), cancellationToken);
+			// Get video
+			var video = await _videoRepository.GetByIdAsync(VideoId.From(request.VideoId), cancellationToken);
 			if (video is null)
-				return Result.Failure<Guid>(VideoErrors.NotFound);
+				return Result.Failure(VideoErrors.NotFound);
 
-			var now = DateTimeOffset.UtcNow;
-			var transcriptResult = Domain.Entities.Video.Transcript.Transcript.Create(
+			// Check if video already has a transcript
+			if (video.Transcript is not null)
+				return Result.Failure<TranscriptDto>(TranscriptErrors.AlreadyExists);
+
+			// Create transcript with Official source
+			var transcriptResult = TranscriptEntity.Create(
 				video.Id,
-				request.fullText,
-				now,
-				now);
+				request.FullText,
+				DateTimeOffset.UtcNow,
+				DateTimeOffset.UtcNow);
 
 			if (transcriptResult.IsFailure)
-				return Result.Failure<Guid>(transcriptResult.Error);
+				return Result.Failure(transcriptResult.Error);
 
-			video.SetTranscript(transcriptResult.Value);
-			return Result.Success(transcriptResult.Value.Id.Value);
+			var transcript = transcriptResult.Value;
+
+			// Set storage key for Official source
+			transcript.SetStorageKey(request.StorageKey);
+
+			// Assign transcript to video
+			video.SetTranscript(transcript);
+
+			return Result.Success();
 		}, cancellationToken);
 	}
 }

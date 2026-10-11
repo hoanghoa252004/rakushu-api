@@ -20,6 +20,7 @@ using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Application.Abstractions.Persistence.Queries;
+using Rakushu.Domain.Entities.Series;
 
 namespace Rakushu.Persistence.Extensions;
 
@@ -58,6 +59,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IUniversalPartOfSpeechRepository, UniversalPartOfSpeechRepository>();
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
+		services.AddScoped<ISeriesRepository, SeriesRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();

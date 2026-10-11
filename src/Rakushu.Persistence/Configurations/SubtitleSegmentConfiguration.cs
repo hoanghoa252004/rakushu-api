@@ -60,13 +60,5 @@ internal sealed class SubtitleSegmentConfiguration : IEntityTypeConfiguration<Su
 		// EndTime
 		builder.Property(si => si.EndTime)
 			.IsRequired();
-
-		// CreatedAt
-		builder.Property(si => si.CreatedAt)
-			.IsRequired();
-
-		// UpdatedAt
-		builder.Property(si => si.UpdatedAt)
-			.IsRequired();
 	}
 }

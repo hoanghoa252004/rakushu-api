@@ -42,17 +42,6 @@ internal sealed class SeriesConfiguration : IEntityTypeConfiguration<Series>
 			.HasConversion<string>()
 			.IsRequired();
 
-		// ContentCategoryId
-		builder.Property(s => s.ContentCategoryId)
-			.HasConversion(
-				id => id.Value,
-				value => ContentCategoryId.From(value))
-			.IsRequired();
-		builder.HasOne(s => s.ContentCategory)
-			.WithMany(ct => ct.Series)
-			.HasForeignKey(s => s.ContentCategoryId)
-			.OnDelete(DeleteBehavior.Restrict);
-
 		// IsActive
 		builder.Property(s => s.IsActive)
 			.IsRequired();

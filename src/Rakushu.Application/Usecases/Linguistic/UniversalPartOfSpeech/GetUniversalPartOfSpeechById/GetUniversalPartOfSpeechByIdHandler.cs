@@ -1,5 +1,4 @@
 using MediatR;
-using Rakushu.Application.Usecases.Linguistic.UniversalPartOfSpeech;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
@@ -17,6 +16,16 @@ internal sealed class GetUniversalPartOfSpeechByIdHandler : IRequestHandler<GetU
 
 	public async Task<Result<UniversalPartOfSpeechDto>> Handle(GetUniversalPartOfSpeechByIdQuery request, CancellationToken cancellationToken)
 	{
-		return Result.Success(new UniversalPartOfSpeechDto());
+		var item = await _repository.GetByIdAsync(UniversalPartOfSpeechId.From(request.Id), cancellationToken);
+
+		if (item == null) return Result.Failure<UniversalPartOfSpeechDto>(Error.NotFound("UniversalPartOfSpeech.NOT_FOUND", "KO co thay ma oi"));
+
+		return Result.Success(new UniversalPartOfSpeechDto(
+			item.Id.Value,
+			item.Code,
+			item.Name,
+			item.JapaneseName,
+			item.Description
+			));
 	}
 }

@@ -6,4 +6,8 @@ public static class TranscriptSegmentErrors
 {
 	public static readonly Error NotFound = Error.NotFound(
 		"TRANSCRIPT_SEGMENT.NOT_FOUND", "The transcript segment was not found.");
+
+	public static readonly Error InvalidSequence = Error.Validation(
+		"TRANSCRIPT_SEGMENT.INVALID_SEQUENCE", "The sequence number is invalid for this transcript.");
 }
+

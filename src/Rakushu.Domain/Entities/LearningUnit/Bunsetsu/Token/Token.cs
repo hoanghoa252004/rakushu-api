@@ -18,8 +18,6 @@ public sealed partial class Token : Entity<TokenId>
 	public int StartIndex { get; private set; }
 	public int EndIndex { get; private set; }
 	public int Sequence { get; private set; }
-	public DateTimeOffset CreatedAt { get; private set; }
-	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// Bunsetsu
@@ -48,9 +46,7 @@ public sealed partial class Token : Entity<TokenId>
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
 		int endIndex,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 		: base(id)
 	{
 		BunsetsuId = bunsetsuId;
@@ -63,8 +59,6 @@ public sealed partial class Token : Entity<TokenId>
 		StartIndex = startIndex;
 		EndIndex = endIndex;
 		Sequence = sequence;
-		CreatedAt = createdAt;
-		UpdatedAt = updatedAt;
 	}
 
 	public static Result<Token> Create(
@@ -77,9 +71,7 @@ public sealed partial class Token : Entity<TokenId>
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
 		int endIndex,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 	{
 		return Result.Success(new Token(
 			TokenId.Create(),
@@ -92,33 +84,7 @@ public sealed partial class Token : Entity<TokenId>
 			dependencyRelationshipId,
 			startIndex,
 			endIndex,
-			sequence,
-			createdAt,
-			updatedAt));
+			sequence));
 	}
 
-	public Result Update(
-		string surface,
-		string lemma,
-		string reading,
-		JapanesePartOfSpeechId japanesePartOfSpeechId,
-		UniversalPartOfSpeechId universalPartOfSpeechId,
-		DependencyRelationshipId dependencyRelationshipId,
-		int startIndex,
-		int endIndex,
-		int sequence,
-		DateTimeOffset updatedAt)
-	{
-		Surface = surface;
-		Lemma = lemma;
-		Reading = reading;
-		JapanesePartOfSpeechId = japanesePartOfSpeechId;
-		UniversalPartOfSpeechId = universalPartOfSpeechId;
-		DependencyRelationshipId = dependencyRelationshipId;
-		StartIndex = startIndex;
-		EndIndex = endIndex;
-		Sequence = sequence;
-		UpdatedAt = updatedAt;
-		return Result.Success();
-	}
 }

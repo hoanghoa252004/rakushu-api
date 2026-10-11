@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.Series;
 
-internal interface ISeriesRepository
+public interface ISeriesRepository
 {
+	Task<Series?> GetByIdAsync(SeriesId id, CancellationToken cancellationToken = default);
+	Task<Series?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
+	Task<IEnumerable<Series>> GetAllAsync(CancellationToken cancellationToken = default);
+	void Add(Series series);
+	void Delete(Series series);
 }

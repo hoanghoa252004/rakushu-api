@@ -1,7 +1,5 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.BunsetsuDependencyRelationship;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
@@ -16,8 +14,6 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 	public int StartIndex { get; private set; }
 	public int EndIndex { get; private set; }
 	public TranscriptSegmentId TranscriptSegmentId { get; private set; } = null!;
-	public DateTimeOffset CreatedAt { get; private set; }
-	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// TranscriptSegment
@@ -44,9 +40,7 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 		string text,
 		int startIndex,
 		int endIndex,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 		: base(id)
 	{
 		TranscriptSegmentId = transcriptSegmentId;
@@ -54,8 +48,6 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 		StartIndex = startIndex;
 		EndIndex = endIndex;
 		Sequence = sequence;
-		CreatedAt = createdAt;
-		UpdatedAt = updatedAt;
 	}
 
 	public static Result<Bunsetsu> Create(
@@ -63,9 +55,7 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 		string text,
 		int startIndex,
 		int endIndex,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 	{
 		return Result.Success(new Bunsetsu(
 			BunsetsuId.Create(),
@@ -73,9 +63,7 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 			text,
 			startIndex,
 			endIndex,
-			sequence,
-			createdAt,
-			updatedAt));
+			sequence));
 	}
 
 	public Result Update(
@@ -89,7 +77,6 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 		StartIndex = startIndex;
 		EndIndex = endIndex;
 		Sequence = sequence;
-		UpdatedAt = updatedAt;
 		return Result.Success();
 	}
 
@@ -102,9 +89,7 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
 		int endIndex,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+		int sequence)
 	{
 		var result = Token.Token.Create(
 			Id,
@@ -116,26 +101,12 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 			dependencyRelationshipId,
 			startIndex,
 			endIndex,
-			sequence,
-			createdAt,
-			updatedAt);
+			sequence);
 
 		if (result.IsFailure)
 			return result;
 
 		_tokens.Add(result.Value);
-		UpdatedAt = updatedAt;
 		return result;
-	}
-
-	public Result RemoveToken(Token.TokenId tokenId)
-	{
-		var token = _tokens.FirstOrDefault(t => t.Id == tokenId);
-		if (token is null)
-			return Result.Failure(Token.TokenErrors.NotFound);
-
-		_tokens.Remove(token);
-		UpdatedAt = DateTimeOffset.UtcNow;
-		return Result.Success();
 	}
 }

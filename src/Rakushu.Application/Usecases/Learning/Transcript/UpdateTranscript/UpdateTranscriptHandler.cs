@@ -17,17 +17,31 @@ internal sealed class UpdateTranscriptHandler : IRequestHandler<UpdateTranscript
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<Result> Handle(UpdateTranscriptCommand request, CancellationToken cancellationToken)
+	public async Task<Result> Handle(
+		UpdateTranscriptCommand request,
+		CancellationToken cancellationToken)
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var transcriptId = TranscriptId.From(request.TranscriptId);
-			var video = await _videoRepository.GetByTranscriptIdAsync(transcriptId, cancellationToken);
-			if (video is null || video.Transcript is null)
+			// Get video
+			var video = await _videoRepository.GetByIdAsync(VideoId.From(request.VideoId), cancellationToken);
+			if (video is null)
+				return Result.Failure(VideoErrors.NotFound);
+
+			// Check if transcript exists
+			if (video.Transcript is null)
 				return Result.Failure(TranscriptErrors.NotFound);
 
-			var now = DateTimeOffset.UtcNow;
-			return video.Transcript.Update(request.fullText, now);
+			// Update transcript (FullText and StorageKey only)
+			var updateResult = video.Transcript.UpdateTranscript(
+				request.FullText,
+				request.StorageKey,
+				DateTimeOffset.UtcNow);
+
+			if (updateResult.IsFailure)
+				return Result.Failure(updateResult.Error);
+
+			return Result.Success();
 		}, cancellationToken);
 	}
 }

@@ -1,5 +1,6 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Video.Subtitle;
 
 namespace Rakushu.Domain.Entities.Video.Transcript;
 
@@ -7,6 +8,8 @@ public sealed partial class Transcript : Entity<TranscriptId>
 {
 	public VideoId VideoId { get; private set; } = null!;
 	public string FullText { get; private set; } = null!;
+	public TranscriptSource SourceType { get; private set; }
+	public string? StorageKey { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -56,6 +59,21 @@ public sealed partial class Transcript : Entity<TranscriptId>
 		return Result.Success();
 	}
 
+	public void SetStorageKey(string storageKey)
+	{
+		StorageKey = storageKey;
+		SourceType = TranscriptSource.Official;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public Result UpdateTranscript(string fullText, string storageKey, DateTimeOffset updatedAt)
+	{
+		FullText = fullText;
+		StorageKey = storageKey;
+		UpdatedAt = updatedAt;
+		return Result.Success();
+	}
+
 	public Result<TranscriptSegment.TranscriptSegment> AddSegment(
 		string text,
 		TimeSpan startTime,
@@ -69,9 +87,7 @@ public sealed partial class Transcript : Entity<TranscriptId>
 			text,
 			startTime,
 			endTime,
-			sequence,
-			createdAt,
-			updatedAt);
+			sequence);
 
 		if (segmentResult.IsFailure)
 			return segmentResult;
@@ -87,7 +103,67 @@ public sealed partial class Transcript : Entity<TranscriptId>
 		if (segment is null)
 			return Result.Failure(TranscriptSegment.TranscriptSegmentErrors.NotFound);
 
+		var removedSequence = segment.Sequence;
 		_transcriptSegments.Remove(segment);
+
+		// Reorder remaining segments after the removed one
+		var segmentsToReorder = _transcriptSegments
+			.Where(s => s.Sequence > removedSequence)
+			.OrderBy(s => s.Sequence)
+			.ToList();
+
+		foreach (var seg in segmentsToReorder)
+		{
+			seg.DecrementSequence();
+		}
+
+		UpdatedAt = DateTimeOffset.UtcNow;
+		return Result.Success();
+	}
+
+	public Result UpdateSegmentSequence(TranscriptSegment.TranscriptSegmentId segmentId, int newSequence)
+	{
+		var segment = _transcriptSegments.FirstOrDefault(s => s.Id == segmentId);
+		if (segment is null)
+			return Result.Failure(TranscriptSegment.TranscriptSegmentErrors.NotFound);
+
+		var oldSequence = segment.Sequence;
+		var maxSequence = _transcriptSegments.Count;
+
+		if (newSequence < 1 || newSequence > maxSequence)
+			return Result.Failure(TranscriptSegment.TranscriptSegmentErrors.InvalidSequence);
+
+		if (oldSequence == newSequence)
+			return Result.Success();
+
+		// If moving forward (higher sequence)
+		if (newSequence > oldSequence)
+		{
+			var segmentsToShift = _transcriptSegments
+				.Where(s => s.Sequence > oldSequence && s.Sequence <= newSequence)
+				.OrderBy(s => s.Sequence)
+				.ToList();
+
+			foreach (var seg in segmentsToShift)
+			{
+				seg.DecrementSequence();
+			}
+		}
+		// If moving backward (lower sequence)
+		else
+		{
+			var segmentsToShift = _transcriptSegments
+				.Where(s => s.Sequence >= newSequence && s.Sequence < oldSequence)
+				.OrderByDescending(s => s.Sequence)
+				.ToList();
+
+			foreach (var seg in segmentsToShift)
+			{
+				seg.IncrementSequence();
+			}
+		}
+
+		segment.SetSequence(newSequence);
 		UpdatedAt = DateTimeOffset.UtcNow;
 		return Result.Success();
 	}

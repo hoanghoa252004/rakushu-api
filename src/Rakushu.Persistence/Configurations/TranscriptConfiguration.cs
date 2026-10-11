@@ -29,6 +29,17 @@ internal sealed class TranscriptConfiguration : IEntityTypeConfiguration<Transcr
 		builder.HasIndex(t => t.VideoId)
 			.IsUnique();
 
+		// SourceType
+		builder.Property(v => v.SourceType)
+			.HasMaxLength(30)
+			.HasConversion<string>()
+			.IsRequired();
+
+		// StorageKey
+		builder.Property(m => m.StorageKey)
+			.HasMaxLength(500)
+			.IsRequired();
+
 		// FullText
 		builder.Property(t => t.FullText)
 			.IsRequired();
