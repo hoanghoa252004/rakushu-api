@@ -18,7 +18,6 @@ using Rakushu.Persistence.Repositories;
 using Rakushu.Domain.Entities.ProficiencyLevel;
 using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Entities.Series;
 
@@ -56,7 +55,6 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IContentCategoryRepository, ContentCategoryRepository>();
 		services.AddScoped<IVideoRepository, VideoRepository>();
 		services.AddScoped<IJapanesePartOfSpeechRepository, JapanesePartOfSpeechRepository>();
-		services.AddScoped<IUniversalPartOfSpeechRepository, UniversalPartOfSpeechRepository>();
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
 		services.AddScoped<ISeriesRepository, SeriesRepository>();

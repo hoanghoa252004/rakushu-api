@@ -2,7 +2,6 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
 
 namespace Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
@@ -85,7 +84,6 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 		string lemma,
 		string reading,
 		JapanesePartOfSpeechId japanesePartOfSpeechId,
-		UniversalPartOfSpeechId universalPartOfSpeechId,
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
 		int endIndex,
@@ -97,7 +95,6 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 			lemma,
 			reading,
 			japanesePartOfSpeechId,
-			universalPartOfSpeechId,
 			dependencyRelationshipId,
 			startIndex,
 			endIndex,

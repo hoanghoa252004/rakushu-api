@@ -2,7 +2,6 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 
 namespace Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
 
@@ -13,7 +12,6 @@ public sealed partial class Token : Entity<TokenId>
 	public string Lemma { get; private set; } = null!;
 	public string Reading { get; private set; } = null!;
 	public JapanesePartOfSpeechId JapanesePartOfSpeechId { get; private set; } = null!;
-	public UniversalPartOfSpeechId UniversalPartOfSpeechId { get; private set; } = null!;
 	public DependencyRelationshipId DependencyRelationshipId { get; private set; } = null!;
 	public int StartIndex { get; private set; }
 	public int EndIndex { get; private set; }
@@ -25,9 +23,6 @@ public sealed partial class Token : Entity<TokenId>
 
 	// JapanesePartOfSpeech
 	public JapanesePartOfSpeech JapanesePartOfSpeech { get; private set; } = null!;
-
-	// UniversalPartOfSpeech
-	public UniversalPartOfSpeech UniversalPartOfSpeech { get; private set; } = null!;
 
 	// DependencyRelationship
 	public DependencyRelationship DependencyRelationship { get; private set; } = null!;
@@ -42,7 +37,6 @@ public sealed partial class Token : Entity<TokenId>
 		string lemma,
 		string reading,
 		JapanesePartOfSpeechId japanesePartOfSpeechId,
-		UniversalPartOfSpeechId universalPartOfSpeechId,
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
 		int endIndex,
@@ -54,7 +48,6 @@ public sealed partial class Token : Entity<TokenId>
 		Lemma = lemma;
 		Reading = reading;
 		JapanesePartOfSpeechId = japanesePartOfSpeechId;
-		UniversalPartOfSpeechId = universalPartOfSpeechId;
 		DependencyRelationshipId = dependencyRelationshipId;
 		StartIndex = startIndex;
 		EndIndex = endIndex;
@@ -67,7 +60,6 @@ public sealed partial class Token : Entity<TokenId>
 		string lemma,
 		string reading,
 		JapanesePartOfSpeechId japanesePartOfSpeechId,
-		UniversalPartOfSpeechId universalPartOfSpeechId,
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
 		int endIndex,
@@ -80,7 +72,6 @@ public sealed partial class Token : Entity<TokenId>
 			lemma,
 			reading,
 			japanesePartOfSpeechId,
-			universalPartOfSpeechId,
 			dependencyRelationshipId,
 			startIndex,
 			endIndex,

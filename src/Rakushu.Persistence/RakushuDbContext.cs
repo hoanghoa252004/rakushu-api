@@ -14,7 +14,6 @@ using Rakushu.Domain.Entities.LinguisticKnowledge;
 using Rakushu.Domain.Entities.LinguisticKnowledge.LinguisticKnowledgeMeaning;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Payment;
 using Rakushu.Domain.Entities.Payment.Transaction;
 using Rakushu.Domain.Entities.Plan;
@@ -98,7 +97,6 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 
 	// Linguistic Metadata
 	public DbSet<JapanesePartOfSpeech> JapanesePartOfSpeeches => Set<JapanesePartOfSpeech>();
-	public DbSet<UniversalPartOfSpeech> UniversalPartOfSpeeches => Set<UniversalPartOfSpeech>();
 	public DbSet<DependencyRelationship> DependencyRelationships => Set<DependencyRelationship>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

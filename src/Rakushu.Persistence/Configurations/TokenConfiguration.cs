@@ -4,7 +4,6 @@ using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
 using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
 using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 
 namespace Rakushu.Persistence.Configurations;
 
@@ -51,17 +50,6 @@ internal sealed class TokenConfiguration : IEntityTypeConfiguration<Token>
 		builder.HasOne(t => t.JapanesePartOfSpeech)
 			.WithMany(jop => jop.Tokens)
 			.HasForeignKey(t => t.JapanesePartOfSpeechId)
-			.OnDelete(DeleteBehavior.Restrict);
-
-		// UniversalPartOfSpeech
-		builder.Property(t => t.UniversalPartOfSpeechId)
-			.HasConversion(
-				id => id.Value,
-				value => UniversalPartOfSpeechId.From(value))
-			.IsRequired();
-		builder.HasOne(t => t.UniversalPartOfSpeech)
-			.WithMany(up => up.Tokens)
-			.HasForeignKey(t => t.UniversalPartOfSpeechId)
 			.OnDelete(DeleteBehavior.Restrict);
 
 		// DependencyRelationship

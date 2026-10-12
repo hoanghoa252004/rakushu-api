@@ -1,13 +1,7 @@
 using Rakushu.Application.Common.Pagination;
-using Rakushu.Application.Usecases.Learning.Bunsetsu;
-using Rakushu.Application.Usecases.Learning.Token;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Common;
 using Rakushu.Application.Usecases.Linguistic.JapanesePartOfSpeech.Common;
-using Rakushu.Application.Usecases.Linguistic.UniversalPartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
 using Rakushu.Domain.Entities.Video.Transcript;
-using System.Xml.Linq;
 
 namespace Rakushu.Application.Usecases.Learning.Transcript;
 
@@ -82,7 +76,6 @@ public sealed record TokenDetailDto(
 	string Lemma,
 	string Reading,
 	JapanesePartOfSpeechDto JapanesePartOfSpeech,
-	UniversalPartOfSpeechDto UniversalPartOfSpeech,
 	DependencyRelationshipDto DependencyRelationship,
 	int StartIndex,
 	int EndIndex,
@@ -102,13 +95,6 @@ public sealed record TokenDetailDto(
 				JapaneseName= e.JapanesePartOfSpeech.JapaneseName,
 				Description = e.JapanesePartOfSpeech.Description
 			},
-			new UniversalPartOfSpeechDto(
-				e.UniversalPartOfSpeech.Id.Value,
-				e.UniversalPartOfSpeech.Code,
-				e.UniversalPartOfSpeech.Name,
-				e.UniversalPartOfSpeech.JapaneseName,
-				e.UniversalPartOfSpeech.Description
-				),
 			new DependencyRelationshipDto()
 			{
 				Id = e.DependencyRelationship.Id.Value,
