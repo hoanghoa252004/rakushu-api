@@ -1,6 +1,6 @@
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 namespace Rakushu.Application.Usecases.Linguistic.ProficiencyLevel.GetProficiencyLevelById;
 

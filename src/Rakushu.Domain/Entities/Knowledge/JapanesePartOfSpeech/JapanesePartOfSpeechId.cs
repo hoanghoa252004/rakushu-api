@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+namespace Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 
 public sealed class JapanesePartOfSpeechId : StronglyTypedId<Guid>
 {

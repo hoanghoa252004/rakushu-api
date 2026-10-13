@@ -14,6 +14,9 @@ internal sealed class TranscriptItemConfiguration : IEntityTypeConfiguration<Tra
 {
 	public void Configure(EntityTypeBuilder<TranscriptItem> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(ts => ts.Id);
 		builder.Property(ts => ts.Id)

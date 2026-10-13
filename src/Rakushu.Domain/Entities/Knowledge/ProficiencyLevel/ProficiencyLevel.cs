@@ -2,7 +2,7 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User.Profile;
 
-namespace Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+namespace Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 public sealed partial class ProficiencyLevel : Entity<ProficiencyLevelId>
 {

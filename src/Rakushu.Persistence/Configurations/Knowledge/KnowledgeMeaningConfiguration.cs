@@ -9,6 +9,9 @@ internal sealed class KnowledgeMeaningConfiguration : IEntityTypeConfiguration<K
 {
 	public void Configure(EntityTypeBuilder<KnowledgeMeaning> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("knowledge");
+
 		// Id
 		builder.HasKey(km => km.Id);
 		builder.Property(km => km.Id)
@@ -16,15 +19,15 @@ internal sealed class KnowledgeMeaningConfiguration : IEntityTypeConfiguration<K
 				id => id.Value,
 				value => KnowledgeMeaningId.From(value));
 
-		// LinguisticKnowledgeId
-		builder.Property(km => km.LinguisticKnowledgeId)
+		// KnowledgeUnitId
+		builder.Property(km => km.KnowledgeUnitId)
 			.HasConversion(
 				id => id.Value,
 				value => KnowledgeUnitId.From(value))
 			.IsRequired();
-		builder.HasOne(km => km.LinguisticKnowledge)
+		builder.HasOne(km => km.KnowledgeUnit)
 			.WithMany(lk => lk.Meanings)
-			.HasForeignKey(km => km.LinguisticKnowledgeId)
+			.HasForeignKey(km => km.KnowledgeUnitId)
 			.OnDelete(DeleteBehavior.Cascade);
 
 		// SortOrder
@@ -38,13 +41,5 @@ internal sealed class KnowledgeMeaningConfiguration : IEntityTypeConfiguration<K
 
 		// Description
 		builder.Property(km => km.Description);
-
-		// CreatedAt
-		builder.Property(km => km.CreatedAt)
-			.IsRequired();
-
-		// UpdatedAt
-		builder.Property(km => km.UpdatedAt)
-			.IsRequired();
 	}
 }

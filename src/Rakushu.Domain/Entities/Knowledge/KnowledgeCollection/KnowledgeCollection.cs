@@ -22,6 +22,10 @@ public sealed class KnowledgeCollection : AggregateRoot<KnowledgeCollectionId>
 	// KnowledgeUnits
 	private readonly List<KnowledgeUnit.KnowledgeUnit> _knowledgeUnits = new();
 	public IReadOnlyCollection<KnowledgeUnit.KnowledgeUnit> KnowledgeUnits => _knowledgeUnits.AsReadOnly();
+
+	// ContentKnowledgeCollections
+	private readonly List<Knowledge.ContentKnowledgeCollection.ContentKnowledgeCollection> _contentKnowledgeCollections = new();
+	public IReadOnlyCollection<Knowledge.ContentKnowledgeCollection.ContentKnowledgeCollection> ContentKnowledgeCollections => _contentKnowledgeCollections.AsReadOnly();
 	private KnowledgeCollection()
 	{
 	}

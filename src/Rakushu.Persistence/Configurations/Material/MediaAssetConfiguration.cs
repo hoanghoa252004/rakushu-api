@@ -9,6 +9,9 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
 {
 	public void Configure(EntityTypeBuilder<MediaAsset> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(m => m.Id);
 		builder.Property(m => m.Id)
@@ -50,27 +53,6 @@ internal sealed class MediaAssetConfiguration : IEntityTypeConfiguration<MediaAs
 
 		// FileSizeBytes
 		builder.Property(m => m.FileSizeBytes)
-			.IsRequired();
-
-		// Container
-		builder.Property(m => m.Container)
-			.HasMaxLength(50);
-
-		// Codec
-		builder.Property(m => m.Codec)
-			.HasMaxLength(50);
-
-		// Width
-		builder.Property(m => m.Width);
-
-		// Height
-		builder.Property(m => m.Height);
-
-		// FrameRate
-		builder.Property(m => m.FrameRate);
-
-		// CreatedAt
-		builder.Property(m => m.CreatedAt)
 			.IsRequired();
 	}
 }

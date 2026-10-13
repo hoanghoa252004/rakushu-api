@@ -1,4 +1,4 @@
-﻿using Rakushu.Domain.Entities.Linguistic;
+﻿using Rakushu.Domain.Common.Linguistic;
 using Rakushu.Domain.Entities.Material.Bunsetsu.BunsetsuDependencyRelationship;
 using Rakushu.Domain.Entities.Material.Token;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+namespace Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
 public sealed class DependencyRelationship : Linguistic<DependencyRelationshipId>
 {

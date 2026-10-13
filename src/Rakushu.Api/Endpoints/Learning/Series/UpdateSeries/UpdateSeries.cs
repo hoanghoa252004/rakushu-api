@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Learning.TranscriptSegment;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Series;
 using Rakushu.Application.Usecases.Learning.Series.UpdateSeries;

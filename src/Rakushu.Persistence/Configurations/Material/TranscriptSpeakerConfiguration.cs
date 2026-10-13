@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
-using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +15,9 @@ internal sealed class TranscriptSpeakerConfiguration : IEntityTypeConfiguration<
 {
 	public void Configure(EntityTypeBuilder<TranscriptSpeaker> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(ts => ts.Id);
 		builder.Property(ts => ts.Id)
@@ -33,11 +35,6 @@ internal sealed class TranscriptSpeakerConfiguration : IEntityTypeConfiguration<
 			.WithMany(t => t.TranscriptSpeakers)
 			.HasForeignKey(ts => ts.TranscriptId)
 			.OnDelete(DeleteBehavior.Cascade);
-
-		// Label
-		builder.Property(ts => ts.Label)
-			.HasMaxLength(30)
-			.IsRequired();
 
 		// Label
 		builder.Property(ts => ts.Label)

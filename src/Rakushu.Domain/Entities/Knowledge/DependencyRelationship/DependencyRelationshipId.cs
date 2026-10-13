@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+namespace Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
 public sealed class DependencyRelationshipId : StronglyTypedId<Guid>
 {

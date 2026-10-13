@@ -9,6 +9,9 @@ internal sealed class TranscriptConfiguration : IEntityTypeConfiguration<Transcr
 {
 	public void Configure(EntityTypeBuilder<Transcript> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(t => t.Id);
 		builder.Property(t => t.Id)
@@ -29,6 +32,10 @@ internal sealed class TranscriptConfiguration : IEntityTypeConfiguration<Transcr
 		builder.HasIndex(t => t.VideoId)
 			.IsUnique();
 
+		// FullText
+		builder.Property(t => t.FullText)
+			.IsRequired();
+
 		// SourceType
 		builder.Property(v => v.SourceType)
 			.HasMaxLength(30)
@@ -37,11 +44,7 @@ internal sealed class TranscriptConfiguration : IEntityTypeConfiguration<Transcr
 
 		// StorageKey
 		builder.Property(m => m.StorageKey)
-			.HasMaxLength(500);
-
-		// FullText
-		builder.Property(t => t.FullText)
-			.IsRequired();
+			.HasMaxLength(100);
 
 		// IsReviewed
 		builder.Property(t => t.IsReviewed)

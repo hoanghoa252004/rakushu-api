@@ -1,5 +1,4 @@
 ﻿using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;

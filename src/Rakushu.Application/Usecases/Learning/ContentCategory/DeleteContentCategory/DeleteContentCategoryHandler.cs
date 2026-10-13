@@ -27,7 +27,7 @@ internal sealed class DeleteContentCategoryHandler : IRequestHandler<DeleteConte
 			if (category is null)
 				return Result.Failure(ContentCategoryErrors.NotFound);
 
-			if(category.Videos.Any() || category.ContentProcessingPolicies.Any() || category.Interests.Any())
+			if(category.Videos.Any() || category.ContentKnowledgeCollections.Any() || category.Interests.Any())
 				return Result.Failure(ContentCategoryErrors.IsInUse);
 
 			_repository.Delete(category);

@@ -1,8 +1,8 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
 using Rakushu.Domain.Entities.Material.Video;
 

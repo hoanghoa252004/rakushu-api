@@ -14,6 +14,9 @@ internal sealed class EmailVerificationTokenConfiguration : IEntityTypeConfigura
 {
 	public void Configure(EntityTypeBuilder<EmailVerificationToken> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("identity");
+
 		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)

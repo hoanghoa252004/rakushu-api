@@ -4,7 +4,6 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Video;
-using Rakushu.Domain.Entities.Video.Transcript;
 
 namespace Rakushu.Persistence.Configurations.Material;
 
@@ -12,6 +11,9 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 {
 	public void Configure(EntityTypeBuilder<Video> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(v => v.Id);
 		builder.Property(v => v.Id)
@@ -81,15 +83,15 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 			.HasConversion<string>()
 			.IsRequired();
 
-		// CreatedBy (UserId)
-		builder.Property(v => v.CreatedBy)
+		// LearnerId
+		builder.Property(v => v.LearnerId)
 			.HasConversion(
 				id => id.Value,
 				value => UserId.From(value))
 			.IsRequired();
-		builder.HasOne(v => v.CreatedByUser)
+		builder.HasOne(v => v.Learner)
 			.WithMany(u => u.Videos)
-			.HasForeignKey(v => v.CreatedBy)
+			.HasForeignKey(v => v.LearnerId)
 			.OnDelete(DeleteBehavior.Restrict);
 
 		// CreatedAt

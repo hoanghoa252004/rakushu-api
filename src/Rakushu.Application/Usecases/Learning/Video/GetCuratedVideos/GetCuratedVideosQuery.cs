@@ -1,7 +1,6 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.GetCuratedVideos;
 

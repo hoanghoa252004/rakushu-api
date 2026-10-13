@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Linguistic;
+namespace Rakushu.Domain.Common.Linguistic;
 
 public abstract class Linguistic<TId> : AggregateRoot<TId>
 	where TId : notnull

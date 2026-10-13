@@ -10,6 +10,9 @@ internal sealed class SubtitleSegmentConfiguration : IEntityTypeConfiguration<Su
 {
 	public void Configure(EntityTypeBuilder<SubtitleSegment> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(si => si.Id);
 		builder.Property(si => si.Id)

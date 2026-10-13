@@ -9,6 +9,9 @@ internal sealed class BunsetsuConfiguration : IEntityTypeConfiguration<Bunsetsu>
 {
 	public void Configure(EntityTypeBuilder<Bunsetsu> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(b => b.Id);
 		builder.Property(b => b.Id)

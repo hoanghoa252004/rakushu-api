@@ -9,6 +9,9 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
 {
 	public void Configure(EntityTypeBuilder<RefreshToken> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("identity");
+
 		// Id
 		builder.HasKey(t => t.Id);
 		builder.Property(t => t.Id)

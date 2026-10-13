@@ -1,7 +1,8 @@
 ﻿using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User.Specifications;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory.Specifications;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel.Specifications;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +34,7 @@ public sealed class ProfileUpdatePolicy
 
 	public Result Validate(
 		User user,
-		Linguistic.ProficiencyLevel.ProficiencyLevel level,
+		ProficiencyLevel level,
 		IReadOnlyCollection<Knowledge.ContentCategory.ContentCategory> interestCategories)
 	{
 		// 0. User active

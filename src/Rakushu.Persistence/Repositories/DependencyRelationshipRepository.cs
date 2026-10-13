@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
 namespace Rakushu.Persistence.Repositories;
 

@@ -1,4 +1,4 @@
-﻿using Rakushu.Domain.Entities.Linguistic;
+﻿using Rakushu.Domain.Common.Linguistic;
 using Rakushu.Domain.Entities.Material.Token;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+namespace Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 
 public sealed class JapanesePartOfSpeech : Linguistic<JapanesePartOfSpeechId>
 {

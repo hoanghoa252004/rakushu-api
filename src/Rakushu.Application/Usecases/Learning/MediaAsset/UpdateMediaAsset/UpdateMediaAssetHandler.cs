@@ -31,16 +31,11 @@ internal sealed class UpdateMediaAssetHandler : IRequestHandler<UpdateMediaAsset
 				return Result.Failure(MediaAssetErrors.NotFound);
 
 			return asset.Update(
-				request.assetType,
-				request.storageKey,
-				request.contentType,
-				request.fileName,
-				request.fileSizeBytes,
-				request.container,
-				request.codec,
-				request.width,
-				request.height,
-				request.frameRate);
+				request.AssetType,
+				request.StorageKey,
+				request.ContentType,
+				request.FileName,
+				request.FileSizeBytes);
 		}, cancellationToken);
 	}
 }

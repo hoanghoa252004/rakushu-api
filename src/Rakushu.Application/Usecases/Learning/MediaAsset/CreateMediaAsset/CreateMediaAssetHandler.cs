@@ -30,13 +30,7 @@ internal sealed class CreateMediaAssetHandler : IRequestHandler<CreateMediaAsset
 				request.storageKey,
 				request.contentType,
 				request.fileName,
-				request.fileSizeBytes,
-				DateTime.UtcNow,
-				request.container,
-				request.codec,
-				request.width,
-				request.height,
-				request.frameRate);
+				request.fileSizeBytes);
 
 			if (assetResult.IsFailure)
 				return Result.Failure<Guid>(assetResult.Error);

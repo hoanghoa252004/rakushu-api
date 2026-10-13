@@ -11,12 +11,11 @@ namespace Rakushu.Domain.Entities.Material.Subtitle.SubtitleSegment;
 
 public sealed class SubtitleSegment : Entity<SubtitleSegmentId>
 {
-	
+	public int Sequence { get; private set; }
 	public SubtitleId SubtitleId { get; private set; } = null!;
 	public TranscriptSegmentId TranscriptSegmentId { get; private set; } = null!;
 	public string OriginalText { get; private set; } = null!;
 	public string TranslatedText { get; private set; } = null!;
-	public int Sequence { get; private set; }
 	public TimeSpan StartTime { get; private set; }
 	public TimeSpan EndTime { get; private set; }
 
@@ -32,25 +31,5 @@ public sealed class SubtitleSegment : Entity<SubtitleSegmentId>
 
 	private SubtitleSegment()
 	{
-	}
-
-	private SubtitleSegment(
-		SubtitleSegmentId id,
-		SubtitleId subtitleId,
-		TranscriptSegmentId transcriptSegmentId,
-		string originalText,
-		string translatedText,
-		TimeSpan startTime,
-		TimeSpan endTime,
-		int sequence)
-		: base(id)
-	{
-		SubtitleId = subtitleId;
-		TranscriptSegmentId = transcriptSegmentId;
-		OriginalText = originalText;
-		TranslatedText = translatedText;
-		StartTime = startTime;
-		EndTime = endTime;
-		Sequence = sequence;
 	}
 }

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Identity.User.Profile;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 namespace Rakushu.Persistence.Configurations.Identity;
 
@@ -10,6 +10,9 @@ internal sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
 {
 	public void Configure(EntityTypeBuilder<Profile> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("identity");
+
 		// Id
 		builder.HasKey(p => p.Id);
 		builder.Property(p => p.Id)

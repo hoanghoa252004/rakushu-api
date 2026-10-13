@@ -7,7 +7,7 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Identity.User.Profile.Interest;
 using Rakushu.Domain.Entities.Identity.User.Profile.Policies;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 using Rakushu.Domain.Entities.Subscriptions.Plan;
 using System;
 using System.Collections.Generic;

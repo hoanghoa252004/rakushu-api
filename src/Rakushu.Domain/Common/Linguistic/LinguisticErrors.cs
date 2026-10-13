@@ -1,6 +1,6 @@
 using Rakushu.Domain.Common.Errors;
 
-namespace Rakushu.Domain.Entities.Linguistic;
+namespace Rakushu.Domain.Common.Linguistic;
 
 public static class LinguisticErrors
 {

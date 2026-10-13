@@ -4,7 +4,6 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlans;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
-using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Api.Endpoints.Subscription.Plan.GetPlans;
 

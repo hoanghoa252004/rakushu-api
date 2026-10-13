@@ -10,8 +10,8 @@ namespace Rakushu.Domain.Entities.Material.Transcript.TranscriptItem;
 
 public sealed class TranscriptItem : Entity<TranscriptItemId>
 {
-	public TranscriptSegmentId TranscriptSegmentId { get; private set; } = null!;
 	public int Sequence { get; private set; }
+	public TranscriptSegmentId TranscriptSegmentId { get; private set; } = null!;
 	public string Text { get; private set; } = null!;
 	public TranscriptItemType Type { get; private set; }
 	public TimeSpan StartTime { get; private set; }

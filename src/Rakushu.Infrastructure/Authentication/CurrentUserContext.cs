@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
-using Rakushu.Domain.Entities.Role;
 using DomainUserId = Rakushu.Domain.Entities.Identity.User.UserId;
 
 namespace Rakushu.Infrastructure.Authentication;

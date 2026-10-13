@@ -1,5 +1,4 @@
 using FluentValidation;
-using Rakushu.Domain.Entities.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.UpdateVideoStatus;
 

@@ -50,7 +50,7 @@ internal sealed class GetAllVideosHandler : IRequestHandler<GetAllVideosQuery, R
 		if (request.UserId.HasValue)
 		{
 			var userId = UserId.From(request.UserId.Value);
-			filteredVideos = filteredVideos.Where(v => v.CreatedBy == userId);
+			filteredVideos = filteredVideos.Where(v => v.LearnerId == userId);
 		}
 
 		// Calculate total count before paging

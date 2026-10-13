@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
 using Rakushu.Domain.Entities.Material.Bunsetsu.BunsetsuDependencyRelationship;
 
@@ -10,6 +10,9 @@ internal sealed class BunsetsuDependencyRelationshipConfiguration : IEntityTypeC
 {
 	public void Configure(EntityTypeBuilder<BunsetsuDependencyRelationship> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(b => b.Id);
 		builder.Property(b => b.Id)

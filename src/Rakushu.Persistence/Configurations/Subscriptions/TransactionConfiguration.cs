@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Domain.Entities.Subscriptions.Transaction;
-using Rakushu.Domain.Entities.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +14,9 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
 {
 	public void Configure(EntityTypeBuilder<Transaction> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("subscription");
+
 		// Id
 		builder.HasKey(t => t.Id);
 		builder.Property(t => t.Id)

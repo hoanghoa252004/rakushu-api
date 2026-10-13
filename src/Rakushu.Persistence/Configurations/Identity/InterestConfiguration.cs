@@ -10,6 +10,9 @@ internal sealed class InterestConfiguration : IEntityTypeConfiguration<Interest>
 {
 	public void Configure(EntityTypeBuilder<Interest> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("identity");
+
 		// Id
 		builder.HasKey(i => i.Id);
 		builder.Property(i => i.Id)

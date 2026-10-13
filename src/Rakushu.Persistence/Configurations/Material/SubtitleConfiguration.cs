@@ -9,6 +9,9 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 {
 	public void Configure(EntityTypeBuilder<Subtitle> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(s => s.Id);
 		builder.Property(s => s.Id)
@@ -33,6 +36,8 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 			.WithMany(v => v.Subtitles)
 			.HasForeignKey(s => s.VideoId)
 			.OnDelete(DeleteBehavior.Cascade);
+		builder.HasIndex(t => t.VideoId)
+			.IsUnique();
 
 		// CreatedAt
 		builder.Property(s => s.CreatedAt)

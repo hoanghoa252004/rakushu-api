@@ -15,6 +15,9 @@ internal sealed class SubscriptionUsageConfiguration : IEntityTypeConfiguration<
 {
 	public void Configure(EntityTypeBuilder<SubscriptionUsage> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("subscription");
+
 		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)

@@ -1,8 +1,8 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using DependencyRelationshipEntity = Rakushu.Domain.Entities.Linguistic.DependencyRelationship.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using DependencyRelationshipEntity = Rakushu.Domain.Entities.Knowledge.DependencyRelationship.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
 namespace Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Create;
 

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 
@@ -10,6 +10,9 @@ internal sealed class LearningUnitConfiguration : IEntityTypeConfiguration<Learn
 {
 	public void Configure(EntityTypeBuilder<LearningUnit> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(l => l.Id);
 		builder.Property(l => l.Id)
@@ -17,15 +20,15 @@ internal sealed class LearningUnitConfiguration : IEntityTypeConfiguration<Learn
 				id => id.Value,
 				value => LearningUnitId.From(value));
 
-		// LinguisticKnowledgeId
-		builder.Property(l => l.LinguisticKnowledgeId)
+		// KnowledgeMeaningId
+		builder.Property(l => l.KnowledgeMeaningId)
 			.HasConversion(
 				id => id.Value,
-				value => KnowledgeUnitId.From(value))
+				value => KnowledgeMeaningId.From(value))
 			.IsRequired();
-		builder.HasOne(l => l.LinguisticKnowledge)
+		builder.HasOne(l => l.KnowledgeMeaning)
 			.WithMany(xx => xx.LearningUnits)
-			.HasForeignKey(l => l.LinguisticKnowledgeId)
+			.HasForeignKey(l => l.KnowledgeMeaningId)
 			.OnDelete(DeleteBehavior.Restrict);
 
 		// TranscriptSegmentId
@@ -51,18 +54,15 @@ internal sealed class LearningUnitConfiguration : IEntityTypeConfiguration<Learn
 		builder.Property(l => l.Confidence)
 			.IsRequired();
 
+		// IsReviewed
+		builder.Property(l => l.IsReviewed)
+			.HasDefaultValue(false)
+			.IsRequired();
+
 		// DetectionMethod
 		builder.Property(l => l.DetectionMethod)
 			.HasMaxLength(30)
 			.HasConversion<string>()
-			.IsRequired();
-
-		// DetectedAt
-		builder.Property(l => l.DetectedAt)
-			.IsRequired();
-
-		// UpdatedAt
-		builder.Property(l => l.UpdatedAt)
 			.IsRequired();
 	}
 }

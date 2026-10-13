@@ -1,8 +1,8 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Common.Linguistic;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
 namespace Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Delete;
 

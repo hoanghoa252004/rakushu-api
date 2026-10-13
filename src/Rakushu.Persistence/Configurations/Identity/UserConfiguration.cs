@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Persistence.Configurations.Identity;
 
@@ -9,6 +9,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
 	public void Configure(EntityTypeBuilder<User> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("identity");
+
 		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)

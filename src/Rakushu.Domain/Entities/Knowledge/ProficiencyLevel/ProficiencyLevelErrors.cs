@@ -1,6 +1,6 @@
 using Rakushu.Domain.Common.Errors;
 
-namespace Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+namespace Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 public static class ProficiencyLevelErrors
 {

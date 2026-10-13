@@ -1,7 +1,7 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 
 namespace Rakushu.Domain.Entities.Material.Bunsetsu;

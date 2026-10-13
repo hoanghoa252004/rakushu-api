@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.ContentCategory;
 using Rakushu.Domain.Entities.Material.Series;
 
 namespace Rakushu.Persistence.Configurations.Material;
@@ -9,6 +8,9 @@ internal sealed class SeriesConfiguration : IEntityTypeConfiguration<Series>
 {
 	public void Configure(EntityTypeBuilder<Series> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(s => s.Id);
 		builder.Property(s => s.Id)

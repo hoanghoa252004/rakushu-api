@@ -18,7 +18,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	public VideoSource SourceType { get; private set; }
 	public string? SourceUrl { get; private set; }
 	public VideoStatus Status { get; private set; }
-	public UserId CreatedBy { get; private set; } = null!;
+	public UserId? LearnerId { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
@@ -26,8 +26,8 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	// ContentCategory
 	public Knowledge.ContentCategory.ContentCategory ContentCategory { get; private set; } = null!;
 
-	// User (CreatedBy)
-	public Identity.User.User CreatedByUser { get; private set; } = null!;
+	// User (Learner)
+	public Identity.User.User? Learner { get; private set; }
 
 	// Transcript
 	public Material.Transcript.Transcript Transcript { get; private set; } = null!;
@@ -56,7 +56,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		int sortOrder,
 		VideoSource sourceType,
 		VideoStatus status,
-		UserId createdBy,
+		UserId? learnerId,
 		DateTimeOffset createdAt,
 		DateTimeOffset updatedAt,
 		string? description = null,
@@ -72,7 +72,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		SourceType = sourceType;
 		SourceUrl = sourceUrl;
 		Status = status;
-		CreatedBy = createdBy;
+		LearnerId = learnerId;
 		CreatedAt = createdAt;
 		UpdatedAt = updatedAt;
 	}

@@ -32,7 +32,7 @@ internal sealed class GetMyVideosHandler : IRequestHandler<GetMyVideosQuery, Res
 
 		// Filter videos created by current user with UploadedByLearner or ImportedFromExternal source
 		var filteredVideos = videos.Where(v =>
-			v.CreatedBy == userId &&
+			v.LearnerId == userId &&
 			(v.SourceType == VideoSource.UploadedByLearner ||
 			 v.SourceType == VideoSource.ImportedFromExternal));
 

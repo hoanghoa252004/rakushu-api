@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Learning.TranscriptSegment;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Series.GetVideoBySeriesSlugAndVideoSlug;
 using Rakushu.Application.Usecases.Learning.Video;

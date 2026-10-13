@@ -1,13 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 
-namespace Rakushu.Persistence.Configurations.Linguistic;
+namespace Rakushu.Persistence.Configurations.Knowledge;
 
 internal sealed class JapanesePartOfSpeechConfiguration : IEntityTypeConfiguration<JapanesePartOfSpeech>
 {
 	public void Configure(EntityTypeBuilder<JapanesePartOfSpeech> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("knowledge");
+
 		// Id
 		builder.HasKey(j => j.Id);
 		builder.Property(j => j.Id)

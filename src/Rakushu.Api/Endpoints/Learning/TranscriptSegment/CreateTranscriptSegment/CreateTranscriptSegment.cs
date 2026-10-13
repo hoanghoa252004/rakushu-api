@@ -1,6 +1,5 @@
 using MediatR;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Learning.Series;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.TranscriptSegment.CreateSegment;
 using Rakushu.Domain.Entities.Identity.Role;

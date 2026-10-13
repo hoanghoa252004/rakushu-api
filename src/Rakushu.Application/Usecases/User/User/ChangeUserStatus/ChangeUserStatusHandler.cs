@@ -5,7 +5,6 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Plan;
 
 namespace Rakushu.Application.Usecases.User.User.ChangeUserStatus;
 

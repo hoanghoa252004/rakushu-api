@@ -7,7 +7,6 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
-using Rakushu.Domain.Entities.User.Subscription;
 
 namespace Rakushu.Application.Usecases.Payment.Payment.GetPaymentById;
 

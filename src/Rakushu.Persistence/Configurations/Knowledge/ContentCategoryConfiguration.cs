@@ -8,6 +8,9 @@ internal sealed class ContentCategoryConfiguration : IEntityTypeConfiguration<Co
 {
 	public void Configure(EntityTypeBuilder<ContentCategory> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("knowledge");
+
 		// Id
 		builder.HasKey(c => c.Id);
 		builder.Property(c => c.Id)

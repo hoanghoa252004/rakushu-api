@@ -10,12 +10,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Persistence.Configurations.Catalog;
+namespace Rakushu.Persistence.Configurations.Subscriptions;
 
 internal sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
 {
 	public void Configure(EntityTypeBuilder<Subscription> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("subscription");
+
 		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)

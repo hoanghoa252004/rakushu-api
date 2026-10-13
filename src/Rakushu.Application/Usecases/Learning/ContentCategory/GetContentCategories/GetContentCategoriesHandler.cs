@@ -5,7 +5,6 @@ using Rakushu.Application.Usecases.Learning.ContentCategory.GetContentCategoryBy
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
-using Rakushu.Domain.Entities.Plan;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.GetContentCategories;
 

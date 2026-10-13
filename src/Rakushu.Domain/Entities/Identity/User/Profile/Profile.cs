@@ -1,7 +1,7 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 namespace Rakushu.Domain.Entities.Identity.User.Profile;
 
@@ -21,7 +21,7 @@ public sealed class Profile : Entity<ProfileId>
 	public User User { get; private set; } = null!;
 
 	// Level
-	public Linguistic.ProficiencyLevel.ProficiencyLevel Level { get; private set; } = null!;
+	public ProficiencyLevel Level { get; private set; } = null!;
 
 	// Interests
 	private readonly List<Interest.Interest> _interests = new();

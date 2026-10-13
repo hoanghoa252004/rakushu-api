@@ -10,6 +10,9 @@ internal sealed class TranscriptSegmentConfiguration : IEntityTypeConfiguration<
 {
 	public void Configure(EntityTypeBuilder<TranscriptSegment> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(ts => ts.Id);
 		builder.Property(ts => ts.Id)

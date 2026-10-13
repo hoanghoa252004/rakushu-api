@@ -7,12 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Persistence.Configurations.Catalog;
+namespace Rakushu.Persistence.Configurations.Subscriptions;
 
 internal sealed class FeatureConfiguration : IEntityTypeConfiguration<Feature>
 {
 	public void Configure(EntityTypeBuilder<Feature> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("subscription");
+
 		// Id
 		builder.HasKey(u => u.Id);
 		builder.Property(u => u.Id)

@@ -19,6 +19,9 @@ public sealed class KnowledgeMeaning : Entity<KnowledgeMeaningId>
 	// KnowledgeUnit
 	public KnowledgeUnit.KnowledgeUnit KnowledgeUnit { get; private set; } = null!;
 
+	// LearningUnits
+	private readonly List<Material.LearningUnit.LearningUnit> _learningUnits = new();
+	public IReadOnlyCollection<Material.LearningUnit.LearningUnit> LearningUnits => _learningUnits.AsReadOnly();
 
 	private KnowledgeMeaning()
 	{

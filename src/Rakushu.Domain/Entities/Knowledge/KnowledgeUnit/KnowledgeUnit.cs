@@ -28,10 +28,6 @@ public sealed class KnowledgeUnit : AggregateRoot<KnowledgeUnitId>
 	// KnowledgeCollection
 	public KnowledgeCollection.KnowledgeCollection KnowledgeCollection { get; private set; } = null!;
 
-	// LearningUnits
-	private readonly List<Material.LearningUnit.LearningUnit> _learningUnits = new();
-	public IReadOnlyCollection<Material.LearningUnit.LearningUnit> LearningUnits => _learningUnits.AsReadOnly();
-
 	private KnowledgeUnit()
 	{
 	}

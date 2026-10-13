@@ -13,7 +13,7 @@ public sealed record VideoListDto(
 	int SortOrder,
 	VideoSource SourceType,
 	VideoStatus Status,
-	Guid CreatedBy,
+	Guid? LearnerId,
 	DateTimeOffset CreatedAt,
 	DateTimeOffset UpdatedAt)
 {
@@ -29,7 +29,7 @@ public sealed record VideoListDto(
 			e.SortOrder,
 			e.SourceType,
 			e.Status,
-			e.CreatedBy.Value,
+			e.LearnerId?.Value,
 			e.CreatedAt,
 			e.UpdatedAt);
 }
@@ -48,8 +48,8 @@ public sealed record VideoDetailDto(
 	VideoSource SourceType,
 	string? SourceUrl,
 	VideoStatus Status,
-	Guid CreatedBy,
-	string? CreatedByFullName,
+	Guid? LearnerId,
+	string? LearnerFullName,
 	DateTimeOffset CreatedAt,
 	DateTimeOffset UpdatedAt,
 	List<MediaAssetDto> MediaAssets)
@@ -69,8 +69,8 @@ public sealed record VideoDetailDto(
 			e.SourceType,
 			e.SourceUrl,
 			e.Status,
-			e.CreatedBy.Value,
-			e.CreatedByUser?.FullName,
+			e.LearnerId?.Value,
+			e.Learner?.FullName,
 			e.CreatedAt,
 			e.UpdatedAt,
 			e.MediaAssets.Select(ma => new MediaAssetDto(

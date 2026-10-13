@@ -1,13 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
-namespace Rakushu.Persistence.Configurations.Linguistic;
+namespace Rakushu.Persistence.Configurations.Knowledge;
 
 internal sealed class ProficiencyLevelConfiguration : IEntityTypeConfiguration<ProficiencyLevel>
 {
 	public void Configure(EntityTypeBuilder<ProficiencyLevel> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("knowledge");
+
 		// Id
 		builder.HasKey(pl => pl.Id);
 		builder.Property(pl => pl.Id)

@@ -9,12 +9,7 @@ public sealed record MediaAssetDto(
 	string StorageKey,
 	string ContentType,
 	string FileName,
-	long FileSizeBytes,
-	string? Container,
-	string? Codec,
-	int? Width,
-	int? Height,
-	double? FrameRate)
+	long FileSizeBytes)
 {
 	public static MediaAssetDto FromEntity(Entity e) =>
 		new(
@@ -23,10 +18,5 @@ public sealed record MediaAssetDto(
 			e.StorageKey,
 			e.ContentType,
 			e.FileName,
-			e.FileSizeBytes,
-			e.Container,
-			e.Codec,
-			e.Width,
-			e.Height,
-			e.FrameRate);
+			e.FileSizeBytes);
 }

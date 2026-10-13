@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
-namespace Rakushu.Api.Endpoints.Learning.Series;
+namespace Rakushu.Api.Endpoints.Learning.TranscriptSegment;
 
 internal static class TranscriptSegmentEndpointGroupExtension
 {

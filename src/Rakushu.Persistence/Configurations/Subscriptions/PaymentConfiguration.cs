@@ -15,6 +15,9 @@ internal sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
 {
 	public void Configure(EntityTypeBuilder<Payment> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("subscription");
+
 		// Id
 		builder.HasKey(t => t.Id);
 		builder.Property(t => t.Id)

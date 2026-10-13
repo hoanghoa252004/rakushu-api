@@ -8,20 +8,20 @@ using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
 using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
-using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
 using Rakushu.Domain.Entities.NotReviewedYet.DictionaryEntry;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Subscriptions.Plan;
 using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Domain.Entities.Subscriptions.Transaction;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 namespace Rakushu.Persistence.Extensions;
 

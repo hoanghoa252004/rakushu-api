@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
 using Rakushu.Domain.Entities.Material.Token;
 
@@ -11,6 +11,9 @@ internal sealed class TokenConfiguration : IEntityTypeConfiguration<Token>
 {
 	public void Configure(EntityTypeBuilder<Token> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("material");
+
 		// Id
 		builder.HasKey(t => t.Id);
 		builder.Property(t => t.Id)

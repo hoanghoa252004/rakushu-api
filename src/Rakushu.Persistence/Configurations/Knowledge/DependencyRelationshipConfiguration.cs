@@ -1,13 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
-namespace Rakushu.Persistence.Configurations.Linguistic;
+namespace Rakushu.Persistence.Configurations.Knowledge;
 
 internal sealed class DependencyRelationshipConfiguration : IEntityTypeConfiguration<DependencyRelationship>
 {
 	public void Configure(EntityTypeBuilder<DependencyRelationship> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("knowledge");
+
 		// Id
 		builder.HasKey(dr => dr.Id);
 		builder.Property(dr => dr.Id)

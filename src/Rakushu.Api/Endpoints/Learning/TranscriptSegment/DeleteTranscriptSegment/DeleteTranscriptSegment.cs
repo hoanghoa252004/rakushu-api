@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Learning.Series;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.TranscriptSegment.DeleteSegment;
 using Rakushu.Domain.Entities.Identity.Role;

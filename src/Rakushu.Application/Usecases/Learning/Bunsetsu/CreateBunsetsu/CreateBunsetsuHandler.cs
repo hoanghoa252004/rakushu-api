@@ -1,7 +1,6 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
 

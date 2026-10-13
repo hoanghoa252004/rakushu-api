@@ -1,6 +1,6 @@
 using Rakushu.Domain.Common.Contract;
 
-namespace Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+namespace Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
 public interface IDependencyRelationshipRepository : IBaseRepository<DependencyRelationship, DependencyRelationshipId>
 {

@@ -38,7 +38,7 @@ internal sealed class DeleteVideoHandler : IRequestHandler<DeleteVideoCommand, R
 			if (currentUserRole == RoleCodes.Learner)
 			{
 				// Learner can only delete their own videos if status is Pending
-				if (video.CreatedBy != UserId.From(currentUserId!.Value))
+				if (video.LearnerId != UserId.From(currentUserId!.Value))
 					return Result.Failure(VideoErrors.CannotDeleteVideo);
 
 				if (video.Status != VideoStatus.Pending)

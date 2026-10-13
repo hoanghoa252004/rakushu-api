@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
+namespace Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 internal class TestEnum
 {

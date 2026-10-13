@@ -1,5 +1,5 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
 using System;
 using System.Collections.Generic;

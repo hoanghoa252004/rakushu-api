@@ -1,13 +1,14 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
-using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
 
 namespace Rakushu.Domain.Entities.Material.Token;
 
 public sealed partial class Token : Entity<TokenId>
 {
+	public int Sequence { get; private set; }
 	public BunsetsuId BunsetsuId { get; private set; } = null!;
 	public string Surface { get; private set; } = null!;
 	public string Lemma { get; private set; } = null!;
@@ -16,8 +17,7 @@ public sealed partial class Token : Entity<TokenId>
 	public DependencyRelationshipId DependencyRelationshipId { get; private set; } = null!;
 	public int StartIndex { get; private set; }
 	public int EndIndex { get; private set; }
-	public int Sequence { get; private set; }
-
+	
 	// NAVIGATION PROPERTIES
 	// Bunsetsu
 	public Bunsetsu.Bunsetsu Bunsetsu { get; private set; } = null!;
@@ -78,5 +78,4 @@ public sealed partial class Token : Entity<TokenId>
 			endIndex,
 			sequence));
 	}
-
 }

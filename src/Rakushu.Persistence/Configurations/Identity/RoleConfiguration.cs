@@ -8,6 +8,9 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
 	public void Configure(EntityTypeBuilder<Role> builder)
 	{
+		// Schema
+		builder.Metadata.SetSchema("identity");
+
 		// Id
 		builder.HasKey(r => r.Id);
 		builder.Property(r => r.Id)
