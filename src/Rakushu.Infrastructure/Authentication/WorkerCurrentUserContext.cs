@@ -1,5 +1,5 @@
 ﻿using Rakushu.Application.Abstractions.Infrastructure.Authentication;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;

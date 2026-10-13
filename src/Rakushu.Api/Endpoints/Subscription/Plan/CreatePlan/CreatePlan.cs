@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Subscription.Plan.CreatePlan;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Subscription.Plan.CreatePlan;
 

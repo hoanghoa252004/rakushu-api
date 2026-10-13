@@ -2,7 +2,7 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ProficiencyLevel;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel;
 
 namespace Rakushu.Application.Usecases.Linguistic.ProficiencyLevel.UpdateProficiencyLevel;
 

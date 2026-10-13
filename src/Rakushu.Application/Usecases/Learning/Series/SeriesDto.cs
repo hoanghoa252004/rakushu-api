@@ -1,4 +1,4 @@
-using Rakushu.Domain.Entities.Series;
+using Rakushu.Domain.Entities.Material.Series;
 
 namespace Rakushu.Application.Usecases.Learning.Series;
 
@@ -13,7 +13,7 @@ public sealed record SeriesDto(
 	DateTimeOffset CreatedAt,
 	DateTimeOffset UpdatedAt)
 {
-	public static SeriesDto FromEntity(Domain.Entities.Series.Series e) =>
+	public static SeriesDto FromEntity(Domain.Entities.Material.Series.Series e) =>
 		new(
 			e.Id.Value,
 			e.Slug,

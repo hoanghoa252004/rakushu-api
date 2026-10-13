@@ -5,7 +5,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Subscription.Subscription.GetMySubscriptions;
 using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptionById;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Subscription.Subscription.GetMySubscriptions;
 

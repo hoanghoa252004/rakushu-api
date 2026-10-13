@@ -2,8 +2,8 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.Series;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Material.Series;
 
 namespace Rakushu.Application.Usecases.Learning.Series.CreateSeries;
 
@@ -32,7 +32,7 @@ internal sealed class CreateSeriesHandler : IRequestHandler<CreateSeriesCommand,
 				: SeriesSource.Learner;
 
 			// Create new series using the domain factory
-			var series = Domain.Entities.Series.Series.Create(
+			var series = Domain.Entities.Material.Series.Series.Create(
 				request.Slug,
 				request.Name,
 				request.DisplayOrder,

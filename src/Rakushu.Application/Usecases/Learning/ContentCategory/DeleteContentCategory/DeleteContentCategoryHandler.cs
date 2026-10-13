@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.DeleteContentCategory;
 

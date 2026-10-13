@@ -1,8 +1,8 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using JapanesePartOfSpeechEntity = Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using JapanesePartOfSpeechEntity = Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
 
 namespace Rakushu.Application.Usecases.Linguistic.JapanesePartOfSpeech.Create;
 

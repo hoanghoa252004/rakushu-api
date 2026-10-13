@@ -2,8 +2,9 @@ using MediatR;
 using Rakushu.Application.Usecases.Learning.Transcript;
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.TranscriptSegment.CreateSegment;
 
@@ -26,7 +27,7 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 
 		if (video.Transcript is null)
 			return Result.Failure<TranscriptSegmentDetailDto>(
-				Domain.Entities.Video.Transcript.TranscriptErrors.NotFound);
+				TranscriptErrors.NotFound);
 
 		// Determine the actual sequence for the new segment
 		var currentMaxSequence = video.Transcript.TranscriptSegments.Count;

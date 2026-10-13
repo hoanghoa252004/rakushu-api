@@ -9,8 +9,8 @@ using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptionById;
 using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptions;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Subscriptions.Subscription;
 
 namespace Rakushu.Application.Usecases.Subscription.Subscription.GetMySubscriptions;
 

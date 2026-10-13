@@ -1,9 +1,9 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.Series;
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
+using Rakushu.Domain.Entities.Material.Series;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.GetCuratedVideos;
 

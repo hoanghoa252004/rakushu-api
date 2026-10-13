@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Series;
+using Rakushu.Domain.Entities.Material.Series;
 
 namespace Rakushu.Application.Usecases.Learning.Series.GetAllSeries;
 

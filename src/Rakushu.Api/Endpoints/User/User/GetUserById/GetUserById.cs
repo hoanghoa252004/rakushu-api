@@ -4,7 +4,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Endpoints.User.User;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.User.User.GetUserById;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.User.User.GetUserById;
 

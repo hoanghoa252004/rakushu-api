@@ -1,8 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.MediaAsset;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.MediaAsset.CreateMediaAsset;
 
@@ -25,7 +24,7 @@ internal sealed class CreateMediaAssetHandler : IRequestHandler<CreateMediaAsset
 			if (video is null)
 				return Result.Failure<Guid>(VideoErrors.NotFound);
 
-			var assetResult = Domain.Entities.Video.MediaAsset.MediaAsset.Create(
+			var assetResult = Domain.Entities.Material.Video.MediaAsset.MediaAsset.Create(
 				video.Id,
 				request.assetType,
 				request.storageKey,

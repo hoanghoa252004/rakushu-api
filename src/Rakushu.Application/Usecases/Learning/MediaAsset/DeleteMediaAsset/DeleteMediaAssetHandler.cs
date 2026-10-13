@@ -1,8 +1,8 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.MediaAsset;
+using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Material.Video.MediaAsset;
 
 namespace Rakushu.Application.Usecases.Learning.MediaAsset.DeleteMediaAsset;
 

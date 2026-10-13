@@ -2,8 +2,8 @@
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Plan.Entitlement;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Subscriptions.Entitlement;
+using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,8 +90,8 @@ internal sealed class CreateSubscriptionUsagesHandler
 	}
 
 	private static (DateTimeOffset Start, DateTimeOffset End)? CalculatePeriod(
-		Domain.Entities.User.Subscription.Subscription subscription,
-		Domain.Entities.Plan.Entitlement.Entitlement entitlement,
+		Domain.Entities.Subscriptions.Subscription.Subscription subscription,
+		Domain.Entities.Subscriptions.Entitlement.Entitlement entitlement,
 		DateTimeOffset now)
 	{
 		return entitlement.LimitPeriod switch

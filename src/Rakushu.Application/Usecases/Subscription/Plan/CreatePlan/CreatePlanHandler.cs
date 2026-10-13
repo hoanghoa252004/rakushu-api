@@ -2,8 +2,8 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
-using Rakushu.Domain.Entities.Plan;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Plan;
 
 namespace Rakushu.Application.Usecases.Subscription.Plan.CreatePlan;
 
@@ -66,7 +66,7 @@ public sealed class CreatePlanHandler : IRequestHandler<CreatePlanCommand, Resul
 			var now = _systemClock.UtcNow;
 
 			// 3. Create plan
-			var planResult = Domain.Entities.Plan.Plan.Create(
+			var planResult = Domain.Entities.Subscriptions.Plan.Plan.Create(
 				request.Code,
 				request.Name,
 				request.JapaneseName,

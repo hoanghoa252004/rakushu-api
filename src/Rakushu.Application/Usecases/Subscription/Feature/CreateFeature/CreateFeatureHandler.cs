@@ -2,7 +2,7 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Subscriptions.Feature;
 
 namespace Rakushu.Application.Usecases.Subscription.Feature.CreateFeature;
 
@@ -40,7 +40,7 @@ internal sealed class CreateFeatureHandler : IRequestHandler<CreateFeatureComman
 			// Create feature
 			var now = _systemClock.UtcNow;
 
-			var featureResult = Domain.Entities.Feature.Feature.Create(
+			var featureResult = Domain.Entities.Subscriptions.Feature.Feature.Create(
 				request.Code,
 				request.Name,
 				request.IsActive,

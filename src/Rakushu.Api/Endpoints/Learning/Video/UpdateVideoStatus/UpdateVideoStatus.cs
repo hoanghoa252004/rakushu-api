@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Video.UpdateVideoStatus;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Api.Endpoints.Learning.Video.UpdateVideoStatus;
 

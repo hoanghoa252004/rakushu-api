@@ -7,8 +7,8 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Endpoints.Learning.Video;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Video.CreateVideo;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Api.Endpoints.Learning.Video.CreateVideo;
 

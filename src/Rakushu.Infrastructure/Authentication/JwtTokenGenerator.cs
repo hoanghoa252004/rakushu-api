@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.User.RefreshToken;
 using Rakushu.Infrastructure.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;

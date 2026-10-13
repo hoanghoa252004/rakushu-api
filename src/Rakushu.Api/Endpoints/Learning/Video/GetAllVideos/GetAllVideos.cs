@@ -8,7 +8,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Learning.Video;
 using Rakushu.Application.Usecases.Learning.Video.GetAllVideos;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Video.GetAllVideos;
 

@@ -1,8 +1,8 @@
 ﻿using MediatR;
 using Rakushu.Application.Usecases.Learning.ContentCategory.GetContentCategoryById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using System;
 using System.Collections.Generic;
 using System.Linq;

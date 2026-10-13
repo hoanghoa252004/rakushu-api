@@ -6,7 +6,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Curator.Oov.Common;
 using Rakushu.Application.Usecases.Curator.Oov.GetOovCandidateById;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 using System;
 using System.Threading;
 

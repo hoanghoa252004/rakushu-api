@@ -1,7 +1,6 @@
-using Entity = Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Bunsetsu;
+using Entity = Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu;
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
 
 namespace Rakushu.Application.Usecases.Learning.Bunsetsu.CreateBunsetsu;
 

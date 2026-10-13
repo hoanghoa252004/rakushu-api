@@ -1,4 +1,4 @@
-using Entity = Rakushu.Domain.Entities.Video.Video;
+using Entity = Rakushu.Domain.Entities.Material.Video.Video;
 using MediatR;
 using Rakushu.Domain.Common.Results;
 

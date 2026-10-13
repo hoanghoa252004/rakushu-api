@@ -2,9 +2,9 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Feature;
-using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.Plan.Entitlement;
+using Rakushu.Domain.Entities.Subscriptions.Entitlement;
+using Rakushu.Domain.Entities.Subscriptions.Feature;
+using Rakushu.Domain.Entities.Subscriptions.Plan;
 
 namespace Rakushu.Application.Usecases.Subscription.Entitlement.CreateEntitlement;
 

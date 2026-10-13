@@ -1,6 +1,6 @@
 ﻿using MediatR;
+using Rakushu.Domain.Entities.Identity.User.DomainEvents;
 using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.DomainEvents;
 using System;
 using System.Collections.Generic;
 using System.Linq;

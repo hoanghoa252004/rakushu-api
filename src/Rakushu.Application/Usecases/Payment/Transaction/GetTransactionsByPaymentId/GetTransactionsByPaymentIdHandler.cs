@@ -2,9 +2,9 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
-using Rakushu.Domain.Entities.Payment.Transaction;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Transaction;
 
 namespace Rakushu.Application.Usecases.Payment.Transaction.GetTransactionsByPaymentId;
 
@@ -50,7 +50,7 @@ public sealed class GetTransactionsByPaymentIdHandler : IRequestHandler<GetTrans
 
 		// Validate status if provided
 		if (!string.IsNullOrWhiteSpace(request.Status) && 
-			!Enum.TryParse<Domain.Entities.Payment.Transaction.TransactionStatus>(request.Status, true, out _))
+			!Enum.TryParse<TransactionStatus>(request.Status, true, out _))
 		{
 			return Result.Failure<IReadOnlyCollection<TransactionDto>>(PaymentError.InvalidStatus);
 		}

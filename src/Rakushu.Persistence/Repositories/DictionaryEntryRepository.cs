@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.DictionaryEntry;
+using Rakushu.Domain.Entities.NotReviewedYet.DictionaryEntry;
 using System.Threading;
 using System.Threading.Tasks;
 

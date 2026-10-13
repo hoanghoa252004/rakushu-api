@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Rakushu.Domain.Entities.ContentCategory.Specifications;
-using Rakushu.Domain.Entities.ProficiencyLevel.Specifications;
-using Rakushu.Domain.Entities.User.Specifications;
+using Rakushu.Domain.Entities.Identity.User.Specifications;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory.Specifications;
+using Rakushu.Domain.Entities.Linguistic.ProficiencyLevel.Specifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;

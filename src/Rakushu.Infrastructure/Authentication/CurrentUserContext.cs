@@ -3,8 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
-using DomainUserId = Rakushu.Domain.Entities.User.UserId;
+using DomainUserId = Rakushu.Domain.Entities.Identity.User.UserId;
 
 namespace Rakushu.Infrastructure.Authentication;
 

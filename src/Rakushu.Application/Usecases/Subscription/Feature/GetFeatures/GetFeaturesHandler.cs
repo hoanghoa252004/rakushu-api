@@ -2,7 +2,7 @@ using MediatR;
 using Rakushu.Application.Usecases.Linguistic.ProficiencyLevel;
 using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Subscriptions.Feature;
 
 namespace Rakushu.Application.Usecases.Subscription.Feature.GetFeatures;
 

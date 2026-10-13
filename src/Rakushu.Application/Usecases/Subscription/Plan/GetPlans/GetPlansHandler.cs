@@ -4,8 +4,8 @@ using Rakushu.Application.Usecases.Subscription.Entitlement.GetEntitlements;
 using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Subscriptions.Plan;
 
 namespace Rakushu.Application.Usecases.Subscription.Plan.GetPlans;
 

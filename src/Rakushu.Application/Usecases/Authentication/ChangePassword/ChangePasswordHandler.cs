@@ -3,7 +3,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Usecases.Authentication.Login;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
 using System.Security.Cryptography;
 
 namespace Rakushu.Application.Usecases.Authentication.ChangePassword;

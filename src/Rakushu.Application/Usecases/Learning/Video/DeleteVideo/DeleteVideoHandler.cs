@@ -2,9 +2,9 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.DeleteVideo;
 

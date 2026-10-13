@@ -1,6 +1,6 @@
 using MediatR;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Common;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.Linguistic.DependencyRelationship;
 
 namespace Rakushu.Application.Usecases.Linguistic.DependencyRelationship.GetAll;
 

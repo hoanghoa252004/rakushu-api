@@ -1,9 +1,9 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.Transcript;
-using TranscriptEntity = Rakushu.Domain.Entities.Video.Transcript.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Video;
+using TranscriptEntity = Rakushu.Domain.Entities.Material.Transcript.Transcript;
 
 namespace Rakushu.Application.Usecases.Learning.Transcript.CreateTranscript;
 

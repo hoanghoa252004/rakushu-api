@@ -1,8 +1,9 @@
 using MediatR;
 using Rakushu.Application.Usecases.Learning.Transcript;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.TranscriptSegment.UpdateSegment;
 
@@ -25,7 +26,7 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 
 		if (video.Transcript is null)
 			return Result.Failure<TranscriptSegmentDetailDto>(
-				Domain.Entities.Video.Transcript.TranscriptErrors.NotFound);
+				TranscriptErrors.NotFound);
 
 		var segmentId = TranscriptSegmentId.From(request.SegmentId);
 		var segment = video.Transcript.TranscriptSegments.FirstOrDefault(s => s.Id == segmentId);

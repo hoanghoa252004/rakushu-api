@@ -7,7 +7,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Usecases.Curator.Oov.ManualAddOovCandidate;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 using System;
 using System.Threading;
 

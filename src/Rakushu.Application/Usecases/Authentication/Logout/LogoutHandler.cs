@@ -3,7 +3,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Application.Usecases.Authentication.Logout;
 

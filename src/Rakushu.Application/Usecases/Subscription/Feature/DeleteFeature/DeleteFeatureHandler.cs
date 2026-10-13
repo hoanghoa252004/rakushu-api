@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Subscriptions.Feature;
 
 namespace Rakushu.Application.Usecases.Subscription.Feature.DeleteFeature;
 

@@ -1,7 +1,8 @@
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.TranscriptSegment.DeleteSegment;
 
@@ -30,7 +31,7 @@ internal sealed class DeleteTranscriptSegmentHandler : IRequestHandler<DeleteTra
 
 		// Get the transcript
 		if (video.Transcript is null)
-			return Result.Failure(Domain.Entities.Video.Transcript.TranscriptErrors.NotFound);
+			return Result.Failure(TranscriptErrors.NotFound);
 
 		// Get the segment to delete
 		var segmentId = TranscriptSegmentId.From(request.SegmentId);

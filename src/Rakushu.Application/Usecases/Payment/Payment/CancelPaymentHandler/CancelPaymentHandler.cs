@@ -3,7 +3,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
 
 namespace Rakushu.Application.Usecases.Payment.Payment.CancelPaymentHandler;
 

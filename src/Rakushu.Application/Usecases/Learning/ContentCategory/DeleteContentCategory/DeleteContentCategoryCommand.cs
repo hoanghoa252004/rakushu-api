@@ -1,7 +1,6 @@
-using Entity = Rakushu.Domain.Entities.ContentCategory.ContentCategory;
+using Entity = Rakushu.Domain.Entities.Knowledge.ContentCategory.ContentCategory;
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.DeleteContentCategory;
 

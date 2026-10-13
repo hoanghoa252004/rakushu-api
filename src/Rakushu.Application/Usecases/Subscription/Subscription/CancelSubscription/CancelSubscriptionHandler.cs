@@ -2,7 +2,7 @@
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,4 +1,4 @@
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video;
 
@@ -17,7 +17,7 @@ public sealed record VideoListDto(
 	DateTimeOffset CreatedAt,
 	DateTimeOffset UpdatedAt)
 {
-	public static VideoListDto FromEntity(Domain.Entities.Video.Video e) =>
+	public static VideoListDto FromEntity(Domain.Entities.Material.Video.Video e) =>
 		new(
 			e.Id.Value,
 			e.Slug,
@@ -54,7 +54,7 @@ public sealed record VideoDetailDto(
 	DateTimeOffset UpdatedAt,
 	List<MediaAssetDto> MediaAssets)
 {
-	public static VideoDetailDto FromEntity(Domain.Entities.Video.Video e) =>
+	public static VideoDetailDto FromEntity(Domain.Entities.Material.Video.Video e) =>
 		new(
 			e.Id.Value,
 			e.Slug,

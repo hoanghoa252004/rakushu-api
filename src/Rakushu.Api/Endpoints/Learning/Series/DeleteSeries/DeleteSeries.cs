@@ -7,7 +7,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Endpoints.Learning.TranscriptSegment;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Series.DeleteSeries;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Series.DeleteSeries;
 

@@ -2,8 +2,8 @@ using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Bunsetsu.CreateBunsetsu;
 

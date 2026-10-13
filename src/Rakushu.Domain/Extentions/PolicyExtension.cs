@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Rakushu.Domain.Entities.User.Profile.Policies;
+using Rakushu.Domain.Entities.Identity.User.Profile.Policies;
 using System;
 using System.Collections.Generic;
 using System.Linq;

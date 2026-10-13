@@ -1,6 +1,6 @@
 using Rakushu.Application.Usecases.Curator.Oov.Common;
 using Rakushu.Application.Usecases.Curator.Oov.GetOovCandidates;
-using Rakushu.Domain.Entities.OovCandidate;
+using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;

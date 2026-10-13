@@ -7,7 +7,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Transcript;
 using Rakushu.Application.Usecases.Learning.Transcript.UpdateTranscript;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Transcript.UpdateTranscript;
 

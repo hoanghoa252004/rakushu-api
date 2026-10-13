@@ -1,7 +1,8 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Transcript.GetTranscript;
 
@@ -24,7 +25,7 @@ internal sealed class GetTranscriptHandler : IRequestHandler<GetTranscriptQuery,
 
 		if (video.Transcript is null)
 			return Result.Failure<TranscriptDetailDto>(
-				Domain.Entities.Video.Transcript.TranscriptErrors.NotFound);
+				TranscriptErrors.NotFound);
 
 		// Filter segments by startTime if provided
 		var filteredSegments = video.Transcript.TranscriptSegments.AsEnumerable();

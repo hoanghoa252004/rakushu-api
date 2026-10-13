@@ -3,7 +3,7 @@ using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Payment.Payment.GetPaymentById;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Subscriptions.Subscription;
 
 namespace Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptions;
 

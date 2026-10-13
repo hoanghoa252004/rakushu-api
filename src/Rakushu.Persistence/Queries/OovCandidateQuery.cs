@@ -2,7 +2,7 @@ using Dapper;
 using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Application.Usecases.Curator.Oov.Common;
 using Rakushu.Application.Usecases.Curator.Oov.GetOovCandidates;
-using Rakushu.Domain.Entities.OovCandidate;
+using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
 using Rakushu.Persistence.Connection;
 using System;
 using System.Collections.Generic;

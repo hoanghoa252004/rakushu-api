@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.GetById;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetDependencyRelationshipById;
 

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.Series;
+using Rakushu.Domain.Entities.Material.Series;
 
 namespace Rakushu.Persistence.Repositories;
 

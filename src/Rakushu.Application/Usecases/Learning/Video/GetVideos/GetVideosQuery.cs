@@ -1,7 +1,6 @@
-using Entity = Rakushu.Domain.Entities.Video.Video;
+using Entity = Rakushu.Domain.Entities.Material.Video.Video;
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video;
 using Rakushu.Application.Usecases.Learning.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.GetVideos;

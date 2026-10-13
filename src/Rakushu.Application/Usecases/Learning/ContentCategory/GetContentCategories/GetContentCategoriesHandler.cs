@@ -3,9 +3,9 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Learning.ContentCategory.GetContentCategoryById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.Role;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.GetContentCategories;
 

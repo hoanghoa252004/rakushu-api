@@ -1,7 +1,7 @@
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Common;
 using Rakushu.Application.Usecases.Linguistic.JapanesePartOfSpeech.Common;
-using Rakushu.Domain.Entities.Video.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript;
 
 namespace Rakushu.Application.Usecases.Learning.Transcript;
 
@@ -15,7 +15,7 @@ public sealed record TranscriptDetailDto(
 	DateTimeOffset UpdatedAt,
 	PaginatedList<TranscriptSegmentDetailDto> Segments)
 {
-	public static TranscriptDetailDto FromEntity(Domain.Entities.Video.Transcript.Transcript e, PaginatedList<TranscriptSegmentDetailDto> segments) =>
+	public static TranscriptDetailDto FromEntity(Domain.Entities.Material.Transcript.Transcript e, PaginatedList<TranscriptSegmentDetailDto> segments) =>
 		new(
 			e.Id.Value,
 			e.VideoId.Value,
@@ -36,7 +36,7 @@ public sealed record TranscriptSegmentDetailDto(
 	TimeSpan EndTime,
 	List<BunsetsuDetailDto> Bunsetsu)
 {
-	public static TranscriptSegmentDetailDto FromEntity(Domain.Entities.Video.Transcript.TranscriptSegment.TranscriptSegment e) =>
+	public static TranscriptSegmentDetailDto FromEntity(Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment e) =>
 		new(
 			e.Id.Value,
 			e.Sequence,
@@ -57,7 +57,7 @@ public sealed record BunsetsuDetailDto(
 	int EndIndex,
 	List<TokenDetailDto> Tokens)
 {
-	public static BunsetsuDetailDto FromEntity(Domain.Entities.LearningUnit.Bunsetsu.Bunsetsu e) =>
+	public static BunsetsuDetailDto FromEntity(Domain.Entities.Material.Bunsetsu.Bunsetsu e) =>
 		new(
 			e.Id.Value,
 			e.Sequence,
@@ -81,7 +81,7 @@ public sealed record TokenDetailDto(
 	int EndIndex,
 	int Sequence)
 {
-	public static TokenDetailDto FromEntity(Domain.Entities.LearningUnit.Bunsetsu.Token.Token e) =>
+	public static TokenDetailDto FromEntity(Domain.Entities.Material.Token.Token e) =>
 		new(
 			e.Id.Value,
 			e.Surface,

@@ -3,11 +3,11 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.Series;
-using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
+using Rakushu.Domain.Entities.Material.Series;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.CreateVideo;
 
@@ -52,7 +52,7 @@ internal sealed class CreateVideoHandler : IRequestHandler<CreateVideoCommand, R
 				? VideoStatus.Processing 
 				: VideoStatus.Pending;
 
-			var videoResult = Domain.Entities.Video.Video.Create(
+			var videoResult = Domain.Entities.Material.Video.Video.Create(
 				request.Slug,
 				request.Title,
 				request.Duration,

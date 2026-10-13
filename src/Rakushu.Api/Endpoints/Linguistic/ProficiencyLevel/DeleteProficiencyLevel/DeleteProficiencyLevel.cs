@@ -3,7 +3,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Linguistic.ProficiencyLevel.DeleteProficiencyLevel;
 

@@ -5,7 +5,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.User.User.GetUserById;
 using Rakushu.Application.Usecases.User.User.GetUsers;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.User.User.GetUsers;
 

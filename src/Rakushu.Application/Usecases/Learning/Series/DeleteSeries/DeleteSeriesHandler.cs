@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Series;
+using Rakushu.Domain.Entities.Material.Series;
 
 namespace Rakushu.Application.Usecases.Learning.Series.DeleteSeries;
 

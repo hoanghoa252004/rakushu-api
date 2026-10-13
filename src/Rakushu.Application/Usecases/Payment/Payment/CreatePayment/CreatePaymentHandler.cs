@@ -4,10 +4,10 @@ using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Abstractions.Infrastructure.Payment;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
-using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Plan;
+using Rakushu.Domain.Entities.Subscriptions.Subscription;
 
 namespace Rakushu.Application.Usecases.Payment.Payment.CreatePayment;
 
@@ -107,7 +107,7 @@ public sealed class CreatePaymentHandler : IRequestHandler<CreatePaymentCommand,
 			// 4. Create payment
 			var expiredAt = _paymentService.GetPaymentExpiration();
 
-			var paymentResult = Domain.Entities.Payment.Payment.Create(
+			var paymentResult = Domain.Entities.Subscriptions.Payment.Payment.Create(
 				userId,
 				planId,
 				plan.Price,

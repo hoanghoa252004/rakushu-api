@@ -9,7 +9,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Learning.Series;
 using Rakushu.Application.Usecases.Learning.Series.GetAllSeries;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Series.GetAllSeries;
 

@@ -1,6 +1,6 @@
 using MediatR;
 using Rakushu.Application.Usecases.Linguistic.JapanesePartOfSpeech.Common;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Linguistic.JapanesePartOfSpeech;
 
 namespace Rakushu.Application.Usecases.Linguistic.JapanesePartOfSpeech.GetById;
 

@@ -1,6 +1,5 @@
-using Entity = Rakushu.Domain.Entities.Video.MediaAsset.MediaAsset;
-
-using Rakushu.Domain.Entities.Video.MediaAsset;
+using Entity = Rakushu.Domain.Entities.Material.Video.MediaAsset.MediaAsset;
+using Rakushu.Domain.Entities.Material.Video.MediaAsset;
 
 namespace Rakushu.Application.Usecases.Learning.MediaAsset;
 
