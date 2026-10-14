@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
 
 namespace Rakushu.Persistence.Repositories;
 

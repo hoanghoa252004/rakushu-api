@@ -2,10 +2,11 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.ProficiencyLevel;
-using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.Profile.Policies;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Identity.User.Profile.Interest;
+using Rakushu.Domain.Entities.Identity.User.Profile.Policies;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 namespace Rakushu.Application.Usecases.User.Profile.UpdateProfile;
 
@@ -123,11 +124,11 @@ internal sealed class UpdateProfileHandler : IRequestHandler<UpdateProfileComman
 
 			// 4. Update interests if provided
 			
-			var interests = new List<Rakushu.Domain.Entities.User.Profile.Interest.Interest>();
+			var interests = new List<Interest>();
 
 			foreach (var x in request.Interests)
 			{
-				var interestResult = Rakushu.Domain.Entities.User.Profile.Interest.Interest
+				var interestResult = Interest
 					.Create( user.Profile.Id, ContentCategoryId.From(x.ContentCategoryId), x.Priority);
 
 				if (interestResult.IsFailure)

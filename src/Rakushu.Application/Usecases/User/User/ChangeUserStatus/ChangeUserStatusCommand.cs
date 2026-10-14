@@ -1,6 +1,5 @@
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Application.Usecases.User.User.ChangeUserStatus;
 

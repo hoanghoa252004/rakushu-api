@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -18,9 +17,8 @@ public sealed class ContentCategoryRepository : BaseRepository<ContentCategory, 
 	{
 		return await _context.ContentCategories
 			.Include(c => c.Videos)
-			.Include(c => c.Series)
 			.Include(c => c.Interests)
-			.Include(c => c.ContentProcessingPolicies)
+			.Include(c => c.ContentKnowledgeCollections)
 			.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 	}
 	public async Task<ContentCategory?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)

@@ -5,7 +5,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 using Rakushu.Application.Usecases.Subscription.Feature.GetFeatures;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Subscription.Feature.GetFeatures;
 

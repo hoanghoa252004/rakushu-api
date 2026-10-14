@@ -2,7 +2,6 @@ using MediatR;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.User.User.GetUserById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
 
 namespace Rakushu.Application.Usecases.User.User.GetUsers;
 

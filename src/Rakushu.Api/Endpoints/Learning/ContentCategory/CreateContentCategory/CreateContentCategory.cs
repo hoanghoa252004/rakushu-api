@@ -10,7 +10,7 @@ using Rakushu.Api.Endpoints.Subscription.Plan.CreatePlan;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.ContentCategory.CreateContentCategory;
 using Rakushu.Application.Usecases.Subscription.Plan.CreatePlan;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.ContentCategory.CreateContentCategory;
 

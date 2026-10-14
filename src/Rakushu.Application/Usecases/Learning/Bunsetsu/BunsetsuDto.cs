@@ -1,6 +1,4 @@
-using Entity = Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Bunsetsu;
-
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
+using Entity = Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu;
 
 namespace Rakushu.Application.Usecases.Learning.Bunsetsu;
 

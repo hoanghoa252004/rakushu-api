@@ -3,7 +3,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Abstractions.Infrastructure.Payment;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Infrastructure.Extensions.Options;
 using System;
 using System.Collections.Generic;

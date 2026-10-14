@@ -1,6 +1,5 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
-using Rakushu.Domain.Entities.User.Subscription;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Rakushu.Api.Extensions;

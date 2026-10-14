@@ -7,8 +7,8 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Usecases.Curator.Oov.ReviewOovCandidate;
-using Rakushu.Domain.Entities.CuratorReview;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.NotReviewedYet.CuratorReview;
 using System;
 using System.Threading;
 

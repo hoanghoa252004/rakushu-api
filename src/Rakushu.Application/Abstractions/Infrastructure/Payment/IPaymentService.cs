@@ -1,6 +1,6 @@
 ﻿using Rakushu.Application.Abstractions.Infrastructure.PaymentGateway;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,6 +1,5 @@
-using Entity = Rakushu.Domain.Entities.Video.MediaAsset.MediaAsset;
-
-using Rakushu.Domain.Entities.Video.MediaAsset;
+using Entity = Rakushu.Domain.Entities.Material.Video.MediaAsset.MediaAsset;
+using Rakushu.Domain.Entities.Material.Video.MediaAsset;
 
 namespace Rakushu.Application.Usecases.Learning.MediaAsset;
 
@@ -10,12 +9,7 @@ public sealed record MediaAssetDto(
 	string StorageKey,
 	string ContentType,
 	string FileName,
-	long FileSizeBytes,
-	string? Container,
-	string? Codec,
-	int? Width,
-	int? Height,
-	double? FrameRate)
+	long FileSizeBytes)
 {
 	public static MediaAssetDto FromEntity(Entity e) =>
 		new(
@@ -24,10 +18,5 @@ public sealed record MediaAssetDto(
 			e.StorageKey,
 			e.ContentType,
 			e.FileName,
-			e.FileSizeBytes,
-			e.Container,
-			e.Codec,
-			e.Width,
-			e.Height,
-			e.FrameRate);
+			e.FileSizeBytes);
 }

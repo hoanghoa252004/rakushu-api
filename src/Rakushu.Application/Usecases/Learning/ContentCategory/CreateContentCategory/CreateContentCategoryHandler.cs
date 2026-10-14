@@ -2,8 +2,7 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.Feature;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.CreateContentCategory;
 
@@ -34,7 +33,7 @@ internal sealed class CreateContentCategoryHandler : IRequestHandler<CreateConte
 
 			var now = _systemClock.UtcNow;
 
-			var categoryResult = Domain.Entities.ContentCategory.ContentCategory.Create(
+			var categoryResult = Domain.Entities.Knowledge.ContentCategory.ContentCategory.Create(
 				request.Slug,
 				request.Code,
 				request.Name,

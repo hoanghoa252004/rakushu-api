@@ -5,7 +5,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Payment.Payment.GetPaymentById;
 using Rakushu.Application.Usecases.Payment.Payment.GetPayments;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Payment.Payment.GetPayments;
 

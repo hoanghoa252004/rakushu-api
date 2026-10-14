@@ -2,8 +2,8 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Application.Usecases.User.Role.UpdateRole;
 

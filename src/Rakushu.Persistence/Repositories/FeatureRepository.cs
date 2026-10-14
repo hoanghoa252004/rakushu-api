@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.Feature;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Subscriptions.Feature;
 
 namespace Rakushu.Persistence.Repositories;
 

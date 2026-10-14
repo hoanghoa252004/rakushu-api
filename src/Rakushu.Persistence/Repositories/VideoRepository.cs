@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.Video;
-using Rakushu.Domain.Entities.Video.MediaAsset;
-using Rakushu.Domain.Entities.Video.Transcript;
-using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
+using Rakushu.Domain.Entities.Material.Bunsetsu;
+using Rakushu.Domain.Entities.Material.Token;
+using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Material.Video.MediaAsset;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -15,6 +15,7 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 	public override async Task<Video?> GetByIdAsync(VideoId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
+			.Include(v => v.Series)
 			.Include(v => v.MediaAssets)
 			.Include(v => v.Transcript)
 				.ThenInclude(t => t.TranscriptSegments)
@@ -26,6 +27,7 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 	public async Task<Video?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
+			.Include(v => v.Series)
 			.Include(v => v.MediaAssets)
 			.Include(v => v.Transcript)
 			.FirstOrDefaultAsync(v => v.Slug == slug, cancellationToken);
@@ -75,6 +77,7 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 	public override async Task<IEnumerable<Video>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
+			.Include(v => v.Series)
 			.Include(v => v.MediaAssets)
 			.Include(v => v.Transcript)
 				.ThenInclude(t => t.TranscriptSegments)

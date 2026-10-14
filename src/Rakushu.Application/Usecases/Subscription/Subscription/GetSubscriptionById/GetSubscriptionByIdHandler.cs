@@ -5,7 +5,7 @@ using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptions;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Subscriptions.Subscription;
 
 namespace Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptionById;
 

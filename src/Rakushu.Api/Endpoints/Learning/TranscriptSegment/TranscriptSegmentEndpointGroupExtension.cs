@@ -8,7 +8,7 @@ internal static class TranscriptSegmentEndpointGroupExtension
 {
 	internal static RouteGroupBuilder MapTranscriptSegmentEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/admin/transcript-segments")
+		return app.MapGroup("/api/video/{videoId:guid}/transcript/segments")
 			.WithTags("TranscriptSegment")
 			.WithGroupName("admin")
 			.AllowAnonymous();

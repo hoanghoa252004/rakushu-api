@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.OovCandidate;
+using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
 using System.Threading;
 using System.Threading.Tasks;
 

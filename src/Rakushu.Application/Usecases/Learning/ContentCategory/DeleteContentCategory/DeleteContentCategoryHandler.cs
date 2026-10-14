@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 
 namespace Rakushu.Application.Usecases.Learning.ContentCategory.DeleteContentCategory;
 
@@ -27,7 +27,7 @@ internal sealed class DeleteContentCategoryHandler : IRequestHandler<DeleteConte
 			if (category is null)
 				return Result.Failure(ContentCategoryErrors.NotFound);
 
-			if(category.Videos.Any() || category.Series.Any() || category.ContentProcessingPolicies.Any() || category.Interests.Any())
+			if(category.Videos.Any() || category.ContentKnowledgeCollections.Any() || category.Interests.Any())
 				return Result.Failure(ContentCategoryErrors.IsInUse);
 
 			_repository.Delete(category);

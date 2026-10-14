@@ -6,7 +6,7 @@ using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Payment.Payment.GetMyPaymentHistory;
 using Rakushu.Application.Usecases.Payment.Payment.GetPaymentById;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Payment.Payment.GetMyPaymentHistory;
 

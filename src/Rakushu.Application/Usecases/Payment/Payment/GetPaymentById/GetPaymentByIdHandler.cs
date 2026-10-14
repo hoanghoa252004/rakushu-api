@@ -4,10 +4,9 @@ using Rakushu.Application.Usecases.Payment.Transaction.GetTransactionsByPaymentI
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptions;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
 
 namespace Rakushu.Application.Usecases.Payment.Payment.GetPaymentById;
 

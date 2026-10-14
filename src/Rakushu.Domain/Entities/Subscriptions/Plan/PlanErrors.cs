@@ -1,0 +1,48 @@
+﻿using Rakushu.Domain.Common.Errors;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Rakushu.Domain.Entities.Subscriptions.Plan;
+
+public static class PlanErrors
+{
+	public static readonly Error InvalidCode = Error.Validation(
+		"PLAN.INVALID_CODE", "The plan code is invalid, it must have value, not exceed 100 chars, all uppercase, and concat with '_'. For example: FREE_PLAN ; PREMIUM_PLAN.");
+
+	public static readonly Error NotFound = Error.NotFound(
+		"PLAN.NOT_FOUND", "The specified plan was not found.");
+
+	public static Error DuplicateCode(string code) => Error.Conflict(
+		"PLAN.DUPLICATE_CODE", $"A plan with code '{code}' already exists.");
+
+	public static readonly Error CannotDeletePlanWithSubscriptions = Error.Conflict(
+		"PLAN.CANNOT_DELETE", "Cannot delete a plan that has been subscribed, you can only archive it.");
+	public static readonly Error InvalidName = Error.Validation(
+		"PLAN.INVALID_NAME",
+		"Plan name is required and must not exceed 50 characters.");
+
+	public static readonly Error InvalidPrice = Error.Validation(
+		"PLAN.INVALID_PRICE",
+		"Plan price must be greater than 0.");
+
+	public static readonly Error InvalidCurrency = Error.Validation(
+		"PLAN.INVALID_CURRENCY",
+		"The specified currency is not supported. Valid currency: "
+		+ string.Join(", ", Enum.GetNames<Currency>()) + ".");
+
+	public static readonly Error InvalidBillingCycle = Error.Validation(
+		"PLAN.INVALID_BILLING_CYCLE",
+		"The specified billing cycle is invalid. Valid billing cycle: "
+		+ string.Join(", ", Enum.GetNames<BillingCycle>()) + ".");
+	public static readonly Error InvalidJapaneseName = Error.Validation(
+		"PLAN.INVALID_JAPANESE_NAME",
+		"Plan Japanese name is required and must not exceed 100 characters.");
+
+	public static readonly Error DuplicateFreePlan = Error.Conflict(
+		"PLAN.DUPLICATE_FREE_PLAN",
+		"Only one free plan is allowed.");
+}

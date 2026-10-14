@@ -4,7 +4,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Usecases.Authentication.Login;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Application.Usecases.Authentication.RefreshToken;
 

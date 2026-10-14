@@ -5,7 +5,7 @@ using Rakushu.Api.Endpoints.Subscription.Feature;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.ContentCategory.GetContentCategoryById;
 using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.ContentCategory.GetContentCategoryById;
 

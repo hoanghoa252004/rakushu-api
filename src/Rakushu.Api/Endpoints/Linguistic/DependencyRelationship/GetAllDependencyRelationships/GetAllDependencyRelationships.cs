@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Api.Common;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.GetAll;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.GetAllDependencyRelationships;
 

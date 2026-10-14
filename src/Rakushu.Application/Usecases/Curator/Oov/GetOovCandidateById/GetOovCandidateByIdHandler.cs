@@ -1,10 +1,10 @@
 using Rakushu.Application.Usecases.Curator.Oov.Common;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.OovCandidate;
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
 using Rakushu.Application.Abstractions.Persistence.Queries;
+using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
 
 namespace Rakushu.Application.Usecases.Curator.Oov.GetOovCandidateById;
 

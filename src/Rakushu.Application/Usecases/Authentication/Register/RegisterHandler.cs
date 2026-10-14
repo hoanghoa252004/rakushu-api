@@ -3,8 +3,8 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Application.Usecases.Authentication.Register;
 
@@ -60,7 +60,7 @@ internal sealed class RegisterHandler : IRequestHandler<RegisterCommand, Result>
 
 			var utcNow = _systemClock.UtcNow;
 
-			var userResult = Rakushu.Domain.Entities.User.User.Create(
+			var userResult = Domain.Entities.Identity.User.User.Create(
 				request.FullName,
 				request.Email.ToLower(),
 				passwordHash,

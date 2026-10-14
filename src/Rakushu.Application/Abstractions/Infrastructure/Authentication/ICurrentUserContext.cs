@@ -1,4 +1,4 @@
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Application.Abstractions.Infrastructure.Authentication;
 

@@ -1,6 +1,6 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.User.Subscription;
+using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using System;
 using System.Collections.Generic;
 using System.Linq;

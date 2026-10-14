@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Linguistic.DependencyRelationship.Delete;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Linguistic.DependencyRelationship.DeleteDependencyRelationship;
 

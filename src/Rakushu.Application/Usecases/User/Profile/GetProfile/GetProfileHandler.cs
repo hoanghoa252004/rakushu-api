@@ -3,7 +3,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Usecases.User.User.GetUserById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Application.Usecases.User.Profile.GetProfile;
 

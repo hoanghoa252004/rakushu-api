@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Rakushu.Domain.Entities.OovCandidate;
+using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
 using System.Threading;
 using System.Threading.Tasks;
 

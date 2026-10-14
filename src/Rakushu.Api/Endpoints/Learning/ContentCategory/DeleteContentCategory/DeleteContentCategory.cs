@@ -4,7 +4,7 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.ContentCategory.DeleteContentCategory;
 using Rakushu.Application.Usecases.Learning.ContentCategory.GetContentCategoryById;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.ContentCategory.DeleteContentCategory;
 

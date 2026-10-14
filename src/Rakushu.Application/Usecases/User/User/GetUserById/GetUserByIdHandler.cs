@@ -1,8 +1,8 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
-using Rakushu.Domain.Entities.User;
+using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Application.Usecases.User.User.GetUserById;
 

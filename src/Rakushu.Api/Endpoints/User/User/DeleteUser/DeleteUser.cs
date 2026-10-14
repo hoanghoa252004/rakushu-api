@@ -6,7 +6,7 @@ using Rakushu.Application.Usecases.User.User.ChangeUserStatus;
 using Rakushu.Application.Usecases.User.User.DeleteUser;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.User.User.DeleteUser;
 

@@ -8,7 +8,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Curator.Oov.Common;
 using Rakushu.Application.Usecases.Curator.Oov.GetOovCandidates;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 using System.Threading;
 
 namespace Rakushu.Api.Endpoints.Curator.GetOovCandidates;

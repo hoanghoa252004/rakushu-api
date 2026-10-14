@@ -5,8 +5,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Payment;
 using Rakushu.Application.Abstractions.Infrastructure.PaymentGateway;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Payment;
-using Rakushu.Domain.Entities.Payment.Transaction;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
 
 namespace Rakushu.Application.Usecases.Payment.Transaction.CreateTransaction;
 

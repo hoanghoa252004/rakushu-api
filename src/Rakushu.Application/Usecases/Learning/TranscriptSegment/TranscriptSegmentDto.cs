@@ -1,6 +1,4 @@
-using Entity = Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment.TranscriptSegment;
-
-using Rakushu.Domain.Entities.Video.Transcript.TranscriptSegment;
+using Entity = Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment;
 
 namespace Rakushu.Application.Usecases.Learning.TranscriptSegment;
 

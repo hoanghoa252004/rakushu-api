@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Application.Usecases.Linguistic.JapanesePartOfSpeech.GetAll;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Linguistic.JapanesePartOfSpeech.GetAll;
 

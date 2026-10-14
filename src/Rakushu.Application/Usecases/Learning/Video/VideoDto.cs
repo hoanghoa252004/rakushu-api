@@ -1,6 +1,5 @@
-using Entity = Rakushu.Domain.Entities.Video.Video;
-
-using Rakushu.Domain.Entities.Video;
+using Entity = Rakushu.Domain.Entities.Material.Video.Video;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video;
 
@@ -10,12 +9,12 @@ public sealed record VideoDto(
 	string? Description,
 	TimeSpan Duration,
 	Guid ContentCategoryId,
-	Guid SeriesId,
+	Guid? SeriesId,
 	int SortOrder,
 	VideoSource SourceType,
 	string? SourceUrl,
 	VideoStatus Status,
-	Guid CreatedBy)
+	Guid? LearnerId)
 {
 	public static VideoDto FromEntity(Entity e) =>
 		new(
@@ -24,10 +23,10 @@ public sealed record VideoDto(
 			e.Description,
 			e.Duration,
 			e.ContentCategoryId.Value,
-			e.SeriesId.Value,
+			e.SeriesId?.Value,
 			e.SortOrder,
 			e.SourceType,
 			e.SourceUrl,
 			e.Status,
-			e.CreatedBy.Value);
+			e.LearnerId?.Value);
 }

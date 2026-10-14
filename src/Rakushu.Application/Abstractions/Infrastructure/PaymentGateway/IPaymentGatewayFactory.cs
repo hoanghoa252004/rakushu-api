@@ -1,5 +1,5 @@
 using Rakushu.Application.Abstractions.Infrastructure.Payment;
-using Rakushu.Domain.Entities.Payment;
+using Rakushu.Domain.Entities.Subscriptions.Payment;
 
 namespace Rakushu.Application.Abstractions.Infrastructure.PaymentGateway;
 

@@ -1,7 +1,6 @@
-using Entity = Rakushu.Domain.Entities.Video.MediaAsset.MediaAsset;
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Video.MediaAsset;
+using Rakushu.Domain.Entities.Material.Video.MediaAsset;
 
 namespace Rakushu.Application.Usecases.Learning.MediaAsset.CreateMediaAsset;
 
@@ -11,10 +10,5 @@ public sealed record CreateMediaAssetCommand(
 	string storageKey,
 	string contentType,
 	string fileName,
-	long fileSizeBytes,
-	string? container,
-	string? codec,
-	int? width,
-	int? height,
-	double? frameRate
+	long fileSizeBytes
 ) : IRequest<Result<Guid>>;

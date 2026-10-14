@@ -1,12 +1,10 @@
 using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu;
-using Rakushu.Domain.Entities.LearningUnit.Bunsetsu.Token;
-using Rakushu.Domain.Entities.LinguisticMetadata.DependencyRelationship;
-using Rakushu.Domain.Entities.LinguisticMetadata.JapanesePartOfSpeech;
-using Rakushu.Domain.Entities.LinguisticMetadata.UniversalPartOfSpeech;
-using Rakushu.Domain.Entities.Video;
+using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
+using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
+using Rakushu.Domain.Entities.Material.Bunsetsu;
+using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Token.CreateToken;
 
@@ -37,19 +35,15 @@ internal sealed class CreateTokenHandler : IRequestHandler<CreateTokenCommand, R
 			if (bunsetsu is null)
 				return Result.Failure<Guid>(BunsetsuErrors.NotFound);
 
-			var now = DateTimeOffset.UtcNow;
 			var result = bunsetsu.AddToken(
 				request.surface,
 				request.lemma,
 				request.reading,
 				JapanesePartOfSpeechId.From(request.japanesePartOfSpeechId),
-				UniversalPartOfSpeechId.From(request.universalPartOfSpeechId),
 				DependencyRelationshipId.From(request.dependencyRelationshipId),
 				request.startIndex,
 				request.endIndex,
-				request.sequence,
-				now,
-				now);
+				request.sequence);
 
 			if (result.IsFailure)
 				return Result.Failure<Guid>(result.Error);

@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Role;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Application.Usecases.User.Role.GetRoles;
 

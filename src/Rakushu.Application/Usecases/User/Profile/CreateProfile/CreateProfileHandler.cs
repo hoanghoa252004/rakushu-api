@@ -3,11 +3,12 @@ using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.ContentCategory;
-using Rakushu.Domain.Entities.Plan;
-using Rakushu.Domain.Entities.ProficiencyLevel;
-using Rakushu.Domain.Entities.User;
-using Rakushu.Domain.Entities.User.Profile.Policies;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Identity.User.Profile.Interest;
+using Rakushu.Domain.Entities.Identity.User.Profile.Policies;
+using Rakushu.Domain.Entities.Knowledge.ContentCategory;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
+using Rakushu.Domain.Entities.Subscriptions.Plan;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -126,7 +127,7 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 			}
 
 			// 3. Update the profile with all fields
-			var createProfileResult = Rakushu.Domain.Entities.User.Profile.Profile.Create(
+			var createProfileResult = Domain.Entities.Identity.User.Profile.Profile.Create(
 				user.Id,
 				levelId,
 				request.DailyLearningMinutes,
@@ -144,11 +145,11 @@ internal sealed class CreateProfileHandler : IRequestHandler<CreateProfileComman
 
 			// 4. Update interests if provided
 
-			var interests = new List<Rakushu.Domain.Entities.User.Profile.Interest.Interest>();
+			var interests = new List<Interest>();
 
 			foreach (var x in request.Interests)
 			{
-				var interestResult = Rakushu.Domain.Entities.User.Profile.Interest.Interest
+				var interestResult = Interest
 					.Create(createProfileResult.Value.Id, ContentCategoryId.From(x.ContentCategoryId), x.Priority);
 
 				if (interestResult.IsFailure)
