@@ -8,4 +8,4 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Application.Usecases.Storage.CreateImagePresignedUrl;
 
-public sealed record CreateImagePresignedUrlCommand(string ContentType) : IRequest<Result<CreateImagePresignedUrlResponseDto>>;
+public sealed record CreateImagePresignedUrlCommand(string ContentType, string FileName) : IRequest<Result<CreateImagePresignedUrlResponseDto>>;

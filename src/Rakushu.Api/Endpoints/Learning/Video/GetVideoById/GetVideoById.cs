@@ -24,7 +24,7 @@ internal sealed class GetVideoById : IEndpoint
 			.WithSummary("Anonymous")
 			.WithDescription("Gets video by id with all information including content category, series (if available), and media assets.")
 			.AllowAnonymous()
-			.Produces<VideoDto>(StatusCodes.Status200OK)
+			.Produces<VideoDetailDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}

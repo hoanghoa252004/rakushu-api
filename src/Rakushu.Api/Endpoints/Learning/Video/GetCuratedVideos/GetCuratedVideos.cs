@@ -33,7 +33,7 @@ internal sealed class GetCuratedVideos : IEndpoint
 			.WithSummary("Anonymous")
 			.WithDescription("Gets all curated videos with pagination and filtering.")
 			.AllowAnonymous()
-			.Produces<PaginatedList<VideoListDto>>(StatusCodes.Status200OK)
+			.Produces<PaginatedList<VideoDetailDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}

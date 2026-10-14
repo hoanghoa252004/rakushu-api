@@ -1,7 +1,6 @@
-using Rakushu.Application.Abstractions.Infrastructure.Payment;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 
-namespace Rakushu.Application.Abstractions.Infrastructure.PaymentGateway;
+namespace Rakushu.Application.Abstractions.Infrastructure.Payment;
 
 public interface IPaymentGatewayFactory
 {

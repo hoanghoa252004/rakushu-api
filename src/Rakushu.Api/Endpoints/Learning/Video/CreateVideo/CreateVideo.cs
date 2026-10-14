@@ -1,14 +1,9 @@
 using MediatR;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
-using Rakushu.Api.Endpoints.Learning.Video;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Video.CreateVideo;
 using Rakushu.Domain.Entities.Identity.Role;
-using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Api.Endpoints.Learning.Video.CreateVideo;
 
@@ -32,7 +27,8 @@ internal sealed class CreateVideo : IEndpoint
 					dto.SortOrder,
 					dto.SourceType,
 					dto.SourceUrl,
-					dto.StorageKeyOfVideo);
+					dto.StorageKeyOfVideo,
+					dto.StorageKeyOfThumbnail);
 
 				var result = await sender.Send(command, cancellationToken);
 
@@ -57,6 +53,7 @@ internal record CreateVideoRequestDto(
 	Guid ContentCategoryId,
 	Guid? SeriesId,
 	int SortOrder,
-	VideoSource SourceType,
+	string SourceType,
 	string? SourceUrl,
-	string StorageKeyOfVideo);
+	string StorageKeyOfVideo,
+	string StorageKeyOfThumbnail);

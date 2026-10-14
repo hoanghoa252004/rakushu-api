@@ -153,4 +153,22 @@ internal class AwsS3Service : IStorageService
 
 		await _s3.AbortMultipartUploadAsync(request, cancellationToken);
 	}
+
+	public async Task<MediaAssetMetadataDto> GetMediaAssetMetadataAsync(string key, CancellationToken cancellationToken)
+	{
+		var response = await _s3.GetObjectMetadataAsync(
+			new GetObjectMetadataRequest
+			{
+				BucketName = _s3Settings.BucketName,
+				Key = key
+			},
+			cancellationToken);
+
+		return new MediaAssetMetadataDto
+		(
+			response.Headers.ContentType,
+			Path.GetFileName(key),
+			response.ContentLength
+		);
+	}
 }

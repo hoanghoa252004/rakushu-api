@@ -269,34 +269,6 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "knowledge_units",
-                schema: "knowledge",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    knowledge_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    knowledge_collection_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    expression = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    reading = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    audio_key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_knowledge_units", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_knowledge_units_knowledge_collections_knowledge_collection_",
-                        column: x => x.knowledge_collection_id,
-                        principalSchema: "knowledge",
-                        principalTable: "knowledge_collections",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "entitlements",
                 schema: "subscription",
                 columns: table => new
@@ -326,6 +298,42 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "plans",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "knowledge_units",
+                schema: "knowledge",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    knowledge_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    knowledge_collection_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    proficiency_level_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    expression = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    reading = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    audio_key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_knowledge_units", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_knowledge_units_knowledge_collections_knowledge_collection_",
+                        column: x => x.knowledge_collection_id,
+                        principalSchema: "knowledge",
+                        principalTable: "knowledge_collections",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_knowledge_units_proficiency_levels_proficiency_level_id",
+                        column: x => x.proficiency_level_id,
+                        principalSchema: "knowledge",
+                        principalTable: "proficiency_levels",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -538,7 +546,7 @@ namespace Rakushu.Persistence.Migrations
                     description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     duration = table.Column<TimeSpan>(type: "interval", nullable: false),
                     content_category_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    series_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    series_id = table.Column<Guid>(type: "uuid", nullable: true),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     source_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
@@ -1178,6 +1186,12 @@ namespace Rakushu.Persistence.Migrations
                 column: "knowledge_collection_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_knowledge_units_proficiency_level_id",
+                schema: "knowledge",
+                table: "knowledge_units",
+                column: "proficiency_level_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_learning_units_knowledge_meaning_id",
                 schema: "material",
                 table: "learning_units",
@@ -1534,10 +1548,6 @@ namespace Rakushu.Persistence.Migrations
                 schema: "knowledge");
 
             migrationBuilder.DropTable(
-                name: "proficiency_levels",
-                schema: "knowledge");
-
-            migrationBuilder.DropTable(
                 name: "knowledge_units",
                 schema: "knowledge");
 
@@ -1551,6 +1561,10 @@ namespace Rakushu.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "knowledge_collections",
+                schema: "knowledge");
+
+            migrationBuilder.DropTable(
+                name: "proficiency_levels",
                 schema: "knowledge");
 
             migrationBuilder.DropTable(

@@ -10,4 +10,4 @@ public sealed record GetMyVideosQuery(
 	string? SearchKey = null,
 	Guid? ContentCategoryId = null,
 	Guid? SeriesId = null
-) : IRequest<Result<PaginatedList<VideoListDto>>>;
+) : IRequest<Result<PaginatedList<VideoDetailDto>>>;
