@@ -17,7 +17,7 @@ internal class CreateVideoMultipartUpload : IEndpoint
 			CancellationToken cancellationToken
 			) =>
 		{
-			var command = new CreateVideoMultipartUploadCommand(request.ContentType);
+			var command = new CreateVideoMultipartUploadCommand(request.ContentType, request.FileName);
 
 			var result = await _sender.Send(command, cancellationToken);
 
@@ -33,4 +33,5 @@ internal class CreateVideoMultipartUpload : IEndpoint
 }
 
 internal sealed record CreateVideoMultipartUploadRequestDto(
-	string ContentType);
+	string ContentType,
+	string FileName);

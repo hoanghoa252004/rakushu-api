@@ -1,5 +1,6 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
@@ -9,23 +10,27 @@ using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.GetMyVideos;
 
-internal sealed class GetMyVideosHandler : IRequestHandler<GetMyVideosQuery, Result<PaginatedList<VideoListDto>>>
+internal sealed class GetMyVideosHandler : IRequestHandler<GetMyVideosQuery, Result<PaginatedList<VideoDetailDto>>>
 {
 	private readonly IVideoRepository _repository;
 	private readonly ICurrentUserContext _currentUserContext;
 
+	private readonly IStorageService _storageService;
+
 	public GetMyVideosHandler(
 		IVideoRepository repository,
-		ICurrentUserContext currentUserContext)
+		ICurrentUserContext currentUserContext,
+		IStorageService storageService)
 	{
 		_repository = repository;
 		_currentUserContext = currentUserContext;
+		_storageService = storageService;
 	}
 
-	public async Task<Result<PaginatedList<VideoListDto>>> Handle(GetMyVideosQuery request, CancellationToken cancellationToken)
+	public async Task<Result<PaginatedList<VideoDetailDto>>> Handle(GetMyVideosQuery request, CancellationToken cancellationToken)
 	{
 		if (_currentUserContext.UserId is null)
-			return Result.Failure<PaginatedList<VideoListDto>>(VideoErrors.NotFound);
+			return Result.Failure<PaginatedList<VideoDetailDto>>(VideoErrors.NotFound);
 
 		var userId = UserId.From(_currentUserContext.UserId.Value);
 		var videos = await _repository.GetAllAsync(cancellationToken);
@@ -67,11 +72,40 @@ internal sealed class GetMyVideosHandler : IRequestHandler<GetMyVideosQuery, Res
 			.OrderByDescending(v => v.CreatedAt)
 			.Skip((request.PageNumber - 1) * request.PageSize)
 			.Take(request.PageSize)
-			.Select(VideoListDto.FromEntity)
+			.Select(VideoDetailDto.FromEntity)
 			.ToList();
 
-		var pagedResult = PaginatedList<VideoListDto>.Create(items, totalCount, request.PageNumber, request.PageSize);
+		// Generate pre-signed URLs for media assets
+		var enrichedItems = await Task.WhenAll(
+			items.Select(async video =>
+			{
+				var mediaAssets = await Task.WhenAll(
+					video.MediaAssets.Select(async mediaAsset =>
+					{
+						var signedUrl = await _storageService
+							.CreatePresignedReadUrlAsync(
+								mediaAsset.StorageKey,
+								cancellationToken);
 
+						return mediaAsset with
+						{
+							StorageKey = signedUrl
+						};
+					}));
+
+				return video with
+				{
+					MediaAssets = mediaAssets
+				};
+			}));
+
+		// Create paginated result
+		var pagedResult = PaginatedList<VideoDetailDto>.Create(
+			enrichedItems,
+			totalCount,
+			request.PageNumber,
+			request.PageSize);
+		
 		return Result.Success(pagedResult);
 	}
 }

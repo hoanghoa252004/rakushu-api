@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
-using Rakushu.Application.Abstractions.Infrastructure.PaymentGateway;
+using Rakushu.Application.Abstractions.Infrastructure.Payment;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;

@@ -1,11 +1,14 @@
 ﻿using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.SimpleEmail;
+using Amazon.TranscribeService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Rakushu.Application.Abstractions.Infrastructure.ASR;
 using Rakushu.Application.Abstractions.Infrastructure.Email;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Infrastructure.ASR;
 using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
 using Rakushu.Infrastructure.Storage;
@@ -39,6 +42,10 @@ internal static class AwsExtention
 				new AmazonS3Client(
 					Amazon.RegionEndpoint.APSoutheast1
 				));
+
+			services.AddSingleton<IAmazonTranscribeService>(_ =>
+				new AmazonTranscribeServiceClient(
+					Amazon.RegionEndpoint.APSoutheast1));
 		}
 		else
 		{
@@ -60,13 +67,22 @@ internal static class AwsExtention
 					awsCredentials,
 					Amazon.RegionEndpoint.APSoutheast1
 				));
+
+			// AWS Transcribe
+			services.AddSingleton<IAmazonTranscribeService>(_ =>
+				new AmazonTranscribeServiceClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1));
 		}
 
 		services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
 
 		// SES
 		services.AddScoped<IEmailService, AwsSesService>();
+		// S3
 		services.AddScoped<IStorageService, AwsS3Service>();
+		// Transcribe
+		services.AddScoped<IAsrService, AwsTranscribeService>();
 		return services;
 	}
 }

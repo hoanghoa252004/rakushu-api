@@ -11,7 +11,7 @@ using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Api.Endpoints.Learning.Video.UpdateVideoStatus;
 
-internal sealed class UpdateVideoStatus : IEndpoint
+internal sealed class ChangeVideoStatus : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
@@ -22,7 +22,7 @@ internal sealed class UpdateVideoStatus : IEndpoint
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new UpdateVideoStatusCommand(id, dto.NewStatus);
+				var command = new ChangeVideoStatusCommand(id, dto.NewStatus);
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchOk();
 			})

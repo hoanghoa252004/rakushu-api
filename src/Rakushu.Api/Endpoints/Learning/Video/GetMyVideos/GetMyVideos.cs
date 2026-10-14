@@ -34,7 +34,7 @@ internal sealed class GetMyVideos : IEndpoint
 			.WithSummary("Learner")
 			.WithDescription("Gets videos uploaded by the current learner with pagination and filtering.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
-			.Produces<PaginatedList<VideoListDto>>(StatusCodes.Status200OK)
+			.Produces<PaginatedList<VideoDetailDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)

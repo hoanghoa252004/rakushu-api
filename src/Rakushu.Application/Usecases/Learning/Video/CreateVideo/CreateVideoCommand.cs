@@ -1,7 +1,5 @@
-using Entity = Rakushu.Domain.Entities.Material.Video.Video;
 using MediatR;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.CreateVideo;
 
@@ -13,8 +11,9 @@ public sealed record CreateVideoCommand(
 	Guid ContentCategoryId,
 	Guid? SeriesId,
 	int SortOrder,
-	VideoSource SourceType,
+	string SourceType,
 	string? SourceUrl,
-	string StorageKeyOfVideo
+	string StorageKeyOfVideo,
+	string StorageKeyOfThumbnail
 ) : IRequest<Result<Guid>>;
 

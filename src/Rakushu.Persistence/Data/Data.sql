@@ -2,39 +2,17 @@ BEGIN;
 -- ====================================================================================================
 -- Rakushu Linguistic Metadata Seed Script (PostgreSQL)
 -- Tables:
---   1. universal_part_of_speeches (17 UPOS tags)
---   2. japanese_part_of_speeches  (UniDic/Sudachi XPOS tags)
---   3. dependency_relationships   (29 Universal Dependency tags)
+--   1. japanese_part_of_speeches  (UniDic/Sudachi XPOS tags)
+--   2. dependency_relationships   (29 Universal Dependency tags)
 -- Columns: id, code, name (tiếng Việt), japanese_name (tiếng Nhật), description
 -- Script có thể chạy lại nhiều lần (idempotent) nhờ ON CONFLICT (code).
 -- ====================================================================================================
 -- ----------------------------------------------------------------------------------------------------
--- 1. UNIVERSAL PART OF SPEECH (UPOS - 17 tags)
--- ----------------------------------------------------------------------------------------------------
-INSERT INTO universal_part_of_speeches (id, code, name, japanese_name, description)
-VALUES
-    (gen_random_uuid(), 'ADJ', 'Tính từ', '形容詞', 'Từ mô tả thuộc tính, tính chất hoặc trạng thái của danh từ (ví dụ: big, old, green)'),
-    (gen_random_uuid(), 'ADP', 'Giới từ / Trợ từ quan hệ', '接置詞', 'Giới từ hoặc hậu từ liên kết với danh từ/đại từ để chỉ quan hệ ngữ pháp (ví dụ: in, to, of)'),
-    (gen_random_uuid(), 'ADV', 'Phó từ / Trạng từ', '副詞', 'Từ bổ nghĩa cho động từ, tính từ, phó từ khác hoặc toàn bộ mệnh đề (ví dụ: very, well, slowly)'),
-    (gen_random_uuid(), 'AUX', 'Trợ động từ', '助動詞', 'Từ hỗ trợ động từ chính biểu thị thời, thể, thể thức hoặc thức giả định (ví dụ: is, has, will, can)'),
-    (gen_random_uuid(), 'CCONJ', 'Liên từ kết hợp', '等位接続詞', 'Liên từ liên kết các từ, cụm từ hoặc mệnh đề đẳng lập ngang hàng (ví dụ: and, or, but)'),
-    (gen_random_uuid(), 'DET', 'Từ chỉ định / Hạn định từ', '限定詞', 'Từ đứng trước danh từ để xác định hoặc hạn định đối tượng tham chiếu (ví dụ: a, the, this, that)'),
-    (gen_random_uuid(), 'INTJ', 'Thán từ', '感動詞', 'Từ biểu lộ cảm xúc trực tiếp hoặc tiếng hô gọi, chào đón, hồi đáp (ví dụ: oh, wow, hey, yes)'),
-    (gen_random_uuid(), 'NOUN', 'Danh từ', '名詞', 'Từ chỉ người, sự vật, con vật, địa điểm, hiện tượng hoặc khái niệm trừu tượng (ví dụ: water, cat, teacher)'),
-    (gen_random_uuid(), 'NUM', 'Số từ', '数詞', 'Chữ số hoặc từ ngữ chỉ số lượng, số thứ tự (ví dụ: 1, 2, first, second)'),
-    (gen_random_uuid(), 'PART', 'Tiểu từ / Trợ từ', '助詞', 'Hư từ ngữ pháp thực hiện chức năng ngữ pháp đặc thù mà không xếp vào từ loại khác (ví dụ: not, ''s)'),
-    (gen_random_uuid(), 'PRON', 'Đại từ', '代名詞', 'Từ dùng để xưng hô hoặc thay thế cho danh từ/cụm danh từ (ví dụ: I, you, he, she, they)'),
-    (gen_random_uuid(), 'PROPN', 'Danh từ riêng', '固有名詞', 'Tên riêng chỉ người, địa danh, tổ chức, nhãn hiệu cụ thể (ví dụ: Tokyo, Vietnam, Google)'),
-    (gen_random_uuid(), 'PUNCT', 'Dấu câu', '句読点', 'Ký hiệu ngắt nghỉ hoặc kết thúc phân đoạn văn bản (ví dụ: ., ,, ?, !, :)'),
-    (gen_random_uuid(), 'SCONJ', 'Liên từ phụ thuộc', '従属接続詞', 'Liên từ nối mệnh đề phụ với mệnh đề chính (ví dụ: because, although, if, since)'),
-    (gen_random_uuid(), 'SYM', 'Ký hiệu', '記号', 'Ký hiệu đặc biệt, toán học, đơn vị tiền tệ hoặc biểu tượng (ví dụ: $, %, +, =, &)'),
-    (gen_random_uuid(), 'VERB', 'Động từ', '動詞', 'Từ biểu thị hành động, trạng thái tồn tại hoặc biến đổi (ví dụ: go, eat, become, run)'),
-    (gen_random_uuid(), 'X', 'Khác / Không xác định', 'その他', 'Từ loại ngoại ngữ chưa phân loại, từ viết tắt hoặc dị thể ngữ pháp');
 
 -- ----------------------------------------------------------------------------------------------------
--- 2. JAPANESE PART OF SPEECH (JPOS / UniDic XPOS)
+-- 1. JAPANESE PART OF SPEECH (JPOS / UniDic XPOS)
 -- ----------------------------------------------------------------------------------------------------
-INSERT INTO japanese_part_of_speeches (id, code, name, japanese_name, description)
+INSERT INTO knowledge.japanese_part_of_speeches (id, code, name, japanese_name, description)
 VALUES
     (gen_random_uuid(), '代名詞', 'Đại từ', '代名詞', 'Đại từ chỉ người, vật, địa điểm (ví dụ: 私, 彼, ここ)'),
     (gen_random_uuid(), '副詞', 'Phó từ', '副詞', 'Phó từ bổ nghĩa hành động/trạng thái (ví dụ: ゆっくり, すぐ, もっと)'),
@@ -90,9 +68,9 @@ VALUES
     (gen_random_uuid(), '連体詞', 'Liên thể từ', '連体詞', 'Từ chỉ định không biến đổi đứng trước danh từ (ví dụ: この, その, あの, ある, いわゆる)');
 
 -- ----------------------------------------------------------------------------------------------------
--- 3. DEPENDENCY RELATIONSHIPS (Universal Dependencies - 29 tags)
+-- 2. DEPENDENCY RELATIONSHIPS (Universal Dependencies - 29 tags)
 -- ----------------------------------------------------------------------------------------------------
-INSERT INTO dependency_relationships (id, code, name, japanese_name, description)
+INSERT INTO knowledge.dependency_relationships (id, code, name, japanese_name, description)
 VALUES
     (gen_random_uuid(), 'root', 'Vị ngữ trung tâm (Gốc câu)', '文の根（ルート）', 'Động từ/danh từ vị ngữ đóng vai trò trung tâm của cả câu'),
     (gen_random_uuid(), 'nsubj', 'Chủ ngữ danh từ', '名詞主語', 'Chủ ngữ của câu hoặc của mệnh đề phụ (đi với が hoặc は)'),
@@ -127,7 +105,7 @@ VALUES
 -- ============================================
 -- Seed data: Proficiency Levels - JLPT
 -- ============================================
-INSERT INTO proficiency_levels (
+INSERT INTO knowledge.proficiency_levels (
     id,
     code,
     name,
@@ -200,7 +178,7 @@ VALUES
 -- Seed data: Content Categories
 -- Hierarchical structure
 -- ============================================
-INSERT INTO content_categories (
+INSERT INTO knowledge.content_categories (
     id,
     slug,
     code,
@@ -316,7 +294,7 @@ VALUES
 -- ============================================
 -- Seed data: Roles
 -- ============================================
-INSERT INTO roles (
+INSERT INTO identity.roles (
     id,
     code,
     name,
@@ -358,7 +336,7 @@ VALUES
 -- ============================================
 -- Seed data: Users
 -- ============================================
-INSERT INTO users (
+INSERT INTO identity.users (
     id,
     full_name,
     email,
@@ -417,7 +395,7 @@ VALUES
 -- Profiles are only created for Learner users.
 -- System Administrator and Linguistic Curator do not require profiles.
 
-INSERT INTO profiles (
+INSERT INTO identity.profiles (
 	id,
 	user_id,
 	avatar_key,
@@ -453,7 +431,7 @@ VALUES
 -- ============================================
 -- Seed data: User Interests
 -- ============================================
-INSERT INTO interests (
+INSERT INTO identity.interests (
 	id,
 	profile_id,
 	content_category_id,
@@ -514,7 +492,7 @@ BEGIN;
 -- FEATURES
 -- =========================================================
 
-INSERT INTO features
+INSERT INTO subscription.features
 (id, code, name, description, is_active, created_at, updated_at)
 VALUES
 ('11111111-1111-1111-1111-111111111111','VIDEO','Video','Create and learn from Japanese learning videos with interactive subtitle.',true,NOW(),NOW()),
@@ -526,7 +504,7 @@ VALUES
 -- PLANS
 -- =========================================================
 
-INSERT INTO plans
+INSERT INTO subscription.plans
 (id, code, name, japanese_name, description, price, currency, billing_cycle, is_active, created_at, updated_at)
 VALUES
 ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','HAJIME','Hajime','初め','A free plan for learners who are just getting started.',0.00,'VND','Weekly',true,NOW(),NOW()),
@@ -537,7 +515,7 @@ VALUES
 -- ENTITLEMENTS
 -- =========================================================
 
-INSERT INTO entitlements
+INSERT INTO subscription.entitlements
 (id, plan_id, feature_id, is_enabled, limit_value, limit_unit, limit_period)
 VALUES
 -- HAJIME
@@ -562,7 +540,7 @@ VALUES
 -- PAYMENTS
 -- =========================================================
 
-INSERT INTO payments
+INSERT INTO subscription.payments
 (id, user_id, plan_id, amount, currency, status, expired_at, created_at, updated_at)
 VALUES
 ('11111111-0001-0001-0001-000000000001','cccccccc-cccc-cccc-cccc-cccccccccccc','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',0.00,'VND','Completed',NOW()-INTERVAL '4 days 23 hours 45 minutes',NOW()-INTERVAL '5 days',NOW()-INTERVAL '5 days'),
@@ -586,7 +564,7 @@ VALUES
 -- TRANSACTIONS
 -- =========================================================
 
-INSERT INTO transactions
+INSERT INTO subscription.transactions
 (id, payment_id, provider, amount, currency, txn_ref, url, transaction_no, raw_response_payload, status, expired_at, created_at, updated_at)
 VALUES
 ('22222222-0001-0001-0001-000000000001','11111111-0001-0001-0001-000000000001','VNPAY',0.00,'VND','TXNREF_00001_20250125','https://sandbox.vnpayment.vn/paygate/Vpayment.html?vnp_TxnRef=TXNREF_00001_20250125','0000000001','{"responseCode":"00","message":"Success"}','Successful',NOW()-INTERVAL '4 days 23 hours 45 minutes',NOW()-INTERVAL '5 days',NOW()-INTERVAL '5 days'),
@@ -614,7 +592,7 @@ VALUES
 -- MUST COME BEFORE subscription_usages
 -- =========================================================
 
-INSERT INTO subscriptions
+INSERT INTO subscription.subscriptions
 (id, user_id, payment_id, plan_id, status, start_at, end_at)
 VALUES
 ('55555555-0001-0001-0001-000000000001','cccccccc-cccc-cccc-cccc-cccccccccccc',NULL,'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','Active',NOW()-INTERVAL '5 days',NOW()-INTERVAL '5 days'+INTERVAL '7 days'),
@@ -631,7 +609,7 @@ VALUES
 -- MUST BE LAST
 -- =========================================================
 
-INSERT INTO subscription_usages
+INSERT INTO subscription.subscription_usages
 (id, subscription_id, feature_id, period_start, period_end, max_value, used_value, is_over_limit, is_expired, is_canceled, created_at, updated_at)
 VALUES
 -- Subscription 1 - Hajime Active: 1/3, 10/30, 2/3, 1/1

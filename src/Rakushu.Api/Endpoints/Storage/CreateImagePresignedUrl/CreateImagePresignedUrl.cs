@@ -17,7 +17,7 @@ internal class CreateImagePresignedUrl : IEndpoint
 			CancellationToken cancellationToken
 			) =>
 		{
-			var command = new CreateImagePresignedUrlCommand(request.ContentType);
+			var command = new CreateImagePresignedUrlCommand(request.ContentType, request.FileName);
 
 			var result = await _sender.Send(command, cancellationToken);
 
@@ -32,4 +32,4 @@ internal class CreateImagePresignedUrl : IEndpoint
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
-internal sealed record CreateImagePresignedUrlRequestDto(string ContentType);
+internal sealed record CreateImagePresignedUrlRequestDto(string ContentType, string FileName);

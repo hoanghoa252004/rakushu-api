@@ -30,4 +30,7 @@ public static class VideoErrors
 
 	public static readonly Error CannotUpdateVideoStatus = Error.Validation(
 		"VIDEO.CANNOT_UPDATE_VIDEO_STATUS", "User is not authorized to update video status.");
+
+	public static readonly Error InvalidSourceType = Error.Validation(
+		"VIDEO.INVALID_SOURCE_TYPE", "Invalid video source type.");
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeCollection;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
+using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 
 namespace Rakushu.Persistence.Configurations.Knowledge;
 
@@ -29,6 +30,17 @@ internal sealed class KnowledgeUnitConfiguration : IEntityTypeConfiguration<Know
 			.WithMany(cat => cat.KnowledgeUnits)
 			.HasForeignKey(c => c.KnowledgeCollectionId)
 			.OnDelete(DeleteBehavior.Cascade);
+
+		// ProficiencyLevelId
+		builder.Property(c => c.ProficiencyLevelId)
+			.HasConversion(
+				id => id.Value,
+				value => ProficiencyLevelId.From(value))
+			.IsRequired();
+		builder.HasOne(c => c.ProficiencyLevel)
+			.WithMany(cat => cat.KnowledgeUnits)
+			.HasForeignKey(c => c.ProficiencyLevelId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 
 		// KnowledgeUnitType (enum)

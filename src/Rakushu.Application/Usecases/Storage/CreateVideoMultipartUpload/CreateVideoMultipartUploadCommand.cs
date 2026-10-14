@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 namespace Rakushu.Application.Usecases.Storage.CreateVideoMultipartUpload;
 
 public sealed record CreateVideoMultipartUploadCommand(
-	string ContentType
+	string ContentType,
+	string FileName
 ) : IRequest<Result<CreateVideoMultipartUploadResponseDto>>;
 
 public sealed record CreateVideoMultipartUploadResponseDto(
