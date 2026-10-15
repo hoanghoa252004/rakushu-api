@@ -40,6 +40,7 @@ using Rakushu.Domain.Entities.Subscriptions.Plan;
 using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using Rakushu.Domain.Entities.Subscriptions.Subscription.SubscriptionUsage;
 using Rakushu.Domain.Entities.Subscriptions.Transaction;
+using Rakushu.Domain.Entities.Srs;
 
 namespace Rakushu.Persistence;
 
@@ -103,6 +104,16 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<OovCandidate> OovCandidates => Set<OovCandidate>();
 	public DbSet<CuratorReview> CuratorReviews => Set<CuratorReview>();
 	public DbSet<DictionaryEntry> DictionaryEntries => Set<DictionaryEntry>();
+
+	// SRS and Quiz
+	public DbSet<SrsNote> SrsNotes => Set<SrsNote>();
+	public DbSet<SrsCard> SrsCards => Set<SrsCard>();
+	public DbSet<SrsCardState> SrsCardStates => Set<SrsCardState>();
+	public DbSet<SrsReviewLog> SrsReviewLogs => Set<SrsReviewLog>();
+	public DbSet<SrsSession> SrsSessions => Set<SrsSession>();
+	public DbSet<SrsSessionItem> SrsSessionItems => Set<SrsSessionItem>();
+	public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
+	public DbSet<QuizAttemptItem> QuizAttemptItems => Set<QuizAttemptItem>();
 
 
 
