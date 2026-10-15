@@ -1,11 +1,11 @@
+using Rakushu.Domain.Common;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 
 namespace Rakushu.Domain.Entities.Srs;
 
-public sealed class SrsNote
+public sealed class SrsNote : AggregateRoot<SrsNoteId>
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
     public UserId UserId { get; private set; } = null!;
     public LearningUnitId LearningUnitId { get; private set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
@@ -16,13 +16,16 @@ public sealed class SrsNote
 
     private SrsNote() { }
 
-    public static SrsNote Create(UserId userId, LearningUnitId learningUnitId, DateTimeOffset now) => new()
-    {
-        UserId = userId ?? throw new ArgumentNullException(nameof(userId)),
-        LearningUnitId = learningUnitId ?? throw new ArgumentNullException(nameof(learningUnitId)),
-        CreatedAt = now,
-        UpdatedAt = now
-    };
+    private SrsNote(SrsNoteId id) : base(id) { }
+
+    public static SrsNote Create(UserId userId, LearningUnitId learningUnitId, DateTimeOffset now) =>
+        new(SrsNoteId.Create())
+        {
+            UserId = userId ?? throw new ArgumentNullException(nameof(userId)),
+            LearningUnitId = learningUnitId ?? throw new ArgumentNullException(nameof(learningUnitId)),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
 
     public bool IsArchived => ArchivedAt is not null;
 

@@ -3,9 +3,9 @@ using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Domain.Entities.Srs;
 
-public sealed class SrsCard : AggregateRoot<Guid>
+public sealed class SrsCard : AggregateRoot<SrsCardId>
 {
-    public Guid SrsNoteId { get; private set; }
+    public SrsNoteId SrsNoteId { get; private set; } = null!;
     public SrsCardStatus Status { get; private set; } = SrsCardStatus.New;
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -13,21 +13,18 @@ public sealed class SrsCard : AggregateRoot<Guid>
     public SrsCardState? State { get; private set; }
 
     private SrsCard() { }
-
-    private SrsCard(Guid id, Guid srsNoteId, DateTimeOffset now) : base(id)
+    private SrsCard(SrsCardId id, SrsNoteId srsNoteId, DateTimeOffset now) : base(id)
     {
         SrsNoteId = srsNoteId;
         CreatedAt = now;
         UpdatedAt = now;
-        Status = SrsCardStatus.New;
     }
 
-    public static Result<SrsCard> Create(Guid srsNoteId, DateTimeOffset now)
+    public static Result<SrsCard> Create(SrsNoteId srsNoteId, DateTimeOffset now)
     {
-        if (srsNoteId == Guid.Empty)
+        if (srsNoteId is null || srsNoteId.Value == Guid.Empty)
             return Result.Failure<SrsCard>(SrsCardErrors.InvalidNoteId);
-
-        return Result.Success(new SrsCard(Guid.NewGuid(), srsNoteId, now));
+        return Result.Success(new SrsCard(SrsCardId.Create(), srsNoteId, now));
     }
 
     public Result Suspend(DateTimeOffset now) => ChangeStatus(SrsCardStatus.Suspended, now, SrsCardStatus.New, SrsCardStatus.Learning, SrsCardStatus.Review);
@@ -36,7 +33,6 @@ public sealed class SrsCard : AggregateRoot<Guid>
     {
         if (Status != SrsCardStatus.Suspended)
             return Result.Failure(SrsCardErrors.InvalidCardStatusTransition);
-
         Status = State is null || State.Repetitions == 0 ? SrsCardStatus.Learning : SrsCardStatus.Review;
         UpdatedAt = now;
         return Result.Success();
@@ -46,7 +42,6 @@ public sealed class SrsCard : AggregateRoot<Guid>
     {
         if (Status == SrsCardStatus.Archived)
             return Result.Failure(SrsCardErrors.CardAlreadyArchived);
-
         Status = SrsCardStatus.Archived;
         UpdatedAt = now;
         return Result.Success();
@@ -58,7 +53,6 @@ public sealed class SrsCard : AggregateRoot<Guid>
             return Result.Failure(SrsCardErrors.CardStateAlreadyExists);
         if (state.SrsCardId != Id)
             return Result.Failure(SrsCardErrors.CardStateOwnerMismatch);
-
         State = state;
         UpdatedAt = now;
         return Result.Success();
@@ -75,13 +69,9 @@ public sealed class SrsCard : AggregateRoot<Guid>
 
         var quality = rating.ToUpperInvariant() switch
         {
-            "AGAIN" => 0,
-            "HARD" => 3,
-            "GOOD" => 4,
-            "EASY" => 5,
+            "AGAIN" => 0, "HARD" => 3, "GOOD" => 4, "EASY" => 5,
             _ => throw new InvalidOperationException("Validated review rating was not mapped.")
         };
-
         State.ApplyReview(quality, reviewedAt);
         Status = State.Repetitions == 0 ? SrsCardStatus.Learning : SrsCardStatus.Review;
         UpdatedAt = reviewedAt;
@@ -92,7 +82,6 @@ public sealed class SrsCard : AggregateRoot<Guid>
     {
         if (!allowedCurrentStatuses.Contains(Status))
             return Result.Failure(SrsCardErrors.InvalidCardStatusTransition);
-
         Status = nextStatus;
         UpdatedAt = now;
         return Result.Success();

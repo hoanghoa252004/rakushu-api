@@ -1,12 +1,12 @@
+using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Domain.Entities.Srs;
 
-public sealed class QuizAttemptItem
+public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
-    public Guid QuizAttemptId { get; private set; }
-    public Guid SrsCardId { get; private set; }
+    public QuizAttemptId QuizAttemptId { get; private set; } = null!;
+    public SrsCardId SrsCardId { get; private set; } = null!;
     public int Position { get; private set; }
     public string QuestionType { get; private set; } = "WORD_TO_MEANING_MCQ";
     public string QuestionSnapshot { get; private set; } = "{}";
@@ -23,24 +23,18 @@ public sealed class QuizAttemptItem
 
     private QuizAttemptItem() { }
 
+    private QuizAttemptItem(QuizAttemptItemId id) : base(id) { }
+
     public static Result<QuizAttemptItem> Create(
-        Guid cardId,
-        int position,
-        string questionType,
-        string questionSnapshot,
-        string correctAnswerSnapshot,
-        DateTimeOffset createdAt,
-        string? choicesSnapshot = null,
-        string? feedbackSnapshot = null)
+        SrsCardId cardId, int position, string questionType, string questionSnapshot,
+        string correctAnswerSnapshot, DateTimeOffset createdAt, string? choicesSnapshot = null, string? feedbackSnapshot = null)
     {
-        if (cardId == Guid.Empty || position < 1)
+        if (cardId is null || cardId.Value == Guid.Empty || position < 1)
             return Result.Failure<QuizAttemptItem>(QuizAttemptErrors.InvalidCardId);
-        if (string.IsNullOrWhiteSpace(questionType) ||
-            string.IsNullOrWhiteSpace(questionSnapshot) ||
-            string.IsNullOrWhiteSpace(correctAnswerSnapshot))
+        if (string.IsNullOrWhiteSpace(questionType) || string.IsNullOrWhiteSpace(questionSnapshot) || string.IsNullOrWhiteSpace(correctAnswerSnapshot))
             return Result.Failure<QuizAttemptItem>(QuizAttemptErrors.InvalidQuizAnswer);
 
-        return Result.Success(new QuizAttemptItem
+        var item = new QuizAttemptItem(QuizAttemptItemId.Create())
         {
             SrsCardId = cardId,
             Position = position,
@@ -50,16 +44,16 @@ public sealed class QuizAttemptItem
             ChoicesSnapshot = choicesSnapshot,
             FeedbackSnapshot = feedbackSnapshot,
             CreatedAt = createdAt
-        });
+        };
+        return Result.Success(item);
     }
 
     internal Result<QuizAttemptItem> CreateRetryCopy(DateTimeOffset createdAt) =>
-        Create(SrsCardId, Position, QuestionType, QuestionSnapshot, CorrectAnswerSnapshot,
-            createdAt, ChoicesSnapshot, FeedbackSnapshot);
+        Create(SrsCardId, Position, QuestionType, QuestionSnapshot, CorrectAnswerSnapshot, createdAt, ChoicesSnapshot, FeedbackSnapshot);
 
-    internal void AssignToAttempt(Guid attemptId, int position)
+    internal void AssignToAttempt(QuizAttemptId attemptId, int position)
     {
-        if (attemptId == Guid.Empty)
+        if (attemptId is null || attemptId.Value == Guid.Empty)
             throw new ArgumentException("A valid quiz attempt ID is required.", nameof(attemptId));
         QuizAttemptId = attemptId;
         Position = position;

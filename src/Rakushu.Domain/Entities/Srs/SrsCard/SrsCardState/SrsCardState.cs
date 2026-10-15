@@ -1,11 +1,8 @@
 namespace Rakushu.Domain.Entities.Srs;
 
-/// <summary>
-/// SM-2 scheduling state owned by an SRS card.
-/// </summary>
 public sealed class SrsCardState
 {
-    public Guid SrsCardId { get; private set; }
+    public SrsCardId SrsCardId { get; private set; } = null!;
     public DateTimeOffset DueAt { get; private set; }
     public DateTimeOffset? LastReviewAt { get; private set; }
     public int Repetitions { get; private set; }
@@ -17,7 +14,7 @@ public sealed class SrsCardState
 
     private SrsCardState() { }
 
-    public static SrsCardState Create(Guid cardId, DateTimeOffset now) => new()
+    public static SrsCardState Create(SrsCardId cardId, DateTimeOffset now) => new()
     {
         SrsCardId = cardId,
         DueAt = now,
@@ -28,15 +25,11 @@ public sealed class SrsCardState
         IntervalDays = 0
     };
 
-    /// <summary>
-    /// Applies a SM-2 quality score (0-5) and updates the complete scheduling state atomically.
-    /// Scores below 3 reset the repetition sequence.
-    /// </summary>
     public void ApplyReview(int quality, DateTimeOffset reviewedAt)
     {
         if (quality is < 0 or > 5)
             throw new ArgumentOutOfRangeException(nameof(quality), "SM-2 quality must be between 0 and 5.");
-        if (reviewedAt < LastReviewAt)
+        if (LastReviewAt is not null && reviewedAt < LastReviewAt)
             throw new ArgumentOutOfRangeException(nameof(reviewedAt), "Review time cannot precede the previous review.");
 
         if (quality < 3)

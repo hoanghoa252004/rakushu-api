@@ -1,10 +1,11 @@
+using Rakushu.Domain.Common;
+
 namespace Rakushu.Domain.Entities.Srs;
 
-public sealed class SrsSessionItem
+public sealed class SrsSessionItem : Entity<SrsSessionItemId>
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
-    public Guid SrsSessionId { get; private set; }
-    public Guid SrsCardId { get; private set; }
+    public SrsSessionId SrsSessionId { get; private set; } = null!;
+    public SrsCardId SrsCardId { get; private set; } = null!;
     public int Position { get; private set; }
     public string? Rating { get; private set; }
     public DateTimeOffset ShownAt { get; private set; }
@@ -16,14 +17,18 @@ public sealed class SrsSessionItem
 
     private SrsSessionItem() { }
 
-    internal static SrsSessionItem Create(Guid sessionId, Guid cardId, int position, DateTimeOffset shownAt) => new()
+    private SrsSessionItem(SrsSessionItemId id, SrsSessionId sessionId, SrsCardId cardId, int position, DateTimeOffset shownAt)
+        : base(id)
     {
-        SrsSessionId = sessionId,
-        SrsCardId = cardId,
-        Position = position,
-        ShownAt = shownAt,
-        CreatedAt = shownAt
-    };
+        SrsSessionId = sessionId;
+        SrsCardId = cardId;
+        Position = position;
+        ShownAt = shownAt;
+        CreatedAt = shownAt;
+    }
+
+    internal static SrsSessionItem Create(SrsSessionId sessionId, SrsCardId cardId, int position, DateTimeOffset shownAt) =>
+        new(SrsSessionItemId.Create(), sessionId, cardId, position, shownAt);
 
     internal Rakushu.Domain.Common.Results.Result RecordReview(string rating, DateTimeOffset reviewedAt, int? elapsedMs)
     {
