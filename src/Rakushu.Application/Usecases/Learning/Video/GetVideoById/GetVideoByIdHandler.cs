@@ -1,25 +1,49 @@
 using MediatR;
-using Rakushu.Application.Usecases.Learning.Video;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.GetVideoById;
 
-internal sealed class GetVideoByIdHandler : IRequestHandler<GetVideoByIdQuery, Result<VideoDto>>
+internal sealed class GetVideoByIdHandler : IRequestHandler<GetVideoByIdQuery, Result<VideoDetailDto>>
 {
 	private readonly IVideoRepository _repository;
 
-	public GetVideoByIdHandler(IVideoRepository repository)
+	private readonly IStorageService _storageService;
+
+	public GetVideoByIdHandler(IVideoRepository repository, IStorageService storageService)
 	{
 		_repository = repository;
+		_storageService = storageService;
 	}
 
-	public async Task<Result<VideoDto>> Handle(GetVideoByIdQuery request, CancellationToken cancellationToken)
+	public async Task<Result<VideoDetailDto>> Handle(GetVideoByIdQuery request, CancellationToken cancellationToken)
 	{
 		var video = await _repository.GetByIdAsync(VideoId.From(request.VideoId), cancellationToken);
-		if (video is null)
-			return Result.Failure<VideoDto>(VideoErrors.NotFound);
 
-		return Result.Success(VideoDto.FromEntity(video));
+		if (video is null)
+			return Result.Failure<VideoDetailDto>(VideoErrors.NotFound);
+
+		var dto = VideoDetailDto.FromEntity(video);
+
+		var mediaAssets = await Task.WhenAll(
+			dto.MediaAssets.Select(async mediaAsset =>
+			{
+				var signedUrl = await _storageService.CreatePresignedReadUrlAsync(
+					mediaAsset.StorageKey,
+					cancellationToken);
+
+				return mediaAsset with
+				{
+					StorageKey = signedUrl
+				};
+			}));
+
+		dto = dto with
+		{
+			MediaAssets = mediaAssets
+		};
+
+		return Result.Success(dto);
 	}
 }

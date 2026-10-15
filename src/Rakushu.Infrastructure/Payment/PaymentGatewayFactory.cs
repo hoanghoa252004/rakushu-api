@@ -1,5 +1,4 @@
 using Rakushu.Application.Abstractions.Infrastructure.Payment;
-using Rakushu.Application.Abstractions.Infrastructure.PaymentGateway;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Infrastructure.Payment.VnPay;
 

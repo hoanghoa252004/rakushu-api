@@ -11,4 +11,4 @@ public sealed record GetAllVideosQuery(
 	Guid? ContentCategoryId = null,
 	Guid? SeriesId = null,
 	Guid? UserId = null
-) : IRequest<Result<PaginatedList<VideoListDto>>>;
+) : IRequest<Result<PaginatedList<VideoDetailDto>>>;

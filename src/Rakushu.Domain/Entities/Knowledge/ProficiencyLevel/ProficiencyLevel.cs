@@ -21,6 +21,10 @@ public sealed partial class ProficiencyLevel : Entity<ProficiencyLevelId>
 	private readonly List<Profile> _profileLevels = new();
 	public IReadOnlyCollection<Profile> ProfileLevels => _profileLevels.AsReadOnly();
 
+	// KnowledgeUnits:
+	private readonly List<KnowledgeUnit.KnowledgeUnit> _knowledgeUnits = new();
+	public IReadOnlyCollection<KnowledgeUnit.KnowledgeUnit> KnowledgeUnits => _knowledgeUnits.AsReadOnly();
+
 	// CONSTRUCTORS & FACTORY METHODS
 	private ProficiencyLevel() { }
 

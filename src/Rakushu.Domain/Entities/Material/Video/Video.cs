@@ -3,6 +3,7 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using Rakushu.Domain.Entities.Material.Series;
+using Rakushu.Domain.Entities.Material.Video.MediaAsset;
 
 namespace Rakushu.Domain.Entities.Material.Video;
 
@@ -115,6 +116,8 @@ public sealed partial class Video : AggregateRoot<VideoId>
 			sourceUrl));
 	}
 
+
+
 	public Result Update(
 		string slug,
 		string title,
@@ -170,7 +173,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		return Result.Success();
 	}
 
-	public Result UpdateStatus(VideoStatus newStatus)
+	public Result ChangeStatus(VideoStatus newStatus)
 	{
 		if (!VideoStatusTransition.IsAllowed(Status, newStatus))
 			return Result.Failure(VideoErrors.InvalidStatusTransition);

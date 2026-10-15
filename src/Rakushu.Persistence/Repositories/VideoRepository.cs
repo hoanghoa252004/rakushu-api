@@ -15,6 +15,8 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 	public override async Task<Video?> GetByIdAsync(VideoId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
+			.Include(v => v.Learner)
+			.Include(v => v.ContentCategory)
 			.Include(v => v.Series)
 			.Include(v => v.MediaAssets)
 			.Include(v => v.Transcript)
@@ -77,6 +79,8 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 	public override async Task<IEnumerable<Video>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
+			.Include(v => v.Learner)
+			.Include(v => v.ContentCategory)
 			.Include(v => v.Series)
 			.Include(v => v.MediaAssets)
 			.Include(v => v.Transcript)

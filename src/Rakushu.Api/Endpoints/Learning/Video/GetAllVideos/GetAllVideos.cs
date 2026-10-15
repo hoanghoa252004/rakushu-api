@@ -35,7 +35,7 @@ internal sealed class GetAllVideos : IEndpoint
 			.WithSummary("Curator, Admin")
 			.WithDescription("Gets all videos in the system with pagination and filtering. Only Curator and Admin can access.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
-			.Produces<PaginatedList<VideoListDto>>(StatusCodes.Status200OK)
+			.Produces<PaginatedList<VideoDetailDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)

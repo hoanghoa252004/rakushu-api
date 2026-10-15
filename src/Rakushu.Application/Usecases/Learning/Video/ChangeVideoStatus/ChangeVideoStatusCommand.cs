@@ -4,7 +4,7 @@ using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.UpdateVideoStatus;
 
-public sealed record UpdateVideoStatusCommand(
+public sealed record ChangeVideoStatusCommand(
 	Guid VideoId,
 	VideoStatus NewStatus
 ) : IRequest<Result>;

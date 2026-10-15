@@ -27,7 +27,7 @@ internal sealed class CreateVideoValidator : AbstractValidator<CreateVideoComman
 			.GreaterThan(0).WithMessage("SortOrder must be greater than 0");
 
 		RuleFor(x => x.SourceType)
-			.IsInEnum().WithMessage("Invalid VideoSource");
+				.NotEmpty().WithMessage("VideoSource is required");
 
 		RuleFor(x => x.StorageKeyOfVideo)
 			.NotEmpty().WithMessage("StorageKeyOfVideo is required");

@@ -23,7 +23,9 @@ internal sealed class CreateVideoMultipartUploadHandler : IRequestHandler<Create
 		CreateVideoMultipartUploadCommand request,
 		CancellationToken cancellationToken)
 	{
-		var key = $"media-assets/videos/{Guid.NewGuid().ToString()}";
+		var extension = Path.GetExtension(request.FileName);
+
+		var key = $"videos/{Guid.NewGuid():N}{extension}";
 
 		var result = await _storageService.CreateMultipartUploadAsync(
 			key,

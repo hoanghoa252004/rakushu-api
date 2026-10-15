@@ -24,7 +24,9 @@ internal sealed class CreateImagePresignedUrlcsHandler : IRequestHandler<CreateI
 
 	public async Task<Result<CreateImagePresignedUrlResponseDto>> Handle(CreateImagePresignedUrlCommand request, CancellationToken cancellationToken)
 	{
-		var key = $"images/{Guid.NewGuid().ToString()}";
+		var extension = Path.GetExtension(request.FileName);
+
+		var key = $"images/{Guid.NewGuid():N}{extension}";
 
 		var presignUrl = await _storageService.CreatePresignedUploadUrlAsync(key, request.ContentType, cancellationToken);
 

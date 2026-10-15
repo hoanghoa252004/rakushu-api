@@ -40,5 +40,15 @@ public interface IStorageService
 		string key, 
 		CancellationToken cancellationToken);
 
-
+	// Metadata
+	Task<MediaAssetMetadataDto> GetMediaAssetMetadataAsync(
+		string key, 
+		CancellationToken cancellationToken);
 }
+
+// DTO 
+public sealed record MediaAssetMetadataDto(
+	string ContentType,
+	string FileName,
+	long FileSizeBytes
+);

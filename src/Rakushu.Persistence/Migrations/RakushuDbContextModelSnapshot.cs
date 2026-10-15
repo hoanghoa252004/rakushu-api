@@ -588,6 +588,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("knowledge_type");
 
+                    b.Property<Guid>("ProficiencyLevelId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("proficiency_level_id");
+
                     b.Property<string>("Reading")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -609,6 +613,9 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasIndex("KnowledgeCollectionId")
                         .HasDatabaseName("ix_knowledge_units_knowledge_collection_id");
+
+                    b.HasIndex("ProficiencyLevelId")
+                        .HasDatabaseName("ix_knowledge_units_proficiency_level_id");
 
                     b.ToTable("knowledge_units", "knowledge");
                 });
@@ -1244,7 +1251,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("learner_id");
 
-                    b.Property<Guid>("SeriesId")
+                    b.Property<Guid?>("SeriesId")
                         .HasColumnType("uuid")
                         .HasColumnName("series_id");
 
@@ -2028,7 +2035,16 @@ namespace Rakushu.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_knowledge_units_knowledge_collections_knowledge_collection_");
 
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.ProficiencyLevel.ProficiencyLevel", "ProficiencyLevel")
+                        .WithMany("KnowledgeUnits")
+                        .HasForeignKey("ProficiencyLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_knowledge_units_proficiency_levels_proficiency_level_id");
+
                     b.Navigation("KnowledgeCollection");
+
+                    b.Navigation("ProficiencyLevel");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", b =>
@@ -2245,7 +2261,6 @@ namespace Rakushu.Persistence.Migrations
                         .WithMany("Videos")
                         .HasForeignKey("SeriesId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_videos_series_series_id");
 
                     b.Navigation("ContentCategory");
@@ -2445,6 +2460,8 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Knowledge.ProficiencyLevel.ProficiencyLevel", b =>
                 {
+                    b.Navigation("KnowledgeUnits");
+
                     b.Navigation("ProfileLevels");
                 });
 

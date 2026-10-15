@@ -6,13 +6,13 @@ using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Learning.Video.UpdateVideoStatus;
 
-internal sealed class UpdateVideoStatusHandler : IRequestHandler<UpdateVideoStatusCommand, Result>
+internal sealed class ChangeVideoStatusHandler : IRequestHandler<ChangeVideoStatusCommand, Result>
 {
 	private readonly IVideoRepository _repository;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly ISystemClock _systemClock;
 
-	public UpdateVideoStatusHandler(
+	public ChangeVideoStatusHandler(
 		IVideoRepository repository,
 		IUnitOfWork unitOfWork,
 		ISystemClock systemClock)
@@ -22,7 +22,7 @@ internal sealed class UpdateVideoStatusHandler : IRequestHandler<UpdateVideoStat
 		_systemClock = systemClock;
 	}
 
-	public async Task<Result> Handle(UpdateVideoStatusCommand request, CancellationToken cancellationToken)
+	public async Task<Result> Handle(ChangeVideoStatusCommand request, CancellationToken cancellationToken)
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
@@ -30,7 +30,7 @@ internal sealed class UpdateVideoStatusHandler : IRequestHandler<UpdateVideoStat
 			if (video is null)
 				return Result.Failure(VideoErrors.NotFound);
 
-			var updateResult = video.UpdateStatus(request.NewStatus);
+			var updateResult = video.ChangeStatus(request.NewStatus);
 			if (updateResult.IsFailure)
 				return updateResult;
 
