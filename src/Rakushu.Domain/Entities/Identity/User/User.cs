@@ -47,6 +47,10 @@ public sealed class User : AggregateRoot<UserId>
 	private readonly List<Material.Video.Video> _videos = [];
 	public IReadOnlyCollection<Material.Video.Video> Videos => _videos.AsReadOnly();
 
+	// Series:
+	private readonly List<Material.Series.Series> _series = new();
+	public IReadOnlyCollection<Material.Series.Series> Series => _series.AsReadOnly();
+
 	// CONSTRUCTORS & FACTORY METHODS----------
 	private User() { }
 

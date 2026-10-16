@@ -1,4 +1,5 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Transcript;
 using System;
 using System.Collections.Generic;
@@ -29,4 +30,25 @@ public sealed class TranscriptSpeaker : Entity<TranscriptSpeakerId>
 
 	// CONSTRUCTORS & FACTORY METHODS
 	private TranscriptSpeaker() { }
+
+
+	private TranscriptSpeaker(
+		TranscriptSpeakerId id,
+		TranscriptId transcriptId,
+		string label)
+		: base(id)
+	{
+		TranscriptId = transcriptId;
+		Label = label;
+	}
+
+	public static Result<TranscriptSpeaker> Create(
+		TranscriptId transcriptId,
+		string label)
+	{
+		return Result.Success(new TranscriptSpeaker(
+			TranscriptSpeakerId.Create(),
+			transcriptId,
+			label));
+	}
 }

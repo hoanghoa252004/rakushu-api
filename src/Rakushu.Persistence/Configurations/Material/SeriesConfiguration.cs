@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.Series;
 
 namespace Rakushu.Persistence.Configurations.Material;
@@ -17,6 +18,17 @@ internal sealed class SeriesConfiguration : IEntityTypeConfiguration<Series>
 			.HasConversion(
 				id => id.Value,
 				value => SeriesId.From(value));
+
+		// UserId
+		builder.Property(v => v.UserId)
+			.HasConversion(
+				id => id.Value,
+				value => UserId.From(value))
+			.IsRequired();
+		builder.HasOne(v => v.User)
+			.WithMany(u => u.Series)
+			.HasForeignKey(v => v.UserId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		// Slug
 		builder.Property(s => s.Slug)

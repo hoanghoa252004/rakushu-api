@@ -4,9 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Persistence.Connection;
-using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
-using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Video;
@@ -63,8 +61,6 @@ public static class PersistenceServiceCollectionExtensions
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
-
-		services.AddScoped<IOovCandidateQuery, OovCandidateQuery>();
 		return services;
 	}
 }

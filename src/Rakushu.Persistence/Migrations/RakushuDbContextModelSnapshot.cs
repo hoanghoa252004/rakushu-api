@@ -846,12 +846,19 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
                     b.HasKey("Id")
                         .HasName("pk_series");
 
                     b.HasIndex("Slug")
                         .IsUnique()
                         .HasDatabaseName("ix_series_slug");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_series_user_id");
 
                     b.ToTable("series", "material");
                 });
@@ -1060,8 +1067,8 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("id");
 
                     b.Property<decimal>("Confidence")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("numeric(5,4)")
+                        .HasPrecision(8, 5)
+                        .HasColumnType("numeric(8,5)")
                         .HasColumnName("confidence");
 
                     b.Property<TimeSpan>("EndTime")
@@ -1127,7 +1134,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_id");
 
-                    b.Property<Guid?>("TranscriptSpeakerId")
+                    b.Property<Guid>("TranscriptSpeakerId")
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_speaker_id");
 
@@ -1247,7 +1254,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("interval")
                         .HasColumnName("duration");
 
-                    b.Property<Guid>("LearnerId")
+                    b.Property<Guid?>("LearnerId")
                         .HasColumnType("uuid")
                         .HasColumnName("learner_id");
 
@@ -2110,6 +2117,18 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("TranscriptSegment");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Series.Series", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
+                        .WithMany("Series")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_series_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
@@ -2210,6 +2229,7 @@ namespace Rakushu.Persistence.Migrations
                         .WithMany("TranscriptSegments")
                         .HasForeignKey("TranscriptSpeakerId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
                         .HasConstraintName("fk_transcript_segments_transcript_speakers_transcript_speaker_");
 
                     b.Navigation("Transcript");
@@ -2254,7 +2274,6 @@ namespace Rakushu.Persistence.Migrations
                         .WithMany("Videos")
                         .HasForeignKey("LearnerId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_videos_users_learner_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Material.Series.Series", "Series")
@@ -2414,6 +2433,8 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Profile");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Series");
 
                     b.Navigation("Subscriptions");
 

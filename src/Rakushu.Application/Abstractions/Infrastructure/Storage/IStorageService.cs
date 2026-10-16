@@ -44,9 +44,14 @@ public interface IStorageService
 	Task<MediaAssetMetadataDto> GetMediaAssetMetadataAsync(
 		string key, 
 		CancellationToken cancellationToken);
+
+	// Streaming
+	Task<Stream> StreamingReadAsync(
+	string key,
+	CancellationToken cancellationToken);
 }
 
-// DTO 
+// DTO
 public sealed record MediaAssetMetadataDto(
 	string ContentType,
 	string FileName,

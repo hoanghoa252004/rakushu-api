@@ -3,6 +3,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Api.Middleware;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
 using Rakushu.Application.Extensions;
+using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Extentions;
 using Rakushu.Infrastructure.Extensions;
 using Rakushu.Persistence.Extensions;
@@ -42,7 +43,7 @@ app.UseAuthorization();
 app.MapEndpoints();
 app.MapGet("/", () => "Welcome to Rakushu Api").ExcludeFromDescription();
 
-
+#region Test
 //app.MapPost("/api/transcriptions/", async (
 //	[FromBody] StartTranscriptionRequest request,
 //		IAsrService transcriptionService,
@@ -86,5 +87,61 @@ app.MapGet("/", () => "Welcome to Rakushu Api").ExcludeFromDescription();
 //	.WithSummary("Get transcription job status")
 //	.Produces<TranscriptionJobResult>()
 //	.Produces(StatusCodes.Status404NotFound);
+
+//// Get transcription job status
+//app.MapGet("/api/transcriptions/test-ast-output", async (
+//	string storageKey,
+//		IAsrOutputReader asrOutputReader,
+//		CancellationToken cancellationToken
+//	) =>
+//{
+//	var fullText = await asrOutputReader.ReadFullTextAsync(
+//		   storageKey,
+//		   cancellationToken);
+
+//	var items = new List<TranscribeItemAsrReadDto>();
+
+//	await foreach (var item in asrOutputReader.ReadItemsAsync(
+//		storageKey,
+//		cancellationToken))
+//	{
+//		items.Add(item);
+//	}
+
+//	var speakers = await asrOutputReader.ReadSpeakersAsync(
+//		storageKey,
+//		cancellationToken);
+
+//	return Results.Ok(new TranscribeOutputDto(
+//		FullText: fullText,
+//		Speakers: speakers,
+//		Items: items
+//	));
+//})
+//	.WithGroupName("storage")
+//	.WithTags("TEST ASR Output")
+//	.WithName("GetTranscriptionOutput")
+//	.WithSummary("Get transcription output")
+//	.Produces<object>()
+//	.Produces(StatusCodes.Status404NotFound);
+
+//app.MapGet("/api/transcriptions/detail", async (
+//		IVideoRepository videoRepository,
+//		CancellationToken cancellationToken
+//	) =>
+//{
+//	var video = await videoRepository.GetAllAsync(
+//		cancellationToken);
+
+//	return Results.Ok(video.ToList());
+//})
+//	.WithGroupName("learning")
+//	.WithTags("TEST Transcript Detail ")
+//	.WithName("GetTranscriptionDetail")
+//	.WithSummary("Get transcription detail")
+//	.Produces<Video>()
+//	.Produces(StatusCodes.Status404NotFound);
+
+#endregion
 
 app.Run();

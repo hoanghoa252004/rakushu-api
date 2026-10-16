@@ -1,7 +1,7 @@
 ﻿using MediatR;
-using Rakushu.Application.Usecases.Payment.Payment.GetPaymentById;
 using Rakushu.Application.Usecases.Subscription.Entitlement.GetEntitlements;
 using Rakushu.Application.Usecases.Subscription.Feature.GetFeatureById;
+using Rakushu.Application.Usecases.Subscription.Payment.GetPaymentById;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptions;
 using Rakushu.Domain.Common.Results;

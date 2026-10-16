@@ -1,4 +1,5 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Entities.Identity.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,15 @@ public sealed class Series : AggregateRoot<SeriesId>
 	public string? Description { get; private set; }
 	public int DisplayOrder { get; private set; }
 	public SeriesSource SourceType { get; private set; }
+	public UserId UserId { get; private set; }
 	public bool IsActive { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
+	// CreatedBy
+	public User User { get; private set; } = null!;
+
 	// Videos:
 	private readonly List<Video.Video> _videos = new();
 	public IReadOnlyCollection<Video.Video> Videos => _videos.AsReadOnly();
@@ -28,6 +33,7 @@ public sealed class Series : AggregateRoot<SeriesId>
 
 	private Series(
 		SeriesId id,
+		UserId userId,
 		string slug,
 		string name,
 		int displayOrder,
@@ -38,6 +44,7 @@ public sealed class Series : AggregateRoot<SeriesId>
 		string? description = null)
 		: base(id)
 	{
+		UserId = userId;
 		Slug = slug;
 		Name = name;
 		DisplayOrder = displayOrder;
@@ -49,20 +56,23 @@ public sealed class Series : AggregateRoot<SeriesId>
 	}
 
 	public static Series Create(
+		UserId userId,
 		string slug,
 		string name,
 		int displayOrder,
 		SeriesSource sourceType,
+		bool isActive,
 		string? description = null)
 	{
 		var now = DateTimeOffset.UtcNow;
 		return new Series(
 			SeriesId.Create(),
+			userId,
 			slug,
 			name,
 			displayOrder,
 			sourceType,
-			isActive: true,
+			isActive,
 			now,
 			now,
 			description);

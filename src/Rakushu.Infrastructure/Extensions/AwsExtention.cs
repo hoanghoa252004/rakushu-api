@@ -83,6 +83,7 @@ internal static class AwsExtention
 		services.AddScoped<IStorageService, AwsS3Service>();
 		// Transcribe
 		services.AddScoped<IAsrService, AwsTranscribeService>();
+		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();
 		return services;
 	}
 }

@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Endpoints\Linguistic\DependencyRelationship\GetAllDependencyRelationships\GetAllDependencyRelationships.cs" />
+    <None Include="Endpoints\Knowledge\DependencyRelationship\GetAllDependencyRelationships\GetAllDependencyRelationships.cs" />
   </ItemGroup>
 
   <ItemGroup>

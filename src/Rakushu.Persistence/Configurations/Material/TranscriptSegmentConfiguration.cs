@@ -51,7 +51,8 @@ internal sealed class TranscriptSegmentConfiguration : IEntityTypeConfiguration<
 		builder.Property(ts => ts.TranscriptSpeakerId)
 			.HasConversion(
 				id => id.Value,
-				value => TranscriptSpeakerId.From(value));
+				value => TranscriptSpeakerId.From(value))
+			.IsRequired();
 		builder.HasOne(ts => ts.TranscriptSpeaker)
 			.WithMany(t => t.TranscriptSegments)
 			.HasForeignKey(ts => ts.TranscriptSpeakerId)

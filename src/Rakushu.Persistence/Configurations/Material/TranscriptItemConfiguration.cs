@@ -48,7 +48,7 @@ internal sealed class TranscriptItemConfiguration : IEntityTypeConfiguration<Tra
 
 		// Confidence
 		builder.Property(x => x.Confidence)
-			.HasPrecision(5, 4)
+			.HasPrecision(8, 5)
 			.IsRequired();
 
 		// TranscriptSegmentId

@@ -171,4 +171,17 @@ internal class AwsS3Service : IStorageService
 			response.ContentLength
 		);
 	}
+
+	public async Task<Stream> StreamingReadAsync(string key, CancellationToken cancellationToken)
+	{
+		var response = await _s3.GetObjectAsync(
+		new GetObjectRequest
+		{
+			BucketName = _s3Settings.BucketName,
+			Key = key
+		},
+		cancellationToken);
+
+		return new S3ObjectReadStream(response);
+	}
 }

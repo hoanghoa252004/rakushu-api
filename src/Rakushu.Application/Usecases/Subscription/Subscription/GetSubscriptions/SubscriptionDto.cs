@@ -1,4 +1,4 @@
-using Rakushu.Application.Usecases.Payment.Payment.GetPaymentById;
+using Rakushu.Application.Usecases.Subscription.Payment.GetPaymentById;
 using Rakushu.Application.Usecases.Subscription.Plan.GetPlanById;
 
 namespace Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptions;

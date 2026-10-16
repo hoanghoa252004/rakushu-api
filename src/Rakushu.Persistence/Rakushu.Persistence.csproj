@@ -24,4 +24,8 @@
     <ProjectReference Include="..\Rakushu.Application\Rakushu.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Queries\" />
+  </ItemGroup>
+
 </Project>
