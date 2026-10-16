@@ -23,8 +23,7 @@ internal sealed class SeriesConfiguration : IEntityTypeConfiguration<Series>
 		builder.Property(v => v.UserId)
 			.HasConversion(
 				id => id.Value,
-				value => UserId.From(value))
-			.IsRequired();
+				value => UserId.From(value));
 		builder.HasOne(v => v.User)
 			.WithMany(u => u.Series)
 			.HasForeignKey(v => v.UserId)
@@ -39,12 +38,21 @@ internal sealed class SeriesConfiguration : IEntityTypeConfiguration<Series>
 
 		// Name
 		builder.Property(s => s.Name)
-			.HasMaxLength(255)
+			.HasMaxLength(100)
+			.IsRequired();
+
+		// JapaneseName
+		builder.Property(s => s.JapaneseName)
+			.HasMaxLength(100)
+			.IsRequired();
+
+		// ThumbnailKey
+		builder.Property(m => m.ThumbnailKey)
+			.HasMaxLength(500)
 			.IsRequired();
 
 		// Description
-		builder.Property(s => s.Description)
-			.HasMaxLength(1000);
+		builder.Property(s => s.Description);
 
 		// DisplayOrder
 		builder.Property(s => s.DisplayOrder)

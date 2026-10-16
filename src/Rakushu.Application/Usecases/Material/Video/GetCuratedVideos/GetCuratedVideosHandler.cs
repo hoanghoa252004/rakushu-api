@@ -79,6 +79,13 @@ internal sealed class GetCuratedVideosHandler : IRequestHandler<GetCuratedVideos
 						};
 					}));
 
+				if (video.Series?.ThumbnailKey != null)
+				{
+					var thumbnailUrl = await _storageService.CreatePresignedReadUrlAsync(video.Series.ThumbnailKey, cancellationToken);
+
+					video = video with { Series = video.Series with { ThumbnailKey = thumbnailUrl } };
+				}
+
 				return video with
 				{
 					MediaAssets = mediaAssets

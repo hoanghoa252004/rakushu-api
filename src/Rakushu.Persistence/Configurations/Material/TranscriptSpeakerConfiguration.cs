@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +41,16 @@ internal sealed class TranscriptSpeakerConfiguration : IEntityTypeConfiguration<
 		builder.Property(ts => ts.Label)
 			.HasMaxLength(30)
 			.IsRequired();
+
+		// SpeakerId
+		builder.Property(ts => ts.SpeakerId)
+			.HasConversion(
+				id => id.Value,
+				value => SpeakerId.From(value));
+		builder.HasOne(ts => ts.Speaker)
+			.WithMany(s => s.TranscriptSpeakers)
+			.HasForeignKey(ts => ts.SpeakerId)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		// Name
 		builder.Property(ts => ts.Name)

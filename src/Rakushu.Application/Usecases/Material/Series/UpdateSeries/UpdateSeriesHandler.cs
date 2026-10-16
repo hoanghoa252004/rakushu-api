@@ -36,9 +36,11 @@ internal sealed class UpdateSeriesHandler : IRequestHandler<UpdateSeriesCommand,
 			// Update series (note: SourceType cannot be updated)
 			series.Update(
 				request.Name,
-				request.Description,
-				request.DisplayOrder,
-				request.IsActive);
+				japaneseName: request.JapaneseName,
+				description: request.Description,
+				thumbnailKey: request.ThumbnailKey,
+				displayOrder: request.DisplayOrder,
+				isActive: request.IsActive);
 
 			return Result.Success();
 		});

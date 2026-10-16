@@ -30,9 +30,7 @@ using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Material.Video.MediaAsset;
-using Rakushu.Domain.Entities.NotReviewedYet.CuratorReview;
-using Rakushu.Domain.Entities.NotReviewedYet.DictionaryEntry;
-using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Subscriptions.Entitlement;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
@@ -99,10 +97,8 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();
 	public DbSet<Transaction> Transactions => Set<Transaction>();
 
-	// NotReviewedYet
-	public DbSet<OovCandidate> OovCandidates => Set<OovCandidate>();
-	public DbSet<CuratorReview> CuratorReviews => Set<CuratorReview>();
-	public DbSet<DictionaryEntry> DictionaryEntries => Set<DictionaryEntry>();
+	// Shadowing
+	public DbSet<Speaker> Speakers => Set<Speaker>();
 
 
 

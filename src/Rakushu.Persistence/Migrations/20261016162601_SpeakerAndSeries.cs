@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Rakushu.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitDomainModel : Migration
+    public partial class SpeakerAndSeries : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,6 +22,9 @@ namespace Rakushu.Persistence.Migrations
 
             migrationBuilder.EnsureSchema(
                 name: "subscription");
+
+            migrationBuilder.EnsureSchema(
+                name: "shadowing");
 
             migrationBuilder.CreateTable(
                 name: "content_categories",
@@ -59,28 +62,6 @@ namespace Rakushu.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_dependency_relationships", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "dictionary_entries",
-                columns: table => new
-                {
-                    dictionary_entry_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    term = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    reading = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    part_of_speech = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    meaning = table.Column<string>(type: "text", nullable: false),
-                    meaning_vietnamese = table.Column<string>(type: "text", nullable: true),
-                    jlpt_level = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true),
-                    word_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    audio_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    definition_tags = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_dictionary_entries", x => x.dictionary_entry_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -135,27 +116,6 @@ namespace Rakushu.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_knowledge_collections", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "oov_candidates",
-                columns: table => new
-                {
-                    oov_candidate_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    token_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    term = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    tentative_reading = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    tentative_pos = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    suggested_meaning = table.Column<string>(type: "text", nullable: true),
-                    context_snippet = table.Column<string>(type: "text", nullable: true),
-                    confidence_score = table.Column<double>(type: "double precision", nullable: false),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    detected_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_oov_candidates", x => x.oov_candidate_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -219,23 +179,23 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "series",
-                schema: "material",
+                name: "speakers",
+                schema: "shadowing",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    slug = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    display_order = table.Column<int>(type: "integer", nullable: false),
-                    source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    code = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    japanese_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    avatar_key = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    theme_color = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_series", x => x.id);
+                    table.PrimaryKey("pk_speakers", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -386,40 +346,6 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "curator_reviews",
-                columns: table => new
-                {
-                    review_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    oov_candidate_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    curator_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    decision = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    edited_term = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    edited_reading = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    edited_pos = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    edited_meaning = table.Column<string>(type: "text", nullable: true),
-                    comment = table.Column<string>(type: "text", nullable: true),
-                    reviewed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_curator_reviews", x => x.review_id);
-                    table.ForeignKey(
-                        name: "fk_curator_reviews_oov_candidates_oov_candidate_id",
-                        column: x => x.oov_candidate_id,
-                        principalTable: "oov_candidates",
-                        principalColumn: "oov_candidate_id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_curator_reviews_users_curator_id",
-                        column: x => x.curator_id,
-                        principalSchema: "identity",
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "email_verification_tokens",
                 schema: "identity",
                 columns: table => new
@@ -536,45 +462,29 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "videos",
+                name: "series",
                 schema: "material",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     slug = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    duration = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    content_category_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    series_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    sort_order = table.Column<int>(type: "integer", nullable: false),
+                    name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    japanese_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    thumbnail_key = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    display_order = table.Column<int>(type: "integer", nullable: false),
                     source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    source_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    learner_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_videos", x => x.id);
+                    table.PrimaryKey("pk_series", x => x.id);
                     table.ForeignKey(
-                        name: "fk_videos_content_categories_content_category_id",
-                        column: x => x.content_category_id,
-                        principalSchema: "knowledge",
-                        principalTable: "content_categories",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "fk_videos_series_series_id",
-                        column: x => x.series_id,
-                        principalSchema: "material",
-                        principalTable: "series",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "fk_videos_users_learner_id",
-                        column: x => x.learner_id,
+                        name: "fk_series_users_user_id",
+                        column: x => x.user_id,
                         principalSchema: "identity",
                         principalTable: "users",
                         principalColumn: "id",
@@ -681,6 +591,89 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "videos",
+                schema: "material",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    slug = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    duration = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    content_category_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    series_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    sort_order = table.Column<int>(type: "integer", nullable: false),
+                    source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    source_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    learner_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_videos", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_videos_content_categories_content_category_id",
+                        column: x => x.content_category_id,
+                        principalSchema: "knowledge",
+                        principalTable: "content_categories",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_videos_series_series_id",
+                        column: x => x.series_id,
+                        principalSchema: "material",
+                        principalTable: "series",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_videos_users_learner_id",
+                        column: x => x.learner_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "subscription_usages",
+                schema: "subscription",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    subscription_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    feature_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    period_start = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    period_end = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    max_value = table.Column<int>(type: "integer", nullable: false),
+                    used_value = table.Column<int>(type: "integer", nullable: false),
+                    is_over_limit = table.Column<bool>(type: "boolean", nullable: false),
+                    is_expired = table.Column<bool>(type: "boolean", nullable: false),
+                    is_canceled = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_subscription_usages", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_subscription_usages_features_feature_id",
+                        column: x => x.feature_id,
+                        principalSchema: "subscription",
+                        principalTable: "features",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_subscription_usages_subscriptions_subscription_id",
+                        column: x => x.subscription_id,
+                        principalSchema: "subscription",
+                        principalTable: "subscriptions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "media_assets",
                 schema: "material",
                 columns: table => new
@@ -755,43 +748,6 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "subscription_usages",
-                schema: "subscription",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    subscription_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    feature_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    period_start = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    period_end = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    max_value = table.Column<int>(type: "integer", nullable: false),
-                    used_value = table.Column<int>(type: "integer", nullable: false),
-                    is_over_limit = table.Column<bool>(type: "boolean", nullable: false),
-                    is_expired = table.Column<bool>(type: "boolean", nullable: false),
-                    is_canceled = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_subscription_usages", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_subscription_usages_features_feature_id",
-                        column: x => x.feature_id,
-                        principalSchema: "subscription",
-                        principalTable: "features",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "fk_subscription_usages_subscriptions_subscription_id",
-                        column: x => x.subscription_id,
-                        principalSchema: "subscription",
-                        principalTable: "subscriptions",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "transcript_speakers",
                 schema: "material",
                 columns: table => new
@@ -799,12 +755,20 @@ namespace Rakushu.Persistence.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     transcript_id = table.Column<Guid>(type: "uuid", nullable: false),
                     label = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    speaker_id = table.Column<Guid>(type: "uuid", nullable: true),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     description = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_transcript_speakers", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_transcript_speakers_speakers_speaker_id",
+                        column: x => x.speaker_id,
+                        principalSchema: "shadowing",
+                        principalTable: "speakers",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "fk_transcript_speakers_transcripts_transcript_id",
                         column: x => x.transcript_id,
@@ -825,7 +789,7 @@ namespace Rakushu.Persistence.Migrations
                     start_time = table.Column<TimeSpan>(type: "interval", nullable: false),
                     end_time = table.Column<TimeSpan>(type: "interval", nullable: false),
                     transcript_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    transcript_speaker_id = table.Column<Guid>(type: "uuid", nullable: true)
+                    transcript_speaker_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -948,7 +912,7 @@ namespace Rakushu.Persistence.Migrations
                     type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     start_time = table.Column<TimeSpan>(type: "interval", nullable: false),
                     end_time = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    confidence = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: false)
+                    confidence = table.Column<decimal>(type: "numeric(8,5)", precision: 8, scale: 5, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1093,32 +1057,11 @@ namespace Rakushu.Persistence.Migrations
                 column: "knowledge_collection_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_curator_reviews_curator_id",
-                table: "curator_reviews",
-                column: "curator_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_curator_reviews_oov_candidate_id",
-                table: "curator_reviews",
-                column: "oov_candidate_id",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_dependency_relationships_code",
                 schema: "knowledge",
                 table: "dependency_relationships",
                 column: "code",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_dictionary_entries_reading",
-                table: "dictionary_entries",
-                column: "reading");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_dictionary_entries_term",
-                table: "dictionary_entries",
-                column: "term");
 
             migrationBuilder.CreateIndex(
                 name: "ix_email_verification_tokens_user_id",
@@ -1210,16 +1153,6 @@ namespace Rakushu.Persistence.Migrations
                 column: "video_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_oov_candidates_status",
-                table: "oov_candidates",
-                column: "status");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_oov_candidates_term",
-                table: "oov_candidates",
-                column: "term");
-
-            migrationBuilder.CreateIndex(
                 name: "ix_payments_plan_id",
                 schema: "subscription",
                 table: "payments",
@@ -1283,6 +1216,19 @@ namespace Rakushu.Persistence.Migrations
                 schema: "material",
                 table: "series",
                 column: "slug",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_series_user_id",
+                schema: "material",
+                table: "series",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_speakers_code",
+                schema: "shadowing",
+                table: "speakers",
+                column: "code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1400,6 +1346,12 @@ namespace Rakushu.Persistence.Migrations
                 column: "transcript_speaker_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_transcript_speakers_speaker_id",
+                schema: "material",
+                table: "transcript_speakers",
+                column: "speaker_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_transcript_speakers_transcript_id",
                 schema: "material",
                 table: "transcript_speakers",
@@ -1463,12 +1415,6 @@ namespace Rakushu.Persistence.Migrations
                 schema: "knowledge");
 
             migrationBuilder.DropTable(
-                name: "curator_reviews");
-
-            migrationBuilder.DropTable(
-                name: "dictionary_entries");
-
-            migrationBuilder.DropTable(
                 name: "email_verification_tokens",
                 schema: "identity");
 
@@ -1511,9 +1457,6 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "transcript_items",
                 schema: "material");
-
-            migrationBuilder.DropTable(
-                name: "oov_candidates");
 
             migrationBuilder.DropTable(
                 name: "profiles",
@@ -1574,6 +1517,10 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "transcript_speakers",
                 schema: "material");
+
+            migrationBuilder.DropTable(
+                name: "speakers",
+                schema: "shadowing");
 
             migrationBuilder.DropTable(
                 name: "transcripts",

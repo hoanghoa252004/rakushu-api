@@ -188,6 +188,7 @@ public sealed partial class Transcript : Entity<TranscriptId>
 
 		var result = TranscriptSpeaker.TranscriptSpeaker.Create(
 			Id,
+			speakerId: null,
 			label);
 
 		if (result.IsFailure)

@@ -20,6 +20,8 @@ internal sealed class CreateSeries : IEndpoint
 			var command = new CreateSeriesCommand(
 				request.Slug,
 				request.Name,
+				request.JapaneseName,
+				request.ThumbnailKey,
 				request.Description,
 				request.DisplayOrder,
 				request.IsActive);
@@ -42,8 +44,8 @@ internal sealed class CreateSeries : IEndpoint
 public sealed record CreateSeriesRequest(
 	string Slug,
 	string Name,
+	string JapaneseName,
+	string? ThumbnailKey,
 	string? Description,
 	int DisplayOrder,
 	bool IsActive);
-
-public sealed record CreateSeriesResponse(Guid Id);

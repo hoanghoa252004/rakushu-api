@@ -184,4 +184,9 @@ internal class AwsS3Service : IStorageService
 
 		return new S3ObjectReadStream(response);
 	}
+
+	public string GetS3MediaUri(string videoStorageKey)
+	{
+		return $"s3://{_s3Settings.BucketName}/{videoStorageKey}";
+	}
 }

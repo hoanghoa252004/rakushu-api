@@ -20,6 +20,8 @@ internal sealed class UpdateSeries : IEndpoint
 			var command = new UpdateSeriesCommand(
 				id,
 				request.Name,
+				request.JapaneseName,
+				request.ThumbnailKey,
 				request.Description,
 				request.DisplayOrder,
 				request.IsActive);
@@ -42,6 +44,8 @@ internal sealed class UpdateSeries : IEndpoint
 
 public sealed record UpdateSeriesRequest(
 	string Name,
+	string JapaneseName,
+	string? ThumbnailKey,
 	string? Description,
 	int DisplayOrder,
 	bool IsActive);

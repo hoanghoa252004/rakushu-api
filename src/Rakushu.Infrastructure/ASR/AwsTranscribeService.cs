@@ -43,7 +43,7 @@ internal sealed class AwsTranscribeService : IAsrService
 
 			OutputBucketName = _awsSettings.BucketName,
 
-			OutputKey = $"transcripts/{request.JobName}-transcript.json",
+			OutputKey = request.OutputKey,
 
 			Settings = new Settings
 			{
@@ -90,7 +90,7 @@ internal sealed class AwsTranscribeService : IAsrService
 				job.Transcript?.TranscriptFileUri,
 				job.FailureReason);
 		}
-		catch (NotFoundException)
+		catch (Exception)
 		{
 			return null;
 		}

@@ -12,8 +12,8 @@ using Rakushu.Persistence;
 namespace Rakushu.Persistence.Migrations
 {
     [DbContext(typeof(RakushuDbContext))]
-    [Migration("20261016055540_Fxk3")]
-    partial class Fxk3
+    [Migration("20261016162601_SpeakerAndSeries")]
+    partial class SpeakerAndSeries
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -815,8 +815,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
+                        .HasColumnType("text")
                         .HasColumnName("description");
 
                     b.Property<int>("DisplayOrder")
@@ -827,10 +826,16 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<string>("JapaneseName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("japanese_name");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
                     b.Property<string>("Slug")
@@ -845,9 +850,19 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("source_type");
 
+                    b.Property<string>("ThumbnailKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("thumbnail_key");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("pk_series");
@@ -855,6 +870,9 @@ namespace Rakushu.Persistence.Migrations
                     b.HasIndex("Slug")
                         .IsUnique()
                         .HasDatabaseName("ix_series_slug");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_series_user_id");
 
                     b.ToTable("series", "material");
                 });
@@ -1167,12 +1185,19 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
+                    b.Property<Guid?>("SpeakerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("speaker_id");
+
                     b.Property<Guid>("TranscriptId")
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_id");
 
                     b.HasKey("Id")
                         .HasName("pk_transcript_speakers");
+
+                    b.HasIndex("SpeakerId")
+                        .HasDatabaseName("ix_transcript_speakers_speaker_id");
 
                     b.HasIndex("TranscriptId")
                         .HasDatabaseName("ix_transcript_speakers_transcript_id");
@@ -1250,7 +1275,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("interval")
                         .HasColumnName("duration");
 
-                    b.Property<Guid>("LearnerId")
+                    b.Property<Guid?>("LearnerId")
                         .HasColumnType("uuid")
                         .HasColumnName("learner_id");
 
@@ -1314,205 +1339,61 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("videos", "material");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.CuratorReview.CuratorReview", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
-                        .HasColumnName("review_id");
+                        .HasColumnName("id");
 
-                    b.Property<string>("Comment")
-                        .HasColumnType("text")
-                        .HasColumnName("comment");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("CuratorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("curator_id");
-
-                    b.Property<string>("Decision")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("decision");
-
-                    b.Property<string>("EditedMeaning")
-                        .HasColumnType("text")
-                        .HasColumnName("edited_meaning");
-
-                    b.Property<string>("EditedPos")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("edited_pos");
-
-                    b.Property<string>("EditedReading")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("edited_reading");
-
-                    b.Property<string>("EditedTerm")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("edited_term");
-
-                    b.Property<Guid>("OovCandidateId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("oov_candidate_id");
-
-                    b.Property<DateTimeOffset>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_curator_reviews");
-
-                    b.HasIndex("CuratorId")
-                        .HasDatabaseName("ix_curator_reviews_curator_id");
-
-                    b.HasIndex("OovCandidateId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_curator_reviews_oov_candidate_id");
-
-                    b.ToTable("curator_reviews", (string)null);
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.DictionaryEntry.DictionaryEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dictionary_entry_id");
-
-                    b.Property<string>("AudioUrl")
+                    b.Property<string>("AvatarKey")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
-                        .HasColumnName("audio_url");
+                        .HasColumnName("avatar_key");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("DefinitionTags")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("definition_tags");
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
-                    b.Property<string>("JlptLevel")
+                    b.Property<string>("JapaneseName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("japanese_name");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("ThemeColor")
+                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
-                        .HasColumnName("jlpt_level");
-
-                    b.Property<string>("Meaning")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("meaning");
-
-                    b.Property<string>("MeaningVietnamese")
-                        .HasColumnType("text")
-                        .HasColumnName("meaning_vietnamese");
-
-                    b.Property<string>("Pos")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("part_of_speech");
-
-                    b.Property<string>("Reading")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("reading");
-
-                    b.Property<string>("Term")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("term");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("WordType")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("word_type");
-
-                    b.HasKey("Id")
-                        .HasName("pk_dictionary_entries");
-
-                    b.HasIndex("Reading")
-                        .HasDatabaseName("ix_dictionary_entries_reading");
-
-                    b.HasIndex("Term")
-                        .HasDatabaseName("ix_dictionary_entries_term");
-
-                    b.ToTable("dictionary_entries", (string)null);
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.OovCandidate.OovCandidate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("oov_candidate_id");
-
-                    b.Property<double>("ConfidenceScore")
-                        .HasColumnType("double precision")
-                        .HasColumnName("confidence_score");
-
-                    b.Property<string>("ContextSnippet")
-                        .HasColumnType("text")
-                        .HasColumnName("context_snippet");
-
-                    b.Property<DateTimeOffset>("DetectedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("detected_at");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("status");
-
-                    b.Property<string>("SuggestedMeaning")
-                        .HasColumnType("text")
-                        .HasColumnName("suggested_meaning");
-
-                    b.Property<string>("TentativePos")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("tentative_pos");
-
-                    b.Property<string>("TentativeReading")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("tentative_reading");
-
-                    b.Property<string>("Term")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("term");
-
-                    b.Property<Guid?>("TokenId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("token_id");
+                        .HasColumnName("theme_color");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_oov_candidates");
+                        .HasName("pk_speakers");
 
-                    b.HasIndex("Status")
-                        .HasDatabaseName("ix_oov_candidates_status");
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_speakers_code");
 
-                    b.HasIndex("Term")
-                        .HasDatabaseName("ix_oov_candidates_term");
-
-                    b.ToTable("oov_candidates", (string)null);
+                    b.ToTable("speakers", "shadowing");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
@@ -2113,6 +1994,17 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("TranscriptSegment");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Series.Series", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
+                        .WithMany("Series")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_series_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
@@ -2223,12 +2115,20 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker.TranscriptSpeaker", b =>
                 {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", "Speaker")
+                        .WithMany("TranscriptSpeakers")
+                        .HasForeignKey("SpeakerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_transcript_speakers_speakers_speaker_id");
+
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.Transcript", "Transcript")
                         .WithMany("TranscriptSpeakers")
                         .HasForeignKey("TranscriptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_transcript_speakers_transcripts_transcript_id");
+
+                    b.Navigation("Speaker");
 
                     b.Navigation("Transcript");
                 });
@@ -2258,7 +2158,6 @@ namespace Rakushu.Persistence.Migrations
                         .WithMany("Videos")
                         .HasForeignKey("LearnerId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_videos_users_learner_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Material.Series.Series", "Series")
@@ -2272,27 +2171,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Learner");
 
                     b.Navigation("Series");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.CuratorReview.CuratorReview", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "Curator")
-                        .WithMany()
-                        .HasForeignKey("CuratorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_curator_reviews_users_curator_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.NotReviewedYet.OovCandidate.OovCandidate", "OovCandidate")
-                        .WithOne("CuratorReview")
-                        .HasForeignKey("Rakushu.Domain.Entities.NotReviewedYet.CuratorReview.CuratorReview", "OovCandidateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_curator_reviews_oov_candidates_oov_candidate_id");
-
-                    b.Navigation("Curator");
-
-                    b.Navigation("OovCandidate");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
@@ -2419,6 +2297,8 @@ namespace Rakushu.Persistence.Migrations
 
                     b.Navigation("RefreshTokens");
 
+                    b.Navigation("Series");
+
                     b.Navigation("Subscriptions");
 
                     b.Navigation("Videos");
@@ -2522,9 +2402,9 @@ namespace Rakushu.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.OovCandidate.OovCandidate", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", b =>
                 {
-                    b.Navigation("CuratorReview");
+                    b.Navigation("TranscriptSpeakers");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Feature.Feature", b =>

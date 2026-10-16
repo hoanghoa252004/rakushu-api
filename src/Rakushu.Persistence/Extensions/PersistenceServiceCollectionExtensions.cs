@@ -10,8 +10,6 @@ using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Identity.Role;
-using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
-using Rakushu.Domain.Entities.NotReviewedYet.DictionaryEntry;
 using Rakushu.Domain.Entities.Subscriptions.Plan;
 using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
@@ -50,8 +48,6 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IPaymentRepository, PaymentRepository>();
 		services.AddScoped<ITransactionRepository, TransactionRepository>();
 		services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-		services.AddScoped<IOovCandidateRepository, OovCandidateRepository>();
-		services.AddScoped<IDictionaryEntryRepository, DictionaryEntryRepository>();
 		services.AddScoped<IContentCategoryRepository, ContentCategoryRepository>();
 		services.AddScoped<IVideoRepository, VideoRepository>();
 		services.AddScoped<IJapanesePartOfSpeechRepository, JapanesePartOfSpeechRepository>();

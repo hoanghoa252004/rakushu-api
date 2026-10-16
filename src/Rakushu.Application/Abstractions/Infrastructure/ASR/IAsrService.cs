@@ -19,6 +19,7 @@ public sealed record StartTranscriptionRequest(
 	string MediaUri,
 	string MediaFormat,
 	string LanguageCode,
+	string OutputKey,
 	bool EnableSpeakerIdentification = true,
 	int MaxSpeakerLabels = 5);
 

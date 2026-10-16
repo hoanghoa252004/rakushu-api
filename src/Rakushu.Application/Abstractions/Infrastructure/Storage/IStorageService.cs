@@ -44,6 +44,7 @@ public interface IStorageService
 	Task<MediaAssetMetadataDto> GetMediaAssetMetadataAsync(
 		string key, 
 		CancellationToken cancellationToken);
+	string GetS3MediaUri(string videoStorageKey);
 
 	// Streaming
 	Task<Stream> StreamingReadAsync(

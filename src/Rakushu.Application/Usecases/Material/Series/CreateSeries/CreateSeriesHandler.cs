@@ -33,13 +33,15 @@ internal sealed class CreateSeriesHandler : IRequestHandler<CreateSeriesCommand,
 
 			// Create new series using the domain factory
 			var series = Domain.Entities.Material.Series.Series.Create(
-				_currentUserContext.UserId!,
 				request.Slug,
 				request.Name,
+				request.JapaneseName,
 				request.DisplayOrder,
 				sourceType,
 				request.IsActive,
-				request.Description);
+				sourceType == SeriesSource.Learner ? _currentUserContext.UserId : null,
+				request.Description,
+				request.ThumbnailKey);
 
 			// Add to repository
 			_repository.Add(series);

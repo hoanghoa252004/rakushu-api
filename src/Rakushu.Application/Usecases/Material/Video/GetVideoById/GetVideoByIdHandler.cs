@@ -45,6 +45,13 @@ internal sealed class GetVideoByIdHandler : IRequestHandler<GetVideoByIdQuery, R
 			MediaAssets = mediaAssets
 		};
 
+		if (dto.Series?.ThumbnailKey != null)
+		{
+			var thumbnailUrl = await _storageService.CreatePresignedReadUrlAsync(dto.Series.ThumbnailKey, cancellationToken);
+
+			dto = dto with { Series = dto.Series with { ThumbnailKey = thumbnailUrl } };
+		}
+
 		return Result.Success(dto);
 	}
 }
