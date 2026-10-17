@@ -12,9 +12,7 @@ internal sealed class QuizAttemptConfiguration : IEntityTypeConfiguration<QuizAt
         builder.ToTable("quiz_attempts", "srs", table =>
         {
             table.HasCheckConstraint("ck_quiz_attempts_counts", "total_items >= 0 AND answered_items >= 0 AND correct_items >= 0 AND correct_items <= answered_items AND answered_items <= total_items");
-            table.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");
-            table.HasCheckConstraint("ck_quiz_attempts_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
-            table.HasCheckConstraint("ck_quiz_attempts_status", "status IN ('Created', 'InProgress', 'Completed', 'Abandoned')");
+            table.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");            table.HasCheckConstraint("ck_quiz_attempts_status", "status IN ('Created', 'InProgress', 'Completed', 'Abandoned')");
             table.HasCheckConstraint("ck_quiz_attempts_mode", "attempt_mode IN ('SrsReview', 'Practice')");
             table.HasCheckConstraint("ck_quiz_attempts_completed_at", "status <> 'Completed' OR completed_at IS NOT NULL");
         });

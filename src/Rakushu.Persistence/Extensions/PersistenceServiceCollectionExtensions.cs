@@ -7,6 +7,7 @@ using Rakushu.Persistence.Connection;
 using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
 using Rakushu.Application.Abstractions.Persistence.Queries;
+using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Video;
@@ -22,6 +23,7 @@ using Rakushu.Domain.Entities.Subscriptions.Transaction;
 using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
+using Rakushu.Domain.Entities.Srs;
 
 namespace Rakushu.Persistence.Extensions;
 
@@ -60,6 +62,9 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
 		services.AddScoped<ISeriesRepository, SeriesRepository>();
+		services.AddScoped<ISrsNoteRepository, SrsNoteRepository>();
+		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
+		services.AddScoped<ISrsCardRepository, SrsCardRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();

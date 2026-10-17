@@ -16,7 +16,6 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
     public bool? IsCorrect { get; private set; }
     public string? FeedbackSnapshot { get; private set; }
     public DateTimeOffset? AnsweredAt { get; private set; }
-    public long? ElapsedMs { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public QuizAttempt QuizAttempt { get; private set; } = null!;
     public SrsCard SrsCard { get; private set; } = null!;
@@ -59,19 +58,18 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
         Position = position;
     }
 
-    internal Result RecordAnswer(string selectedAnswer, bool isCorrect, DateTimeOffset answeredAt, long? elapsedMs)
+    internal Result RecordAnswer(string selectedAnswer, bool isCorrect, DateTimeOffset answeredAt)
     {
         if (AnsweredAt is not null)
             return Result.Failure(QuizAttemptErrors.QuizItemAlreadyAnswered);
         if (string.IsNullOrWhiteSpace(selectedAnswer))
             return Result.Failure(QuizAttemptErrors.InvalidQuizAnswer);
-        if (elapsedMs is < 0 || answeredAt < CreatedAt)
+        if (answeredAt < CreatedAt)
             return Result.Failure(QuizAttemptErrors.InvalidReviewTiming);
 
         SelectedAnswer = selectedAnswer;
         IsCorrect = isCorrect;
         AnsweredAt = answeredAt;
-        ElapsedMs = elapsedMs;
         return Result.Success();
     }
 }

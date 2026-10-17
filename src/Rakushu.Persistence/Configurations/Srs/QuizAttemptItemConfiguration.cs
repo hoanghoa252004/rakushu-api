@@ -11,7 +11,6 @@ internal sealed class QuizAttemptItemConfiguration : IEntityTypeConfiguration<Qu
         builder.ToTable("quiz_attempt_items", "srs", table =>
         {
             table.HasCheckConstraint("ck_quiz_attempt_items_position", "position > 0");
-            table.HasCheckConstraint("ck_quiz_attempt_items_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
         });
         builder.HasKey(item => item.Id);
         builder.Property(item => item.Id).HasConversion(id => id.Value, value => QuizAttemptItemId.From(value));
@@ -21,7 +20,7 @@ internal sealed class QuizAttemptItemConfiguration : IEntityTypeConfiguration<Qu
         builder.Property(item => item.QuestionSnapshot).HasColumnType("jsonb").IsRequired();
         builder.Property(item => item.ChoicesSnapshot).HasColumnType("jsonb");
         builder.Property(item => item.CorrectAnswerSnapshot).HasColumnType("jsonb").IsRequired();
-        builder.Property(item => item.SelectedAnswer).HasColumnType("jsonb");
+        builder.Property(item => item.SelectedAnswer).HasColumnType("text");
         builder.Property(item => item.FeedbackSnapshot).HasColumnType("jsonb");
         builder.HasOne(item => item.QuizAttempt).WithMany(attempt => attempt.Items).HasForeignKey(item => item.QuizAttemptId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(item => item.SrsCard).WithMany().HasForeignKey(item => item.SrsCardId).OnDelete(DeleteBehavior.Restrict);

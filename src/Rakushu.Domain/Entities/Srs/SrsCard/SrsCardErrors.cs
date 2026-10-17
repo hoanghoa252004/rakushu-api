@@ -16,4 +16,5 @@ public static class SrsCardErrors
     public static readonly Error CardStateOwnerMismatch = Error.Validation("SRS.CARD_STATE_OWNER_MISMATCH", "The scheduling state belongs to a different card.");
     public static readonly Error CardNotReviewable = Error.Validation("SRS.CARD_NOT_REVIEWABLE", "The SRS card cannot be reviewed in its current status.");
     public static readonly Error CardStateMissing = Error.Validation("SRS.CARD_STATE_MISSING", "The SRS card has no scheduling state.");
+    public static readonly Error NoDueCards = Error.NotFound("SRS.NO_DUE_CARDS", "There are no SRS cards due for review.");
 }

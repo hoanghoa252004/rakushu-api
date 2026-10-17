@@ -1508,7 +1508,6 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttempt", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -1535,10 +1534,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<long?>("ElapsedMs")
-                        .HasColumnType("bigint")
-                        .HasColumnName("elapsed_ms");
 
                     b.Property<decimal?>("Score")
                         .HasPrecision(5, 2)
@@ -1596,8 +1591,6 @@ namespace Rakushu.Persistence.Migrations
 
                             t.HasCheckConstraint("ck_quiz_attempts_counts", "total_items >= 0 AND answered_items >= 0 AND correct_items >= 0 AND correct_items <= answered_items AND answered_items <= total_items");
 
-                            t.HasCheckConstraint("ck_quiz_attempts_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
-
                             t.HasCheckConstraint("ck_quiz_attempts_mode", "attempt_mode IN ('SrsReview', 'Practice')");
 
                             t.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");
@@ -1609,7 +1602,6 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttemptItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -1629,10 +1621,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<long?>("ElapsedMs")
-                        .HasColumnType("bigint")
-                        .HasColumnName("elapsed_ms");
 
                     b.Property<string>("FeedbackSnapshot")
                         .HasColumnType("jsonb")
@@ -1664,7 +1652,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("quiz_attempt_id");
 
                     b.Property<string>("SelectedAnswer")
-                        .HasColumnType("jsonb")
+                        .HasColumnType("text")
                         .HasColumnName("selected_answer");
 
                     b.Property<Guid>("SrsCardId")
@@ -1683,8 +1671,6 @@ namespace Rakushu.Persistence.Migrations
 
                     b.ToTable("quiz_attempt_items", "srs", t =>
                         {
-                            t.HasCheckConstraint("ck_quiz_attempt_items_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
-
                             t.HasCheckConstraint("ck_quiz_attempt_items_position", "position > 0");
                         });
                 });
@@ -1692,7 +1678,6 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsCard", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -1795,7 +1780,6 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsNote", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -1837,7 +1821,6 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsReviewLog", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -1936,7 +1919,6 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsSession", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -1995,7 +1977,6 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsSessionItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -2041,6 +2022,10 @@ namespace Rakushu.Persistence.Migrations
                     b.HasIndex("SrsSessionId", "Position")
                         .IsUnique()
                         .HasDatabaseName("ix_srs_session_items_srs_session_id_position");
+
+                    b.HasIndex("SrsSessionId", "SrsCardId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_srs_session_items_srs_session_id_srs_card_id");
 
                     b.ToTable("srs_session_items", "srs", t =>
                         {

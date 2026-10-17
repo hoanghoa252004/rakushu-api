@@ -16,9 +16,7 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
     public int CorrectItems { get; private set; }
     public decimal? Score { get; private set; }
     public DateTimeOffset StartedAt { get; private set; }
-    public DateTimeOffset? CompletedAt { get; private set; }
-    public long? ElapsedMs { get; private set; }
-    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset? CompletedAt { get; private set; }    public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
     public User User { get; private set; } = null!;
     public QuizAttempt? SourceAttempt { get; private set; }
@@ -48,6 +46,8 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
     {
         if (source is null || source.Status != QuizAttemptStatus.Completed)
             return Result.Failure<QuizAttempt>(QuizAttemptErrors.RetryRequiresCompletedAttempt);
+        // Retry is for reviewing answers, not a new scheduled SRS review.
+        // Keep SM-2 unchanged when the retry is submitted.
         var retryResult = Create(source.UserId, source.TemplateCode, "Practice", now, source.Id);
         if (retryResult.IsFailure)
             return retryResult;
@@ -79,14 +79,14 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
         return Result.Success();
     }
 
-    public Result RecordAnswer(Guid itemId, string selectedAnswer, bool isCorrect, DateTimeOffset answeredAt, long? elapsedMs = null)
+    public Result RecordAnswer(Guid itemId, string selectedAnswer, bool isCorrect, DateTimeOffset answeredAt)
     {
         if (Status != QuizAttemptStatus.InProgress)
             return Result.Failure(QuizAttemptErrors.QuizNotInProgress);
         var item = Items.SingleOrDefault(x => x.Id.Value == itemId);
         if (item is null)
             return Result.Failure(QuizAttemptErrors.QuizItemNotFound);
-        var answerResult = item.RecordAnswer(selectedAnswer, isCorrect, answeredAt, elapsedMs);
+        var answerResult = item.RecordAnswer(selectedAnswer, isCorrect, answeredAt);
         if (answerResult.IsFailure)
             return answerResult;
         AnsweredItems = Items.Count(x => x.AnsweredAt is not null);
@@ -103,7 +103,6 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
             return Result.Failure(QuizAttemptErrors.QuizHasUnansweredItems);
         Status = QuizAttemptStatus.Completed;
         CompletedAt = completedAt;
-        ElapsedMs = Math.Max(0, (long)(completedAt - StartedAt).TotalMilliseconds);
         Score = Math.Round((decimal)CorrectItems * 100m / TotalItems, 2);
         UpdatedAt = completedAt;
         return Result.Success();

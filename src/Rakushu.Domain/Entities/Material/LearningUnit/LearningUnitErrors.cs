@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Rakushu.Domain.Common.Errors;
 
 namespace Rakushu.Domain.Entities.Material.LearningUnit;
 
-internal class LearningUnitErrors
+public static class LearningUnitErrors
 {
+    public static readonly Error NotFound = Error.NotFound(
+        "LEARNING_UNIT.NOT_FOUND", "The learning unit was not found.");
 }

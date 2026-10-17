@@ -63,6 +63,13 @@ internal static class SwaggerExtension
 				Description = "APIs for learning content."
 			});
 
+			options.SwaggerDoc("srs", new OpenApiInfo
+			{
+				Title = "SRS API",
+				Version = "v1",
+				Description = "APIs for spaced repetition learning: enrollment, card selection, and quiz attempts."
+			});
+
 			options.SwaggerDoc("payment", new OpenApiInfo
 			{
 				Title = "Payment API",
@@ -113,11 +120,13 @@ internal static class SwaggerExtension
 			//options.SwaggerEndpoint("/swagger/admin/swagger.json", "Admin API");
 			options.SwaggerEndpoint("/swagger/auth/swagger.json", "Authentication API");
 			options.SwaggerEndpoint("/swagger/user/swagger.json", "User API");
+			// Profile APIs remain documented under User API.
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
 			options.SwaggerEndpoint("/swagger/curator/swagger.json", "Curator API");
 			options.SwaggerEndpoint("/swagger/linguistic/swagger.json", "Linguistic API");
 			options.SwaggerEndpoint("/swagger/learning/swagger.json", "Learning API");
+			options.SwaggerEndpoint("/swagger/srs/swagger.json", "SRS API");
 			options.SwaggerEndpoint("/swagger/payment/swagger.json", "Payment API");
 
 		});

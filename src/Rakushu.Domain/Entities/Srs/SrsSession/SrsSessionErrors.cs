@@ -13,6 +13,7 @@ public static class SrsSessionErrors
     public static readonly Error InvalidReviewTiming = Error.Validation("SRS.INVALID_REVIEW_TIMING", "Review time must not precede the item timestamp and elapsed time cannot be negative.");
     public static readonly Error SessionNotInProgress = Error.Validation("SRS.SESSION_NOT_IN_PROGRESS", "The SRS session is not in progress.");
     public static readonly Error DuplicateSessionCard = Error.Conflict("SRS.DUPLICATE_SESSION_CARD", "The card is already in this session.");
+    public static readonly Error SessionNotFound = Error.NotFound("SRS.SESSION_NOT_FOUND", "The SRS session was not found.");
     public static readonly Error SessionItemNotFound = Error.NotFound("SRS.SESSION_ITEM_NOT_FOUND", "The session item was not found.");
     public static readonly Error SessionHasUnreviewedItems = Error.Validation("SRS.SESSION_HAS_UNREVIEWED_ITEMS", "All session items must be reviewed before completion.");
     public static readonly Error SessionItemAlreadyReviewed = Error.Conflict("SRS.SESSION_ITEM_ALREADY_REVIEWED", "The session item has already been reviewed.");
