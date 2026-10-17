@@ -1,9 +1,8 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
-using Rakushu.Application.Usecases.Material.Series;
 using Rakushu.Domain.Common.Results;
 
-namespace Rakushu.Application.Usecases.Material.Series.GetAllSeries;
+namespace Rakushu.Application.Usecases.Material.Series.GetSeries;
 
 public sealed record GetSeriesQuery(
 	int PageNumber = 1,

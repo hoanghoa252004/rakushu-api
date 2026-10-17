@@ -4,12 +4,12 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Material.Video;
-using Rakushu.Application.Usecases.Material.Video.GetAllVideos;
+using Rakushu.Application.Usecases.Material.Video.GetVideos;
 using Rakushu.Domain.Entities.Identity.Role;
 
-namespace Rakushu.Api.Endpoints.Material.Video.GetAllVideos;
+namespace Rakushu.Api.Endpoints.Material.Video.GetVideos;
 
-internal sealed class GetAllVideos : IEndpoint
+internal sealed class GetVideos : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
@@ -22,9 +22,10 @@ internal sealed class GetAllVideos : IEndpoint
 				[FromQuery] Guid? contentCategoryId = null,
 				[FromQuery] Guid? seriesId = null,
 				[FromQuery] Guid? userId = null,
+				[FromQuery] string? status = null,
 				CancellationToken cancellationToken = default) =>
 			{
-				var query = new GetAllVideosQuery(pageNumber, pageSize, searchKey, contentCategoryId, seriesId, userId);
+				var query = new GetVideosQuery(pageNumber, pageSize, searchKey, contentCategoryId, seriesId, userId, status);
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})

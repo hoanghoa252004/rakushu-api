@@ -25,7 +25,7 @@ internal sealed class GetCuratedVideosHandler : IRequestHandler<GetCuratedVideos
 		var videos = await _repository.GetAllAsync(cancellationToken);
 
 		// Filter by VideoSource = Curated
-		var filteredVideos = videos.Where(v => v.SourceType == VideoSource.Curated);
+		var filteredVideos = videos.Where(v => v.SourceType == VideoSource.Curated && v.Status == VideoStatus.Ready);
 
 		// Filter by SearchKey (title or slug)
 		if (!string.IsNullOrWhiteSpace(request.SearchKey))

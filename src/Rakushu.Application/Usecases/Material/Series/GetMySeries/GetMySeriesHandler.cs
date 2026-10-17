@@ -1,11 +1,7 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
-using Rakushu.Application.Common.Pagination;
-using Rakushu.Application.Usecases.Material.Series.GetAllSeries;
-using Rakushu.Application.Usecases.User.User.GetUserById;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Material.Series;
 using System;
 using System.Collections.Generic;

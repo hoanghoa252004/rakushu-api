@@ -1,27 +1,26 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Common.Pagination;
-using Rakushu.Application.Usecases.Material.Video;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Video;
 
-namespace Rakushu.Application.Usecases.Material.Video.GetAllVideos;
+namespace Rakushu.Application.Usecases.Material.Video.GetVideos;
 
-internal sealed class GetAllVideosHandler : IRequestHandler<GetAllVideosQuery, Result<PaginatedList<VideoDetailDto>>>
+internal sealed class GetVideosHandler : IRequestHandler<GetVideosQuery, Result<PaginatedList<VideoDetailDto>>>
 {
 	private readonly IVideoRepository _repository;
 	private readonly IStorageService _storageService;
 
-	public GetAllVideosHandler(IVideoRepository repository, IStorageService storageService)
+	public GetVideosHandler(IVideoRepository repository, IStorageService storageService)
 	{
 		_repository = repository;
 		_storageService = storageService;
 	}
 
-	public async Task<Result<PaginatedList<VideoDetailDto>>> Handle(GetAllVideosQuery request, CancellationToken cancellationToken)
+	public async Task<Result<PaginatedList<VideoDetailDto>>> Handle(GetVideosQuery request, CancellationToken cancellationToken)
 	{
 		var videos = await _repository.GetAllAsync(cancellationToken);
 
@@ -57,6 +56,16 @@ internal sealed class GetAllVideosHandler : IRequestHandler<GetAllVideosQuery, R
 			filteredVideos = filteredVideos.Where(v => v.LearnerId == userId);
 		}
 
+		if (string.IsNullOrWhiteSpace(request.Status) == false && !Enum.TryParse<VideoStatus>(request.Status, true, out var status))
+		{
+			return Result.Failure<PaginatedList<VideoDetailDto>>(VideoErrors.InvalidStatus);
+		}
+
+		if (!string.IsNullOrWhiteSpace(request.Status))
+		{
+			filteredVideos = filteredVideos.Where(v => v.Status.ToString() == request.Status.ToString());
+		}
+		
 		// Calculate total count before paging
 		var totalCount = filteredVideos.Count();
 

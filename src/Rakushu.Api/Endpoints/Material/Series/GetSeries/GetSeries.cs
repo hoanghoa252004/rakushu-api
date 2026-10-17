@@ -4,10 +4,10 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Material.Series;
-using Rakushu.Application.Usecases.Material.Series.GetAllSeries;
+using Rakushu.Application.Usecases.Material.Series.GetSeries;
 using Rakushu.Domain.Entities.Identity.Role;
 
-namespace Rakushu.Api.Endpoints.Material.Series.GetAllSeries;
+namespace Rakushu.Api.Endpoints.Material.Series.GetSeries;
 
 internal sealed class GetSeries : IEndpoint
 {

@@ -1,15 +1,15 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
-using Rakushu.Application.Usecases.Material.Video;
 using Rakushu.Domain.Common.Results;
 
-namespace Rakushu.Application.Usecases.Material.Video.GetAllVideos;
+namespace Rakushu.Application.Usecases.Material.Video.GetVideos;
 
-public sealed record GetAllVideosQuery(
+public sealed record GetVideosQuery(
 	int PageNumber = 1,
 	int PageSize = 10,
 	string? SearchKey = null,
 	Guid? ContentCategoryId = null,
 	Guid? SeriesId = null,
-	Guid? UserId = null
+	Guid? UserId = null,
+	string? Status = null
 ) : IRequest<Result<PaginatedList<VideoDetailDto>>>;

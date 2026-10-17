@@ -6,7 +6,7 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Material.Series;
 
-namespace Rakushu.Application.Usecases.Material.Series.GetAllSeries;
+namespace Rakushu.Application.Usecases.Material.Series.GetSeries;
 
 internal sealed class GetSeriesHandler : IRequestHandler<GetSeriesQuery, Result<PaginatedList<SeriesDto>>>
 {

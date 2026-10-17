@@ -1,10 +1,10 @@
 using FluentValidation;
 
-namespace Rakushu.Application.Usecases.Material.Video.GetAllVideos;
+namespace Rakushu.Application.Usecases.Material.Video.GetVideos;
 
-internal sealed class GetAllVideosValidator : AbstractValidator<GetAllVideosQuery>
+internal sealed class GetVideosValidator : AbstractValidator<GetVideosQuery>
 {
-	public GetAllVideosValidator()
+	public GetVideosValidator()
 	{
 		RuleFor(x => x.PageNumber)
 			.GreaterThan(0).WithMessage("PageNumber must be greater than 0");
