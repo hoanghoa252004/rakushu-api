@@ -20,9 +20,9 @@ internal sealed class GetJapanesePartOfSpeechById : IEndpoint
 				return result is null ? Results.NotFound() : Results.Ok(result);
 			})
 			.WithName("GetJapanesePartOfSpeechById")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)

@@ -36,10 +36,10 @@ internal sealed class UpdateContentCategory : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdateContentCategory")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Update a content category.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

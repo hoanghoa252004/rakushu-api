@@ -20,10 +20,10 @@ internal sealed class DeleteProficiencyLevel : IEndpoint
 			})
 			// 2. Description
 			.WithName("DeleteProficiencyLevel")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Deletes an existing proficiency level for linguistic skills.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

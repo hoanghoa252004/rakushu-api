@@ -27,10 +27,10 @@ internal sealed class CreateJapanesePartOfSpeech : IEndpoint
 				return result.MatchCreated("GetJapanesePartOfSpeechById", id => new { id });
 			})
 			.WithName("CreateJapanesePartOfSpeech")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Creates a new Japanese part of speech with Vietnamese and Japanese names.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces<Guid>(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

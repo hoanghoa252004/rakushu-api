@@ -27,10 +27,10 @@ internal sealed class CreateDependencyRelationship : IEndpoint
 				return result.MatchCreated("GetDependencyRelationshipById", id => new { id });
 			})
 			.WithName("CreateDependencyRelationship")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Creates a new dependency relationship with Vietnamese and Japanese names.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces<Guid>(StatusCodes.Status204NoContent)
 			.ProducesProblem(StatusCodes.Status404NotFound)

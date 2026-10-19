@@ -18,10 +18,10 @@ internal sealed class DeleteJapanesePartOfSpeech : IEndpoint
 				return result.MatchNoContent();
 			})
 			.WithName("DeleteJapanesePartOfSpeech")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Deletes an existing Japanese part of speech.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces(StatusCodes.Status204NoContent)
 			.ProducesProblem(StatusCodes.Status404NotFound)

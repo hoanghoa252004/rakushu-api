@@ -27,9 +27,9 @@ internal sealed class GetContentCategoryById : IEndpoint
 			})
 			// 2. Description
 			.WithName("GetContentCategoryById")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Retrieves a specific content category by its ID.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces<ContentCategoryDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)

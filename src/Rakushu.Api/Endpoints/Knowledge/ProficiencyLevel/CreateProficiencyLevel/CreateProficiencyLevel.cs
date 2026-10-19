@@ -19,10 +19,10 @@ internal sealed class CreateProficiencyLevel : IEndpoint
 			})
 			// 2. Description
 			.WithName("CreateProficiencyLevel")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Creates a new proficiency level for linguistic skills.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces<Guid>(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

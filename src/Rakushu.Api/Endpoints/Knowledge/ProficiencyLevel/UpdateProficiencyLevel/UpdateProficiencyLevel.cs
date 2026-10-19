@@ -36,10 +36,10 @@ internal sealed class UpdateProficiencyLevel : IEndpoint
 			})
 			// 2. Description
 			.WithName("UpdateProficiencyLevel")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Updates an existing proficiency level with the specified details.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

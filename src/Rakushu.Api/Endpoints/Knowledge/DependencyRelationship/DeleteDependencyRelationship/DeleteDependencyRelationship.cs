@@ -18,10 +18,10 @@ internal sealed class DeleteDependencyRelationship : IEndpoint
 				return result.MatchNoContent();
 			})
 			.WithName("DeleteDependencyRelationship")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Deletes an existing dependency relationship.")
 			// 3. Authentication & Authorization
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces(StatusCodes.Status204NoContent)
 			.ProducesProblem(StatusCodes.Status404NotFound)

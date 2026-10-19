@@ -28,9 +28,9 @@ internal sealed class DeleteContentCategory : IEndpoint
 			})
 			// 2. Description
 			.WithName("DeleteContentCategory")
-			.WithSummary("Admin")
+			.WithSummary("Curator")
 			.WithDescription("Delete a content Category")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.SystemAdministrator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response
 			.Produces<ContentCategoryDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
