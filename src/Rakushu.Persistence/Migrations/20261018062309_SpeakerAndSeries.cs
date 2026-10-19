@@ -975,6 +975,7 @@ namespace Rakushu.Persistence.Migrations
                     surface = table.Column<string>(type: "text", nullable: false),
                     lemma = table.Column<string>(type: "text", nullable: false),
                     reading = table.Column<string>(type: "text", nullable: false),
+                    head_sequence = table.Column<int>(type: "integer", nullable: false),
                     japanese_part_of_speech_id = table.Column<Guid>(type: "uuid", nullable: false),
                     dependency_relationship_id = table.Column<Guid>(type: "uuid", nullable: false),
                     start_index = table.Column<int>(type: "integer", nullable: false),

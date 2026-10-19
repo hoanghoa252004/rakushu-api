@@ -979,6 +979,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("end_index");
 
+                    b.Property<int>("HeadSequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("head_sequence");
+
                     b.Property<Guid>("JapanesePartOfSpeechId")
                         .HasColumnType("uuid")
                         .HasColumnName("japanese_part_of_speech_id");

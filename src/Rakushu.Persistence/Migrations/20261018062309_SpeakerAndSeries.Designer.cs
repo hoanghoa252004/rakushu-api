@@ -12,7 +12,7 @@ using Rakushu.Persistence;
 namespace Rakushu.Persistence.Migrations
 {
     [DbContext(typeof(RakushuDbContext))]
-    [Migration("20261016162601_SpeakerAndSeries")]
+    [Migration("20261018062309_SpeakerAndSeries")]
     partial class SpeakerAndSeries
     {
         /// <inheritdoc />
@@ -981,6 +981,10 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<int>("EndIndex")
                         .HasColumnType("integer")
                         .HasColumnName("end_index");
+
+                    b.Property<int>("HeadSequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("head_sequence");
 
                     b.Property<Guid>("JapanesePartOfSpeechId")
                         .HasColumnType("uuid")

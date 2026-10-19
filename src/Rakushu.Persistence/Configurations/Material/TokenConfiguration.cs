@@ -44,6 +44,10 @@ internal sealed class TokenConfiguration : IEntityTypeConfiguration<Token>
 		builder.Property(t => t.Reading)
 			.IsRequired();
 
+		// HeadSequence
+		builder.Property(t => t.HeadSequence)
+			.IsRequired();
+
 		// JapanesePartOfSpeech
 		builder.Property(t => t.JapanesePartOfSpeechId)
 			.HasConversion(

@@ -92,24 +92,10 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		return Result.Success();
 	}
 
-	public Result<Bunsetsu.Bunsetsu> AddBunsetsu(
-		string text,
-		int startIndex,
-		int endIndex,
-		int sequence)
+	public Result<Bunsetsu.Bunsetsu> AddBunsetsu(Material.Bunsetsu.Bunsetsu bunsetsu)
 	{
-		var result = Material.Bunsetsu.Bunsetsu.Create(
-			Id,
-			text,
-			startIndex,
-			endIndex,
-			sequence);
-
-		if (result.IsFailure)
-			return result;
-
-		_bunsetsu.Add(result.Value);
-		return result;
+		_bunsetsu.Add(bunsetsu);
+		return Result.Success(bunsetsu);
 	}
 
 	public Result RemoveBunsetsu(BunsetsuId bunsetsuId)

@@ -7,10 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
 using Rakushu.Application.Abstractions.Infrastructure.Email;
+using Rakushu.Application.Abstractions.Infrastructure.Nlp;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Infrastructure.ASR;
 using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
+using Rakushu.Infrastructure.Nlp;
 using Rakushu.Infrastructure.Storage;
 using System;
 using System.Collections.Generic;
@@ -84,6 +86,18 @@ internal static class AwsExtention
 		// Transcribe
 		services.AddScoped<IAsrService, AwsTranscribeService>();
 		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();
+		// NLP Service
+		services.AddHttpClient<INlpService, SelftHostingNlpService>((serviceProvider, client) =>
+		{
+			var configuration = serviceProvider
+				.GetRequiredService<IConfiguration>();
+
+			var baseUrl = "http://localhost:8000";
+
+			client.BaseAddress = new Uri(baseUrl);
+
+			client.Timeout = TimeSpan.FromMinutes(2);
+		});
 		return services;
 	}
 }

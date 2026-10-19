@@ -80,20 +80,22 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 	}
 
 	public Result<Material.Token.Token> AddToken(
-		string surface,
-		string lemma,
-		string reading,
-		JapanesePartOfSpeechId japanesePartOfSpeechId,
-		DependencyRelationshipId dependencyRelationshipId,
-		int startIndex,
-		int endIndex,
-		int sequence)
+	string surface,
+	string lemma,
+	string reading,
+	int headSequence,
+	JapanesePartOfSpeechId japanesePartOfSpeechId,
+	DependencyRelationshipId dependencyRelationshipId,
+	int startIndex,
+	int endIndex,
+	int sequence)
 	{
 		var result = Material.Token.Token.Create(
 			Id,
 			surface,
 			lemma,
 			reading,
+			headSequence,
 			japanesePartOfSpeechId,
 			dependencyRelationshipId,
 			startIndex,

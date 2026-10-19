@@ -72,6 +72,62 @@ VALUES
 -- ----------------------------------------------------------------------------------------------------
 INSERT INTO knowledge.dependency_relationships (id, code, name, japanese_name, description)
 VALUES
+(
+        gen_random_uuid(),
+        'dep',
+        'Quan hệ phụ thuộc tổng quát',
+        '依存関係',
+        'Quan hệ phụ thuộc tổng quát được mô hình phân tích cú pháp xác định'
+    ),
+    (
+        gen_random_uuid(),
+        'expl',
+        'Thành phần expletive',
+        '虚辞',
+        'Thành phần ngữ pháp đặc biệt trong cấu trúc câu'
+    ),
+    (
+        gen_random_uuid(),
+        'parataxis',
+        'Quan hệ mệnh đề song song',
+        '並列的な節の関係',
+        'Quan hệ giữa các mệnh đề hoặc phát ngôn đặt cạnh nhau mà không có liên kết cú pháp phụ thuộc thông thường'
+    ),
+    (
+        gen_random_uuid(),
+        'orphan',
+        'Thành phần trong cấu trúc lược bỏ',
+        '孤立成分',
+        'Thành phần còn lại trong cấu trúc cú pháp có thành phần bị lược bỏ'
+    ),
+    (
+        gen_random_uuid(),
+        'reparandum',
+        'Thành phần bị sửa lại trong lời nói',
+        '言い直しの対象',
+        'Thành phần người nói ngắt hoặc sửa lại trong lời nói tự nhiên'
+    ),
+    (
+        gen_random_uuid(),
+        'goeswith',
+        'Thành phần được phân tích đi cùng nhau',
+        '結合成分',
+        'Quan hệ giữa các thành phần được phân tích là đi cùng nhau'
+    ),
+    (
+        gen_random_uuid(),
+        'preconj',
+        'Thành phần kết hợp đứng trước',
+        '前置等位接続要素',
+        'Thành phần kết hợp đứng trước trong cấu trúc đẳng lập'
+    ),
+    (
+        gen_random_uuid(),
+        'meta',
+        'Thành phần siêu ngôn ngữ',
+        'メタ言語要素',
+        'Thành phần dùng để diễn đạt nhận xét hoặc thông tin siêu ngôn ngữ'
+    ),
     (gen_random_uuid(), 'root', 'Vị ngữ trung tâm (Gốc câu)', '文の根（ルート）', 'Động từ/danh từ vị ngữ đóng vai trò trung tâm của cả câu'),
     (gen_random_uuid(), 'nsubj', 'Chủ ngữ danh từ', '名詞主語', 'Chủ ngữ của câu hoặc của mệnh đề phụ (đi với が hoặc は)'),
     (gen_random_uuid(), 'obj', 'Tân ngữ trực tiếp', '直接目的語', 'Tân ngữ nhận tác động trực tiếp của động từ (đi với を)'),
@@ -812,7 +868,7 @@ VALUES
     1,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -828,7 +884,7 @@ VALUES
     2,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -844,7 +900,7 @@ VALUES
     3,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -860,7 +916,7 @@ VALUES
     4,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -876,7 +932,7 @@ VALUES
     5,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -892,7 +948,7 @@ VALUES
     6,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -908,7 +964,7 @@ VALUES
     7,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -924,7 +980,7 @@ VALUES
     8,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -940,7 +996,7 @@ VALUES
     9,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -956,7 +1012,7 @@ VALUES
     10,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -972,7 +1028,7 @@ VALUES
     11,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -988,7 +1044,7 @@ VALUES
     12,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -1004,7 +1060,7 @@ VALUES
     13,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -1020,7 +1076,7 @@ VALUES
     14,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()
@@ -1036,7 +1092,7 @@ VALUES
     15,
     'Curated',
     NULL,
-    'Draft',
+    'Processing',
     NULL,
     NOW(),
     NOW()

@@ -1,5 +1,6 @@
 ﻿using Rakushu.Worker.Jobs.Payment;
 using Rakushu.Worker.Jobs.Subscription;
+using Rakushu.Worker.Jobs.Video.Nlp;
 using Rakushu.Worker.Jobs.Video.Transcript;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<PaymentExpirationWorker>();
 		services.AddHostedService<TransactionExpiryWorker>();
 		services.AddHostedService<TranscriptImportWorker>();
+		services.AddHostedService<NlpProcessWorker>();
 
 		// SUBSCRIPTION
 		services.AddHostedService<SubscriptionTrackingWorker>();
