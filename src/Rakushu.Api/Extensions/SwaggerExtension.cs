@@ -49,6 +49,13 @@ internal static class SwaggerExtension
 				Description = "APIs for learning content."
 			});
 
+			options.SwaggerDoc("knowledge", new OpenApiInfo
+			{
+				Title = "Knowlege API",
+				Version = "v1",
+				Description = "APIs for knowledge."
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -87,6 +94,7 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/storage/swagger.json", "Storage API");
 			options.SwaggerEndpoint("/swagger/subscription/swagger.json", "Subscription API");
 			options.SwaggerEndpoint("/swagger/material/swagger.json", "Material API");
+			options.SwaggerEndpoint("/swagger/knowledge/swagger.json", "Knowledge API");
 
 		});
 
