@@ -5,6 +5,7 @@ using Rakushu.Domain.Common.Results;
 namespace Rakushu.Application.Usecases.Learning.Srs.CreateQuizAttempt;
 
 public sealed record CreateQuizAttemptCommand(
-    IReadOnlyList<Guid>? CardIds,
-    string AttemptMode = "SrsReview")
-    : IRequest<Result<QuizAttemptStartedResponse>>;
+	IReadOnlyList<Guid>? CardIds,
+	string AttemptMode = "SrsReview",
+	string QuestionFormat = "MC")
+	: IRequest<Result<QuizAttemptStartedResponse>>;

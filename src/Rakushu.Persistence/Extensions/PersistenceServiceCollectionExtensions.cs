@@ -65,6 +65,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<ISrsNoteRepository, SrsNoteRepository>();
 		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 		services.AddScoped<ISrsCardRepository, SrsCardRepository>();
+		services.AddScoped<IQuizVocabularyQuery, QuizVocabularyQuery>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
@@ -73,4 +74,3 @@ public static class PersistenceServiceCollectionExtensions
 		return services;
 	}
 }
-

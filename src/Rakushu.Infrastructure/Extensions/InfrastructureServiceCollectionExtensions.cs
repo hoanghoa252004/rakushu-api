@@ -65,6 +65,7 @@ public static class InfrastructureServiceCollectionExtensions
 
 		// AI SERVICE CLIENT
 		services.AddHttpClient<Rakushu.Application.Abstractions.Infrastructure.IAiServiceClient, Rakushu.Infrastructure.AiService.AiServiceClient>();
+		services.AddHttpClient<Rakushu.Application.Abstractions.Infrastructure.IQuizContentGenerator, Rakushu.Infrastructure.AiService.OllamaQuizContentGenerator>();
 
 		return services;
 	}
