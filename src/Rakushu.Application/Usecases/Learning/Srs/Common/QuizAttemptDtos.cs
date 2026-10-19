@@ -13,6 +13,7 @@ public sealed record QuizQuestionDto(
 public sealed record QuizQuestionResultDto(
     Guid ItemId,
     int Position,
+    string QuestionType,
     string Prompt,
     string? Reading,
     string SelectedOptionId,
