@@ -78,6 +78,21 @@ public sealed class SrsCard : AggregateRoot<SrsCardId>
         return Result.Success();
     }
 
+    public Result RecordReview(int quality, DateTimeOffset reviewedAt)
+    {
+        if (Status is SrsCardStatus.Suspended or SrsCardStatus.Archived)
+            return Result.Failure(SrsCardErrors.CardNotReviewable);
+        if (State is null)
+            return Result.Failure(SrsCardErrors.CardStateMissing);
+        if (quality is < 0 or > 5)
+            return Result.Failure(SrsCardErrors.InvalidReviewRating);
+
+        State.ApplyReview(quality, reviewedAt);
+        Status = State.Repetitions == 0 ? SrsCardStatus.Learning : SrsCardStatus.Review;
+        UpdatedAt = reviewedAt;
+        return Result.Success();
+    }
+
     private Result ChangeStatus(SrsCardStatus nextStatus, DateTimeOffset now, params SrsCardStatus[] allowedCurrentStatuses)
     {
         if (!allowedCurrentStatuses.Contains(Status))

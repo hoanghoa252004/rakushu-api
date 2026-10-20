@@ -13,6 +13,7 @@ internal sealed class SrsReviewLogConfiguration : IEntityTypeConfiguration<SrsRe
             table.HasCheckConstraint("ck_srs_review_logs_single_source",
                 "(srs_session_item_id IS NOT NULL AND quiz_attempt_item_id IS NULL) OR (srs_session_item_id IS NULL AND quiz_attempt_item_id IS NOT NULL)");
             table.HasCheckConstraint("ck_srs_review_logs_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
+            table.HasCheckConstraint("ck_srs_review_logs_quality", "quality BETWEEN 0 AND 5");
         });
         builder.HasKey(log => log.Id);
         builder.Property(log => log.Id).HasConversion(id => id.Value, value => SrsReviewLogId.From(value));

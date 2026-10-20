@@ -8,6 +8,7 @@ public sealed class SrsReviewLog : Entity<SrsReviewLogId>
     public SrsSessionItemId? SrsSessionItemId { get; private set; }
     public QuizAttemptItemId? QuizAttemptItemId { get; private set; }
     public string Rating { get; private set; } = null!;
+    public int Quality { get; private set; }
     public DateTimeOffset ReviewedAt { get; private set; }
     public int? ElapsedMs { get; private set; }
     public DateTimeOffset? PreviousDueAt { get; private set; }
@@ -31,6 +32,7 @@ public sealed class SrsReviewLog : Entity<SrsReviewLogId>
         SrsSessionItemId? sessionItemId,
         QuizAttemptItemId? quizAttemptItemId,
         string rating,
+        int quality,
         DateTimeOffset reviewedAt,
         int? elapsedMs,
         DateTimeOffset? previousDueAt,
@@ -49,6 +51,8 @@ public sealed class SrsReviewLog : Entity<SrsReviewLogId>
             throw new ArgumentException("Exactly one review source must be specified.");
         if (string.IsNullOrWhiteSpace(rating) || !SrsReviewRating.IsValid(rating))
             throw new ArgumentException("A valid review rating is required.", nameof(rating));
+        if (quality is < 0 or > 5)
+            throw new ArgumentOutOfRangeException(nameof(quality), "SM-2 quality must be between 0 and 5.");
         if (elapsedMs is < 0)
             throw new ArgumentOutOfRangeException(nameof(elapsedMs));
 
@@ -58,6 +62,7 @@ public sealed class SrsReviewLog : Entity<SrsReviewLogId>
             SrsSessionItemId = sessionItemId,
             QuizAttemptItemId = quizAttemptItemId,
             Rating = rating,
+            Quality = quality,
             ReviewedAt = reviewedAt,
             ElapsedMs = elapsedMs,
             PreviousDueAt = previousDueAt,

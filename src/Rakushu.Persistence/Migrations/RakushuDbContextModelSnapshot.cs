@@ -1864,6 +1864,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("previous_repetitions");
 
+                    b.Property<int>("Quality")
+                        .HasColumnType("integer")
+                        .HasColumnName("quality");
+
                     b.Property<Guid?>("QuizAttemptItemId")
                         .HasColumnType("uuid")
                         .HasColumnName("quiz_attempt_item_id");
@@ -1911,6 +1915,8 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("srs_review_logs", "srs", t =>
                         {
                             t.HasCheckConstraint("ck_srs_review_logs_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
+
+                            t.HasCheckConstraint("ck_srs_review_logs_quality", "quality BETWEEN 0 AND 5");
 
                             t.HasCheckConstraint("ck_srs_review_logs_single_source", "(srs_session_item_id IS NOT NULL AND quiz_attempt_item_id IS NULL) OR (srs_session_item_id IS NULL AND quiz_attempt_item_id IS NOT NULL)");
                         });

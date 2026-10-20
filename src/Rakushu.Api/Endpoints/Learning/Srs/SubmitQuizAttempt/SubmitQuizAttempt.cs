@@ -23,7 +23,8 @@ internal sealed class SubmitQuizAttempt : IEndpoint
                     var answers = dto.Answers
                         .Select(answer => new QuizAnswerSubmission(
                             answer.ItemId,
-                            answer.SelectedOptionId))
+                            answer.SelectedOptionId,
+                            answer.ElapsedMs))
                         .ToList();
 
                     var command = new SubmitQuizAttemptCommand(attemptId, answers);
@@ -44,7 +45,7 @@ internal sealed class SubmitQuizAttempt : IEndpoint
     }
 }
 
-internal sealed record SubmitQuizAnswerDto(Guid ItemId, string SelectedOptionId);
+internal sealed record SubmitQuizAnswerDto(Guid ItemId, string SelectedOptionId, int? ElapsedMs = null);
 
 internal sealed record SubmitQuizAttemptRequestDto(
     IReadOnlyList<SubmitQuizAnswerDto> Answers);

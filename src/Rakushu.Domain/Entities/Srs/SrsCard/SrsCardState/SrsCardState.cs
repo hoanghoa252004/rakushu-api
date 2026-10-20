@@ -34,6 +34,8 @@ public sealed class SrsCardState
 
         if (quality < 3)
         {
+            // SM-2: failed recall resets the repetition sequence and interval,
+            // but leaves the easiness factor unchanged.
             Repetitions = 0;
             Lapses++;
             IntervalDays = 1;
@@ -44,12 +46,15 @@ public sealed class SrsCardState
             {
                 0 => 1,
                 1 => 6,
-                _ => Math.Max(1, (int)Math.Round(Math.Max(1, IntervalDays) * EasinessFactor, MidpointRounding.AwayFromZero))
+                _ => Math.Max(1, (int)Math.Ceiling(Math.Max(1, IntervalDays) * EasinessFactor))
             };
             Repetitions++;
+
+            EasinessFactor = Math.Max(
+                1.3,
+                EasinessFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
         }
 
-        EasinessFactor = Math.Max(1.3, EasinessFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
         LastReviewAt = reviewedAt;
         DueAt = reviewedAt.AddDays(IntervalDays);
         UpdatedAt = reviewedAt;

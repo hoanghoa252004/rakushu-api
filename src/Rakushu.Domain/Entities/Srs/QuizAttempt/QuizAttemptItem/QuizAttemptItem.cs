@@ -71,12 +71,10 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 	{
 		if (AnsweredAt is not null)
 			return Result.Failure(QuizAttemptErrors.QuizItemAlreadyAnswered);
-		if (string.IsNullOrWhiteSpace(selectedAnswer))
-			return Result.Failure(QuizAttemptErrors.InvalidQuizAnswer);
 		if (answeredAt < CreatedAt)
 			return Result.Failure(QuizAttemptErrors.InvalidReviewTiming);
 
-		SelectedAnswer = selectedAnswer;
+		SelectedAnswer = string.IsNullOrWhiteSpace(selectedAnswer) ? null : selectedAnswer;
 		IsCorrect = isCorrect;
 		AnsweredAt = answeredAt;
 		return Result.Success();

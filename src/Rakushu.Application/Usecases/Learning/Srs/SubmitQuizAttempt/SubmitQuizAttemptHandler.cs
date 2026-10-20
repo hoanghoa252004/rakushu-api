@@ -129,16 +129,25 @@ internal sealed class SubmitQuizAttemptHandler
 					QuizAttemptErrors.QuizHasUnansweredItems);
 			}
 
+			if (request.Answers.Any(answer => answer.ElapsedMs is < 0))
+			{
+				return Result.Failure<QuizAttemptResultResponse>(
+					QuizAttemptErrors.InvalidQuizAnswer);
+			}
+
 			var itemsById = attempt.Items.ToDictionary(item => item.Id.Value);
+			var answersByItemId = request.Answers.ToDictionary(answer => answer.ItemId);
 
 			foreach (var answer in request.Answers)
 			{
-				if (!itemsById.TryGetValue(answer.ItemId, out var item) ||
-					string.IsNullOrWhiteSpace(answer.SelectedOptionId))
+				if (!itemsById.TryGetValue(answer.ItemId, out var item))
 				{
 					return Result.Failure<QuizAttemptResultResponse>(
 						QuizAttemptErrors.InvalidQuizAnswer);
 				}
+
+				if (string.IsNullOrWhiteSpace(answer.SelectedOptionId))
+					continue;
 
 				using var choicesDocument = JsonDocument.Parse(item.ChoicesSnapshot ?? "[]");
 				var isValidOption = choicesDocument.RootElement
@@ -176,7 +185,7 @@ internal sealed class SubmitQuizAttemptHandler
 
 				var recordAnswerResult = attempt.RecordAnswer(
 					answer.ItemId,
-					answer.SelectedOptionId,
+					answer.SelectedOptionId ?? string.Empty,
 					isCorrect,
 					now);
 
@@ -239,8 +248,14 @@ internal sealed class SubmitQuizAttemptHandler
 					var previousEaseFactor = state.EasinessFactor;
 					var previousRepetitions = state.Repetitions;
 
-					var rating = item.IsCorrect == true ? "Good" : "Again";
-					var reviewResult = card.RecordReview(rating, now);
+					var submittedElapsedMs = answersByItemId[item.Id.Value].ElapsedMs;
+					var elapsedMs = QuizAnswerQualityScorer.NormalizeElapsedMs(submittedElapsedMs);
+					var quality = QuizAnswerQualityScorer.Calculate(
+						item.IsCorrect == true,
+						elapsedMs,
+						!string.IsNullOrWhiteSpace(item.SelectedAnswer));
+					var rating = SrsReviewRating.FromQuality(quality);
+					var reviewResult = card.RecordReview(quality, now);
 
 					if (reviewResult.IsFailure)
 					{
@@ -252,8 +267,9 @@ internal sealed class SubmitQuizAttemptHandler
 						null,
 						item.Id,
 						rating,
+						quality,
 						now,
-						null,
+						elapsedMs,
 						previousDueAt,
 						state.DueAt,
 						previousIntervalDays,
@@ -273,7 +289,7 @@ internal sealed class SubmitQuizAttemptHandler
 					item.QuestionType,
 					prompt,
 					reading,
-					item.SelectedAnswer!,
+					item.SelectedAnswer ?? string.Empty,
 					correctOptionId,
 					item.IsCorrect == true,
 					feedback,
