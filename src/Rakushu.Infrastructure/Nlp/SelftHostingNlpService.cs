@@ -24,19 +24,40 @@ public sealed class SelftHostingNlpService : INlpService
 		_httpClient = httpClient;
 	}
 
-	public async Task<NlpAnalysisResponse> AnalyzeAsync(
-		IReadOnlyCollection<NlpSegmentRequest> segments,
+	public async Task<TranscriptNlpAnalysisResponse> TranscriptAnalyzeAsync(
+		IReadOnlyCollection<TranscriptSegmentNlpRequest> segments,
 		CancellationToken cancellationToken)
 	{
 		using var response = await _httpClient.PostAsJsonAsync(
-			"/api/analyze",
+			"/api/transcript-analyze",
 			segments,
 			JsonOptions,
 			cancellationToken);
 
 		response.EnsureSuccessStatusCode();
 
-		var result = await response.Content.ReadFromJsonAsync<NlpAnalysisResponse>(
+		var result = await response.Content.ReadFromJsonAsync<TranscriptNlpAnalysisResponse>(
+			JsonOptions,
+			cancellationToken);
+
+		return result
+			?? throw new InvalidOperationException(
+				"NLP service returned an empty response.");
+	}
+
+	public async Task<KnowledgeNlpAnalysisResponse> KnowledgeAnalyzeAsync(
+		IReadOnlyCollection<KnowledgeUnitNlpRequest> expressions, 
+		CancellationToken cancellationToken)
+	{
+		using var response = await _httpClient.PostAsJsonAsync(
+			"/api/knowledge-analyze",
+			expressions,
+			JsonOptions,
+			cancellationToken);
+
+		response.EnsureSuccessStatusCode();
+
+		var result = await response.Content.ReadFromJsonAsync<KnowledgeNlpAnalysisResponse>(
 			JsonOptions,
 			cancellationToken);
 

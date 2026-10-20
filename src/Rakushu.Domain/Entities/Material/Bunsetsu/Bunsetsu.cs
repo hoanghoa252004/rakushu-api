@@ -22,14 +22,6 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 	private readonly List<Material.Token.Token> _tokens = new();
 	public IReadOnlyCollection<Material.Token.Token> Tokens => _tokens.AsReadOnly();
 
-	// Outgoing dependency relations
-	private readonly List<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> _outgoingRelations = new();
-	public IReadOnlyCollection<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> OutgoingRelations => _outgoingRelations.AsReadOnly();
-
-	// Incoming dependency relations
-	private readonly List<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> _incomingRelations = new();
-	public IReadOnlyCollection<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> IncomingRelations => _incomingRelations.AsReadOnly();
-
 	// CONSTRUCTORS & FACTORY METHODS
 	private Bunsetsu() { }
 

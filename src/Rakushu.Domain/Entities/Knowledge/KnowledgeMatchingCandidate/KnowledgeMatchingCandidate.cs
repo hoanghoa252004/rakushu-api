@@ -15,9 +15,6 @@ public sealed class KnowledgeMatchingCandidate : Entity<KnowledgeMatchingCandida
 	public int StartIndex { get; private set; }
 	public int EndIndex { get; private set; }
 	public string MatchingMethod { get; private set; } = null!;
-	public double? RetrievalScore { get; private set; }
-	public double? MatchingConfidence { get; private set; }
-	public string? MatchingExplanation { get; private set; }
 	public string Status { get; private set; } = null!;
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }

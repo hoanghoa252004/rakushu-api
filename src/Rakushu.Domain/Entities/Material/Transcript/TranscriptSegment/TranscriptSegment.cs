@@ -1,7 +1,6 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
-using Rakushu.Domain.Entities.Material.Subtitle.SubtitleSegment;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptItem;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
@@ -36,8 +35,8 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	private readonly List<LearningUnit.LearningUnit> _learningUnits = new();
 	public IReadOnlyCollection<LearningUnit.LearningUnit> LearningUnits => _learningUnits.AsReadOnly();
 
-	// SubtitleSegment
-	public SubtitleSegment SubtitleSegment { get; private set; } = null!;
+	// Subtitle
+	public Subtitle.Subtitle Subtitle { get; private set; } = null!;
 
 	// CONSTRUCTORS & FACTORY METHODS
 	private TranscriptSegment() { }

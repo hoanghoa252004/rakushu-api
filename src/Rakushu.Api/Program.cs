@@ -1,8 +1,13 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Extensions;
 using Rakushu.Api.Middleware;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
+using Rakushu.Application.Abstractions.Infrastructure.Rag;
 using Rakushu.Application.Extensions;
+using Rakushu.Application.Usecases.Embedding;
+using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeMatchingCandidate;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Extentions;
 using Rakushu.Infrastructure.Extensions;
@@ -141,6 +146,62 @@ app.MapGet("/", () => "Welcome to Rakushu Api").ExcludeFromDescription();
 //	.WithSummary("Get transcription detail")
 //	.Produces<Video>()
 //	.Produces(StatusCodes.Status404NotFound);
+
+//app.MapPost("/api/test/embedding", async (
+//	[FromBody] string text,
+//	IEmbeddingService embeddingService,
+//	IKnowledgeEmbeddingRepository embeddingRepository,
+//	CancellationToken cancellationToken) =>
+//{
+//	if (string.IsNullOrWhiteSpace(text))
+//	{
+//		return Results.BadRequest(new
+//		{
+//			message = "Text cannot be empty."
+//		});
+//	}
+
+//	const int topK = 10;
+
+//	// 1. Generate query embedding.
+//	var queryEmbedding = await embeddingService.GenerateEmbeddingAsync(
+//		text,
+//		cancellationToken);
+
+//	// 2. Retrieve similar KnowledgeMeaning records.
+//	var results = await embeddingRepository.SearchSimilarAsync(
+//		queryEmbedding,
+//		topK,
+//		cancellationToken);
+
+//	// 3. Return query and retrieval results.
+//	return Results.Ok(new
+//	{
+//		Query = text,
+//		ResultCount = results.Count,
+//		Results = results
+//	});
+//})
+//.WithGroupName("material")
+//.WithTags("TEST Embedding")
+//.WithName("GenerateEmbeddingAndRetrieve")
+//.WithSummary("Generate query embedding and retrieve similar knowledge meanings");
+
+app.MapPost("/api/knowledge-matching", async (
+		[FromBody] Guid segmentId,
+		ISender mediator,
+		CancellationToken cancellationToken
+	) =>
+{
+	var result = await mediator.Send(new ProcessKnowledgeMatchingCommand(segmentId), cancellationToken);
+
+	return Results.Ok(result);
+})
+	.WithGroupName("material")
+	.WithTags("Test Knowledge Matching ")
+	.WithName("TestKnowledgeMatching")
+	.Produces<IReadOnlyList<KnowledgeMatchCandidate>>()
+	.Produces(StatusCodes.Status404NotFound);
 
 #endregion
 

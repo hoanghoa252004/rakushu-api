@@ -9,7 +9,11 @@ namespace Rakushu.Application.Abstractions.Infrastructure.Nlp;
 
 public interface INlpService
 {
-	Task<NlpAnalysisResponse> AnalyzeAsync(
-		IReadOnlyCollection<NlpSegmentRequest> segments,
+	Task<TranscriptNlpAnalysisResponse> TranscriptAnalyzeAsync(
+		IReadOnlyCollection<TranscriptSegmentNlpRequest> segments,
+		CancellationToken cancellationToken);
+
+	Task<KnowledgeNlpAnalysisResponse> KnowledgeAnalyzeAsync(
+		IReadOnlyCollection<KnowledgeUnitNlpRequest> expressions,
 		CancellationToken cancellationToken);
 }

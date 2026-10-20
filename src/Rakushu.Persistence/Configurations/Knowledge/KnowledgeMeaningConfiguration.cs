@@ -39,6 +39,11 @@ internal sealed class KnowledgeMeaningConfiguration : IEntityTypeConfiguration<K
 			.HasMaxLength(100)
 			.IsRequired();
 
+		// JapaneseMeaning
+		builder.Property(km => km.JapaneseMeaning)
+			.HasMaxLength(100)
+			.IsRequired();
+
 		// Description
 		builder.Property(km => km.Description);
 	}

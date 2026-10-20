@@ -40,10 +40,6 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	private readonly List<MediaAsset.MediaAsset> _mediaAssets = new();
 	public IReadOnlyCollection<MediaAsset.MediaAsset> MediaAssets => _mediaAssets.AsReadOnly();
 
-	// Subtitles
-	private readonly List<Material.Subtitle.Subtitle> _subtitles = new();
-	public IReadOnlyCollection<Material.Subtitle.Subtitle> Subtitles => _subtitles.AsReadOnly();
-
 	// CONSTRUCTORS & FACTORY METHODS
 	private Video() { }
 

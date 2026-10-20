@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.Material.Subtitle;
 
-internal class SubtitleErrors
+public enum LanguageCode
 {
+	VN = 0
 }

@@ -12,6 +12,7 @@ public sealed class KnowledgeMeaning : Entity<KnowledgeMeaningId>
 {
 	public int SortOrder { get; private set; }
 	public string Meaning { get; private set; } = null!;
+	public string JapaneseMeaning { get; private set; } = null!;
 	public string? Description { get; private set; }
 	public KnowledgeUnitId KnowledgeUnitId { get; private set; } = null!;
 

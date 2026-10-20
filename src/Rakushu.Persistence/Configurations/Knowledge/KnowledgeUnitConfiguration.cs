@@ -81,5 +81,9 @@ internal sealed class KnowledgeUnitConfiguration : IEntityTypeConfiguration<Know
 		// UpdatedAt
 		builder.Property(lk => lk.UpdatedAt)
 			.IsRequired();
+
+		// KnowledgeHash
+		builder.Property(t => t.KnowledgeHash)
+			.IsRequired();
 	}
 }

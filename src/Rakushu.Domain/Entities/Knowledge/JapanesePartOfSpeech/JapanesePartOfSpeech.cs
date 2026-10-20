@@ -15,6 +15,10 @@ public sealed class JapanesePartOfSpeech : Linguistic<JapanesePartOfSpeechId>
 	private readonly List<Token> _tokens = new();
 	public IReadOnlyCollection<Token> Tokens => _tokens.AsReadOnly();
 
+	// KnowledgeUnitElements
+	private readonly List<KnowledgeUnitElement.KnowledgeUnitElement> _knowledgeUnitElements = new();
+	public IReadOnlyCollection<KnowledgeUnitElement.KnowledgeUnitElement> KnowledgeUnitElements => _knowledgeUnitElements.AsReadOnly();
+
 
 	// CONSTRUCTORS & FACTORY METHODS
 	private JapanesePartOfSpeech()

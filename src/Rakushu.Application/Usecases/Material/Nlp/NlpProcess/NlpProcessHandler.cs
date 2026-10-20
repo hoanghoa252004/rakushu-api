@@ -81,7 +81,7 @@ public sealed class NlpProcessHandler : IRequestHandler<NlpProcessCommand, Resul
 
 				// 4. Map segment thành request DTO.
 				var nlpRequest = segments
-					.Select(segment => new NlpSegmentRequest
+					.Select(segment => new TranscriptSegmentNlpRequest
 					{
 						Id = segment.Id.Value,
 						Sequence = segment.Sequence,
@@ -101,7 +101,7 @@ public sealed class NlpProcessHandler : IRequestHandler<NlpProcessCommand, Resul
 					.ToList();
 
 				// 5. Gọi GiNZA.
-				var nlpResponse = await _nlpService.AnalyzeAsync(
+				var nlpResponse = await _nlpService.TranscriptAnalyzeAsync(
 					nlpRequest,
 					cancellationToken);
 

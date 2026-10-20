@@ -1,5 +1,4 @@
 ﻿using Rakushu.Domain.Common.Linguistic;
-using Rakushu.Domain.Entities.Material.Bunsetsu.BunsetsuDependencyRelationship;
 using Rakushu.Domain.Entities.Material.Token;
 using System;
 using System.Collections.Generic;
@@ -11,14 +10,13 @@ namespace Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 
 public sealed class DependencyRelationship : Linguistic<DependencyRelationshipId>
 {
-	// NAVIGATION PROPERTIES
-	// BunsetsuDependencyRelationships
-	private readonly List<BunsetsuDependencyRelationship> _bunsetsuDependencyRelationships = new List<BunsetsuDependencyRelationship>();
-	public IReadOnlyCollection<BunsetsuDependencyRelationship> BunsetsuDependencyRelationships => _bunsetsuDependencyRelationships.AsReadOnly();
-
 	// Tokens
 	private readonly List<Token> _tokens = new();
 	public IReadOnlyCollection<Token> Tokens => _tokens.AsReadOnly();
+
+	// KnowledgeUnitElements
+	private readonly List<KnowledgeUnitElement.KnowledgeUnitElement> _knowledgeUnitElements = new();
+	public IReadOnlyCollection<KnowledgeUnitElement.KnowledgeUnitElement> KnowledgeUnitElements => _knowledgeUnitElements.AsReadOnly();
 
 	// CONSTRUCTORS & FACTORY METHODS
 	private DependencyRelationship()

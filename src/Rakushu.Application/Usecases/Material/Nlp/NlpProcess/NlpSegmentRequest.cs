@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Rakushu.Application.Usecases.Material.Nlp.NlpProcess;
 
 
-public sealed class NlpSegmentRequest
+public sealed class TranscriptSegmentNlpRequest
 {
 	[JsonPropertyName("id")]
 	public Guid Id { get; init; }
@@ -30,4 +30,14 @@ public sealed class NlpSegmentRequest
 
 	[JsonPropertyName("transcript_speaker_id")]
 	public Guid? TranscriptSpeakerId { get; init; }
+}
+
+
+public sealed class KnowledgeUnitNlpRequest
+{
+	[JsonPropertyName("id")]
+	public Guid Id { get; init; }
+
+	[JsonPropertyName("expression")]
+	public string Expression { get; init; } = string.Empty;
 }

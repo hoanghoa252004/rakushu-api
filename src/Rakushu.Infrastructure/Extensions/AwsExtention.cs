@@ -1,4 +1,5 @@
-﻿using Amazon.Runtime.CredentialManagement;
+﻿using Amazon.BedrockRuntime;
+using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.SimpleEmail;
 using Amazon.TranscribeService;
@@ -8,11 +9,13 @@ using Microsoft.Extensions.Hosting;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
 using Rakushu.Application.Abstractions.Infrastructure.Email;
 using Rakushu.Application.Abstractions.Infrastructure.Nlp;
+using Rakushu.Application.Abstractions.Infrastructure.Rag;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Infrastructure.ASR;
 using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
 using Rakushu.Infrastructure.Nlp;
+using Rakushu.Infrastructure.Rag;
 using Rakushu.Infrastructure.Storage;
 using System;
 using System.Collections.Generic;
@@ -48,6 +51,10 @@ internal static class AwsExtention
 			services.AddSingleton<IAmazonTranscribeService>(_ =>
 				new AmazonTranscribeServiceClient(
 					Amazon.RegionEndpoint.APSoutheast1));
+
+			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
+				new AmazonBedrockRuntimeClient(
+					Amazon.RegionEndpoint.APNortheast1));
 		}
 		else
 		{
@@ -75,6 +82,11 @@ internal static class AwsExtention
 				new AmazonTranscribeServiceClient(
 					awsCredentials,
 					Amazon.RegionEndpoint.APSoutheast1));
+
+			// AWS Bedrock
+			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
+				new AmazonBedrockRuntimeClient(
+					Amazon.RegionEndpoint.APNortheast1));
 		}
 
 		services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
@@ -86,6 +98,8 @@ internal static class AwsExtention
 		// Transcribe
 		services.AddScoped<IAsrService, AwsTranscribeService>();
 		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();
+		// Bedrock
+		services.AddScoped<IEmbeddingService, AwsBedrockEmbeddingService>();
 		// NLP Service
 		services.AddHttpClient<INlpService, SelftHostingNlpService>((serviceProvider, client) =>
 		{
