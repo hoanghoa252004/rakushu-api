@@ -9,6 +9,5 @@ namespace Rakushu.Domain.Entities.Material.LearningUnit;
 public enum MatchingMethod
 {
 	KnowledgeMatching = 0, // 0.5 <= KnowledgeMatching <= 1
-	Llm = 3, // always 0.0 
 	CuratorDefine = 4 // always 1.0
 }

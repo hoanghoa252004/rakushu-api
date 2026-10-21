@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Behaviors;
 using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching;
+using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching.ProcessPendingVideoKnowledgeMatching;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMatchingCandidate;
 using System;
 using System.Collections.Generic;
@@ -32,6 +33,7 @@ public static class ApplicationServiceCollectionExtentions
 			includeInternalTypes: true);
 
 		services.AddScoped<KnowledgeMatchingService>();
+		services.AddScoped<LearningUnitOverlapResolver>();
 
 		services.AddScoped<IKnowledgeMatcher, WordMatcher>();
 		services.AddScoped<IKnowledgeMatcher, CollocationMatcher>();

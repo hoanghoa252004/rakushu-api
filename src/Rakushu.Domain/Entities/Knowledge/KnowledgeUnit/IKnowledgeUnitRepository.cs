@@ -14,4 +14,8 @@ public interface IKnowledgeUnitRepository : IBaseRepository<KnowledgeUnit, Knowl
 	int page,
 	int pageSize,
 	CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<KnowledgeUnit>> GetActiveByCollectionIdsAsync(
+	IReadOnlyCollection<KnowledgeCollectionId> collectionIds,
+	CancellationToken cancellationToken = default);
 }

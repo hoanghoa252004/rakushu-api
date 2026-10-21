@@ -1,4 +1,5 @@
 ﻿using Rakushu.Worker.Jobs.Embedding;
+using Rakushu.Worker.Jobs.Knowledge.KnowledgeMatching;
 using Rakushu.Worker.Jobs.Knowledge.KnowledgeNlp;
 using Rakushu.Worker.Jobs.Payment;
 using Rakushu.Worker.Jobs.Subscription;
@@ -17,15 +18,15 @@ internal static class ServiceCollectionExtensions
 	internal static IServiceCollection AddRakushuWorkerServices(this IServiceCollection services)
 	{
 		// PAYMENT
-		services.AddHostedService<PaymentExpirationWorker>();
-		services.AddHostedService<TransactionExpiryWorker>();
-		services.AddHostedService<TranscriptImportWorker>();
-		services.AddHostedService<NlpProcessWorker>();
-		//services.AddHostedService<KnowledgeEmbeddingWorker>();
-		services.AddHostedService<KnowledgeNlpProcessWorker>();
+		//services.AddHostedService<PaymentExpirationWorker>();
+		//services.AddHostedService<TransactionExpiryWorker>();
+		//services.AddHostedService<TranscriptImportWorker>();
+		//services.AddHostedService<NlpProcessWorker>();
+		//services.AddHostedService<KnowledgeNlpProcessWorker>();
+		services.AddHostedService<KnowledgeMatchingWorker>();
 
 		// SUBSCRIPTION
-		services.AddHostedService<SubscriptionTrackingWorker>();
+		//services.AddHostedService<SubscriptionTrackingWorker>();
 
 		return services;
 	}

@@ -147,5 +147,13 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		return result;
 	}
 
+	public Result<LearningUnit.LearningUnit> AddLearningUnit(
+	LearningUnit.LearningUnit learningUnit)
+	{
+		//if (learningUnit.TranscriptSegmentId != Id)
+		//	return Result.Failure(/* lỗi domain tương ứng */);
 
+		_learningUnits.Add(learningUnit);
+		return Result.Success(learningUnit);
+	}
 }

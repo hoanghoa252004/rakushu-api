@@ -30,4 +30,28 @@ public sealed class LearningUnit : AggregateRoot<LearningUnitId>
 	private LearningUnit()
 	{
 	}
+
+	public static LearningUnit Create(
+	LearningUnitId id,
+	KnowledgeMeaning knowledgeMeaning,
+	TranscriptSegmentId transcriptSegmentId,
+	int startTokenIndex,
+	int endTokenIndex,
+	double confidence,
+	bool isReviewed,
+	MatchingMethod detectionMethod)
+	{
+		return new LearningUnit
+		{
+			Id = id,
+			KnowledgeMeaningId = knowledgeMeaning.Id,
+			KnowledgeMeaning = knowledgeMeaning,
+			TranscriptSegmentId = transcriptSegmentId,
+			StartTokenIndex = startTokenIndex,
+			EndTokenIndex = endTokenIndex,
+			Confidence = confidence,
+			IsReviewed = isReviewed,
+			DetectionMethod = detectionMethod
+		};
+	}
 }

@@ -7,6 +7,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
+using Rakushu.Domain.Entities.Knowledge.ContentKnowledgeCollection;
 using Rakushu.Domain.Entities.Knowledge.DependencyRelationship;
 using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeCollection;
@@ -65,6 +66,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IKnowledgeCollectionRepository, KnowledgeCollectionRepository>();
 		services.AddScoped<ITokenRepository, TokenRepository>();
 		services.AddScoped<IKnowledgeUnitRepository, KnowledgeUnitRepository>();
+		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
 
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

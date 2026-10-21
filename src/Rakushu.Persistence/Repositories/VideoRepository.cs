@@ -89,4 +89,28 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 						.ThenInclude(b => b.Tokens)
 			.ToListAsync(cancellationToken);
 	}
+
+	public async Task<IReadOnlyList<Video>>
+	GetProcessingVideosWithReviewedTranscriptAsync(
+		int batchSize,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.Videos
+			//.AsNoTracking()
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(s => s.LearningUnits)
+			.Include(t => t!.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(s => s.Bunsetsu)
+						.ThenInclude(b => b.Tokens)
+			.Where(v =>
+				v.Status == VideoStatus.Processing &&
+				v.Transcript != null &&
+				v.Transcript.IsReviewed
+				&& v.Transcript.TranscriptSegments.Any(s => s.LearningUnits.Any() == false))
+			.Take(batchSize)
+			.OrderBy(v => v.CreatedAt)
+			.ToListAsync(cancellationToken);
+	}
 }
