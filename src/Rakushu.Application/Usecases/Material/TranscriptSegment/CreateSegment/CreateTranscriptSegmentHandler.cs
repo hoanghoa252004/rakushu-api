@@ -9,7 +9,7 @@ using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Material.TranscriptSegment.CreateSegment;
 
-internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTranscriptSegmentCommand, Result<TranscriptSegmentDetailDto>>
+internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTranscriptSegmentCommand, Result<Guid>>
 {
 	private readonly IVideoRepository _videoRepository;
 
@@ -18,16 +18,16 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 		_videoRepository = videoRepository;
 	}
 
-	public async Task<Result<TranscriptSegmentDetailDto>> Handle(
+	public async Task<Result<Guid>> Handle(
 		CreateTranscriptSegmentCommand request,
 		CancellationToken cancellationToken)
 	{
 		var video = await _videoRepository.GetByIdAsync(VideoId.From(request.VideoId), cancellationToken);
 		if (video is null)
-			return Result.Failure<TranscriptSegmentDetailDto>(VideoErrors.NotFound);
+			return Result.Failure<Guid>(VideoErrors.NotFound);
 
 		if (video.Transcript is null)
-			return Result.Failure<TranscriptSegmentDetailDto>(
+			return Result.Failure<Guid>(
 				TranscriptErrors.NotFound);
 
 		// Determine the actual sequence for the new segment
@@ -50,7 +50,7 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 					seg.Sequence + 1);
 
 				if (updateResult.IsFailure)
-					return Result.Failure<TranscriptSegmentDetailDto>(updateResult.Error);
+					return Result.Failure<Guid>(updateResult.Error);
 			}
 		}
 
@@ -63,10 +63,10 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 			DateTimeOffset.UtcNow);
 
 		if (segmentResult.IsFailure)
-			return Result.Failure<TranscriptSegmentDetailDto>(segmentResult.Error);
+			return Result.Failure<Guid>(segmentResult.Error);
 
 		var segment = segmentResult.Value;
 
-		return Result.Success(TranscriptSegmentDetailDto.FromEntity(segment));
+		return Result.Success(segment.Id.Value);
 	}
 }

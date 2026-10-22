@@ -16,6 +16,7 @@ using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Token;
+using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
@@ -67,6 +68,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<ITokenRepository, TokenRepository>();
 		services.AddScoped<IKnowledgeUnitRepository, KnowledgeUnitRepository>();
 		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
+		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
 
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

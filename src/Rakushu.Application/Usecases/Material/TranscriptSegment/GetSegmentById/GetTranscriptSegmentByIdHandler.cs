@@ -34,6 +34,6 @@ internal sealed class GetTranscriptSegmentByIdHandler : IRequestHandler<GetTrans
 			return Result.Failure<TranscriptSegmentDetailDto>(
 				TranscriptSegmentErrors.NotFound);
 
-		return Result.Success(TranscriptSegmentDetailDto.FromEntity(segment));
+		return Result.Success<TranscriptSegmentDetailDto>(null!);
 	}
 }

@@ -11,4 +11,4 @@ public sealed record UpdateTranscriptSegmentCommand(
 	TimeSpan StartTime,
 	TimeSpan EndTime,
 	int? Sequence = null
-) : IRequest<Result<TranscriptSegmentDetailDto>>;
+) : IRequest<Result>;

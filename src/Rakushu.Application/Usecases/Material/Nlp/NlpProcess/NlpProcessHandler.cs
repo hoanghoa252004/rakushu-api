@@ -50,7 +50,7 @@ public sealed class NlpProcessHandler : IRequestHandler<NlpProcessCommand, Resul
 				.Where(v => v.Status == VideoStatus.Processing
 							&& v.Transcript != null
 							&& v.Transcript.IsReviewed == false
-							&& v.Transcript.TranscriptSegments.Any(s => s.Bunsetsu.Any() == false))
+							&& v.Transcript.TranscriptSegments.Any(s => s.Bunsetsus.Any() == false))
 				.ToList();
 
 			if (videos.Count == 0)

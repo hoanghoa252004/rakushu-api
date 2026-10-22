@@ -1154,20 +1154,11 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("label");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
 
                     b.Property<Guid?>("SpeakerId")
                         .HasColumnType("uuid")
@@ -2007,7 +1998,7 @@ namespace Rakushu.Persistence.Migrations
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
-                        .WithMany("Bunsetsu")
+                        .WithMany("Bunsetsus")
                         .HasForeignKey("TranscriptSegmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -2404,7 +2395,7 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", b =>
                 {
-                    b.Navigation("Bunsetsu");
+                    b.Navigation("Bunsetsus");
 
                     b.Navigation("LearningUnits");
 

@@ -17,10 +17,6 @@ public sealed class TranscriptSpeaker : Entity<TranscriptSpeakerId>
 	public string Label { get; private set; } = null!;
 	public SpeakerId? SpeakerId { get; private set; }
 
-	// Optional information identified or edited by the Curator
-	public string? Name { get; private set; }
-	public string? Description { get; private set; }
-
 	// NAVIGATION PROPERTIES
 	// Transcript
 	public Transcript Transcript { get; private set; } = null!;

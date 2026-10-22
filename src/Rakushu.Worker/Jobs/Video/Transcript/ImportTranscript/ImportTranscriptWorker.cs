@@ -29,7 +29,7 @@ public sealed class ImportTranscriptWorker(IServiceScopeFactory scopeFactory, IL
 					.GetRequiredService<IMediator>();
 
 				var result = await mediator.Send(
-					new ImportTranscriptCommand(),
+					new ImportGeneratedTranscriptCommand(),
 					stoppingToken);
 
 				if (result.IsFailure)

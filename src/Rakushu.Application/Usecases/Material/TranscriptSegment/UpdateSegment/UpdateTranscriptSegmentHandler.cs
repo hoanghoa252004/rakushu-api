@@ -7,7 +7,7 @@ using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Application.Usecases.Material.TranscriptSegment.UpdateSegment;
 
-internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTranscriptSegmentCommand, Result<TranscriptSegmentDetailDto>>
+internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTranscriptSegmentCommand, Result>
 	{
 		private readonly IVideoRepository _videoRepository;
 
@@ -16,29 +16,29 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 			_videoRepository = videoRepository;
 		}
 
-	public async Task<Result<TranscriptSegmentDetailDto>> Handle(
+	public async Task<Result> Handle(
 		UpdateTranscriptSegmentCommand request,
 		CancellationToken cancellationToken)
 	{
 		var video = await _videoRepository.GetByIdAsync(VideoId.From(request.VideoId), cancellationToken);
 		if (video is null)
-			return Result.Failure<TranscriptSegmentDetailDto>(VideoErrors.NotFound);
+			return Result.Failure(VideoErrors.NotFound);
 
 		if (video.Transcript is null)
-			return Result.Failure<TranscriptSegmentDetailDto>(
+			return Result.Failure(
 				TranscriptErrors.NotFound);
 
 		var segmentId = TranscriptSegmentId.From(request.SegmentId);
 		var segment = video.Transcript.TranscriptSegments.FirstOrDefault(s => s.Id == segmentId);
 		if (segment is null)
-			return Result.Failure<TranscriptSegmentDetailDto>(TranscriptSegmentErrors.NotFound);
+			return Result.Failure(TranscriptSegmentErrors.NotFound);
 
 		// Handle sequence change if provided
 		if (request.Sequence.HasValue && request.Sequence.Value != segment.Sequence)
 		{
 			var updateSequenceResult = video.Transcript.UpdateSegmentSequence(segmentId, request.Sequence.Value);
 			if (updateSequenceResult.IsFailure)
-				return Result.Failure<TranscriptSegmentDetailDto>(updateSequenceResult.Error);
+				return Result.Failure(updateSequenceResult.Error);
 		}
 
 		// Update segment content
@@ -50,8 +50,8 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 			DateTimeOffset.UtcNow);
 
 		if (updateResult.IsFailure)
-			return Result.Failure<TranscriptSegmentDetailDto>(updateResult.Error);
+			return Result.Failure(updateResult.Error);
 
-		return Result.Success(TranscriptSegmentDetailDto.FromEntity(segment));
+		return Result.Success();
 	}
 }

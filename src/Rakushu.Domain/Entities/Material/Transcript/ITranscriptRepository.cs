@@ -11,5 +11,6 @@ namespace Rakushu.Domain.Entities.Material.Transcript;
 
 public interface ITranscriptRepository : IBaseRepository<Transcript, TranscriptId>
 {
-	Task<Transcript?> GetByVideoIdAsync(VideoId videoId, CancellationToken cancellationToken = default);
+	Task<Transcript?> GetByVideoIdAsync(VideoId videoId, int pageNumber,
+	int pageSize, CancellationToken cancellationToken = default);
 }

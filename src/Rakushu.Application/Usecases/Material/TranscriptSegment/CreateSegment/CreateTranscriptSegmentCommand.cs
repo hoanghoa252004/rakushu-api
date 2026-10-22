@@ -11,4 +11,4 @@ public sealed record CreateTranscriptSegmentCommand(
 	TimeSpan StartTime,
 	TimeSpan EndTime,
 	int? Sequence = null
-) : IRequest<Result<TranscriptSegmentDetailDto>>;
+) : IRequest<Result<Guid>>;

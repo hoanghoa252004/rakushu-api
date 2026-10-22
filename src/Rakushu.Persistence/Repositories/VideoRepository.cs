@@ -21,7 +21,7 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			.Include(v => v.MediaAssets)
 			.Include(v => v.Transcript)
 				.ThenInclude(t => t.TranscriptSegments)
-					.ThenInclude(ts => ts.Bunsetsu)
+					.ThenInclude(ts => ts.Bunsetsus)
 						.ThenInclude(b => b.Tokens)
 			.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
 	}
@@ -62,8 +62,8 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 		return await _context.Videos
 			.Include(v => v.Transcript)
 				.ThenInclude(t => t.TranscriptSegments)
-					.ThenInclude(s => s.Bunsetsu)
-			.FirstOrDefaultAsync(v => v.Transcript != null && v.Transcript.TranscriptSegments.Any(s => s.Bunsetsu.Any(b => b.Id == bunsetsuId)), cancellationToken);
+					.ThenInclude(s => s.Bunsetsus)
+			.FirstOrDefaultAsync(v => v.Transcript != null && v.Transcript.TranscriptSegments.Any(s => s.Bunsetsus.Any(b => b.Id == bunsetsuId)), cancellationToken);
 	}
 
 	public async Task<Video?> GetByTokenIdAsync(TokenId tokenId, CancellationToken cancellationToken = default)
@@ -71,9 +71,9 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 		return await _context.Videos
 			.Include(v => v.Transcript)
 				.ThenInclude(t => t.TranscriptSegments)
-					.ThenInclude(s => s.Bunsetsu)
+					.ThenInclude(s => s.Bunsetsus)
 						.ThenInclude(b => b.Tokens)
-			.FirstOrDefaultAsync(v => v.Transcript != null && v.Transcript.TranscriptSegments.Any(s => s.Bunsetsu.Any(b => b.Tokens.Any(tok => tok.Id == tokenId))), cancellationToken);
+			.FirstOrDefaultAsync(v => v.Transcript != null && v.Transcript.TranscriptSegments.Any(s => s.Bunsetsus.Any(b => b.Tokens.Any(tok => tok.Id == tokenId))), cancellationToken);
 	}
 
 	public override async Task<IEnumerable<Video>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -85,7 +85,7 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			.Include(v => v.MediaAssets)
 			.Include(v => v.Transcript)
 				.ThenInclude(t => t.TranscriptSegments)
-					.ThenInclude(ts => ts.Bunsetsu)
+					.ThenInclude(ts => ts.Bunsetsus)
 						.ThenInclude(b => b.Tokens)
 			.ToListAsync(cancellationToken);
 	}
@@ -101,7 +101,7 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 					.ThenInclude(s => s.LearningUnits)
 			.Include(t => t!.Transcript)
 				.ThenInclude(t => t!.TranscriptSegments)
-					.ThenInclude(s => s.Bunsetsu)
+					.ThenInclude(s => s.Bunsetsus)
 						.ThenInclude(b => b.Tokens)
 			.Where(v =>
 				v.Status == VideoStatus.Processing &&

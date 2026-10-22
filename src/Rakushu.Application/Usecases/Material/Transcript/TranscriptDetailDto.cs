@@ -1,53 +1,42 @@
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Knowledge.DependencyRelationship.Common;
 using Rakushu.Application.Usecases.Knowledge.JapanesePartOfSpeech.Common;
-using Rakushu.Domain.Entities.Material.Transcript;
 
 namespace Rakushu.Application.Usecases.Material.Transcript;
 
-public sealed record TranscriptDetailDto(
-	Guid Id,
-	Guid VideoId,
-	string FullText,
-	TranscriptSource SourceType,
-	string? StorageKey,
-	DateTimeOffset CreatedAt,
-	DateTimeOffset UpdatedAt,
-	PaginatedList<TranscriptSegmentDetailDto> Segments)
-{
-	public static TranscriptDetailDto FromEntity(Domain.Entities.Material.Transcript.Transcript e, PaginatedList<TranscriptSegmentDetailDto> segments) =>
-		new(
-			e.Id.Value,
-			e.VideoId.Value,
-			e.FullText,
-			e.SourceType,
-			e.StorageKey,
-			e.CreatedAt,
-			e.UpdatedAt,
-			segments
-			);
-}
+//public sealed record TranscriptDetailDto(
+//	Guid Id,
+//	Guid VideoId,
+//	string FullText,
+//	string SourceType,
+//	string? StorageKey,
+//	DateTimeOffset CreatedAt,
+//	DateTimeOffset UpdatedAt,
+//	PaginatedList<TranscriptSegmentDetailDto> Segments
+//	);
 
 public sealed record TranscriptSegmentDetailDto(
 	Guid Id,
 	int Sequence,
-	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
-	List<BunsetsuDetailDto> Bunsetsu)
-{
-	public static TranscriptSegmentDetailDto FromEntity(Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment e) =>
-		new(
-			e.Id.Value,
-			e.Sequence,
-			e.Text,
-			e.StartTime,
-			e.EndTime,
-			e.Bunsetsu
-				.OrderBy(b => b.Sequence)
-				.Select(BunsetsuDetailDto.FromEntity)
-				.ToList());
-}
+	string Text,
+	TranscriptSpeakerDetailDto TranscriptSpeaker,
+	SubtitleDetailDto Subtitle,
+	IReadOnlyCollection<LearningUnitDetailDto> LearningUnits,
+	IReadOnlyCollection<TranscriptItemDto> TranscriptItems,
+	IReadOnlyCollection<BunsetsuDetailDto> Bunsetsus
+	);
+
+public sealed record TranscriptItemDto(
+	Guid Id,
+	int Sequence,
+	TimeSpan StartTime,
+	TimeSpan EndTime,
+	string Type,
+	string Text,
+	decimal Confidence
+	);
 
 public sealed record BunsetsuDetailDto(
 	Guid Id,
@@ -55,55 +44,75 @@ public sealed record BunsetsuDetailDto(
 	string Text,
 	int StartIndex,
 	int EndIndex,
-	List<TokenDetailDto> Tokens)
-{
-	public static BunsetsuDetailDto FromEntity(Domain.Entities.Material.Bunsetsu.Bunsetsu e) =>
-		new(
-			e.Id.Value,
-			e.Sequence,
-			e.Text,
-			e.StartIndex,
-			e.EndIndex,
-			e.Tokens
-				.OrderBy(t => t.Sequence)
-				.Select(TokenDetailDto.FromEntity)
-				.ToList());
-}
+	IReadOnlyCollection<TokenDetailDto> Tokens
+	);
 
 public sealed record TokenDetailDto(
 	Guid Id,
+	int Sequence,
+	int StartIndex,
+	int EndIndex,
 	string Surface,
 	string Lemma,
 	string Reading,
 	JapanesePartOfSpeechDto JapanesePartOfSpeech,
-	DependencyRelationshipDto DependencyRelationship,
+	DependencyRelationshipDto DependencyRelationship
+	);
+
+public sealed record TranscriptSpeakerDetailDto(
+	string SpeakerLabel,
+	Guid? Id,
+	string? Name,
+	string? JapaneseName,
+	string? ThemeColor,
+	string? AvatarKey,
+	string? Description
+	);
+
+public sealed record SubtitleDetailDto(
+	Guid Id,
+	int Sequence,
+	string LanguageCode,
+	string Text
+	);
+
+public sealed record LearningUnitDetailDto(
+	Guid Id,
+	KnowledgeUnitDto KnowledgeUnit,
+	KnowledgeMeaningDto KnowledgeMeaning,
 	int StartIndex,
 	int EndIndex,
-	int Sequence)
-{
-	public static TokenDetailDto FromEntity(Domain.Entities.Material.Token.Token e) =>
-		new(
-			e.Id.Value,
-			e.Surface,
-			e.Lemma,
-			e.Reading,
-			new JapanesePartOfSpeechDto()
-			{
-				Id = e.JapanesePartOfSpeech.Id.Value,
-				Code = e.JapanesePartOfSpeech.Code,
-				Name = e.JapanesePartOfSpeech.Name,
-				JapaneseName= e.JapanesePartOfSpeech.JapaneseName,
-				Description = e.JapanesePartOfSpeech.Description
-			},
-			new DependencyRelationshipDto()
-			{
-				Id = e.DependencyRelationship.Id.Value,
-				Code = e.DependencyRelationship.Code,
-				Name = e.DependencyRelationship.Name,
-				JapaneseName = e.DependencyRelationship.JapaneseName,
-				Description = e.DependencyRelationship.Description
-			},
-			e.StartIndex,
-			e.EndIndex,
-			e.Sequence);
-}
+	string DetectionMethod,
+	double Confidence,
+	bool IsReviewed
+	);
+
+public sealed record KnowledgeUnitDto(
+	Guid Id,
+	string KnowledgeType, // Terminology
+	string SourceType, // Defined
+	string ProficiencyLevel, // JLPT N5
+	string Expression, // システム開発
+	string Reading,
+	string? AudioKey,
+	bool IsActive,
+	KnowledgeCollectionBasicDto KnowledgeCollection
+	);
+
+public sealed record KnowledgeCollectionBasicDto(
+	Guid Id,
+	string Scope,
+	string Type,
+	string Name,
+	string? Description
+	);
+
+public sealed record KnowledgeMeaningDto(
+	Guid Id,
+	int SortOrder,
+	string Meaning,
+	string JapaneseMeaning,
+	string? Description,
+	int? AlternativeMeaningCount,
+	IReadOnlyCollection<KnowledgeMeaningDto>? AlternativeMeanings
+	);

@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
-using Rakushu.Domain.Entities.Subscriptions.Feature;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +14,67 @@ public sealed class TranscriptRepository : BaseRepository<Transcript, Transcript
 	{
 	}
 
-	public async Task<Transcript?> GetByVideoIdAsync(VideoId videoId, CancellationToken cancellationToken = default)
+	public async Task<Transcript?> GetByVideoIdAsync(
+	VideoId videoId,
+	int pageNumber,
+	int pageSize,
+	CancellationToken cancellationToken = default)
 	{
+		var skip = (pageNumber - 1) * pageSize;
+
 		return await _context.Transcripts
-			.Include(u => u.TranscriptSegments)
-				.ThenInclude(u => u.Subtitle)
-			.SingleOrDefaultAsync(u => u.VideoId == videoId, cancellationToken);
+			.AsNoTracking()
+			.AsSplitQuery()
+
+			.Include(t => t.TranscriptSegments
+				.OrderBy(s => s.Sequence)
+				.Skip(skip)
+				.Take(pageSize))
+				.ThenInclude(s => s.Subtitle)
+
+			.Include(t => t.TranscriptSegments
+				.OrderBy(s => s.Sequence)
+				.Skip(skip)
+				.Take(pageSize))
+				.ThenInclude(s => s.LearningUnits)
+					.ThenInclude(lu => lu.KnowledgeMeaning)
+						.ThenInclude(km => km.KnowledgeUnit)
+							.ThenInclude(ku => ku.ProficiencyLevel)
+
+			.Include(t => t.TranscriptSegments
+				.OrderBy(s => s.Sequence)
+				.Skip(skip)
+				.Take(pageSize))
+				.ThenInclude(s => s.LearningUnits)
+					.ThenInclude(lu => lu.KnowledgeMeaning)
+						.ThenInclude(km => km.KnowledgeUnit)
+							.ThenInclude(ku => ku.KnowledgeCollection)
+
+			.Include(t => t.TranscriptSegments
+				.OrderBy(s => s.Sequence)
+				.Skip(skip)
+				.Take(pageSize))
+				.ThenInclude(s => s.TranscriptSpeaker)
+					.ThenInclude(ts => ts.Speaker)
+
+			.Include(t => t.TranscriptSegments
+				.OrderBy(s => s.Sequence)
+				.Skip(skip)
+				.Take(pageSize))
+				.ThenInclude(s => s.Bunsetsus)
+					.ThenInclude(b => b.Tokens)
+						.ThenInclude(token => token.JapanesePartOfSpeech)
+
+			.Include(t => t.TranscriptSegments
+				.OrderBy(s => s.Sequence)
+				.Skip(skip)
+				.Take(pageSize))
+				.ThenInclude(s => s.Bunsetsus)
+					.ThenInclude(b => b.Tokens)
+						.ThenInclude(token => token.DependencyRelationship)
+
+			.SingleOrDefaultAsync(
+				t => t.VideoId == videoId,
+				cancellationToken);
 	}
 }

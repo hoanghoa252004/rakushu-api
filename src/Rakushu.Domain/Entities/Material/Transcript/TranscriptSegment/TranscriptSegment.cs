@@ -29,8 +29,8 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	public IReadOnlyCollection<TranscriptItem.TranscriptItem> TranscriptItems => _transcriptItems.AsReadOnly();
 
 	// Bunsetsu
-	private readonly List<Bunsetsu.Bunsetsu> _bunsetsu = new();
-	public IReadOnlyCollection<Bunsetsu.Bunsetsu> Bunsetsu => _bunsetsu.AsReadOnly();
+	private readonly List<Bunsetsu.Bunsetsu> _bunsetsus = new();
+	public IReadOnlyCollection<Bunsetsu.Bunsetsu> Bunsetsus => _bunsetsus.AsReadOnly();
 
 	// LearningUnits
 	private readonly List<LearningUnit.LearningUnit> _learningUnits = new();
@@ -94,17 +94,17 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 
 	public Result<Bunsetsu.Bunsetsu> AddBunsetsu(Material.Bunsetsu.Bunsetsu bunsetsu)
 	{
-		_bunsetsu.Add(bunsetsu);
+		_bunsetsus.Add(bunsetsu);
 		return Result.Success(bunsetsu);
 	}
 
 	public Result RemoveBunsetsu(BunsetsuId bunsetsuId)
 	{
-		var item = _bunsetsu.FirstOrDefault(b => b.Id == bunsetsuId);
+		var item = _bunsetsus.FirstOrDefault(b => b.Id == bunsetsuId);
 		if (item is null)
 			return Result.Failure(BunsetsuErrors.NotFound);
 
-		_bunsetsu.Remove(item);
+		_bunsetsus.Remove(item);
 		return Result.Success();
 	}
 

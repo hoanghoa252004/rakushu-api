@@ -51,12 +51,5 @@ internal sealed class TranscriptSpeakerConfiguration : IEntityTypeConfiguration<
 			.WithMany(s => s.TranscriptSpeakers)
 			.HasForeignKey(ts => ts.SpeakerId)
 			.OnDelete(DeleteBehavior.Restrict);
-
-		// Name
-		builder.Property(ts => ts.Name)
-			.HasMaxLength(100);
-
-		// Description
-		builder.Property(ts => ts.Description);
 	}
 }
