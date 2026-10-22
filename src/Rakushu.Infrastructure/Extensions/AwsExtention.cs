@@ -3,6 +3,7 @@ using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.SimpleEmail;
 using Amazon.TranscribeService;
+using Amazon.Translate;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,12 +12,14 @@ using Rakushu.Application.Abstractions.Infrastructure.Email;
 using Rakushu.Application.Abstractions.Infrastructure.Nlp;
 using Rakushu.Application.Abstractions.Infrastructure.Rag;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Application.Abstractions.Infrastructure.Translation;
 using Rakushu.Infrastructure.ASR;
 using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
 using Rakushu.Infrastructure.Nlp;
 using Rakushu.Infrastructure.Rag;
 using Rakushu.Infrastructure.Storage;
+using Rakushu.Infrastructure.Translation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,6 +58,10 @@ internal static class AwsExtention
 			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
 				new AmazonBedrockRuntimeClient(
 					Amazon.RegionEndpoint.APNortheast1));
+
+			services.AddSingleton<IAmazonTranslate>(_ =>
+				new AmazonTranslateClient(
+					Amazon.RegionEndpoint.APSoutheast1));
 		}
 		else
 		{
@@ -86,7 +93,14 @@ internal static class AwsExtention
 			// AWS Bedrock
 			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
 				new AmazonBedrockRuntimeClient(
+					awsCredentials,
 					Amazon.RegionEndpoint.APNortheast1));
+
+			// AWS Translate
+			services.AddSingleton<IAmazonTranslate>(_ =>
+				new AmazonTranslateClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1));
 		}
 
 		services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
@@ -112,6 +126,8 @@ internal static class AwsExtention
 
 			client.Timeout = TimeSpan.FromMinutes(2);
 		});
+		// Translate
+		services.AddScoped<ITranslateService, AwsTranslateService>();
 		return services;
 	}
 }

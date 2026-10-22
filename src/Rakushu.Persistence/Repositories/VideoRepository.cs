@@ -90,8 +90,7 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<IReadOnlyList<Video>>
-	GetProcessingVideosWithReviewedTranscriptAsync(
+	public async Task<IReadOnlyList<Video>> GetProcessingVideosWithReviewedTranscriptAsync(
 		int batchSize,
 		CancellationToken cancellationToken = default)
 	{
@@ -108,7 +107,25 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 				v.Status == VideoStatus.Processing &&
 				v.Transcript != null &&
 				v.Transcript.IsReviewed
-				&& v.Transcript.TranscriptSegments.Any(s => s.LearningUnits.Any() == false))
+				&& v.Transcript.TranscriptSegments.All(s => s.LearningUnits.Any() == false))
+			.Take(batchSize)
+			.OrderBy(v => v.CreatedAt)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<Video>> GetProcessingVideosWithReviewedTranscriptForTranslateAsync(int batchSize, CancellationToken cancellationToken = default)
+	{
+		return await _context.Videos
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(s => s.Subtitle)
+			.Where(v =>
+				v.Status == VideoStatus.Processing &&
+				v.Transcript != null &&
+				v.Transcript.IsReviewed
+				//&& v.Transcript.TranscriptSegments.Any(s => s.LearningUnits.All(lu => lu.IsReviewed))
+				&& v.Transcript.TranscriptSegments.All(s => s.Subtitle == null)
+			)
 			.Take(batchSize)
 			.OrderBy(v => v.CreatedAt)
 			.ToListAsync(cancellationToken);

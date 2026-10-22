@@ -50,6 +50,19 @@ public interface IStorageService
 	Task<Stream> StreamingReadAsync(
 	string key,
 	CancellationToken cancellationToken);
+
+	// Upload Text File
+	Task UploadTextFileAsync(
+	string key,
+	string content,
+	CancellationToken cancellationToken);
+	Task<string?> FindTranslatedTextFileKeyAsync(
+	string prefix,
+	CancellationToken cancellationToken);
+
+	Task<string> ReadTextFileAsync(
+		string key,
+		CancellationToken cancellationToken);
 }
 
 // DTO

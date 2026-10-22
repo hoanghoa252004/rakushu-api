@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Worker.Jobs.Video.Transcript;
+namespace Rakushu.Worker.Jobs.Video.Transcript.ImportTranscript;
 
-public sealed class TranscriptImportWorker(IServiceScopeFactory scopeFactory, ILogger<TranscriptImportWorker> logger) : BackgroundService
+public sealed class ImportTranscriptWorker(IServiceScopeFactory scopeFactory, ILogger<ImportTranscriptWorker> logger) : BackgroundService
 {
 	private static readonly TimeSpan Interval =
 		TimeSpan.FromSeconds(10);

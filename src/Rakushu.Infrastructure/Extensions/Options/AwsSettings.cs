@@ -19,4 +19,7 @@ public sealed class AwsSettings
 
 	// Bedrock settings
 	public string BedrockModelId { get; set; } = string.Empty;
+
+	// Translate settings
+	public string TranslateDataAccessRoleArn { get; set; } = string.Empty;
 }

@@ -5,6 +5,7 @@ using Rakushu.Worker.Jobs.Payment;
 using Rakushu.Worker.Jobs.Subscription;
 using Rakushu.Worker.Jobs.Video.Nlp;
 using Rakushu.Worker.Jobs.Video.Transcript;
+using Rakushu.Worker.Jobs.Video.Transcript.TranslateTranscript;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,8 @@ internal static class ServiceCollectionExtensions
 		//services.AddHostedService<TranscriptImportWorker>();
 		//services.AddHostedService<NlpProcessWorker>();
 		//services.AddHostedService<KnowledgeNlpProcessWorker>();
-		services.AddHostedService<KnowledgeMatchingWorker>();
+		//services.AddHostedService<KnowledgeMatchingWorker>();
+		services.AddHostedService<TranslateTranscriptWorker>();
 
 		// SUBSCRIPTION
 		//services.AddHostedService<SubscriptionTrackingWorker>();

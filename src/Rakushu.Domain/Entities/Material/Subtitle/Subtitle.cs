@@ -1,10 +1,6 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Domain.Entities.Material.Subtitle;
 
@@ -25,5 +21,33 @@ public sealed class Subtitle : Entity<SubtitleId>
 
 	private Subtitle()
 	{
+	}
+
+	private Subtitle(
+		SubtitleId id,
+		TranscriptSegmentId transcriptSegmentId,
+		LanguageCode languageCode,
+		string text,
+		int sequence)
+		: base(id)
+	{
+		TranscriptSegmentId = transcriptSegmentId;
+		LanguageCode = languageCode;
+		Text = text;
+		Sequence = sequence;
+	}
+
+	public static Result<Subtitle> Create(
+		TranscriptSegmentId transcriptSegmentId,
+		LanguageCode languageCode,
+		string text,
+		int sequence)
+	{
+		return Result.Success(new Subtitle(
+			SubtitleId.Create(),
+			transcriptSegmentId,
+			languageCode,
+			text,
+			sequence));
 	}
 }

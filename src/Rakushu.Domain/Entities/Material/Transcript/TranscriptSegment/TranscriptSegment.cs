@@ -1,6 +1,7 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
+using Rakushu.Domain.Entities.Material.Subtitle;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptItem;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
@@ -155,5 +156,23 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 
 		_learningUnits.Add(learningUnit);
 		return Result.Success(learningUnit);
+	}
+
+	public Result<Subtitle.Subtitle> AddSubtitle(
+	LanguageCode languageCode,
+	string text)
+	{
+		var result = Rakushu.Domain.Entities.Material.Subtitle.Subtitle.Create(
+			Id,
+			languageCode,
+			text,
+			Sequence);
+
+		if (result.IsFailure)
+			return result;
+
+		Subtitle = result.Value;
+
+		return result;
 	}
 }
