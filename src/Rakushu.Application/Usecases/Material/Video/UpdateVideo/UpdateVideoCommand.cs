@@ -8,7 +8,7 @@ public sealed record UpdateVideoCommand(
 	Guid VideoId,
 	string Title,
 	string? Description,
-	Guid ContentCategoryId,
+	//Guid ContentCategoryId,
 	Guid? SeriesId,
 	int SortOrder
 ) : IRequest<Result>;

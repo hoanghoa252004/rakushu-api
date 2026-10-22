@@ -151,7 +151,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	public Result UpdateBasicInfo(
 		string title,
 		string? description,
-		ContentCategoryId contentCategoryId,
+		//ContentCategoryId contentCategoryId,
 		SeriesId? seriesId,
 		int sortOrder,
 		DateTimeOffset updatedAt)
@@ -161,7 +161,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 
 		Title = title;
 		Description = description;
-		ContentCategoryId = contentCategoryId;
+		//ContentCategoryId = contentCategoryId;
 		SeriesId = seriesId;
 		SortOrder = sortOrder;
 		UpdatedAt = updatedAt;

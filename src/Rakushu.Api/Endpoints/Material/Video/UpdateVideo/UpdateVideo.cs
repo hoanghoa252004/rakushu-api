@@ -26,7 +26,7 @@ internal sealed class UpdateVideo : IEndpoint
 					id,
 					dto.Title,
 					dto.Description,
-					dto.ContentCategoryId,
+					//dto.ContentCategoryId,
 					dto.SeriesId,
 					dto.SortOrder);
 
@@ -48,6 +48,6 @@ internal sealed class UpdateVideo : IEndpoint
 internal record UpdateVideoRequestDto(
 	string Title,
 	string? Description,
-	Guid ContentCategoryId,
+	//Guid ContentCategoryId,
 	Guid? SeriesId,
 	int SortOrder);

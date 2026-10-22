@@ -36,7 +36,7 @@ internal sealed class UpdateVideoHandler : IRequestHandler<UpdateVideoCommand, R
 			var updateResult = video.UpdateBasicInfo(
 				request.Title,
 				request.Description,
-				ContentCategoryId.From(request.ContentCategoryId),
+				//ContentCategoryId.From(request.ContentCategoryId),
 				request.SeriesId.HasValue ? SeriesId.From(request.SeriesId.Value) : null,
 				request.SortOrder,
 				now);

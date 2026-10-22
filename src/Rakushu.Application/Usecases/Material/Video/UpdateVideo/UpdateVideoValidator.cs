@@ -16,8 +16,8 @@ internal sealed class UpdateVideoValidator : AbstractValidator<UpdateVideoComman
 		RuleFor(x => x.Description)
 			.MaximumLength(1000).WithMessage("Description must not exceed 1000 characters");
 
-		RuleFor(x => x.ContentCategoryId)
-			.NotEmpty().WithMessage("ContentCategoryId is required");
+		//RuleFor(x => x.ContentCategoryId)
+		//	.NotEmpty().WithMessage("ContentCategoryId is required");
 
 		RuleFor(x => x.SortOrder)
 			.GreaterThan(0).WithMessage("SortOrder must be greater than 0");
