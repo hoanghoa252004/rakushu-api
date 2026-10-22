@@ -2012,14 +2012,14 @@ namespace Rakushu.Persistence.Migrations
                     b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", "KnowledgeMeaning")
                         .WithMany("LearningUnits")
                         .HasForeignKey("KnowledgeMeaningId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_learning_units_knowledge_meanings_knowledge_meaning_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
                         .WithMany("LearningUnits")
                         .HasForeignKey("TranscriptSegmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_learning_units_transcript_segments_transcript_segment_id");
 
@@ -2044,7 +2044,7 @@ namespace Rakushu.Persistence.Migrations
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
                         .WithOne("Subtitle")
                         .HasForeignKey("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", "TranscriptSegmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_subtitles_transcript_segments_transcript_segment_id");
 

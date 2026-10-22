@@ -66,11 +66,11 @@ internal sealed class GetDetailTranscriptHandler : IRequestHandler<GetDetailTran
 					ThemeColor: x.TranscriptSpeaker.Speaker?.ThemeColor,
 					AvatarKey: x.TranscriptSpeaker.Speaker?.AvatarKey is not null ? await _storageService.CreatePresignedReadUrlAsync(x.TranscriptSpeaker.Speaker.AvatarKey, cancellationToken) : null,
 					Description: x.TranscriptSpeaker.Speaker?.Description),
-				Subtitle: new SubtitleDetailDto(
+				Subtitle: x.Subtitle is not null ? new SubtitleDetailDto(
 					Id: x.Subtitle.Id.Value,
 					Sequence: x.Subtitle.Sequence,
 					LanguageCode: x.Subtitle.LanguageCode.ToString(),
-					Text: x.Subtitle.Text),
+					Text: x.Subtitle.Text) : null,
 				LearningUnits: await Task.WhenAll(x.LearningUnits.Select(async lu => new LearningUnitDetailDto(
 					Id: lu.Id.Value,
 					KnowledgeUnit: new KnowledgeUnitDto(

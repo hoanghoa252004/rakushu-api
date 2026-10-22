@@ -36,6 +36,12 @@ public sealed class TranscriptRepository : BaseRepository<Transcript, Transcript
 				.OrderBy(s => s.Sequence)
 				.Skip(skip)
 				.Take(pageSize))
+				.ThenInclude(s => s.TranscriptItems)
+
+			.Include(t => t.TranscriptSegments
+				.OrderBy(s => s.Sequence)
+				.Skip(skip)
+				.Take(pageSize))
 				.ThenInclude(s => s.LearningUnits)
 					.ThenInclude(lu => lu.KnowledgeMeaning)
 						.ThenInclude(km => km.KnowledgeUnit)

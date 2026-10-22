@@ -66,5 +66,9 @@ internal sealed class TranscriptSegmentConfiguration : IEntityTypeConfiguration<
 		builder.Navigation(ts => ts.LearningUnits)
 			.HasField("_learningUnits")
 			.UsePropertyAccessMode(PropertyAccessMode.Field);
+
+		builder.Navigation(ts => ts.TranscriptItems)
+			.HasField("_transcriptItems")
+			.UsePropertyAccessMode(PropertyAccessMode.Field);
 	}
 }

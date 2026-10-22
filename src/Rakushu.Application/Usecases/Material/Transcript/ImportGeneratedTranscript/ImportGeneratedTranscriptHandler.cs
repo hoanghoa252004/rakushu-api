@@ -159,7 +159,7 @@ public sealed class ImportGeneratedTranscriptHandler
 						item.Type,
 						item.StartTime,
 						item.EndTime,
-						item.Sequence,
+						item.Confidence,
 						item.SpeakerLabel)));
 
 				foreach (var draft in segmentDrafts)

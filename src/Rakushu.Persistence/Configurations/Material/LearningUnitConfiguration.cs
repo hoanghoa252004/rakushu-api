@@ -29,7 +29,7 @@ internal sealed class LearningUnitConfiguration : IEntityTypeConfiguration<Learn
 		builder.HasOne(l => l.KnowledgeMeaning)
 			.WithMany(xx => xx.LearningUnits)
 			.HasForeignKey(l => l.KnowledgeMeaningId)
-			.OnDelete(DeleteBehavior.Restrict);
+			.OnDelete(DeleteBehavior.Cascade);
 
 		// TranscriptSegmentId
 		builder.Property(l => l.TranscriptSegmentId)
@@ -40,7 +40,7 @@ internal sealed class LearningUnitConfiguration : IEntityTypeConfiguration<Learn
 		builder.HasOne(l => l.TranscriptSegment)
 			.WithMany(xx => xx.LearningUnits)
 			.HasForeignKey(l => l.TranscriptSegmentId)
-			.OnDelete(DeleteBehavior.Restrict);
+			.OnDelete(DeleteBehavior.Cascade);
 
 		// StartTokenIndex
 		builder.Property(l => l.StartTokenIndex)

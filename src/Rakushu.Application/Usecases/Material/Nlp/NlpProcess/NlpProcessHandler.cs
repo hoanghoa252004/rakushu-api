@@ -49,8 +49,8 @@ public sealed class NlpProcessHandler : IRequestHandler<NlpProcessCommand, Resul
 			var videos = (await _videoRepository.GetAllAsync(cancellationToken))
 				.Where(v => v.Status == VideoStatus.Processing
 							&& v.Transcript != null
-							&& v.Transcript.IsReviewed == false
-							&& v.Transcript.TranscriptSegments.Any(s => s.Bunsetsus.Any() == false))
+							&& v.Transcript.IsReviewed == true
+							&& v.Transcript.TranscriptSegments.All(s => s.Bunsetsus.Any() == false))
 				.ToList();
 
 			if (videos.Count == 0)

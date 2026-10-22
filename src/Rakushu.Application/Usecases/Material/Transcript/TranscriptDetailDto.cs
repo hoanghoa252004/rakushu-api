@@ -22,7 +22,7 @@ public sealed record TranscriptSegmentDetailDto(
 	TimeSpan EndTime,
 	string Text,
 	TranscriptSpeakerDetailDto TranscriptSpeaker,
-	SubtitleDetailDto Subtitle,
+	SubtitleDetailDto? Subtitle,
 	IReadOnlyCollection<LearningUnitDetailDto> LearningUnits,
 	IReadOnlyCollection<TranscriptItemDto> TranscriptItems,
 	IReadOnlyCollection<BunsetsuDetailDto> Bunsetsus

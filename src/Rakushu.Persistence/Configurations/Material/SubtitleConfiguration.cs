@@ -28,7 +28,7 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 		builder.HasOne(si => si.TranscriptSegment)
 			.WithOne(ts => ts.Subtitle)
 			.HasForeignKey<Subtitle>(si => si.TranscriptSegmentId)
-			.OnDelete(DeleteBehavior.Restrict);
+			.OnDelete(DeleteBehavior.Cascade);
 		builder.HasIndex(si => si.TranscriptSegmentId)
 			.IsUnique();
 
