@@ -44,9 +44,28 @@ public interface IStorageService
 	Task<MediaAssetMetadataDto> GetMediaAssetMetadataAsync(
 		string key, 
 		CancellationToken cancellationToken);
+	string GetS3MediaUri(string videoStorageKey);
+
+	// Streaming
+	Task<Stream> StreamingReadAsync(
+	string key,
+	CancellationToken cancellationToken);
+
+	// Upload Text File
+	Task UploadTextFileAsync(
+	string key,
+	string content,
+	CancellationToken cancellationToken);
+	Task<string?> FindTranslatedTextFileKeyAsync(
+	string prefix,
+	CancellationToken cancellationToken);
+
+	Task<string> ReadTextFileAsync(
+		string key,
+		CancellationToken cancellationToken);
 }
 
-// DTO 
+// DTO
 public sealed record MediaAssetMetadataDto(
 	string ContentType,
 	string FileName,

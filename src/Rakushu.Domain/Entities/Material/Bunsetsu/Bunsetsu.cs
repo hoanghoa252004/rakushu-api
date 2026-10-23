@@ -22,14 +22,6 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 	private readonly List<Material.Token.Token> _tokens = new();
 	public IReadOnlyCollection<Material.Token.Token> Tokens => _tokens.AsReadOnly();
 
-	// Outgoing dependency relations
-	private readonly List<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> _outgoingRelations = new();
-	public IReadOnlyCollection<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> OutgoingRelations => _outgoingRelations.AsReadOnly();
-
-	// Incoming dependency relations
-	private readonly List<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> _incomingRelations = new();
-	public IReadOnlyCollection<BunsetsuDependencyRelationship.BunsetsuDependencyRelationship> IncomingRelations => _incomingRelations.AsReadOnly();
-
 	// CONSTRUCTORS & FACTORY METHODS
 	private Bunsetsu() { }
 
@@ -80,20 +72,22 @@ public sealed partial class Bunsetsu : Entity<BunsetsuId>
 	}
 
 	public Result<Material.Token.Token> AddToken(
-		string surface,
-		string lemma,
-		string reading,
-		JapanesePartOfSpeechId japanesePartOfSpeechId,
-		DependencyRelationshipId dependencyRelationshipId,
-		int startIndex,
-		int endIndex,
-		int sequence)
+	string surface,
+	string lemma,
+	string reading,
+	int headSequence,
+	JapanesePartOfSpeechId japanesePartOfSpeechId,
+	DependencyRelationshipId dependencyRelationshipId,
+	int startIndex,
+	int endIndex,
+	int sequence)
 	{
 		var result = Material.Token.Token.Create(
 			Id,
 			surface,
 			lemma,
 			reading,
+			headSequence,
 			japanesePartOfSpeechId,
 			dependencyRelationshipId,
 			startIndex,

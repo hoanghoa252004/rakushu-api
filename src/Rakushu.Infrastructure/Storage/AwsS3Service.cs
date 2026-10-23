@@ -171,4 +171,122 @@ internal class AwsS3Service : IStorageService
 			response.ContentLength
 		);
 	}
+
+	public async Task<Stream> StreamingReadAsync(string key, CancellationToken cancellationToken)
+	{
+		var response = await _s3.GetObjectAsync(
+		new GetObjectRequest
+		{
+			BucketName = _s3Settings.BucketName,
+			Key = key
+		},
+		cancellationToken);
+
+		return new S3ObjectReadStream(response);
+	}
+
+	public string GetS3MediaUri(string videoStorageKey)
+	{
+		return $"s3://{_s3Settings.BucketName}/{videoStorageKey}";
+	}
+
+	public async Task UploadTextFileAsync(
+	string key,
+	string content,
+	CancellationToken cancellationToken)
+	{
+		var bytes = Encoding.UTF8.GetBytes(content);
+
+		await using var stream = new MemoryStream(bytes);
+
+		var request = new PutObjectRequest
+		{
+			BucketName = _s3Settings.BucketName,
+			Key = key,
+			InputStream = stream,
+			ContentType = "text/plain; charset=utf-8"
+		};
+
+		await _s3.PutObjectAsync(request, cancellationToken);
+	}
+
+	public async Task<string?> FindTranslatedTextFileKeyAsync(
+	string prefix,
+	CancellationToken cancellationToken)
+	{
+		// Chuẩn hóa prefix để đảm bảo chỉ tìm trong thư mục output
+		// của transcript tương ứng.
+		prefix = prefix.TrimStart('/');
+
+		if (!prefix.EndsWith('/'))
+		{
+			prefix += "/";
+		}
+
+		string? translatedFileKey = null;
+		string? continuationToken = null;
+
+		do
+		{
+			var request = new ListObjectsV2Request
+			{
+				BucketName = _s3Settings.BucketName,
+				Prefix = prefix,
+				ContinuationToken = continuationToken
+			};
+
+			var response = await _s3.ListObjectsV2Async(
+				request,
+				cancellationToken);
+
+			var textFiles = response.S3Objects
+				.Where(obj =>
+					obj.Key.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+				.Where(obj =>
+					!obj.Key.EndsWith("manifest.txt", StringComparison.OrdinalIgnoreCase))
+				.ToList();
+
+			if (textFiles.Count > 1)
+			{
+				throw new InvalidOperationException(
+					$"Tìm thấy nhiều file dịch trong S3 prefix '{prefix}'. " +
+					"Không thể xác định file output cần đọc.");
+			}
+
+			if (textFiles.Count == 1)
+			{
+				if (translatedFileKey is not null)
+				{
+					throw new InvalidOperationException(
+						$"Tìm thấy nhiều file dịch trong S3 prefix '{prefix}'. " +
+						"Không thể xác định file output cần đọc.");
+				}
+
+				translatedFileKey = textFiles[0].Key;
+			}
+
+			continuationToken = response.IsTruncated == true
+				? response.NextContinuationToken
+				: null;
+		}
+		while (continuationToken is not null);
+
+		return translatedFileKey;
+	}
+
+	public async Task<string> ReadTextFileAsync(
+		string key,
+		CancellationToken cancellationToken)
+	{
+		await using var stream = await StreamingReadAsync(
+			key,
+			cancellationToken);
+
+		using var reader = new StreamReader(
+			stream,
+			Encoding.UTF8,
+			detectEncodingFromByteOrderMarks: true);
+
+		return await reader.ReadToEndAsync(cancellationToken);
+	}
 }

@@ -1,6 +1,9 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Behaviors;
+using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching;
+using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching.ProcessPendingVideoKnowledgeMatching;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeMatchingCandidate;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +31,13 @@ public static class ApplicationServiceCollectionExtentions
 
 		services.AddValidatorsFromAssembly(assembly,
 			includeInternalTypes: true);
+
+		services.AddScoped<KnowledgeMatchingService>();
+		services.AddScoped<LearningUnitOverlapResolver>();
+
+		services.AddScoped<IKnowledgeMatcher, WordMatcher>();
+		services.AddScoped<IKnowledgeMatcher, CollocationMatcher>();
+		services.AddScoped<IKnowledgeMatcher, GrammarMatcher>();
 
 		return services;
 	}

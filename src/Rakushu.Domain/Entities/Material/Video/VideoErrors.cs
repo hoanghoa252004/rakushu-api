@@ -1,4 +1,5 @@
 using Rakushu.Domain.Common.Errors;
+using Rakushu.Domain.Entities.Identity.User;
 
 namespace Rakushu.Domain.Entities.Material.Video;
 
@@ -33,4 +34,9 @@ public static class VideoErrors
 
 	public static readonly Error InvalidSourceType = Error.Validation(
 		"VIDEO.INVALID_SOURCE_TYPE", "Invalid video source type.");
+
+	public static readonly Error InvalidStatus = Error.Validation(
+		"VIDEO.INVALID_STATUS",
+		"The specified video status is invalid. Valid video status: "
+		+ string.Join(", ", Enum.GetNames<VideoStatus>()) + ".");
 }

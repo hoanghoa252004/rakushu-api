@@ -1,0 +1,19 @@
+using FluentValidation;
+
+namespace Rakushu.Application.Usecases.Subscription.Transaction.CreateTransaction;
+
+public sealed class CreateTransactionValidator : AbstractValidator<CreateTransactionCommand>
+{
+	public CreateTransactionValidator()
+	{
+		RuleFor(x => x.PaymentId)
+			.NotEmpty()
+			.WithMessage("Payment ID is required");
+
+		RuleFor(x => x.Provider)
+			.NotEmpty()
+			.WithMessage("Provider is required")
+			.Matches("^(VNPAY|SEPAY)$")
+			.WithMessage("Provider must be either VNPAY or SEPAY");
+	}
+}

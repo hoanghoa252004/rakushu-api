@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 using Rakushu.Persistence;
 
 #nullable disable
@@ -528,6 +529,12 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<string>("JapaneseMeaning")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("japanese_meaning");
+
                     b.Property<Guid>("KnowledgeUnitId")
                         .HasColumnType("uuid")
                         .HasColumnName("knowledge_unit_id");
@@ -582,6 +589,11 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("knowledge_collection_id");
 
+                    b.Property<string>("KnowledgeHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("knowledge_hash");
+
                     b.Property<string>("KnowledgeType")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -618,6 +630,70 @@ namespace Rakushu.Persistence.Migrations
                         .HasDatabaseName("ix_knowledge_units_proficiency_level_id");
 
                     b.ToTable("knowledge_units", "knowledge");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Knowledge.KnowledgeUnitElement.KnowledgeUnitElement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("DependencyRelationshipId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dependency_relationship_id");
+
+                    b.Property<int>("EndIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("end_index");
+
+                    b.Property<int>("HeadSequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("head_sequence");
+
+                    b.Property<Guid>("JapanesePartOfSpeechId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("japanese_part_of_speech_id");
+
+                    b.Property<Guid>("KnowledgeUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("knowledge_unit_id");
+
+                    b.Property<string>("Lemma")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("lemma");
+
+                    b.Property<string>("Reading")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reading");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<int>("StartIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("start_index");
+
+                    b.Property<string>("Surface")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("surface");
+
+                    b.HasKey("Id")
+                        .HasName("pk_knowledge_unit_elements");
+
+                    b.HasIndex("DependencyRelationshipId")
+                        .HasDatabaseName("ix_knowledge_unit_elements_dependency_relationship_id");
+
+                    b.HasIndex("JapanesePartOfSpeechId")
+                        .HasDatabaseName("ix_knowledge_unit_elements_japanese_part_of_speech_id");
+
+                    b.HasIndex("KnowledgeUnitId")
+                        .HasDatabaseName("ix_knowledge_unit_elements_knowledge_unit_id");
+
+                    b.ToTable("knowledge_unit_elements", "knowledge");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Knowledge.ProficiencyLevel.ProficiencyLevel", b =>
@@ -710,47 +786,6 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("bunsetsu", "material");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.BunsetsuDependencyRelationship.BunsetsuDependencyRelationship", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("DependencyRelationshipId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dependency_relationship_id");
-
-                    b.Property<Guid>("FromBunsetsuId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("from_bunsetsu_id");
-
-                    b.Property<Guid>("ToBunsetsuId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("to_bunsetsu_id");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_bunsetsu_dependency_relationships");
-
-                    b.HasIndex("DependencyRelationshipId")
-                        .HasDatabaseName("ix_bunsetsu_dependency_relationships_dependency_relationship_id");
-
-                    b.HasIndex("FromBunsetsuId")
-                        .HasDatabaseName("ix_bunsetsu_dependency_relationships_from_bunsetsu_id");
-
-                    b.HasIndex("ToBunsetsuId")
-                        .HasDatabaseName("ix_bunsetsu_dependency_relationships_to_bunsetsu_id");
-
-                    b.ToTable("bunsetsu_dependency_relationships", "material");
-                });
-
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.LearningUnit.LearningUnit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -812,8 +847,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
+                        .HasColumnType("text")
                         .HasColumnName("description");
 
                     b.Property<int>("DisplayOrder")
@@ -824,10 +858,16 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
+                    b.Property<string>("JapaneseName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("japanese_name");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
                     b.Property<string>("Slug")
@@ -842,9 +882,19 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("source_type");
 
+                    b.Property<string>("ThumbnailKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("thumbnail_key");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("pk_series");
@@ -852,6 +902,9 @@ namespace Rakushu.Persistence.Migrations
                     b.HasIndex("Slug")
                         .IsUnique()
                         .HasDatabaseName("ix_series_slug");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_series_user_id");
 
                     b.ToTable("series", "material");
                 });
@@ -862,85 +915,33 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("Code")
+                    b.Property<string>("LanguageCode")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
-                        .HasColumnName("code");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid>("VideoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("video_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_subtitles");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("ix_subtitles_code");
-
-                    b.HasIndex("VideoId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_subtitles_video_id");
-
-                    b.ToTable("subtitles", "material");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Subtitle.SubtitleSegment.SubtitleSegment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("interval")
-                        .HasColumnName("end_time");
-
-                    b.Property<string>("OriginalText")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("original_text");
+                        .HasColumnName("language_code");
 
                     b.Property<int>("Sequence")
                         .HasColumnType("integer")
                         .HasColumnName("sequence");
 
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("interval")
-                        .HasColumnName("start_time");
-
-                    b.Property<Guid>("SubtitleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("subtitle_id");
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("text");
 
                     b.Property<Guid>("TranscriptSegmentId")
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_segment_id");
 
-                    b.Property<string>("TranslatedText")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("translated_text");
-
                     b.HasKey("Id")
-                        .HasName("pk_subtitle_segments");
-
-                    b.HasIndex("SubtitleId")
-                        .HasDatabaseName("ix_subtitle_segments_subtitle_id");
+                        .HasName("pk_subtitles");
 
                     b.HasIndex("TranscriptSegmentId")
                         .IsUnique()
-                        .HasDatabaseName("ix_subtitle_segments_transcript_segment_id");
+                        .HasDatabaseName("ix_subtitles_transcript_segment_id");
 
-                    b.ToTable("subtitle_segments", "material");
+                    b.ToTable("subtitles", "material");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Token.Token", b =>
@@ -960,6 +961,10 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<int>("EndIndex")
                         .HasColumnType("integer")
                         .HasColumnName("end_index");
+
+                    b.Property<int>("HeadSequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("head_sequence");
 
                     b.Property<Guid>("JapanesePartOfSpeechId")
                         .HasColumnType("uuid")
@@ -1060,8 +1065,8 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("id");
 
                     b.Property<decimal>("Confidence")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("numeric(5,4)")
+                        .HasPrecision(8, 5)
+                        .HasColumnType("numeric(8,5)")
                         .HasColumnName("confidence");
 
                     b.Property<TimeSpan>("EndTime")
@@ -1127,7 +1132,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_id");
 
-                    b.Property<Guid?>("TranscriptSpeakerId")
+                    b.Property<Guid>("TranscriptSpeakerId")
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_speaker_id");
 
@@ -1149,20 +1154,15 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("label");
 
-                    b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
+                    b.Property<Guid?>("SpeakerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("speaker_id");
 
                     b.Property<Guid>("TranscriptId")
                         .HasColumnType("uuid")
@@ -1170,6 +1170,9 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_transcript_speakers");
+
+                    b.HasIndex("SpeakerId")
+                        .HasDatabaseName("ix_transcript_speakers_speaker_id");
 
                     b.HasIndex("TranscriptId")
                         .HasDatabaseName("ix_transcript_speakers_transcript_id");
@@ -1247,7 +1250,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("interval")
                         .HasColumnName("duration");
 
-                    b.Property<Guid>("LearnerId")
+                    b.Property<Guid?>("LearnerId")
                         .HasColumnType("uuid")
                         .HasColumnName("learner_id");
 
@@ -1311,205 +1314,61 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("videos", "material");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.CuratorReview.CuratorReview", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
-                        .HasColumnName("review_id");
+                        .HasColumnName("id");
 
-                    b.Property<string>("Comment")
-                        .HasColumnType("text")
-                        .HasColumnName("comment");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("CuratorId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("curator_id");
-
-                    b.Property<string>("Decision")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("decision");
-
-                    b.Property<string>("EditedMeaning")
-                        .HasColumnType("text")
-                        .HasColumnName("edited_meaning");
-
-                    b.Property<string>("EditedPos")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("edited_pos");
-
-                    b.Property<string>("EditedReading")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("edited_reading");
-
-                    b.Property<string>("EditedTerm")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("edited_term");
-
-                    b.Property<Guid>("OovCandidateId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("oov_candidate_id");
-
-                    b.Property<DateTimeOffset>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_curator_reviews");
-
-                    b.HasIndex("CuratorId")
-                        .HasDatabaseName("ix_curator_reviews_curator_id");
-
-                    b.HasIndex("OovCandidateId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_curator_reviews_oov_candidate_id");
-
-                    b.ToTable("curator_reviews", (string)null);
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.DictionaryEntry.DictionaryEntry", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("dictionary_entry_id");
-
-                    b.Property<string>("AudioUrl")
+                    b.Property<string>("AvatarKey")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
-                        .HasColumnName("audio_url");
+                        .HasColumnName("avatar_key");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("DefinitionTags")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("definition_tags");
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
-                    b.Property<string>("JlptLevel")
+                    b.Property<string>("JapaneseName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("japanese_name");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("ThemeColor")
+                        .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
-                        .HasColumnName("jlpt_level");
-
-                    b.Property<string>("Meaning")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("meaning");
-
-                    b.Property<string>("MeaningVietnamese")
-                        .HasColumnType("text")
-                        .HasColumnName("meaning_vietnamese");
-
-                    b.Property<string>("Pos")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("part_of_speech");
-
-                    b.Property<string>("Reading")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("reading");
-
-                    b.Property<string>("Term")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("term");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("WordType")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("word_type");
-
-                    b.HasKey("Id")
-                        .HasName("pk_dictionary_entries");
-
-                    b.HasIndex("Reading")
-                        .HasDatabaseName("ix_dictionary_entries_reading");
-
-                    b.HasIndex("Term")
-                        .HasDatabaseName("ix_dictionary_entries_term");
-
-                    b.ToTable("dictionary_entries", (string)null);
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.OovCandidate.OovCandidate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("oov_candidate_id");
-
-                    b.Property<double>("ConfidenceScore")
-                        .HasColumnType("double precision")
-                        .HasColumnName("confidence_score");
-
-                    b.Property<string>("ContextSnippet")
-                        .HasColumnType("text")
-                        .HasColumnName("context_snippet");
-
-                    b.Property<DateTimeOffset>("DetectedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("detected_at");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("status");
-
-                    b.Property<string>("SuggestedMeaning")
-                        .HasColumnType("text")
-                        .HasColumnName("suggested_meaning");
-
-                    b.Property<string>("TentativePos")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("tentative_pos");
-
-                    b.Property<string>("TentativeReading")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("tentative_reading");
-
-                    b.Property<string>("Term")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("term");
-
-                    b.Property<Guid?>("TokenId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("token_id");
+                        .HasColumnName("theme_color");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_oov_candidates");
+                        .HasName("pk_speakers");
 
-                    b.HasIndex("Status")
-                        .HasDatabaseName("ix_oov_candidates_status");
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_speakers_code");
 
-                    b.HasIndex("Term")
-                        .HasDatabaseName("ix_oov_candidates_term");
-
-                    b.ToTable("oov_candidates", (string)null);
+                    b.ToTable("speakers", "shadowing");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
@@ -1917,6 +1776,65 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("transactions", "subscription");
                 });
 
+            modelBuilder.Entity("Rakushu.Persistence.Configurations.Knowledge.KnowledgeEmbedding", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("content_hash");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Dimensions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1024)
+                        .HasColumnName("dimensions");
+
+                    b.Property<Vector>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("vector(1024)")
+                        .HasColumnName("embedding");
+
+                    b.Property<string>("EmbeddingText")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("embedding_text");
+
+                    b.Property<Guid>("KnowledgeMeaningId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("knowledge_meaning_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.HasKey("Id")
+                        .HasName("pk_knowledge_embeddings");
+
+                    b.HasIndex("KnowledgeMeaningId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_knowledge_embeddings_knowledge_meaning_id");
+
+                    b.ToTable("knowledge_embeddings", "knowledge", t =>
+                        {
+                            t.HasCheckConstraint("ck_knowledge_embeddings_dimensions", "dimensions = 1024");
+                        });
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Identity.User.EmailVerificationToken.EmailVerificationToken", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Identity.User.User", null)
@@ -2047,10 +1965,40 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("ProficiencyLevel");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Knowledge.KnowledgeUnitElement.KnowledgeUnitElement", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.DependencyRelationship.DependencyRelationship", "DependencyRelationship")
+                        .WithMany("KnowledgeUnitElements")
+                        .HasForeignKey("DependencyRelationshipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_knowledge_unit_elements_dependency_relationships_dependency");
+
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech.JapanesePartOfSpeech", "JapanesePartOfSpeech")
+                        .WithMany("KnowledgeUnitElements")
+                        .HasForeignKey("JapanesePartOfSpeechId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_knowledge_unit_elements_japanese_part_of_speeches_japanese_");
+
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeUnit.KnowledgeUnit", "KnowledgeUnit")
+                        .WithMany("Elements")
+                        .HasForeignKey("KnowledgeUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_knowledge_unit_elements_knowledge_units_knowledge_unit_id");
+
+                    b.Navigation("DependencyRelationship");
+
+                    b.Navigation("JapanesePartOfSpeech");
+
+                    b.Navigation("KnowledgeUnit");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
-                        .WithMany("Bunsetsu")
+                        .WithMany("Bunsetsus")
                         .HasForeignKey("TranscriptSegmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -2059,49 +2007,19 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("TranscriptSegment");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.BunsetsuDependencyRelationship.BunsetsuDependencyRelationship", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Knowledge.DependencyRelationship.DependencyRelationship", "DependencyRelationship")
-                        .WithMany("BunsetsuDependencyRelationships")
-                        .HasForeignKey("DependencyRelationshipId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_bunsetsu_dependency_relationships_dependency_relationships_");
-
-                    b.HasOne("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", "FromBunsetsu")
-                        .WithMany("OutgoingRelations")
-                        .HasForeignKey("FromBunsetsuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_bunsetsu_dependency_relationships_bunsetsu_from_bunsetsu_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", "ToBunsetsu")
-                        .WithMany("IncomingRelations")
-                        .HasForeignKey("ToBunsetsuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_bunsetsu_dependency_relationships_bunsetsu_to_bunsetsu_id");
-
-                    b.Navigation("DependencyRelationship");
-
-                    b.Navigation("FromBunsetsu");
-
-                    b.Navigation("ToBunsetsu");
-                });
-
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.LearningUnit.LearningUnit", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", "KnowledgeMeaning")
                         .WithMany("LearningUnits")
                         .HasForeignKey("KnowledgeMeaningId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_learning_units_knowledge_meanings_knowledge_meaning_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
                         .WithMany("LearningUnits")
                         .HasForeignKey("TranscriptSegmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_learning_units_transcript_segments_transcript_segment_id");
 
@@ -2110,35 +2028,25 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("TranscriptSegment");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Series.Series", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
-                        .WithMany("Subtitles")
-                        .HasForeignKey("VideoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_subtitles_videos_video_id");
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
+                        .WithMany("Series")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_series_users_user_id");
 
-                    b.Navigation("Video");
+                    b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Subtitle.SubtitleSegment.SubtitleSegment", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", "Subtitle")
-                        .WithMany("Items")
-                        .HasForeignKey("SubtitleId")
+                    b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
+                        .WithOne("Subtitle")
+                        .HasForeignKey("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", "TranscriptSegmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_subtitle_segments_subtitles_subtitle_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
-                        .WithOne("SubtitleSegment")
-                        .HasForeignKey("Rakushu.Domain.Entities.Material.Subtitle.SubtitleSegment.SubtitleSegment", "TranscriptSegmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_subtitle_segments_transcript_segments_transcript_segment_id");
-
-                    b.Navigation("Subtitle");
+                        .HasConstraintName("fk_subtitles_transcript_segments_transcript_segment_id");
 
                     b.Navigation("TranscriptSegment");
                 });
@@ -2210,6 +2118,7 @@ namespace Rakushu.Persistence.Migrations
                         .WithMany("TranscriptSegments")
                         .HasForeignKey("TranscriptSpeakerId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
                         .HasConstraintName("fk_transcript_segments_transcript_speakers_transcript_speaker_");
 
                     b.Navigation("Transcript");
@@ -2219,12 +2128,20 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker.TranscriptSpeaker", b =>
                 {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", "Speaker")
+                        .WithMany("TranscriptSpeakers")
+                        .HasForeignKey("SpeakerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_transcript_speakers_speakers_speaker_id");
+
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.Transcript", "Transcript")
                         .WithMany("TranscriptSpeakers")
                         .HasForeignKey("TranscriptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_transcript_speakers_transcripts_transcript_id");
+
+                    b.Navigation("Speaker");
 
                     b.Navigation("Transcript");
                 });
@@ -2254,7 +2171,6 @@ namespace Rakushu.Persistence.Migrations
                         .WithMany("Videos")
                         .HasForeignKey("LearnerId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_videos_users_learner_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Material.Series.Series", "Series")
@@ -2268,27 +2184,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Learner");
 
                     b.Navigation("Series");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.CuratorReview.CuratorReview", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "Curator")
-                        .WithMany()
-                        .HasForeignKey("CuratorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_curator_reviews_users_curator_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.NotReviewedYet.OovCandidate.OovCandidate", "OovCandidate")
-                        .WithOne("CuratorReview")
-                        .HasForeignKey("Rakushu.Domain.Entities.NotReviewedYet.CuratorReview.CuratorReview", "OovCandidateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_curator_reviews_oov_candidates_oov_candidate_id");
-
-                    b.Navigation("Curator");
-
-                    b.Navigation("OovCandidate");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
@@ -2395,6 +2290,16 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Payment");
                 });
 
+            modelBuilder.Entity("Rakushu.Persistence.Configurations.Knowledge.KnowledgeEmbedding", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", null)
+                        .WithMany()
+                        .HasForeignKey("KnowledgeMeaningId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_knowledge_embeddings_knowledge_meanings");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Identity.Role.Role", b =>
                 {
                     b.Navigation("Users");
@@ -2415,6 +2320,8 @@ namespace Rakushu.Persistence.Migrations
 
                     b.Navigation("RefreshTokens");
 
+                    b.Navigation("Series");
+
                     b.Navigation("Subscriptions");
 
                     b.Navigation("Videos");
@@ -2431,13 +2338,15 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Knowledge.DependencyRelationship.DependencyRelationship", b =>
                 {
-                    b.Navigation("BunsetsuDependencyRelationships");
+                    b.Navigation("KnowledgeUnitElements");
 
                     b.Navigation("Tokens");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech.JapanesePartOfSpeech", b =>
                 {
+                    b.Navigation("KnowledgeUnitElements");
+
                     b.Navigation("Tokens");
                 });
 
@@ -2455,6 +2364,8 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Knowledge.KnowledgeUnit.KnowledgeUnit", b =>
                 {
+                    b.Navigation("Elements");
+
                     b.Navigation("Meanings");
                 });
 
@@ -2467,21 +2378,12 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", b =>
                 {
-                    b.Navigation("IncomingRelations");
-
-                    b.Navigation("OutgoingRelations");
-
                     b.Navigation("Tokens");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Series.Series", b =>
                 {
                     b.Navigation("Videos");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Material.Subtitle.Subtitle", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Transcript.Transcript", b =>
@@ -2493,11 +2395,11 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", b =>
                 {
-                    b.Navigation("Bunsetsu");
+                    b.Navigation("Bunsetsus");
 
                     b.Navigation("LearningUnits");
 
-                    b.Navigation("SubtitleSegment")
+                    b.Navigation("Subtitle")
                         .IsRequired();
 
                     b.Navigation("TranscriptItems");
@@ -2512,15 +2414,13 @@ namespace Rakushu.Persistence.Migrations
                 {
                     b.Navigation("MediaAssets");
 
-                    b.Navigation("Subtitles");
-
                     b.Navigation("Transcript")
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.NotReviewedYet.OovCandidate.OovCandidate", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", b =>
                 {
-                    b.Navigation("CuratorReview");
+                    b.Navigation("TranscriptSpeakers");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Feature.Feature", b =>

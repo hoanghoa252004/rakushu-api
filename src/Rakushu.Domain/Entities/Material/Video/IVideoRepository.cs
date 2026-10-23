@@ -15,4 +15,12 @@ public interface IVideoRepository : IBaseRepository<Video, VideoId>
 	Task<Video?> GetByTranscriptSegmentIdAsync(TranscriptSegmentId segmentId, CancellationToken cancellationToken = default);
 	Task<Video?> GetByBunsetsuIdAsync(BunsetsuId bunsetsuId, CancellationToken cancellationToken = default);
 	Task<Video?> GetByTokenIdAsync(TokenId tokenId, CancellationToken cancellationToken = default);
+	Task<IReadOnlyList<Video>> GetProcessingVideosWithReviewedTranscriptAsync(
+		int batchSize,
+	CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<Video>> GetProcessingVideosWithReviewedTranscriptForTranslateAsync(
+		int batchSize,
+	CancellationToken cancellationToken = default);
+	
 }

@@ -40,10 +40,6 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	private readonly List<MediaAsset.MediaAsset> _mediaAssets = new();
 	public IReadOnlyCollection<MediaAsset.MediaAsset> MediaAssets => _mediaAssets.AsReadOnly();
 
-	// Subtitles
-	private readonly List<Material.Subtitle.Subtitle> _subtitles = new();
-	public IReadOnlyCollection<Material.Subtitle.Subtitle> Subtitles => _subtitles.AsReadOnly();
-
 	// CONSTRUCTORS & FACTORY METHODS
 	private Video() { }
 
@@ -155,7 +151,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	public Result UpdateBasicInfo(
 		string title,
 		string? description,
-		ContentCategoryId contentCategoryId,
+		//ContentCategoryId contentCategoryId,
 		SeriesId? seriesId,
 		int sortOrder,
 		DateTimeOffset updatedAt)
@@ -165,7 +161,7 @@ public sealed partial class Video : AggregateRoot<VideoId>
 
 		Title = title;
 		Description = description;
-		ContentCategoryId = contentCategoryId;
+		//ContentCategoryId = contentCategoryId;
 		SeriesId = seriesId;
 		SortOrder = sortOrder;
 		UpdatedAt = updatedAt;

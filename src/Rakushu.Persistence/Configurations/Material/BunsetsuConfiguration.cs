@@ -42,7 +42,7 @@ internal sealed class BunsetsuConfiguration : IEntityTypeConfiguration<Bunsetsu>
 				value => TranscriptSegmentId.From(value))
 			.IsRequired();
 		builder.HasOne(b => b.TranscriptSegment)
-			.WithMany(ts => ts.Bunsetsu)
+			.WithMany(ts => ts.Bunsetsus)
 			.HasForeignKey(b => b.TranscriptSegmentId)
 			.OnDelete(DeleteBehavior.Cascade);
 	}

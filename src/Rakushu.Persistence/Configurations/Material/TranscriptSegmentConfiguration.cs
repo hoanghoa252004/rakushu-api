@@ -51,10 +51,24 @@ internal sealed class TranscriptSegmentConfiguration : IEntityTypeConfiguration<
 		builder.Property(ts => ts.TranscriptSpeakerId)
 			.HasConversion(
 				id => id.Value,
-				value => TranscriptSpeakerId.From(value));
+				value => TranscriptSpeakerId.From(value))
+			.IsRequired();
 		builder.HasOne(ts => ts.TranscriptSpeaker)
 			.WithMany(t => t.TranscriptSegments)
 			.HasForeignKey(ts => ts.TranscriptSpeakerId)
 			.OnDelete(DeleteBehavior.Restrict);
+
+		// Backing field for Slit Query
+		builder.Navigation(ts => ts.Bunsetsus)
+			.HasField("_bunsetsus")
+			.UsePropertyAccessMode(PropertyAccessMode.Field);
+
+		builder.Navigation(ts => ts.LearningUnits)
+			.HasField("_learningUnits")
+			.UsePropertyAccessMode(PropertyAccessMode.Field);
+
+		builder.Navigation(ts => ts.TranscriptItems)
+			.HasField("_transcriptItems")
+			.UsePropertyAccessMode(PropertyAccessMode.Field);
 	}
 }

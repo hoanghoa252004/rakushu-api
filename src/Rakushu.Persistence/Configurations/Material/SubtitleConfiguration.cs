@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Material.Subtitle;
-using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 
 namespace Rakushu.Persistence.Configurations.Material;
 
@@ -13,38 +13,38 @@ internal sealed class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 		builder.Metadata.SetSchema("material");
 
 		// Id
-		builder.HasKey(s => s.Id);
-		builder.Property(s => s.Id)
+		builder.HasKey(si => si.Id);
+		builder.Property(si => si.Id)
 			.HasConversion(
 				id => id.Value,
 				value => SubtitleId.From(value));
 
-		// Code
-		builder.Property(s => s.Code)
-			.HasMaxLength(30)
-			.IsRequired();
-		builder.HasIndex(s => s.Code)
-			.IsUnique();
-
-		// VideoId
-		builder.Property(s => s.VideoId)
+		// TranscriptSegmentId
+		builder.Property(si => si.TranscriptSegmentId)
 			.HasConversion(
 				id => id.Value,
-				value => VideoId.From(value))
+				value => TranscriptSegmentId.From(value))
 			.IsRequired();
-		builder.HasOne(s => s.Video)
-			.WithMany(v => v.Subtitles)
-			.HasForeignKey(s => s.VideoId)
+		builder.HasOne(si => si.TranscriptSegment)
+			.WithOne(ts => ts.Subtitle)
+			.HasForeignKey<Subtitle>(si => si.TranscriptSegmentId)
 			.OnDelete(DeleteBehavior.Cascade);
-		builder.HasIndex(t => t.VideoId)
+		builder.HasIndex(si => si.TranscriptSegmentId)
 			.IsUnique();
 
-		// CreatedAt
-		builder.Property(s => s.CreatedAt)
+		// Text
+		builder.Property(si => si.Text)
 			.IsRequired();
 
-		// UpdatedAt
-		builder.Property(s => s.UpdatedAt)
+		// Sequence
+		builder.Property(si => si.Sequence)
 			.IsRequired();
+
+		// LanguageCode
+		builder.Property(v => v.LanguageCode)
+			.HasMaxLength(30)
+			.HasConversion<string>()
+			.IsRequired();
+
 	}
 }

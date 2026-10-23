@@ -13,6 +13,7 @@ public sealed partial class Token : Entity<TokenId>
 	public string Surface { get; private set; } = null!;
 	public string Lemma { get; private set; } = null!;
 	public string Reading { get; private set; } = null!;
+	public int HeadSequence { get; private set; }
 	public JapanesePartOfSpeechId JapanesePartOfSpeechId { get; private set; } = null!;
 	public DependencyRelationshipId DependencyRelationshipId { get; private set; } = null!;
 	public int StartIndex { get; private set; }
@@ -37,6 +38,7 @@ public sealed partial class Token : Entity<TokenId>
 		string surface,
 		string lemma,
 		string reading,
+		int headSequence,
 		JapanesePartOfSpeechId japanesePartOfSpeechId,
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
@@ -48,6 +50,7 @@ public sealed partial class Token : Entity<TokenId>
 		Surface = surface;
 		Lemma = lemma;
 		Reading = reading;
+		HeadSequence = headSequence;
 		JapanesePartOfSpeechId = japanesePartOfSpeechId;
 		DependencyRelationshipId = dependencyRelationshipId;
 		StartIndex = startIndex;
@@ -60,6 +63,7 @@ public sealed partial class Token : Entity<TokenId>
 		string surface,
 		string lemma,
 		string reading,
+		int headSequence,
 		JapanesePartOfSpeechId japanesePartOfSpeechId,
 		DependencyRelationshipId dependencyRelationshipId,
 		int startIndex,
@@ -72,6 +76,7 @@ public sealed partial class Token : Entity<TokenId>
 			surface,
 			lemma,
 			reading,
+			headSequence,
 			japanesePartOfSpeechId,
 			dependencyRelationshipId,
 			startIndex,

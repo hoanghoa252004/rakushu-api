@@ -1,6 +1,5 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
-using Rakushu.Application.Abstractions.Persistence;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Subscriptions.Feature;

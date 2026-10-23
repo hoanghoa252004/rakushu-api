@@ -7,11 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.101.11" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.35" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.19" />
     <PackageReference Include="AWSSDK.SimpleEmail" Version="4.0.2.16" />
     <PackageReference Include="AWSSDK.TranscribeService" Version="4.0.102.2" />
+    <PackageReference Include="AWSSDK.Translate" Version="4.0.101.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <ItemGroup>

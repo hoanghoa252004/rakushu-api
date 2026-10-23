@@ -1,5 +1,6 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 
 namespace Rakushu.Domain.Entities.Material.Transcript;
@@ -80,16 +81,16 @@ public sealed partial class Transcript : Entity<TranscriptId>
 	}
 
 	public Result<TranscriptSegment.TranscriptSegment> AddSegment(
-		string text,
-		TimeSpan startTime,
-		TimeSpan endTime,
-		int sequence,
-		DateTimeOffset createdAt,
-		DateTimeOffset updatedAt)
+	TranscriptSpeakerId transcriptSpeakerId,
+	string text,
+	TimeSpan startTime,
+	TimeSpan endTime,
+	int sequence,
+	DateTimeOffset updatedAt)
 	{
 		var segmentResult = TranscriptSegment.TranscriptSegment.Create(
 			Id,
-			null,
+			transcriptSpeakerId,
 			text,
 			startTime,
 			endTime,
@@ -99,7 +100,9 @@ public sealed partial class Transcript : Entity<TranscriptId>
 			return segmentResult;
 
 		_transcriptSegments.Add(segmentResult.Value);
+
 		UpdatedAt = updatedAt;
+
 		return segmentResult;
 	}
 
@@ -172,5 +175,27 @@ public sealed partial class Transcript : Entity<TranscriptId>
 		segment.SetSequence(newSequence);
 		UpdatedAt = DateTimeOffset.UtcNow;
 		return Result.Success();
+	}
+
+	public Result<TranscriptSpeaker.TranscriptSpeaker> AddSpeaker(
+	string label)
+	{
+		var existingSpeaker = _transcriptSpeakers
+			.FirstOrDefault(x => x.Label == label);
+
+		if (existingSpeaker is not null)
+			return Result.Success(existingSpeaker);
+
+		var result = TranscriptSpeaker.TranscriptSpeaker.Create(
+			Id,
+			speakerId: null,
+			label);
+
+		if (result.IsFailure)
+			return result;
+
+		_transcriptSpeakers.Add(result.Value);
+
+		return result;
 	}
 }

@@ -16,13 +16,12 @@ using Rakushu.Domain.Entities.Knowledge.JapanesePartOfSpeech;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeCollection;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeUnitElement;
 using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
 using Rakushu.Domain.Entities.Material.Bunsetsu;
-using Rakushu.Domain.Entities.Material.Bunsetsu.BunsetsuDependencyRelationship;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Subtitle;
-using Rakushu.Domain.Entities.Material.Subtitle.SubtitleSegment;
 using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptItem;
@@ -30,9 +29,7 @@ using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Material.Video.MediaAsset;
-using Rakushu.Domain.Entities.NotReviewedYet.CuratorReview;
-using Rakushu.Domain.Entities.NotReviewedYet.DictionaryEntry;
-using Rakushu.Domain.Entities.NotReviewedYet.OovCandidate;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Subscriptions.Entitlement;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
@@ -40,6 +37,7 @@ using Rakushu.Domain.Entities.Subscriptions.Plan;
 using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using Rakushu.Domain.Entities.Subscriptions.Subscription.SubscriptionUsage;
 using Rakushu.Domain.Entities.Subscriptions.Transaction;
+using Rakushu.Persistence.Configurations.Knowledge;
 
 namespace Rakushu.Persistence;
 
@@ -72,17 +70,16 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<DependencyRelationship> DependencyRelationships => Set<DependencyRelationship>();
 	public DbSet<JapanesePartOfSpeech> JapanesePartOfSpeeches => Set<JapanesePartOfSpeech>();
 	public DbSet<ProficiencyLevel> ProficiencyLevels => Set<ProficiencyLevel>();
+	public DbSet<KnowledgeEmbedding> KnowledgeEmbeddings => Set<KnowledgeEmbedding>();
+	public DbSet<KnowledgeUnitElement> KnowledgeUnitElements => Set<KnowledgeUnitElement>();
 
-	
 
 	// Material
 	public DbSet<Bunsetsu> Bunsetsu => Set<Bunsetsu>();
-	public DbSet<BunsetsuDependencyRelationship> BunsetsuDependencyRelationships => Set<BunsetsuDependencyRelationship>();
 	public DbSet<LearningUnit> LearningUnits => Set<LearningUnit>();
 	public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
 	public DbSet<Series> Series => Set<Series>();
 	public DbSet<Subtitle> Subtitles => Set<Subtitle>();
-	public DbSet<SubtitleSegment> SubtitleSegments => Set<SubtitleSegment>();
 	public DbSet<Token> Tokens => Set<Token>();
 	public DbSet<Transcript> Transcripts => Set<Transcript>();
 	public DbSet<TranscriptItem> TranscriptItems => Set<TranscriptItem>();
@@ -99,10 +96,8 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();
 	public DbSet<Transaction> Transactions => Set<Transaction>();
 
-	// NotReviewedYet
-	public DbSet<OovCandidate> OovCandidates => Set<OovCandidate>();
-	public DbSet<CuratorReview> CuratorReviews => Set<CuratorReview>();
-	public DbSet<DictionaryEntry> DictionaryEntries => Set<DictionaryEntry>();
+	// Shadowing
+	public DbSet<Speaker> Speakers => Set<Speaker>();
 
 
 

@@ -86,8 +86,7 @@ internal sealed class VideoConfiguration : IEntityTypeConfiguration<Video>
 		builder.Property(v => v.LearnerId)
 			.HasConversion(
 				id => id.Value,
-				value => UserId.From(value))
-			.IsRequired();
+				value => UserId.From(value));
 		builder.HasOne(v => v.Learner)
 			.WithMany(u => u.Videos)
 			.HasForeignKey(v => v.LearnerId)

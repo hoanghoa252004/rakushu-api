@@ -11,6 +11,7 @@ public sealed class SeriesRepository : BaseRepository<Series, SeriesId>, ISeries
 	{
 		return await _context.Series
 			.Include(s => s.Videos)
+			.Include(s => s.User) 
 			.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 	}
 
@@ -18,6 +19,7 @@ public sealed class SeriesRepository : BaseRepository<Series, SeriesId>, ISeries
 	{
 		return await _context.Series
 			.Include(s => s.Videos)
+			.Include(s => s.User)
 			.FirstOrDefaultAsync(s => s.Slug == slug, cancellationToken);
 	}
 
@@ -25,6 +27,7 @@ public sealed class SeriesRepository : BaseRepository<Series, SeriesId>, ISeries
 	{
 		return await _context.Series
 			.Include(s => s.Videos)
+			.Include(s => s.User)
 			.ToListAsync(cancellationToken);
 	}
 }

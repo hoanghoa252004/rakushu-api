@@ -1,5 +1,6 @@
 ﻿using Rakushu.Domain.Common;
-using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,14 +15,14 @@ public sealed class TranscriptSpeaker : Entity<TranscriptSpeakerId>
 
 	// Speaker label returned by AWS Transcribe, e.g. speaker_0
 	public string Label { get; private set; } = null!;
-
-	// Optional information identified or edited by the Curator
-	public string? Name { get; private set; }
-	public string? Description { get; private set; }
+	public SpeakerId? SpeakerId { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// Transcript
 	public Transcript Transcript { get; private set; } = null!;
+
+	// Speaker
+	public Speaker? Speaker { get; private set; }
 
 	// TranscriptSegments
 	private readonly List<TranscriptSegment.TranscriptSegment> _transcriptSegments = new();
@@ -29,4 +30,29 @@ public sealed class TranscriptSpeaker : Entity<TranscriptSpeakerId>
 
 	// CONSTRUCTORS & FACTORY METHODS
 	private TranscriptSpeaker() { }
+
+
+	private TranscriptSpeaker(
+		TranscriptSpeakerId id,
+		SpeakerId? speakerId,
+		TranscriptId transcriptId,
+		string label)
+		: base(id)
+	{
+		TranscriptId = transcriptId;
+		SpeakerId = speakerId;
+		Label = label;
+	}
+
+	public static Result<TranscriptSpeaker> Create(
+		TranscriptId transcriptId,
+		SpeakerId? speakerId,
+		string label)
+	{
+		return Result.Success(new TranscriptSpeaker(
+			TranscriptSpeakerId.Create(),
+			speakerId,
+			transcriptId,
+			label));
+	}
 }

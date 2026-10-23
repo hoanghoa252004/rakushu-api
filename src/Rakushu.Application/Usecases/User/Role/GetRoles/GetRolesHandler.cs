@@ -1,5 +1,4 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 
