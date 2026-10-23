@@ -275,7 +275,7 @@ namespace Rakushu.Persistence.Migrations
                     audio_key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    knowledge_hash = table.Column<string>(type: "text", nullable: false),
+                    knowledge_hash = table.Column<string>(type: "text", nullable: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
