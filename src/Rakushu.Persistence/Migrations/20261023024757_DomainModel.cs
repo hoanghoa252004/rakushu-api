@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Pgvector;
 
 #nullable disable
 
 namespace Rakushu.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class SpeakerAndSeries : Migration
+    public partial class DomainModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -274,6 +275,7 @@ namespace Rakushu.Persistence.Migrations
                     audio_key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     source_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    knowledge_hash = table.Column<string>(type: "text", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
@@ -330,6 +332,7 @@ namespace Rakushu.Persistence.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     sort_order = table.Column<int>(type: "integer", nullable: false),
                     meaning = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    japanese_meaning = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
                     knowledge_unit_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -338,6 +341,49 @@ namespace Rakushu.Persistence.Migrations
                     table.PrimaryKey("pk_knowledge_meanings", x => x.id);
                     table.ForeignKey(
                         name: "fk_knowledge_meanings_knowledge_units_knowledge_unit_id",
+                        column: x => x.knowledge_unit_id,
+                        principalSchema: "knowledge",
+                        principalTable: "knowledge_units",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "knowledge_unit_elements",
+                schema: "knowledge",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    sequence = table.Column<int>(type: "integer", nullable: false),
+                    knowledge_unit_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    surface = table.Column<string>(type: "text", nullable: false),
+                    lemma = table.Column<string>(type: "text", nullable: false),
+                    reading = table.Column<string>(type: "text", nullable: false),
+                    head_sequence = table.Column<int>(type: "integer", nullable: false),
+                    start_index = table.Column<int>(type: "integer", nullable: false),
+                    end_index = table.Column<int>(type: "integer", nullable: false),
+                    japanese_part_of_speech_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    dependency_relationship_id = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_knowledge_unit_elements", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_knowledge_unit_elements_dependency_relationships_dependency",
+                        column: x => x.dependency_relationship_id,
+                        principalSchema: "knowledge",
+                        principalTable: "dependency_relationships",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_knowledge_unit_elements_japanese_part_of_speeches_japanese_",
+                        column: x => x.japanese_part_of_speech_id,
+                        principalSchema: "knowledge",
+                        principalTable: "japanese_part_of_speeches",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_knowledge_unit_elements_knowledge_units_knowledge_unit_id",
                         column: x => x.knowledge_unit_id,
                         principalSchema: "knowledge",
                         principalTable: "knowledge_units",
@@ -489,6 +535,33 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "knowledge_embeddings",
+                schema: "knowledge",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+                    knowledge_meaning_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    embedding_text = table.Column<string>(type: "text", nullable: false),
+                    content_hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    dimensions = table.Column<int>(type: "integer", nullable: false, defaultValue: 1024),
+                    embedding = table.Column<Vector>(type: "vector(1024)", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_knowledge_embeddings", x => x.id);
+                    table.CheckConstraint("ck_knowledge_embeddings_dimensions", "dimensions = 1024");
+                    table.ForeignKey(
+                        name: "fk_knowledge_embeddings_knowledge_meanings",
+                        column: x => x.knowledge_meaning_id,
+                        principalSchema: "knowledge",
+                        principalTable: "knowledge_meanings",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -699,29 +772,6 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "subtitles",
-                schema: "material",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    code = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    video_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_subtitles", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_subtitles_videos_video_id",
-                        column: x => x.video_id,
-                        principalSchema: "material",
-                        principalTable: "videos",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "transcripts",
                 schema: "material",
                 columns: table => new
@@ -755,9 +805,7 @@ namespace Rakushu.Persistence.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     transcript_id = table.Column<Guid>(type: "uuid", nullable: false),
                     label = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    speaker_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    description = table.Column<string>(type: "text", nullable: true)
+                    speaker_id = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -857,47 +905,37 @@ namespace Rakushu.Persistence.Migrations
                         principalSchema: "knowledge",
                         principalTable: "knowledge_meanings",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "fk_learning_units_transcript_segments_transcript_segment_id",
                         column: x => x.transcript_segment_id,
                         principalSchema: "material",
                         principalTable: "transcript_segments",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "subtitle_segments",
+                name: "subtitles",
                 schema: "material",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     sequence = table.Column<int>(type: "integer", nullable: false),
-                    subtitle_id = table.Column<Guid>(type: "uuid", nullable: false),
                     transcript_segment_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    original_text = table.Column<string>(type: "text", nullable: false),
-                    translated_text = table.Column<string>(type: "text", nullable: false),
-                    start_time = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    end_time = table.Column<TimeSpan>(type: "interval", nullable: false)
+                    language_code = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    text = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_subtitle_segments", x => x.id);
+                    table.PrimaryKey("pk_subtitles", x => x.id);
                     table.ForeignKey(
-                        name: "fk_subtitle_segments_subtitles_subtitle_id",
-                        column: x => x.subtitle_id,
-                        principalSchema: "material",
-                        principalTable: "subtitles",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_subtitle_segments_transcript_segments_transcript_segment_id",
+                        name: "fk_subtitles_transcript_segments_transcript_segment_id",
                         column: x => x.transcript_segment_id,
                         principalSchema: "material",
                         principalTable: "transcript_segments",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -924,44 +962,6 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "transcript_segments",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "bunsetsu_dependency_relationships",
-                schema: "material",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    from_bunsetsu_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    to_bunsetsu_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    dependency_relationship_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_bunsetsu_dependency_relationships", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_bunsetsu_dependency_relationships_bunsetsu_from_bunsetsu_id",
-                        column: x => x.from_bunsetsu_id,
-                        principalSchema: "material",
-                        principalTable: "bunsetsu",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_bunsetsu_dependency_relationships_bunsetsu_to_bunsetsu_id",
-                        column: x => x.to_bunsetsu_id,
-                        principalSchema: "material",
-                        principalTable: "bunsetsu",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_bunsetsu_dependency_relationships_dependency_relationships_",
-                        column: x => x.dependency_relationship_id,
-                        principalSchema: "knowledge",
-                        principalTable: "dependency_relationships",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1012,24 +1012,6 @@ namespace Rakushu.Persistence.Migrations
                 schema: "material",
                 table: "bunsetsu",
                 column: "transcript_segment_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_bunsetsu_dependency_relationships_dependency_relationship_id",
-                schema: "material",
-                table: "bunsetsu_dependency_relationships",
-                column: "dependency_relationship_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_bunsetsu_dependency_relationships_from_bunsetsu_id",
-                schema: "material",
-                table: "bunsetsu_dependency_relationships",
-                column: "from_bunsetsu_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_bunsetsu_dependency_relationships_to_bunsetsu_id",
-                schema: "material",
-                table: "bunsetsu_dependency_relationships",
-                column: "to_bunsetsu_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_content_categories_code",
@@ -1118,9 +1100,34 @@ namespace Rakushu.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_knowledge_embeddings_knowledge_meaning_id",
+                schema: "knowledge",
+                table: "knowledge_embeddings",
+                column: "knowledge_meaning_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_knowledge_meanings_knowledge_unit_id",
                 schema: "knowledge",
                 table: "knowledge_meanings",
+                column: "knowledge_unit_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_knowledge_unit_elements_dependency_relationship_id",
+                schema: "knowledge",
+                table: "knowledge_unit_elements",
+                column: "dependency_relationship_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_knowledge_unit_elements_japanese_part_of_speech_id",
+                schema: "knowledge",
+                table: "knowledge_unit_elements",
+                column: "japanese_part_of_speech_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_knowledge_unit_elements_knowledge_unit_id",
+                schema: "knowledge",
+                table: "knowledge_unit_elements",
                 column: "knowledge_unit_id");
 
             migrationBuilder.CreateIndex(
@@ -1264,30 +1271,10 @@ namespace Rakushu.Persistence.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_subtitle_segments_subtitle_id",
+                name: "ix_subtitles_transcript_segment_id",
                 schema: "material",
-                table: "subtitle_segments",
-                column: "subtitle_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_subtitle_segments_transcript_segment_id",
-                schema: "material",
-                table: "subtitle_segments",
+                table: "subtitles",
                 column: "transcript_segment_id",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_subtitles_code",
-                schema: "material",
-                table: "subtitles",
-                column: "code",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ix_subtitles_video_id",
-                schema: "material",
-                table: "subtitles",
-                column: "video_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1408,10 +1395,6 @@ namespace Rakushu.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "bunsetsu_dependency_relationships",
-                schema: "material");
-
-            migrationBuilder.DropTable(
                 name: "content_knowledge_collections",
                 schema: "knowledge");
 
@@ -1426,6 +1409,14 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "interests",
                 schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "knowledge_embeddings",
+                schema: "knowledge");
+
+            migrationBuilder.DropTable(
+                name: "knowledge_unit_elements",
+                schema: "knowledge");
 
             migrationBuilder.DropTable(
                 name: "learning_units",
@@ -1444,7 +1435,7 @@ namespace Rakushu.Persistence.Migrations
                 schema: "subscription");
 
             migrationBuilder.DropTable(
-                name: "subtitle_segments",
+                name: "subtitles",
                 schema: "material");
 
             migrationBuilder.DropTable(
@@ -1474,10 +1465,6 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "subscriptions",
                 schema: "subscription");
-
-            migrationBuilder.DropTable(
-                name: "subtitles",
-                schema: "material");
 
             migrationBuilder.DropTable(
                 name: "bunsetsu",
