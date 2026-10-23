@@ -8,41 +8,13 @@ public sealed class SrsCardRepository : BaseRepository<SrsCard, SrsCardId>, ISrs
 {
 	public SrsCardRepository(RakushuDbContext context) : base(context) { }
 
-	public async Task<IReadOnlyList<SrsCard>> GetDueCardsAsync(
-		UserId userId, DateTimeOffset now, CancellationToken cancellationToken = default)
-	{
-		return await QueryQuizCards(userId, now, true)
-			.AsNoTracking()
-			.OrderBy(card => card.State!.DueAt)
-			.ToListAsync(cancellationToken);
-	}
-
-	public async Task<IReadOnlyList<SrsCard>> GetDueCardsAsync(
-		UserId userId, DateTimeOffset now, int limit, CancellationToken cancellationToken = default)
-	{
-		return await QueryQuizCards(userId, now, true)
-			.AsNoTracking()
-			.OrderBy(card => card.State!.DueAt)
-			.Take(limit)
-			.ToListAsync(cancellationToken);
-	}
-
-	public async Task<IReadOnlyList<SrsCard>> GetAllActiveCardsAsync(
+	public async Task<IReadOnlyList<SrsCard>> GetCardsAsync(
 		UserId userId, CancellationToken cancellationToken = default)
 	{
 		return await QueryQuizCards(userId, DateTimeOffset.MinValue, false)
 			.AsNoTracking()
 			.OrderBy(card => card.State!.DueAt)
-			.ToListAsync(cancellationToken);
-	}
-
-	public async Task<IReadOnlyList<SrsCard>> GetQuizCardsAsync(
-		UserId userId, DateTimeOffset now, int limit, bool dueOnly, CancellationToken cancellationToken = default)
-	{
-		var query = QueryQuizCards(userId, now, dueOnly);
-		return await query
-			.OrderBy(card => card.State!.DueAt)
-			.Take(limit)
+			.ThenBy(card => card.CreatedAt)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -54,7 +26,9 @@ public sealed class SrsCardRepository : BaseRepository<SrsCard, SrsCardId>, ISrs
 		CancellationToken cancellationToken = default)
 	{
 		if (cardIds.Count == 0)
+		{
 			return Array.Empty<SrsCard>();
+		}
 
 		// Compare the mapped strongly typed ID itself so EF Core can apply its
 		// SrsCardId <-> Guid value converter when translating Contains().
@@ -83,7 +57,9 @@ public sealed class SrsCardRepository : BaseRepository<SrsCard, SrsCardId>, ISrs
 				card.Status != SrsCardStatus.Archived);
 
 		if (dueOnly)
+		{
 			query = query.Where(card => card.State!.DueAt <= now);
+		}
 
 		return query;
 	}
