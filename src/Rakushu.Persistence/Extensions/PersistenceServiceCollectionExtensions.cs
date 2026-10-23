@@ -64,7 +64,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
 		services.AddScoped<ISeriesRepository, SeriesRepository>();
 		services.AddScoped<IKnowledgeMeaningRepository, KnowledgeMeaningRepository>();
-		services.AddScoped<IKnowledgeEmbeddingRepository, KnowledgeEmbeddingRepository>();
+		//services.AddScoped<IKnowledgeEmbeddingRepository, KnowledgeEmbeddingRepository>();
 		services.AddScoped<IKnowledgeCollectionRepository, KnowledgeCollectionRepository>();
 		services.AddScoped<ITokenRepository, TokenRepository>();
 		services.AddScoped<IKnowledgeUnitRepository, KnowledgeUnitRepository>();

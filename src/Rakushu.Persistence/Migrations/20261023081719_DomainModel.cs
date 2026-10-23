@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Pgvector;
 
 #nullable disable
 
@@ -535,33 +534,6 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "knowledge_embeddings",
-                schema: "knowledge",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    knowledge_meaning_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    embedding_text = table.Column<string>(type: "text", nullable: false),
-                    content_hash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
-                    dimensions = table.Column<int>(type: "integer", nullable: false, defaultValue: 1024),
-                    embedding = table.Column<Vector>(type: "vector(1024)", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_knowledge_embeddings", x => x.id);
-                    table.CheckConstraint("ck_knowledge_embeddings_dimensions", "dimensions = 1024");
-                    table.ForeignKey(
-                        name: "fk_knowledge_embeddings_knowledge_meanings",
-                        column: x => x.knowledge_meaning_id,
-                        principalSchema: "knowledge",
-                        principalTable: "knowledge_meanings",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1100,13 +1072,6 @@ namespace Rakushu.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_knowledge_embeddings_knowledge_meaning_id",
-                schema: "knowledge",
-                table: "knowledge_embeddings",
-                column: "knowledge_meaning_id",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_knowledge_meanings_knowledge_unit_id",
                 schema: "knowledge",
                 table: "knowledge_meanings",
@@ -1409,10 +1374,6 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "interests",
                 schema: "identity");
-
-            migrationBuilder.DropTable(
-                name: "knowledge_embeddings",
-                schema: "knowledge");
 
             migrationBuilder.DropTable(
                 name: "knowledge_unit_elements",

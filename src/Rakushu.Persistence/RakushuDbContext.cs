@@ -70,7 +70,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<DependencyRelationship> DependencyRelationships => Set<DependencyRelationship>();
 	public DbSet<JapanesePartOfSpeech> JapanesePartOfSpeeches => Set<JapanesePartOfSpeech>();
 	public DbSet<ProficiencyLevel> ProficiencyLevels => Set<ProficiencyLevel>();
-	public DbSet<KnowledgeEmbedding> KnowledgeEmbeddings => Set<KnowledgeEmbedding>();
+	//public DbSet<KnowledgeEmbedding> KnowledgeEmbeddings => Set<KnowledgeEmbedding>();
 	public DbSet<KnowledgeUnitElement> KnowledgeUnitElements => Set<KnowledgeUnitElement>();
 
 

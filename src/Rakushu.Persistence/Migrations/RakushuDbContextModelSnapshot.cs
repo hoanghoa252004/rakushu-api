@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Pgvector;
 using Rakushu.Persistence;
 
 #nullable disable
@@ -1775,65 +1774,6 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("transactions", "subscription");
                 });
 
-            modelBuilder.Entity("Rakushu.Persistence.Configurations.Knowledge.KnowledgeEmbedding", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<string>("ContentHash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("content_hash");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("Dimensions")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1024)
-                        .HasColumnName("dimensions");
-
-                    b.Property<Vector>("Embedding")
-                        .IsRequired()
-                        .HasColumnType("vector(1024)")
-                        .HasColumnName("embedding");
-
-                    b.Property<string>("EmbeddingText")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("embedding_text");
-
-                    b.Property<Guid>("KnowledgeMeaningId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("knowledge_meaning_id");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.HasKey("Id")
-                        .HasName("pk_knowledge_embeddings");
-
-                    b.HasIndex("KnowledgeMeaningId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_knowledge_embeddings_knowledge_meaning_id");
-
-                    b.ToTable("knowledge_embeddings", "knowledge", t =>
-                        {
-                            t.HasCheckConstraint("ck_knowledge_embeddings_dimensions", "dimensions = 1024");
-                        });
-                });
-
             modelBuilder.Entity("Rakushu.Domain.Entities.Identity.User.EmailVerificationToken.EmailVerificationToken", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Identity.User.User", null)
@@ -2287,16 +2227,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasConstraintName("fk_transactions_payments_payment_id");
 
                     b.Navigation("Payment");
-                });
-
-            modelBuilder.Entity("Rakushu.Persistence.Configurations.Knowledge.KnowledgeEmbedding", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", null)
-                        .WithMany()
-                        .HasForeignKey("KnowledgeMeaningId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_knowledge_embeddings_knowledge_meanings");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Identity.Role.Role", b =>
