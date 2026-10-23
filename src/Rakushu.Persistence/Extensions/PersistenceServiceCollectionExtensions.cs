@@ -18,6 +18,7 @@ using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Domain.Entities.Subscriptions.Plan;
@@ -69,6 +70,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IKnowledgeUnitRepository, KnowledgeUnitRepository>();
 		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
 		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
+		services.AddScoped<ISpeakerRepository, SpeakerRepository>();
 
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

@@ -1,6 +1,8 @@
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
+using Rakushu.Application.Usecases.Material.TranscriptSegment;
 using Rakushu.Application.Usecases.Material.TranscriptSegment.CreateSegment;
 using Rakushu.Domain.Entities.Identity.Role;
 
@@ -12,17 +14,19 @@ internal sealed class CreateTranscriptSegment : IEndpoint
 	{
 		app.MapTranscriptEndpoints()
 			.MapPost("/segments", async (
-				Guid videoId,
-				CreateSegmentRequest request,
+				[FromRoute] Guid videoId,
+				[FromBody] CreateSegmentRequest request,
 				ISender sender,
 				CancellationToken cancellationToken = default) =>
 			{
 				var command = new CreateTranscriptSegmentCommand(
-					request.SpeakerId,
 					videoId,
+					request.SpeakerId,
 					request.Text,
 					request.StartTime,
 					request.EndTime,
+					request.Subtitle,
+					request.Items ?? [],
 					request.Sequence);
 
 				var result = await sender.Send(command, cancellationToken);
@@ -31,7 +35,7 @@ internal sealed class CreateTranscriptSegment : IEndpoint
 			})
 			.WithName("CreateTranscriptSegment")
 			.WithSummary("Curator")
-			.WithDescription("Creates a new transcript segment for the specified video. Automatically reorders sequences if needed.")
+			.WithDescription("Creates a new transcript segment with speaker, subtitle and transcript items. Automatically reorders sequences if needed.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
@@ -45,4 +49,6 @@ public sealed record CreateSegmentRequest(
 	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
+	SubtitleInput Subtitle,
+	List<TranscriptItemInput>? Items,
 	int? Sequence = null);

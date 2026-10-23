@@ -33,6 +33,7 @@ public static class ApplicationServiceCollectionExtentions
 			includeInternalTypes: true);
 
 		services.AddScoped<KnowledgeMatchingService>();
+		services.AddScoped<Rakushu.Application.Usecases.Material.TranscriptSegment.ISegmentNlpService, Rakushu.Application.Usecases.Material.TranscriptSegment.SegmentNlpService>();
 		services.AddScoped<LearningUnitOverlapResolver>();
 
 		services.AddScoped<IKnowledgeMatcher, WordMatcher>();

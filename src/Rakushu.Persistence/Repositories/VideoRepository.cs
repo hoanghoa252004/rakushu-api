@@ -23,6 +23,18 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 				.ThenInclude(t => t.TranscriptSegments)
 					.ThenInclude(ts => ts.Bunsetsus)
 						.ThenInclude(b => b.Tokens)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSpeakers)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(ts => ts.TranscriptItems)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(ts => ts.Subtitle)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(ts => ts.LearningUnits)
+			.AsSplitQuery()
 			.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
 	}
 

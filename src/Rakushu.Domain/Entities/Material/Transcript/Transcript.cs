@@ -178,6 +178,23 @@ public sealed partial class Transcript : Entity<TranscriptId>
 	}
 
 	public Result<TranscriptSpeaker.TranscriptSpeaker> AddSpeaker(
+	string label,
+	Shadowing.Speaker.SpeakerId speakerId)
+	{
+		var result = TranscriptSpeaker.TranscriptSpeaker.Create(
+			Id,
+			speakerId,
+			label);
+
+		if (result.IsFailure)
+			return result;
+
+		_transcriptSpeakers.Add(result.Value);
+
+		return result;
+	}
+
+	public Result<TranscriptSpeaker.TranscriptSpeaker> AddSpeaker(
 	string label)
 	{
 		var existingSpeaker = _transcriptSpeakers
