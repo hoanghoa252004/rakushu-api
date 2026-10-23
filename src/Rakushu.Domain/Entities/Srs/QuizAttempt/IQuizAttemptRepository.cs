@@ -11,9 +11,24 @@ public interface IQuizAttemptRepository : IBaseRepository<QuizAttempt, QuizAttem
 		IReadOnlyCollection<Guid> cardIds,
 		QuizAttemptId excludeAttemptId,
 		CancellationToken cancellationToken = default);
+	Task<IReadOnlyDictionary<Guid, IReadOnlyList<QuizCardFeedbackHistory>>> GetFeedbackHistoryByCardAsync(
+		UserId userId,
+		IReadOnlyCollection<Guid> cardIds,
+		QuizAttemptId excludeAttemptId,
+		int maxEntriesPerCard = 3,
+		CancellationToken cancellationToken = default);
 }
 
 public sealed record QuizCardAnswerHistory(
 	int TotalAttempts,
 	int CorrectAttempts,
 	int IncorrectAttempts);
+
+public sealed record QuizCardFeedbackHistory(
+	Guid ItemId,
+	DateTimeOffset AnsweredAt,
+	bool IsCorrect,
+	string? SelectedAnswer,
+	string? ChoicesSnapshot,
+	string CorrectAnswerSnapshot,
+	string? FeedbackSnapshot);

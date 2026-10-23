@@ -30,8 +30,8 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 
 		_httpClient.BaseAddress = new Uri(baseUri.ToString().TrimEnd('/') + "/");
 		var timeoutSeconds = int.TryParse(configuration["QuizLlm:TimeoutSeconds"], out var configuredTimeout)
-			? Math.Clamp(configuredTimeout, 5, 3600)
-			: 3600;
+			? Math.Clamp(configuredTimeout, 5, 86400)
+			: 7200;
 		_httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 	}
 
@@ -154,7 +154,8 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 				}
 
 				var questions = new List<GeneratedQuizQuestion>();
-				var seenAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);				foreach (var element in questionsElement.EnumerateArray())
+				var seenAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				foreach (var element in questionsElement.EnumerateArray())
 				{
 					if (!element.TryGetProperty("cardId", out var cardIdElement) ||
 						cardIdElement.ValueKind != JsonValueKind.String ||
@@ -216,10 +217,6 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 		throw new JsonException("Quiz question generation failed unexpectedly.");
 	}
 
-	private static bool IsCompleteAdaptiveFeedback(string? message) =>
-		!string.IsNullOrWhiteSpace(message) &&
-		message.Trim().Length <= 180;
-
 	public async Task<IReadOnlyDictionary<Guid, string>> GenerateAdaptiveFeedbackAsync(
 		IReadOnlyList<QuizFeedbackPrompt> questions,
 		CancellationToken cancellationToken = default)
@@ -231,63 +228,33 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 
 		try
 		{
-			var payload = JsonSerializer.Serialize(questions.Select(question => new
-			{
-				itemId = question.ItemId,
-				isCorrect = question.IsCorrect,
-				previousAttemptCount = question.PreviousAttemptCount,
-				previousIncorrectCount = question.PreviousIncorrectCount
-			}), JsonOptions);
+			var correctQuestions = questions.Where(q => q.IsCorrect).ToList();
+			var incorrectQuestions = questions.Where(q => !q.IsCorrect).ToList();
 
-			var prompt = $$"""
-                You give brief, personalized memory-retention feedback in Vietnamese after a quiz.
-                For each item, use ONLY isCorrect and the supplied per-card history counts. These counts describe this learner's completed prior attempts for this card; the current attempt is not included. Do not explain vocabulary, meanings, grammar, or examples, and do not repeat the answer.
-                Personalization rules:
-                - If previousAttemptCount is 0: treat this as the learner's first recorded encounter; encourage or reassure based on isCorrect.
-                - If isCorrect is true and previousIncorrectCount > 0: acknowledge that the learner got it right after earlier mistakes; encourage maintaining the progress without claiming a long-term trend.
-                - If isCorrect is true and previousIncorrectCount is 0: acknowledge successful recall; when previousAttemptCount > 0, encourage consistency.
-                - If isCorrect is false and previousIncorrectCount >= 2: gently identify that this card has been difficult repeatedly and suggest active recall or another short review.
-                - If isCorrect is false and previousIncorrectCount == 1: note that this was missed before and suggest another focused review.
-                - Otherwise, if incorrect after a prior correct attempt, encourage reviewing the card again without blaming the learner.
-                Keep each message to one short Vietnamese sentence, at most 160 characters. Never change the correctness result, infer response speed, or invent history.
-                Return JSON only with this schema:
-                {"feedback":[{"itemId":"exact input GUID","message":"one short Vietnamese sentence about memory/recall"}]}
-                Return exactly one feedback item per input item, preserve itemId, and do not include markdown formatting.
-                INPUT:
-                {{payload}}
-                """;
+			var feedback = new Dictionary<Guid, string>();
 
-			using var response = await CallForJsonAsync(prompt, "quiz_adaptive_feedback", cancellationToken);
-			if (!response.RootElement.TryGetProperty("feedback", out var feedbackElement) ||
-				feedbackElement.ValueKind != JsonValueKind.Array)
+			if (correctQuestions.Count > 0)
 			{
-				return new Dictionary<Guid, string>();
+				var correctFeedback = await GenerateFeedbackGroupAsync(correctQuestions, isCorrect: true, cancellationToken);
+				foreach (var (itemId, message) in correctFeedback)
+				{
+					feedback[itemId] = message;
+				}
 			}
 
-			var expectedItemIds = questions.Select(question => question.ItemId).ToHashSet();
-			var feedback = new Dictionary<Guid, string>();
-			foreach (var element in feedbackElement.EnumerateArray())
+			if (incorrectQuestions.Count > 0)
 			{
-				if (!element.TryGetProperty("itemId", out var idElement) ||
-					!Guid.TryParse(idElement.GetString(), out var itemId) ||
-					!expectedItemIds.Contains(itemId) ||
-					feedback.ContainsKey(itemId) ||
-					!element.TryGetProperty("message", out var messageElement) ||
-					messageElement.ValueKind != JsonValueKind.String)
+				var incorrectFeedback = await GenerateFeedbackGroupAsync(incorrectQuestions, isCorrect: false, cancellationToken);
+				foreach (var (itemId, message) in incorrectFeedback)
 				{
-					continue;
-				}
-
-				var message = messageElement.GetString()?.Trim();
-				if (IsCompleteAdaptiveFeedback(message))
-				{
-					feedback[itemId] = message!;
+					feedback[itemId] = message;
 				}
 			}
 
 			_logger.LogInformation(
-				"[QuizLLM][ParsedFeedback] Model={Model}; ParsedCount={FeedbackCount}; ItemIds={ItemIds}",
+				"[QuizLLM][ParsedFeedback] Model={Model}; TotalFeedbackCount={FeedbackCount}; ItemIds={ItemIds}",
 				_model, feedback.Count, string.Join(",", feedback.Keys));
+
 			return feedback;
 		}
 		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -296,29 +263,293 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 		}
 		catch (Exception exception)
 		{
-			_logger.LogWarning(exception, "LLM adaptive quiz feedback failed; deterministic fallback will be used.");
+			_logger.LogWarning(exception, "LLM adaptive quiz feedback failed.");
 			return new Dictionary<Guid, string>();
 		}
+	}
+
+	private static string BuildHistoryContextText(QuizFeedbackPrompt item, bool isCorrect)
+	{
+		var lastEntry = item.PreviousFeedbackHistory?.FirstOrDefault();
+
+		if (isCorrect)
+		{
+			if (lastEntry != null && !lastEntry.IsCorrect)
+			{
+				var prevWrongChoice = !string.IsNullOrWhiteSpace(lastEntry.SelectedAnswer)
+					? $" (lần trước từng chọn nhầm là '{lastEntry.SelectedAnswer}')"
+					: string.Empty;
+				return $"Lần trước bạn từng trả lời SAI từ này{prevWrongChoice}, nhưng lần này bạn đã xuất sắc khắc phục và chọn ĐÚNG!";
+			}
+
+			if (item.PreviousAttemptCount >= 2 && item.PreviousIncorrectCount == 0)
+			{
+				return $"Bạn đã trả lời ĐÚNG liên tiếp {item.PreviousAttemptCount + 1} lần qua các bài ôn tập!";
+			}
+
+			if (item.PreviousAttemptCount > 0)
+			{
+				return "Bạn tiếp tục duy trì việc ghi nhớ đúng từ này.";
+			}
+
+			return "Lần đầu tiên bạn làm bài kiểm tra với từ vựng này và đã trả lời đúng.";
+		}
+		else
+		{
+			if (lastEntry != null && lastEntry.IsCorrect)
+			{
+				return "Lần trước bạn đã nhớ và trả lời ĐÚNG từ này rồi, nhưng lần này lại bị nhầm lẫn.";
+			}
+
+			if (item.PreviousIncorrectCount >= 1)
+			{
+				return $"Bạn đã bị trả lời SAI từ này {item.PreviousIncorrectCount + 1} lần rồi!";
+			}
+
+			return "Lần đầu tiên bạn gặp câu hỏi về từ này và đã chọn nhầm.";
+		}
+	}
+
+	private async Task<Dictionary<Guid, string>> GenerateFeedbackGroupAsync(
+		IReadOnlyList<QuizFeedbackPrompt> items,
+		bool isCorrect,
+		CancellationToken cancellationToken)
+	{
+		var result = new Dictionary<Guid, string>();
+		if (items.Count == 0)
+			return result;
+
+		var itemByIndex = new Dictionary<int, Guid>();
+		var itemsPromptBuilder = new System.Text.StringBuilder();
+
+		for (int i = 0; i < items.Count; i++)
+		{
+			var index = i + 1;
+			var item = items[i];
+			itemByIndex[index] = item.ItemId;
+
+			itemsPromptBuilder.Append($"- Câu {index}: ");
+			if (!string.IsNullOrWhiteSpace(item.QuestionPrompt))
+			{
+				itemsPromptBuilder.Append($"Câu hỏi: \"{item.QuestionPrompt}\". ");
+			}
+			if (!string.IsNullOrWhiteSpace(item.Reading))
+			{
+				itemsPromptBuilder.Append($"Cách đọc: \"{item.Reading}\". ");
+			}
+
+			if (isCorrect)
+			{
+				if (!string.IsNullOrWhiteSpace(item.CorrectAnswer))
+				{
+					itemsPromptBuilder.Append($"Đáp án đúng đã chọn: \"{item.CorrectAnswer}\". ");
+				}
+			}
+			else
+			{
+				if (!string.IsNullOrWhiteSpace(item.SelectedAnswer))
+				{
+					itemsPromptBuilder.Append($"Học viên chọn nhầm: \"{item.SelectedAnswer}\". ");
+				}
+				if (!string.IsNullOrWhiteSpace(item.CorrectAnswer))
+				{
+					itemsPromptBuilder.Append($"Đáp án đúng là: \"{item.CorrectAnswer}\". ");
+				}
+			}
+
+			var historyText = BuildHistoryContextText(item, isCorrect);
+			itemsPromptBuilder.Append($"Lịch sử học tập: {historyText}");
+			itemsPromptBuilder.AppendLine();
+		}
+
+		var jsonTemplateBuilder = new System.Text.StringBuilder();
+		for (int i = 0; i < items.Count; i++)
+		{
+			var idx = i + 1;
+			jsonTemplateBuilder.Append($"    {{ \"index\": {idx}, \"message\": \"...\" }}");
+			if (i < items.Count - 1)
+				jsonTemplateBuilder.Append(",");
+			jsonTemplateBuilder.AppendLine();
+		}
+
+		string systemPrompt = "Bạn là gia sư AI tiếng Nhật Rakushu. Bạn luôn xưng hô là 'Bạn', đưa ra nhận xét cá nhân hóa (Adaptive Feedback) dựa trên lịch sử học tập và trả về JSON hợp lệ.";
+		string prompt;
+
+		if (isCorrect)
+		{
+			prompt = $$"""
+				Dưới đây là các câu hỏi kiểm tra từ vựng tiếng Nhật học viên vừa trả lời ĐÚNG, kèm theo lịch sử học tập SRS:
+				{{itemsPromptBuilder}}
+
+				YÊU CẦU ADAPTIVE FEEDBACK:
+				Viết 1 câu nhận xét ngắn bằng tiếng Việt tự nhiên và cá nhân hóa cho TỪNG câu:
+				- Hãy tự dùng vốn từ phong phú, sinh động của bạn, tuyệt đối KHÔNG sao chép nguyên văn các câu chữ hướng dẫn này.
+				- Nếu từng làm sai nay làm đúng: bày tỏ vui mừng hoặc khen ngợi sự tiến bộ vượt bậc khi đã khắc phục được lỗi sai.
+				- Nếu đúng liên tiếp: khen ngợi khả năng ghi nhớ vững vàng, phong độ ổn định.
+				- Nếu là lần đầu: động viên khởi đầu tốt.
+				- Xưng hô thân thiện là 'Bạn'.
+				- BẮT BUỘC trả về đủ tất cả {{items.Count}} câu trong mảng feedback (từ index 1 đến index {{items.Count}}).
+
+				Chỉ trả về JSON hợp lệ có cấu trúc:
+				{
+				  "feedback": [
+				{{jsonTemplateBuilder}}
+				  ]
+				}
+				""";
+		}
+		else
+		{
+			prompt = $$"""
+				Dưới đây là các câu hỏi kiểm tra từ vựng tiếng Nhật học viên vừa trả lời SAI, kèm theo lịch sử học tập SRS:
+				{{itemsPromptBuilder}}
+
+				YÊU CẦU ADAPTIVE FEEDBACK:
+				Viết 1 câu nhận xét ngắn bằng tiếng Việt tự nhiên nhắc học viên ôn lại từ và chú ý đáp án đúng (TUYỆT ĐỐI không khen ngợi vì học viên đã trả lời sai):
+				- Hãy tự dùng vốn từ phong phú, sinh động của bạn, tuyệt đối KHÔNG sao chép nguyên văn các câu chữ hướng dẫn này.
+				- Nếu từng nhớ đúng nay lại chọn nhầm: tiếc nuối nhẹ và khuyên củng cố lại để không bị rơi rụng trí nhớ.
+				- Nếu sai nhiều lần liên tiếp: khuyên học viên chú ý đặc biệt, nên ghi chú lại hoặc đặt câu ví dụ để khắc sâu.
+				- Nếu là lần đầu làm sai: chỉ ra đáp án đúng và nhắc ôn tập nhẹ nhàng.
+				- Xưng hô thân thiện là 'Bạn'.
+				- BẮT BUỘC trả về đủ tất cả {{items.Count}} câu trong mảng feedback (từ index 1 đến index {{items.Count}}).
+
+				Chỉ trả về JSON hợp lệ có cấu trúc:
+				{
+				  "feedback": [
+				{{jsonTemplateBuilder}}
+				  ]
+				}
+				""";
+		}
+
+		try
+		{
+			using var response = await CallForJsonAsync(
+				prompt,
+				isCorrect ? "quiz_feedback_correct" : "quiz_feedback_incorrect",
+				cancellationToken,
+				systemPrompt);
+
+			JsonElement feedbackElement;
+			if (response.RootElement.ValueKind == JsonValueKind.Array)
+			{
+				feedbackElement = response.RootElement;
+			}
+			else if (response.RootElement.TryGetProperty("feedback", out var array) && array.ValueKind == JsonValueKind.Array)
+			{
+				feedbackElement = array;
+			}
+			else
+			{
+				_logger.LogWarning("[QuizLLM] Could not find feedback array in LLM response for group isCorrect={IsCorrect}.", isCorrect);
+				return result;
+			}
+
+			int arrayIndex = 0;
+			foreach (var element in feedbackElement.EnumerateArray())
+			{
+				int? targetIndex = null;
+				if (element.TryGetProperty("index", out var indexElement))
+				{
+					if (indexElement.ValueKind == JsonValueKind.Number && indexElement.TryGetInt32(out var idx))
+					{
+						targetIndex = idx;
+					}
+					else if (indexElement.ValueKind == JsonValueKind.String && int.TryParse(indexElement.GetString(), out var parsedIdx))
+					{
+						targetIndex = parsedIdx;
+					}
+				}
+				else if (element.TryGetProperty("id", out var idElement))
+				{
+					var idStr = idElement.GetString()?.Trim();
+					if (idStr != null && int.TryParse(idStr, out var parsedIdx))
+					{
+						targetIndex = parsedIdx;
+					}
+				}
+
+				if (!targetIndex.HasValue && arrayIndex < items.Count)
+				{
+					targetIndex = arrayIndex + 1;
+				}
+				arrayIndex++;
+
+				if (targetIndex.HasValue && itemByIndex.TryGetValue(targetIndex.Value, out var itemId))
+				{
+					string? message = null;
+					if (element.TryGetProperty("message", out var messageElement) &&
+						messageElement.ValueKind == JsonValueKind.String)
+					{
+						message = messageElement.GetString()?.Trim();
+					}
+					else
+					{
+						// Fallback: look for ANY string property in case of slight key malformation
+						foreach (var prop in element.EnumerateObject())
+						{
+							if (prop.Value.ValueKind == JsonValueKind.String &&
+								!string.IsNullOrWhiteSpace(prop.Value.GetString()) &&
+								!string.Equals(prop.Name, "id", StringComparison.OrdinalIgnoreCase) &&
+								!string.Equals(prop.Name, "index", StringComparison.OrdinalIgnoreCase))
+							{
+								message = prop.Value.GetString()?.Trim();
+								break;
+							}
+						}
+					}
+
+					if (!string.IsNullOrWhiteSpace(message))
+					{
+						// Sanity check: if item is incorrect, do not allow praise keywords
+						if (!isCorrect && (message.Contains("chúc mừng", StringComparison.OrdinalIgnoreCase) ||
+										   message.Contains("chính xác", StringComparison.OrdinalIgnoreCase) ||
+										   message.Contains("xuất sắc", StringComparison.OrdinalIgnoreCase) ||
+										   message.Contains("làm tốt", StringComparison.OrdinalIgnoreCase)))
+						{
+							_logger.LogWarning("[QuizLLM] Rejected praise feedback for incorrect item {ItemId}: {Message}", itemId, message);
+						}
+						else
+						{
+							result[itemId] = message;
+						}
+					}
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "[QuizLLM] Failed generating feedback for group isCorrect={IsCorrect}.", isCorrect);
+		}
+
+		return result;
 	}
 
 	private async Task<JsonDocument> CallForJsonAsync(
 		string prompt,
 		string purpose,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		string? systemPrompt = null)
 	{
 		var request = new
 		{
 			model = _model,
 			messages = new[]
 			{
-				new { role = "system", content = "You are Rakushu's quiz content engine. Return valid JSON only." },
+				new { role = "system", content = systemPrompt ?? "You are Rakushu's quiz content engine. Return valid JSON only." },
 				new { role = "user", content = prompt }
 			},
 			stream = false,
 			format = "json",
 			think = false,
 			keep_alive = "30m",
-			options = new { temperature = purpose == "quiz_question_generation" ? 0.7 : 0.2, num_predict = 4096 }
+			options = new
+			{
+				temperature = purpose == "quiz_question_generation" ? 0.7 : 0.5,
+				repeat_penalty = 1.15,
+				top_p = 0.9,
+				num_predict = 4096
+			}
 		};
 
 		using var response = await _httpClient.PostAsJsonAsync("api/chat", request, cancellationToken);
@@ -365,22 +596,34 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 		}
 
 		var contentText = content.GetString()!;
-		if (purpose == "quiz_question_generation")
+		_logger.LogInformation(
+			"[QuizLLM][RawResponse] Model={Model}; Purpose={Purpose}; FullContent={Content}",
+			_model, purpose, contentText);
+
+		var sanitizedJson = contentText.Trim();
+		if (sanitizedJson.Contains("<think>"))
 		{
-			// Question output is vocabulary content, useful at Information level for quiz-generation diagnostics.
-			_logger.LogInformation(
-				"[QuizLLM][RawResponse] Model={Model}; Purpose={Purpose}; FullContent={Content}",
-				_model, purpose, contentText);
-		}
-		else
-		{
-			// Feedback can include learner performance history, so keep its raw content at Debug level.
-			_logger.LogDebug(
-				"[QuizLLM][RawResponse] Model={Model}; Purpose={Purpose}; FullContent={Content}",
-				_model, purpose, contentText);
+			var thinkEnd = sanitizedJson.IndexOf("</think>", StringComparison.OrdinalIgnoreCase);
+			if (thinkEnd >= 0)
+			{
+				sanitizedJson = sanitizedJson[(thinkEnd + 8)..].Trim();
+			}
 		}
 
-		return JsonDocument.Parse(contentText);
+		if (sanitizedJson.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
+		{
+			sanitizedJson = sanitizedJson[7..];
+		}
+		else if (sanitizedJson.StartsWith("```", StringComparison.OrdinalIgnoreCase))
+		{
+			sanitizedJson = sanitizedJson[3..];
+		}
+
+		if (sanitizedJson.EndsWith("```", StringComparison.OrdinalIgnoreCase))
+		{
+			sanitizedJson = sanitizedJson[..^3];
+		}
+
+		return JsonDocument.Parse(sanitizedJson.Trim());
 	}
-
 }
