@@ -20,8 +20,8 @@ internal static class ServiceCollectionExtensions
 	internal static IServiceCollection AddRakushuWorkerServices(this IServiceCollection services)
 	{
 		// PAYMENT
-		//services.AddHostedService<PaymentExpirationWorker>();
-		//services.AddHostedService<TransactionExpiryWorker>();
+		services.AddHostedService<PaymentExpirationWorker>();
+		services.AddHostedService<TransactionExpiryWorker>();
 		services.AddHostedService<ImportTranscriptWorker>();
 		services.AddHostedService<NlpProcessWorker>();
 		services.AddHostedService<KnowledgeNlpProcessWorker>();
@@ -29,7 +29,7 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<TranslateTranscriptWorker>();
 
 		// SUBSCRIPTION
-		//services.AddHostedService<SubscriptionTrackingWorker>();
+		services.AddHostedService<SubscriptionTrackingWorker>();
 
 		return services;
 	}
