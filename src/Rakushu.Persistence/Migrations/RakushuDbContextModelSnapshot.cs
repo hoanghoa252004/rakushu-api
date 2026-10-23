@@ -590,7 +590,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("knowledge_collection_id");
 
                     b.Property<string>("KnowledgeHash")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("knowledge_hash");
 
