@@ -93,7 +93,8 @@ internal sealed class GetQuizAttemptResultHandler
 				correctOptionId,
 				item.IsCorrect == true,
 				feedback,
-				choices));
+				choices,
+				item.SrsCard?.State?.DueAt));
 		}
 
 		return Result.Success(new QuizAttemptResultResponse(

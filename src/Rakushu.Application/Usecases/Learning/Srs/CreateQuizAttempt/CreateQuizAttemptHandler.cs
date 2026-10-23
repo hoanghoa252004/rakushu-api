@@ -69,8 +69,7 @@ internal sealed class CreateQuizAttemptHandler
 			return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.UnsupportedQuestionFormat);
 		}
 
-		if (request.AttemptMode is not ("SrsReview" or "Practice") ||
-			request.CardIds is null ||
+		if (request.CardIds is null ||
 			request.CardIds.Count is < 2 or > 50 ||
 			request.CardIds.Any(cardId => cardId == Guid.Empty) ||
 			request.CardIds.Distinct().Count() != request.CardIds.Count)
@@ -80,7 +79,7 @@ internal sealed class CreateQuizAttemptHandler
 		}
 
 		var now = _clock.UtcNow;
-		var dueOnly = request.AttemptMode == "SrsReview";
+		const bool dueOnly = false;
 		var selectedCardIds = request.CardIds;
 		var cards = await _cardRepository.GetQuizCardsByIdsAsync(
 			userId,
@@ -139,7 +138,7 @@ internal sealed class CreateQuizAttemptHandler
 		{
 			_logger.LogError(exception,
 				"Quiz question generation failed for {CardCount} cards using format {QuestionFormat} and mode {AttemptMode}.",
-				cardDetails.Count, request.QuestionFormat, request.AttemptMode);
+				cardDetails.Count, request.QuestionFormat, "SrsReview");
 			return Result.Failure<QuizAttemptStartedResponse>(
 				QuizAttemptErrors.QuizGenerationFailed);
 		}
@@ -216,10 +215,11 @@ internal sealed class CreateQuizAttemptHandler
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			const string attemptTemplate = "MIXED_DIRECTION_MCQ";
+			const string attemptMode = "SrsReview";
 			var attemptResult = QuizAttempt.Create(
 				userId,
 				attemptTemplate,
-				request.AttemptMode,
+				attemptMode,
 				now);
 
 			if (attemptResult.IsFailure)
