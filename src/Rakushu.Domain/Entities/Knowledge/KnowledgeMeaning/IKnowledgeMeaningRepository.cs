@@ -10,6 +10,10 @@ namespace Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 
 public interface IKnowledgeMeaningRepository : IBaseRepository<KnowledgeMeaning, KnowledgeMeaningId> 
 {
+	Task<IReadOnlyList<KnowledgeMeaning>> GetByKnowledgeUnitIdAsync(
+		KnowledgeUnit.KnowledgeUnitId knowledgeUnitId,
+		CancellationToken cancellationToken = default);
+
 	Task<IReadOnlyList<KnowledgeMeaning>> GetActiveMeaningsForEmbeddingAsync(
 		int offset,
 		int batchSize,

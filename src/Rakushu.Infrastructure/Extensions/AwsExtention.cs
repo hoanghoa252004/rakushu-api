@@ -120,7 +120,10 @@ internal static class AwsExtention
 			var configuration = serviceProvider
 				.GetRequiredService<IConfiguration>();
 
-			var baseUrl = "http://localhost:8000";
+			//var baseUrl = "http://localhost:8000";
+			var baseUrl = configuration["AwsSettings:NlpBaseUrl"]
+				?? throw new InvalidOperationException(
+					"NlpService:BaseUrl is not configured.");
 
 			client.BaseAddress = new Uri(baseUrl);
 

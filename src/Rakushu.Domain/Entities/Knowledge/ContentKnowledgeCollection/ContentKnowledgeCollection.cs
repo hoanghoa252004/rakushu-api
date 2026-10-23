@@ -26,4 +26,37 @@ public class ContentKnowledgeCollection : Entity<ContentKnowledgeCollectionId>
 	// CONSTRUCTORS & FACTORY METHODS
 	private ContentKnowledgeCollection() { }
 
+	private ContentKnowledgeCollection(
+		ContentKnowledgeCollectionId id,
+		ContentCategoryId contentCategoryId,
+		KnowledgeCollectionId knowledgeCollectionId,
+		int priority) : base(id)
+	{
+		ContentCategoryId = contentCategoryId;
+		KnowledgeCollectionId = knowledgeCollectionId;
+		Priority = priority;
+		IsActive = false;
+	}
+
+	public static ContentKnowledgeCollection Create(
+		ContentCategoryId contentCategoryId,
+		KnowledgeCollectionId knowledgeCollectionId,
+		int priority)
+	{
+		return new ContentKnowledgeCollection(
+			ContentKnowledgeCollectionId.Create(),
+			contentCategoryId,
+			knowledgeCollectionId,
+			priority);
+	}
+
+	public void SetPriority(int priority)
+	{
+		Priority = priority;
+	}
+
+	public void SetActive(bool isActive)
+	{
+		IsActive = isActive;
+	}
 }

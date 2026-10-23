@@ -22,4 +22,7 @@ public sealed class AwsSettings
 
 	// Translate settings
 	public string TranslateDataAccessRoleArn { get; set; } = string.Empty;
+	// NLP settings
+	public string NlpBaseUrl { get; set; } = string.Empty;
+
 }

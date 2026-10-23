@@ -12,4 +12,5 @@ namespace Rakushu.Domain.Entities.Knowledge.KnowledgeCollection;
 
 public interface IKnowledgeCollectionRepository : IBaseRepository<KnowledgeCollection, KnowledgeCollectionId>
 {
+	Task<KnowledgeCollection?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
 }

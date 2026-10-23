@@ -48,6 +48,75 @@ public sealed class KnowledgeUnit : AggregateRoot<KnowledgeUnitId>
 	{
 	}
 
+	public static Result<KnowledgeUnit> Create(
+		KnowledgeCollectionId knowledgeCollectionId,
+		ProficiencyLevelId proficiencyLevelId,
+		KnowledgeUnitType knowledgeType,
+		string expression,
+		string reading,
+		KnowledgeUnitSourceType sourceType,
+		bool isActive,
+		DateTimeOffset now,
+		string? audioKey = null)
+	{
+		var validation = Validate(expression, reading);
+		if (validation.IsFailure)
+			return Result.Failure<KnowledgeUnit>(validation.Error);
+
+		return Result.Success(new KnowledgeUnit
+		{
+			Id = KnowledgeUnitId.Create(),
+			KnowledgeCollectionId = knowledgeCollectionId,
+			ProficiencyLevelId = proficiencyLevelId,
+			KnowledgeType = knowledgeType,
+			Expression = expression,
+			Reading = reading,
+			AudioKey = audioKey,
+			SourceType = sourceType,
+			IsActive = isActive,
+			KnowledgeHash = string.Empty,
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+	}
+
+	public Result Update(
+		KnowledgeCollectionId knowledgeCollectionId,
+		ProficiencyLevelId proficiencyLevelId,
+		KnowledgeUnitType knowledgeType,
+		string expression,
+		string reading,
+		bool isActive,
+		DateTimeOffset now,
+		string? audioKey = null)
+	{
+		var validation = Validate(expression, reading);
+		if (validation.IsFailure)
+			return validation;
+
+		KnowledgeCollectionId = knowledgeCollectionId;
+		ProficiencyLevelId = proficiencyLevelId;
+		KnowledgeType = knowledgeType;
+		Expression = expression;
+		Reading = reading;
+		AudioKey = audioKey;
+		IsActive = isActive;
+		UpdatedAt = now;
+
+		return Result.Success();
+	}
+
+	private static Result Validate(string expression, string reading)
+	{
+		if (string.IsNullOrWhiteSpace(expression) || expression.Length > 100)
+			return Result.Failure(KnowledgeUnitErrors.InvalidExpression);
+
+		if (string.IsNullOrWhiteSpace(reading) || reading.Length > 100)
+			return Result.Failure(KnowledgeUnitErrors.InvalidReading);
+
+		return Result.Success();
+	}
+
 
 	public Result<KnowledgeUnitElement.KnowledgeUnitElement> AddElement(
 		string surface,

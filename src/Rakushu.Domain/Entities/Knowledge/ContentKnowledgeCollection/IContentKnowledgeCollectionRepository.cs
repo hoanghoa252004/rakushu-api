@@ -10,6 +10,10 @@ namespace Rakushu.Domain.Entities.Knowledge.ContentKnowledgeCollection;
 
 public interface IContentKnowledgeCollectionRepository : IBaseRepository<ContentKnowledgeCollection, ContentKnowledgeCollectionId>
 {
+	Task<IReadOnlyList<ContentKnowledgeCollection>> GetByContentCategoryIdAsync(
+		ContentCategoryId contentCategoryId,
+		CancellationToken cancellationToken = default);
+
 	Task<IReadOnlyList<ContentKnowledgeCollection>>
 	GetByContentCategoryIdOrderedByPriorityAsync(
 		ContentCategoryId contentCategoryId,

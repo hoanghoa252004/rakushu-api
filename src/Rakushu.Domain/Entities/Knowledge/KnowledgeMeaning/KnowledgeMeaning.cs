@@ -1,4 +1,5 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using System;
 using System.Collections.Generic;
@@ -26,5 +27,53 @@ public sealed class KnowledgeMeaning : Entity<KnowledgeMeaningId>
 
 	private KnowledgeMeaning()
 	{
+	}
+
+	public static Result<KnowledgeMeaning> Create(
+		KnowledgeUnitId knowledgeUnitId,
+		int sortOrder,
+		string meaning,
+		string japaneseMeaning,
+		string? description = null)
+	{
+		var validation = Validate(sortOrder, meaning, japaneseMeaning);
+		if (validation.IsFailure)
+			return Result.Failure<KnowledgeMeaning>(validation.Error);
+
+		return Result.Success(new KnowledgeMeaning
+		{
+			Id = KnowledgeMeaningId.Create(),
+			KnowledgeUnitId = knowledgeUnitId,
+			SortOrder = sortOrder,
+			Meaning = meaning,
+			JapaneseMeaning = japaneseMeaning,
+			Description = description
+		});
+	}
+
+	public Result Update(int sortOrder, string meaning, string japaneseMeaning, string? description = null)
+	{
+		var validation = Validate(sortOrder, meaning, japaneseMeaning);
+		if (validation.IsFailure)
+			return validation;
+
+		SortOrder = sortOrder;
+		Meaning = meaning;
+		JapaneseMeaning = japaneseMeaning;
+		Description = description;
+
+		return Result.Success();
+	}
+
+	private static Result Validate(int sortOrder, string meaning, string japaneseMeaning)
+	{
+		if (sortOrder <= 0)
+			return Result.Failure(KnowledgeMeaningErrors.InvalidSortOrder);
+
+		if (string.IsNullOrWhiteSpace(meaning) || meaning.Length > 100
+			|| string.IsNullOrWhiteSpace(japaneseMeaning) || japaneseMeaning.Length > 100)
+			return Result.Failure(KnowledgeMeaningErrors.InvalidMeaning);
+
+		return Result.Success();
 	}
 }

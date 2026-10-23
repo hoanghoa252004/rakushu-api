@@ -16,6 +16,32 @@ public sealed class ContentKnowledgeCollectionRepository : BaseRepository<Conten
 	{
 	}
 
+	public override async Task<ContentKnowledgeCollection?> GetByIdAsync(ContentKnowledgeCollectionId id, CancellationToken cancellationToken = default)
+	{
+		return await _context.ContentKnowledgeCollections
+			.Include(x => x.ContentCategory)
+			.Include(x => x.KnowledgeCollection)
+			.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+	}
+
+	public override async Task<IEnumerable<ContentKnowledgeCollection>> GetAllAsync(CancellationToken cancellationToken = default)
+	{
+		return await _context.ContentKnowledgeCollections
+			.Include(x => x.ContentCategory)
+			.Include(x => x.KnowledgeCollection)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<ContentKnowledgeCollection>> GetByContentCategoryIdAsync(
+		ContentCategoryId contentCategoryId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ContentKnowledgeCollections
+			.Where(x => x.ContentCategoryId == contentCategoryId)
+			.OrderBy(x => x.Priority)
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<IReadOnlyList<ContentKnowledgeCollection>>
 	GetByContentCategoryIdOrderedByPriorityAsync(
 		ContentCategoryId contentCategoryId,

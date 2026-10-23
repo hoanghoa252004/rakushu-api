@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,23 @@ public sealed class KnowledgeMeaningRepository : BaseRepository<KnowledgeMeaning
 {
 	public KnowledgeMeaningRepository(RakushuDbContext context) : base(context)
 	{
+	}
+
+	public override async Task<KnowledgeMeaning?> GetByIdAsync(KnowledgeMeaningId id, CancellationToken cancellationToken = default)
+	{
+		return await _context.KnowledgeMeanings
+			.Include(m => m.LearningUnits)
+			.SingleOrDefaultAsync(m => m.Id == id, cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<KnowledgeMeaning>> GetByKnowledgeUnitIdAsync(
+		KnowledgeUnitId knowledgeUnitId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.KnowledgeMeanings
+			.Where(m => m.KnowledgeUnitId == knowledgeUnitId)
+			.OrderBy(m => m.SortOrder)
+			.ToListAsync(cancellationToken);
 	}
 
 	public async Task<IReadOnlyList<KnowledgeMeaning>>
