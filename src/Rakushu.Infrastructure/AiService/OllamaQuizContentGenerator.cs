@@ -235,12 +235,21 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 			{
 				itemId = question.ItemId,
 				isCorrect = question.IsCorrect,
-				hasPreviousAttempt = question.HasPreviousAttempt
+				previousAttemptCount = question.PreviousAttemptCount,
+				previousIncorrectCount = question.PreviousIncorrectCount
 			}), JsonOptions);
 
 			var prompt = $$"""
-                You give brief, supportive memory-retention feedback in Vietnamese after a quiz.
-                For each item, use ONLY the supplied isCorrect result and hasPreviousAttempt flag. Do not explain vocabulary, Japanese/Vietnamese meanings, grammar, or examples. Do not repeat the answer. If the answer is correct and this is the first attempt, encourage the learner's initial recall. If correct after a previous attempt, say their recall on review is good or improving without claiming unsupported trends. If incorrect on the first attempt, reassure them that review helps build memory. If incorrect after a previous attempt, gently note that the word is not firmly remembered yet and encourage more review. Keep each message to one short sentence, at most 160 characters. Never change the correctness result or invent history.
+                You give brief, personalized memory-retention feedback in Vietnamese after a quiz.
+                For each item, use ONLY isCorrect and the supplied per-card history counts. These counts describe this learner's completed prior attempts for this card; the current attempt is not included. Do not explain vocabulary, meanings, grammar, or examples, and do not repeat the answer.
+                Personalization rules:
+                - If previousAttemptCount is 0: treat this as the learner's first recorded encounter; encourage or reassure based on isCorrect.
+                - If isCorrect is true and previousIncorrectCount > 0: acknowledge that the learner got it right after earlier mistakes; encourage maintaining the progress without claiming a long-term trend.
+                - If isCorrect is true and previousIncorrectCount is 0: acknowledge successful recall; when previousAttemptCount > 0, encourage consistency.
+                - If isCorrect is false and previousIncorrectCount >= 2: gently identify that this card has been difficult repeatedly and suggest active recall or another short review.
+                - If isCorrect is false and previousIncorrectCount == 1: note that this was missed before and suggest another focused review.
+                - Otherwise, if incorrect after a prior correct attempt, encourage reviewing the card again without blaming the learner.
+                Keep each message to one short Vietnamese sentence, at most 160 characters. Never change the correctness result, infer response speed, or invent history.
                 Return JSON only with this schema:
                 {"feedback":[{"itemId":"exact input GUID","message":"one short Vietnamese sentence about memory/recall"}]}
                 Return exactly one feedback item per input item, preserve itemId, and do not include markdown formatting.

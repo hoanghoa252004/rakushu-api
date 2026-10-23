@@ -53,80 +53,6 @@ internal sealed class CreateQuizAttemptHandler
 		_clock = clock;
 	}
 
-	private static bool PromptMatchesDirection(string direction, string prompt, string expression, string meaning)
-	{
-		return direction == JapaneseToVietnamese
-			? prompt.Contains("tiếng Việt", StringComparison.OrdinalIgnoreCase) &&
-				prompt.Contains(expression, StringComparison.OrdinalIgnoreCase)
-			: prompt.Contains("tiếng Nhật", StringComparison.OrdinalIgnoreCase) &&
-				prompt.Contains(meaning, StringComparison.OrdinalIgnoreCase) &&
-				!prompt.Contains(expression, StringComparison.OrdinalIgnoreCase);
-	}
-
-	private async Task<string> ResolvePromptAsync(
-		GeneratedQuizQuestion generated,
-		QuizCardDetails detail,
-		string questionDirection,
-		string questionFormat,
-		CancellationToken cancellationToken)
-	{
-		var promptText = generated.Prompt?.Trim() ?? string.Empty;
-		var promptIsValid = promptText.Length is > 0 and <= 500 &&
-			PromptMatchesDirection(questionDirection, promptText, detail.Expression, detail.Meaning);
-
-		if (!promptIsValid)
-		{
-			_logger.LogWarning(
-				"[QuizLLM][Retry] Invalid prompt for card {CardId}; retrying generation for this card only. PromptLength={PromptLength}; Direction={QuestionDirection}",
-				detail.Card.Id.Value, promptText.Length, questionDirection);
-			try
-			{
-				var retryQuestions = await _quizContentGenerator.GenerateQuestionsAsync(
-					questionFormat,
-					new[]
-					{
-						new QuizGenerationCard(
-							detail.Card.Id.Value,
-							detail.Expression,
-							detail.Reading,
-							detail.Meaning,
-							questionDirection)
-					},
-					cancellationToken);
-				if (retryQuestions.Count == 1 && retryQuestions[0].CardId == detail.Card.Id.Value)
-				{
-					var retryPrompt = retryQuestions[0].Prompt?.Trim() ?? string.Empty;
-					if (retryPrompt.Length is > 0 and <= 500 &&
-						PromptMatchesDirection(questionDirection, retryPrompt, detail.Expression, detail.Meaning))
-						promptText = retryPrompt;
-				}
-			}
-			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-			{
-				throw;
-			}
-			catch (Exception exception)
-			{
-				_logger.LogWarning(exception,
-					"[QuizLLM][Retry] Prompt regeneration failed for card {CardId}; deterministic fallback will be used.",
-					detail.Card.Id.Value);
-			}
-
-			if (promptText.Length == 0 || promptText.Length > 500 ||
-				!PromptMatchesDirection(questionDirection, promptText, detail.Expression, detail.Meaning))
-			{
-				promptText = questionDirection == JapaneseToVietnamese
-					? $"Từ tiếng Nhật {detail.Expression} có nghĩa là gì trong tiếng Việt?"
-					: $"Từ tiếng Nhật nào có nghĩa là '{detail.Meaning.Trim()}'?";
-				_logger.LogWarning(
-					"[QuizLLM][Fallback] Using deterministic prompt for card {CardId} after targeted retry.",
-					detail.Card.Id.Value);
-			}
-		}
-
-		return promptText;
-	}
-
 	public async Task<Result<QuizAttemptStartedResponse>> Handle(
 		CreateQuizAttemptCommand request,
 		CancellationToken cancellationToken)
@@ -219,23 +145,10 @@ internal sealed class CreateQuizAttemptHandler
 		}
 
 		var expectedCardIds = cardDetails.Select(detail => detail.Card.Id.Value).ToHashSet();
-		if (generatedQuestions.Count != cardDetails.Count)
+		var validationError = QuizGenerationResultValidator.Validate(generatedQuestions, expectedCardIds);
+		if (validationError is not null)
 		{
-			_logger.LogWarning(
-				"Quiz LLM returned an unexpected question count. Expected {ExpectedCount}, actual {ActualCount}.",
-				cardDetails.Count, generatedQuestions.Count);
-			return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
-		}
-
-		if (generatedQuestions.Select(question => question.CardId).Distinct().Count() != generatedQuestions.Count)
-		{
-			_logger.LogWarning("Quiz LLM returned duplicate cardId values.");
-			return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
-		}
-
-		if (!expectedCardIds.SetEquals(generatedQuestions.Select(question => question.CardId)))
-		{
-			_logger.LogWarning("Quiz LLM returned missing or unexpected cardId values.");
+			_logger.LogWarning("Quiz LLM result validation failed: {ValidationError}", validationError);
 			return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
 		}
 
@@ -246,119 +159,58 @@ internal sealed class CreateQuizAttemptHandler
 			.ToHashSet(StringComparer.OrdinalIgnoreCase);
 		var vocabularyEntries = await _quizVocabularyQuery.GetQuizVocabularyEntriesAsync(cancellationToken);
 		var allCorrectExpressions = cardDetails.Select(detail => detail.Expression.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
-		var distractorPool = vocabularyEntries.Select(entry => entry.Meaning)
-			.Select(meaning => meaning?.Trim() ?? string.Empty)
-			.Where(meaning => !string.IsNullOrWhiteSpace(meaning) && meaning.Length <= 300)
-			.Where(meaning => !allCorrectMeanings.Contains(meaning))
-			.Distinct(StringComparer.OrdinalIgnoreCase)
-			.ToList();
+
 		var validatedQuestions = new List<(string Prompt, string? Reading, IReadOnlyList<QuizChoiceDto> Choices, string CorrectChoiceId, string QuestionType, string CorrectAnswerText)>();
 
 		foreach (var detail in cardDetails)
 		{
 			var generated = questionsByCardId[detail.Card.Id.Value];
-			var choicesText = new List<string>();
 			var questionDirection = directionsByCardId[detail.Card.Id.Value];
-			var promptText = await ResolvePromptAsync(
-				generated, detail, questionDirection, request.QuestionFormat, cancellationToken);
-			var authoritativeMeaning = detail.Meaning.Trim();
-			if (string.IsNullOrWhiteSpace(authoritativeMeaning) || authoritativeMeaning.Length > 300)
-			{
-				_logger.LogWarning("Card {CardId} has an invalid authoritative meaning for quiz generation.", detail.Card.Id.Value);
-				return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
-			}
+			var promptText = await QuizPromptResolver.ResolveAsync(
+				_quizContentGenerator,
+				_logger,
+				detail.Card.Id.Value,
+				detail.Expression,
+				detail.Reading,
+				detail.Meaning,
+				questionDirection,
+				request.QuestionFormat,
+				generated,
+				cancellationToken);
 
-			var targetMeaningEntries = vocabularyEntries
-				.Where(entry => string.Equals(entry.Meaning.Trim(), authoritativeMeaning, StringComparison.OrdinalIgnoreCase))
-				.Select(entry => entry.Expression.Trim())
-				.Distinct(StringComparer.OrdinalIgnoreCase)
-				.ToList();
-			if (questionDirection == VietnameseToJapanese && targetMeaningEntries.Count != 1)
-			{
-				// Mixed quizzes fall back to Japanese-to-Vietnamese when the meaning is ambiguous.
-				questionDirection = JapaneseToVietnamese;
-				promptText = $"Từ tiếng Nhật {detail.Expression} có nghĩa là gì trong tiếng Việt?";
-			}
-
-			// Resolve the final direction; ambiguous Mixed questions fall back to JapaneseToVietnamese
-			// when the Vietnamese meaning is ambiguous in the vocabulary database.
-			var correctAnswerText = questionDirection == JapaneseToVietnamese
-				? authoritativeMeaning
-				: detail.Expression.Trim();
-
-			var choicePool = questionDirection == JapaneseToVietnamese
-				? distractorPool
-				: vocabularyEntries
-					.Where(entry => !string.Equals(entry.Meaning.Trim(), authoritativeMeaning, StringComparison.OrdinalIgnoreCase))
-					.Where(entry => !allCorrectExpressions.Contains(entry.Expression.Trim()))
-					.Select(entry => entry.Expression.Trim())
-					.Where(expression => !string.IsNullOrWhiteSpace(expression) && expression.Length <= 100)
-					.Distinct(StringComparer.OrdinalIgnoreCase)
-					.ToList();
-
-			var distinctChoicePool = choicePool
-				.Where(choice => !string.Equals(choice, correctAnswerText, StringComparison.OrdinalIgnoreCase))
-				.Distinct(StringComparer.OrdinalIgnoreCase)
-				.ToList();
-			var choiceSource = questionDirection == JapaneseToVietnamese
-				? "BackendDatabase.KnowledgeMeaning.Meaning"
-				: "BackendDatabase.KnowledgeUnit.Expression";
-			_logger.LogInformation(
-				"[QuizChoices][Source] CardId={CardId}; Direction={Direction}; Source={Source}; CandidateCount={CandidateCount}; DistinctCount={DistinctCount}; LLMGeneratedChoices=false",
-				detail.Card.Id.Value, questionDirection, choiceSource, choicePool.Count, distinctChoicePool.Count);
-
-			var availableDistractors = distinctChoicePool
-				.OrderBy(_ => Random.Shared.Next())
-				.Take(3)
-				.ToList();
-			if (availableDistractors.Count != 3)
+			if (!QuizChoiceBuilder.TryBuild(
+				questionDirection,
+				detail.Expression,
+				detail.Meaning,
+				detail.Reading,
+				vocabularyEntries,
+				allCorrectMeanings,
+				allCorrectExpressions,
+				promptText,
+				out var builtQuestion,
+				out var failureReason) || builtQuestion is null)
 			{
 				_logger.LogWarning(
-					"[QuizChoices][InsufficientDistractors] CardId={CardId}; Direction={Direction}; Source={Source}; AvailableDistinct={DistractorCount}; Required=3. No LLM retry because choices are backend-owned database data.",
-					detail.Card.Id.Value, questionDirection, choiceSource, availableDistractors.Count);
-				return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
-			}
-
-			choicesText = availableDistractors;
-			choicesText.Add(correctAnswerText);
-			for (var shuffleIndex = choicesText.Count - 1; shuffleIndex > 0; shuffleIndex--)
-			{
-				var swapIndex = Random.Shared.Next(shuffleIndex + 1);
-				(choicesText[shuffleIndex], choicesText[swapIndex]) = (choicesText[swapIndex], choicesText[shuffleIndex]);
-			}
-			var correctChoiceIndexes = choicesText
-				.Select((choice, choiceIndex) => new { choice, choiceIndex })
-				.Where(choice => string.Equals(
-					choice.choice,
-					correctAnswerText,
-					StringComparison.OrdinalIgnoreCase))
-				.Select(choice => choice.choiceIndex)
-				.ToList();
-
-			if (correctChoiceIndexes.Count != 1)
-			{
-				_logger.LogWarning(
-					"Quiz authoritative-meaning validation failed for card {CardId}. Exact matches found: {MatchCount}.",
-					detail.Card.Id.Value, correctChoiceIndexes.Count);
+					"Quiz choice construction failed for card {CardId}: {FailureReason}",
+					detail.Card.Id.Value, failureReason);
 				return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
 			}
 
 			_logger.LogInformation(
-				"[QuizChoices][Selected] CardId={CardId}; Direction={Direction}; Source={Source}; Options={Options}; CorrectAnswerIncluded={CorrectAnswerIncluded}",
-				detail.Card.Id.Value, questionDirection, choiceSource, string.Join(" | ", choicesText),
-				choicesText.Count(choice => string.Equals(choice, correctAnswerText, StringComparison.OrdinalIgnoreCase)) == 1);
-			var choices = choicesText
-				.Select((text, choiceIndex) =>
-					new QuizChoiceDto(((char)('A' + choiceIndex)).ToString(), text))
-				.ToList();
+				"[QuizChoices][Selected] CardId={CardId}; Direction={Direction}; Options={Options}; CorrectAnswerIncluded={CorrectAnswerIncluded}",
+				detail.Card.Id.Value,
+				builtQuestion.Direction,
+				string.Join(" | ", builtQuestion.Choices.Select(choice => choice.Text)),
+				builtQuestion.Choices.Count(choice => string.Equals(
+					choice.Text, builtQuestion.CorrectAnswerText, StringComparison.OrdinalIgnoreCase)) == 1);
 
 			validatedQuestions.Add((
-				promptText,
-				questionDirection == JapaneseToVietnamese ? detail.Reading : null,
-				choices,
-				choices[correctChoiceIndexes[0]].Id,
-				questionDirection == JapaneseToVietnamese ? JapaneseToVietnameseQuestionType : VietnameseToJapaneseQuestionType,
-				correctAnswerText));
+				builtQuestion.Prompt,
+				builtQuestion.Direction == JapaneseToVietnamese ? detail.Reading : null,
+				builtQuestion.Choices,
+				builtQuestion.CorrectChoiceId,
+				builtQuestion.QuestionType,
+				builtQuestion.CorrectAnswerText));
 		}
 
 		return await _unitOfWork.ExecuteAsync(async () =>

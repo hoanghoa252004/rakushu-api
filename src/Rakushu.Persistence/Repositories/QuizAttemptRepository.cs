@@ -23,17 +23,17 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 			.FirstOrDefaultAsync(attempt => attempt.Id == attemptId && attempt.UserId == userId, cancellationToken);
 	}
 
-	public async Task<IReadOnlySet<Guid>> GetCardsWithPreviousAnswersAsync(
+	public async Task<IReadOnlyDictionary<Guid, QuizCardAnswerHistory>> GetAnswerHistoryByCardAsync(
 		UserId userId,
 		IReadOnlyCollection<Guid> cardIds,
 		QuizAttemptId excludeAttemptId,
 		CancellationToken cancellationToken = default)
 	{
 		if (cardIds.Count == 0)
-			return new HashSet<Guid>();
+			return new Dictionary<Guid, QuizCardAnswerHistory>();
 
 		var typedCardIds = cardIds.Distinct().Select(SrsCardId.From).ToArray();
-		var cardsWithPreviousAnswers = await _context.QuizAttemptItems
+		var history = await _context.QuizAttemptItems
 			.AsNoTracking()
 			.Where(item =>
 				typedCardIds.Contains(item.SrsCardId) &&
@@ -44,10 +44,18 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 				item.QuizAttempt.SourceAttemptId == null &&
 				item.AnsweredAt != null &&
 				item.IsCorrect != null)
-			.Select(item => item.SrsCardId)
-			.Distinct()
+			.GroupBy(item => item.SrsCardId.Value)
+			.Select(group => new
+			{
+				CardId = group.Key,
+				TotalAttempts = group.Count(),
+				CorrectAttempts = group.Count(item => item.IsCorrect == true),
+				IncorrectAttempts = group.Count(item => item.IsCorrect == false)
+			})
 			.ToListAsync(cancellationToken);
 
-		return cardsWithPreviousAnswers.Select(cardId => cardId.Value).ToHashSet();
+		return history.ToDictionary(
+			item => item.CardId,
+			item => new QuizCardAnswerHistory(item.TotalAttempts, item.CorrectAttempts, item.IncorrectAttempts));
 	}
 }

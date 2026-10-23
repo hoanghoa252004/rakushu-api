@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Behaviors;
+using Rakushu.Application.Usecases.Learning.Srs.SubmitQuizAttempt;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,8 @@ public static class ApplicationServiceCollectionExtentions
 
 		services.AddValidatorsFromAssembly(assembly,
 			includeInternalTypes: true);
+
+		services.AddScoped<IQuizAttemptFeedbackService, QuizAttemptFeedbackService>();
 
 		return services;
 	}
