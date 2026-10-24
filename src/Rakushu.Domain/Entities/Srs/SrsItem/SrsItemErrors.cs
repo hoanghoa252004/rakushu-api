@@ -7,6 +7,8 @@ namespace Rakushu.Domain.Entities.Srs;
 /// </summary>
 public static class SrsItemErrors
 {
+	public static readonly Error NotFound = Error.NotFound("SRS.ITEM_NOT_FOUND", "The SRS item was not found.");
+	public static readonly Error InvalidStatus = Error.Validation("SRS.INVALID_STATUS", "The provided status filter is invalid.");
 	public static readonly Error InvalidUserId = Error.Validation("SRS.INVALID_USER_ID", "A valid user ID is required.");
 	public static readonly Error InvalidKnowledgeMeaningId = Error.Validation("SRS.INVALID_KNOWLEDGE_MEANING_ID", "A valid knowledge meaning ID is required.");
 	public static readonly Error InvalidExpression = Error.Validation("SRS.INVALID_EXPRESSION", "A valid expression is required.");

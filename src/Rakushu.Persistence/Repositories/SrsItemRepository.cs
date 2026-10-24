@@ -8,14 +8,40 @@ public sealed class SrsItemRepository : BaseRepository<SrsItem, SrsItemId>, ISrs
 {
 	public SrsItemRepository(RakushuDbContext context) : base(context) { }
 
-	public async Task<IReadOnlyList<SrsItem>> GetItemsAsync(
+	public Task<SrsItem?> GetByIdForUserAsync(
+		SrsItemId itemId, UserId userId, CancellationToken cancellationToken = default)
+	{
+		return _context.SrsItems
+			.FirstOrDefaultAsync(item => item.Id == itemId && item.UserId == userId, cancellationToken);
+	}
+
+	public Task<IReadOnlyList<SrsItem>> GetItemsAsync(
 		UserId userId, CancellationToken cancellationToken = default)
 	{
-		return await QueryQuizItems(userId, DateTimeOffset.MinValue, false)
+		return GetItemsAsync(userId, SrsItemFilter.Active, cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<SrsItem>> GetItemsAsync(
+		UserId userId, SrsItemFilter filter, CancellationToken cancellationToken = default)
+	{
+		IQueryable<SrsItem> query = _context.SrsItems
 			.AsNoTracking()
-			.OrderBy(item => item.DueAt)
-			.ThenBy(item => item.CreatedAt)
-			.ToListAsync(cancellationToken);
+			.Where(item => item.UserId == userId);
+
+		query = filter switch
+		{
+			SrsItemFilter.Suspended => query.Where(item => item.Status == SrsItemStatus.Suspended).OrderByDescending(item => item.UpdatedAt),
+			SrsItemFilter.Learning => query.Where(item => item.Status == SrsItemStatus.Learning).OrderBy(item => item.DueAt).ThenBy(item => item.CreatedAt),
+			SrsItemFilter.Review => query.Where(item => item.Status == SrsItemStatus.Review).OrderBy(item => item.DueAt).ThenBy(item => item.CreatedAt),
+			SrsItemFilter.Ignored => query.Where(item => item.Status == SrsItemStatus.Ignored).OrderByDescending(item => item.UpdatedAt),
+			_ => query.Where(item =>
+				item.Status != SrsItemStatus.Suspended &&
+				item.Status != SrsItemStatus.Ignored)
+				.OrderBy(item => item.DueAt)
+				.ThenBy(item => item.CreatedAt)
+		};
+
+		return await query.ToListAsync(cancellationToken);
 	}
 
 	public async Task<IReadOnlyList<SrsItem>> GetQuizItemsByIdsAsync(
@@ -37,6 +63,13 @@ public sealed class SrsItemRepository : BaseRepository<SrsItem, SrsItemId>, ISrs
 		return await query
 			.AsNoTracking()
 			.ToListAsync(cancellationToken);
+	}
+
+	public Task<bool> HasQuizHistoryAsync(
+		SrsItemId itemId, CancellationToken cancellationToken = default)
+	{
+		return _context.QuizAttemptItems
+			.AnyAsync(q => q.SrsItemId == itemId, cancellationToken);
 	}
 
 	private IQueryable<SrsItem> QueryQuizItems(UserId userId, DateTimeOffset now, bool dueOnly)

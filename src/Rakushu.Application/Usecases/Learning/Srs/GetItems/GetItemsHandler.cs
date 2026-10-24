@@ -36,10 +36,20 @@ internal sealed class GetItemsHandler
 				UserErrors.UnauthorizedResourceAccess);
 		}
 
-		// 2. Fetch Active Items for User
-		var items = await _repository.GetItemsAsync(userId, cancellationToken);
+		// 2. Parse & Validate Status Filter
+		var filter = SrsItemFilter.Active;
+		if (!string.IsNullOrWhiteSpace(request.Status))
+		{
+			if (!Enum.TryParse<SrsItemFilter>(request.Status, ignoreCase: true, out filter))
+			{
+				return Result.Failure<IReadOnlyList<SrsItemDto>>(SrsItemErrors.InvalidStatus);
+			}
+		}
 
-		// 3. Return DTOs
+		// 3. Fetch Items for User
+		var items = await _repository.GetItemsAsync(userId, filter, cancellationToken);
+
+		// 4. Return DTOs
 		return Result.Success<IReadOnlyList<SrsItemDto>>(
 			items.Select(SrsItemDto.FromEntity).ToList());
 	}

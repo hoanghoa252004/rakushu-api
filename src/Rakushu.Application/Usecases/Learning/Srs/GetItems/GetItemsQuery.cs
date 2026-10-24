@@ -4,4 +4,4 @@ using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.GetItems;
 
-public sealed record GetItemsQuery : IRequest<Result<IReadOnlyList<SrsItemDto>>>;
+public sealed record GetItemsQuery(string? Status = null) : IRequest<Result<IReadOnlyList<SrsItemDto>>>;
