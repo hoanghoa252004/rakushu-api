@@ -15,6 +15,7 @@ internal sealed class QuizAttemptConfiguration : IEntityTypeConfiguration<QuizAt
 			table.HasCheckConstraint("ck_quiz_attempts_counts", "total_items >= 0 AND answered_items >= 0 AND correct_items >= 0 AND correct_items <= answered_items AND answered_items <= total_items");
 			table.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");
 			table.HasCheckConstraint("ck_quiz_attempts_status", "status IN ('Created', 'InProgress', 'Completed', 'Abandoned')");
+			table.HasCheckConstraint("ck_quiz_attempts_mode", "mode IN ('SrsReview', 'PracticeAll', 'PracticeMistakes')");
 			table.HasCheckConstraint("ck_quiz_attempts_completed_at", "status <> 'Completed' OR completed_at IS NOT NULL");
 		});
 
@@ -38,6 +39,13 @@ internal sealed class QuizAttemptConfiguration : IEntityTypeConfiguration<QuizAt
 			.HasConversion(status => status.ToString(), value => Enum.Parse<QuizAttemptStatus>(value))
 			.HasMaxLength(20)
 			.HasDefaultValue(QuizAttemptStatus.InProgress)
+			.IsRequired();
+
+		// Mode
+		builder.Property(attempt => attempt.Mode)
+			.HasConversion(mode => mode.ToString(), value => Enum.Parse<QuizAttemptMode>(value))
+			.HasMaxLength(30)
+			.HasDefaultValue(QuizAttemptMode.SrsReview)
 			.IsRequired();
 
 		// Score & Counts

@@ -10,6 +10,7 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 	public UserId UserId { get; private set; } = null!;
 	public QuizId QuizId { get; private set; } = null!;
 	public QuizAttemptStatus Status { get; private set; } = QuizAttemptStatus.InProgress;
+	public QuizAttemptMode Mode { get; private set; } = QuizAttemptMode.SrsReview;
 	public int TotalItems { get; private set; }
 	public int AnsweredItems { get; private set; }
 	public int CorrectItems { get; private set; }
@@ -30,7 +31,11 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 	private QuizAttempt() { }
 	private QuizAttempt(QuizAttemptId id) : base(id) { }
 
-	public static Result<QuizAttempt> Create(UserId userId, QuizId quizId, DateTimeOffset now)
+	public static Result<QuizAttempt> Create(
+		UserId userId,
+		QuizId quizId,
+		DateTimeOffset now,
+		QuizAttemptMode mode = QuizAttemptMode.SrsReview)
 	{
 		if (userId is null)
 			return Result.Failure<QuizAttempt>(QuizAttemptErrors.InvalidUserId);
@@ -41,6 +46,7 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		{
 			UserId = userId,
 			QuizId = quizId,
+			Mode = mode,
 			Status = QuizAttemptStatus.InProgress,
 			StartedAt = now,
 			CreatedAt = now,

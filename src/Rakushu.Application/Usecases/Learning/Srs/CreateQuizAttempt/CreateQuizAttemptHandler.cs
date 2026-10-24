@@ -248,7 +248,7 @@ internal sealed class CreateQuizAttemptHandler
 			return Result.Success(new QuizAttemptStartedResponse(
 				attempt.Id.Value,
 				attempt.Status.ToString(),
-				"SrsReview",
+				attempt.Mode.ToString(),
 				attempt.StartedAt,
 				responseQuestions));
 		}, cancellationToken);

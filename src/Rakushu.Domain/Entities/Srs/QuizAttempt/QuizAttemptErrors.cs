@@ -29,4 +29,6 @@ public static class QuizAttemptErrors
 	public static readonly Error InvalidQuestionPosition = Error.Validation("SRS.INVALID_QUESTION_POSITION", "Position must be greater than 0.");
 	public static readonly Error InvalidQuizPrompt = Error.Validation("SRS.INVALID_QUIZ_PROMPT", "A question prompt is required.");
 	public static readonly Error InvalidCorrectOptionId = Error.Validation("SRS.INVALID_CORRECT_OPTION_ID", "A correct option ID is required.");
+	public static readonly Error NoMistakesToRetry = Error.Validation("SRS.NO_MISTAKES_TO_RETRY", "There are no incorrect answers in this attempt to retry.");
+	public static readonly Error InvalidRetryMode = Error.Validation("SRS.INVALID_RETRY_MODE", "Invalid retry mode. Supported modes are 'All' and 'MistakesOnly'.");
 }

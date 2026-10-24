@@ -35,10 +35,14 @@ internal static class QuizAttemptResultBuilder
 				elapsedMs,
 				!string.IsNullOrWhiteSpace(item.SelectedOptionId));
 
-			var reviewResult = srsItem.RecordReview(quality, now);
-			if (reviewResult.IsFailure)
+			// Only update SM-2 schedule during official SRS Review mode
+			if (attempt.Mode == QuizAttemptMode.SrsReview)
 			{
-				return Result.Failure<QuizAttemptResultResponse>(reviewResult.Error);
+				var reviewResult = srsItem.RecordReview(quality, now);
+				if (reviewResult.IsFailure)
+				{
+					return Result.Failure<QuizAttemptResultResponse>(reviewResult.Error);
+				}
 			}
 
 			var feedback = item.Feedback ?? (isCorrect
@@ -66,6 +70,7 @@ internal static class QuizAttemptResultBuilder
 			attempt.TotalItems,
 			attempt.CorrectItems,
 			attempt.CompletedAt!.Value,
-			questionResults));
+			questionResults,
+			attempt.Mode.ToString()));
 	}
 }

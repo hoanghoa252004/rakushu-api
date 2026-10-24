@@ -37,4 +37,5 @@ public sealed record QuizAttemptResultResponse(
 	int TotalQuestions,
 	int CorrectAnswers,
 	DateTimeOffset CompletedAt,
-	IReadOnlyList<QuizQuestionResultDto> Results);
+	IReadOnlyList<QuizQuestionResultDto> Results,
+	string AttemptMode = "SrsReview");

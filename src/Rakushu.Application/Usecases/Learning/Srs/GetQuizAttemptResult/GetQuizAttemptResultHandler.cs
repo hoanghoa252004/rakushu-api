@@ -96,6 +96,7 @@ internal sealed class GetQuizAttemptResultHandler
 			attempt.TotalItems,
 			attempt.CorrectItems,
 			attempt.CompletedAt!.Value,
-			questionResults));
+			questionResults,
+			attempt.Mode.ToString()));
 	}
 }
