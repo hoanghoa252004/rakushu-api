@@ -5,50 +5,47 @@ namespace Rakushu.Domain.Entities.Srs;
 
 public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 {
+	// MAIN PROPERTIES----------
 	public QuizAttemptId QuizAttemptId { get; private set; } = null!;
-	public SrsCardId SrsCardId { get; private set; } = null!;
+	public QuestionId QuestionId { get; private set; } = null!;
+	public SrsItemId SrsItemId { get; private set; } = null!;
 	public int Position { get; private set; }
-	public string QuestionType { get; private set; } = "WORD_TO_MEANING_MCQ";
-	public string QuestionSnapshot { get; private set; } = "{}";
-	public string? ChoicesSnapshot { get; private set; }
-	public string CorrectAnswerSnapshot { get; private set; } = "{}";
-	public string? SelectedAnswer { get; private set; }
+	public string? SelectedOptionId { get; private set; }
 	public bool? IsCorrect { get; private set; }
-	public string? FeedbackSnapshot { get; private set; }
+	public int ElapsedMs { get; private set; }
+	public int? Quality { get; private set; }
+	public string? Feedback { get; private set; }
 	public DateTimeOffset? AnsweredAt { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
+
+	// NAVIGATION PROPERTIES----------
 	public QuizAttempt QuizAttempt { get; private set; } = null!;
-	public SrsCard SrsCard { get; private set; } = null!;
+	public Question Question { get; private set; } = null!;
+	public SrsItem SrsItem { get; private set; } = null!;
 
+	// CONSTRUCTORS & FACTORY METHODS----------
 	private QuizAttemptItem() { }
-
 	private QuizAttemptItem(QuizAttemptItemId id) : base(id) { }
 
 	public static Result<QuizAttemptItem> Create(
-		SrsCardId cardId, int position, string questionType, string questionSnapshot,
-		string correctAnswerSnapshot, DateTimeOffset createdAt, string? choicesSnapshot = null, string? feedbackSnapshot = null)
+		QuestionId questionId,
+		SrsItemId itemId,
+		int position,
+		DateTimeOffset createdAt)
 	{
-		if (cardId is null || cardId.Value == Guid.Empty || position < 1)
-			return Result.Failure<QuizAttemptItem>(QuizAttemptErrors.InvalidCardId);
-		if (string.IsNullOrWhiteSpace(questionType) || string.IsNullOrWhiteSpace(questionSnapshot) || string.IsNullOrWhiteSpace(correctAnswerSnapshot))
-			return Result.Failure<QuizAttemptItem>(QuizAttemptErrors.InvalidQuizAnswer);
+		if (questionId is null || questionId.Value == Guid.Empty)
+			return Result.Failure<QuizAttemptItem>(QuizErrors.InvalidQuestion);
+		if (itemId is null || itemId.Value == Guid.Empty || position < 1)
+			return Result.Failure<QuizAttemptItem>(QuizAttemptErrors.InvalidItemId);
 
-		var item = new QuizAttemptItem(QuizAttemptItemId.Create())
+		return Result.Success(new QuizAttemptItem(QuizAttemptItemId.Create())
 		{
-			SrsCardId = cardId,
+			QuestionId = questionId,
+			SrsItemId = itemId,
 			Position = position,
-			QuestionType = questionType,
-			QuestionSnapshot = questionSnapshot,
-			CorrectAnswerSnapshot = correctAnswerSnapshot,
-			ChoicesSnapshot = choicesSnapshot,
-			FeedbackSnapshot = feedbackSnapshot,
 			CreatedAt = createdAt
-		};
-		return Result.Success(item);
+		});
 	}
-
-	internal Result<QuizAttemptItem> CreateRetryCopy(DateTimeOffset createdAt) =>
-		Create(SrsCardId, Position, QuestionType, QuestionSnapshot, CorrectAnswerSnapshot, createdAt, ChoicesSnapshot, FeedbackSnapshot);
 
 	internal void AssignToAttempt(QuizAttemptId attemptId, int position)
 	{
@@ -58,25 +55,36 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 		Position = position;
 	}
 
-	public Result UpdateFeedbackSnapshot(string feedbackSnapshot)
-	{
-		if (string.IsNullOrWhiteSpace(feedbackSnapshot))
-			return Result.Failure(QuizAttemptErrors.InvalidQuizAnswer);
-
-		FeedbackSnapshot = feedbackSnapshot;
-		return Result.Success();
-	}
-
-	internal Result RecordAnswer(string selectedAnswer, bool isCorrect, DateTimeOffset answeredAt)
+	public Result RecordAnswer(
+		string? selectedOptionId,
+		bool isCorrect,
+		int elapsedMs,
+		int quality,
+		string? feedback,
+		DateTimeOffset answeredAt)
 	{
 		if (AnsweredAt is not null)
 			return Result.Failure(QuizAttemptErrors.QuizItemAlreadyAnswered);
 		if (answeredAt < CreatedAt)
 			return Result.Failure(QuizAttemptErrors.InvalidReviewTiming);
+		if (quality is < 0 or > 5)
+			return Result.Failure(QuizAttemptErrors.InvalidReviewTiming);
 
-		SelectedAnswer = string.IsNullOrWhiteSpace(selectedAnswer) ? null : selectedAnswer;
+		SelectedOptionId = string.IsNullOrWhiteSpace(selectedOptionId) ? null : selectedOptionId.Trim();
 		IsCorrect = isCorrect;
+		ElapsedMs = Math.Max(0, elapsedMs);
+		Quality = quality;
+		Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
 		AnsweredAt = answeredAt;
+		return Result.Success();
+	}
+
+	public Result UpdateFeedback(string feedback)
+	{
+		if (string.IsNullOrWhiteSpace(feedback))
+			return Result.Failure(QuizAttemptErrors.InvalidQuizAnswer);
+
+		Feedback = feedback.Trim();
 		return Result.Success();
 	}
 }

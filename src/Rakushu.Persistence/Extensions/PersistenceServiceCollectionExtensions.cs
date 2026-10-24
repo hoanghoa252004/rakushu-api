@@ -62,9 +62,9 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
 		services.AddScoped<ISeriesRepository, SeriesRepository>();
-		services.AddScoped<ISrsNoteRepository, SrsNoteRepository>();
+		services.AddScoped<IQuizRepository, QuizRepository>();
 		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
-		services.AddScoped<ISrsCardRepository, SrsCardRepository>();
+		services.AddScoped<ISrsItemRepository, SrsItemRepository>();
 		services.AddScoped<IQuizVocabularyQuery, QuizVocabularyQuery>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

@@ -13,7 +13,10 @@ internal sealed class GetQuizAttemptResultHandler
 {
 	private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+	// CONTEXT
 	private readonly ICurrentUserContext _currentUser;
+
+	// REPOSITORIES
 	private readonly IQuizAttemptRepository _attemptRepository;
 
 	public GetQuizAttemptResultHandler(
@@ -28,6 +31,7 @@ internal sealed class GetQuizAttemptResultHandler
 		GetQuizAttemptResultQuery request,
 		CancellationToken cancellationToken)
 	{
+		// 1. Validate User Context
 		var userId = _currentUser.UserId;
 		if (userId is null)
 		{
@@ -35,6 +39,7 @@ internal sealed class GetQuizAttemptResultHandler
 				UserErrors.UnauthorizedResourceAccess);
 		}
 
+		// 2. Fetch Quiz Attempt
 		var attempt = await _attemptRepository.GetForUserAsync(
 			QuizAttemptId.From(request.AttemptId),
 			userId,
@@ -46,55 +51,42 @@ internal sealed class GetQuizAttemptResultHandler
 				QuizAttemptErrors.QuizAttemptNotFound);
 		}
 
+		// 3. Verify Completion Status
 		if (attempt.Status != QuizAttemptStatus.Completed)
 		{
 			return Result.Failure<QuizAttemptResultResponse>(
-				QuizAttemptErrors.QuizNotInProgress);
+				QuizAttemptErrors.AttemptNotCompleted);
 		}
 
+		// 4. Map Attempt Results
 		var questionResults = new List<QuizQuestionResultDto>();
 
 		foreach (var item in attempt.Items.OrderBy(item => item.Position))
 		{
-			using var questionDocument = JsonDocument.Parse(item.QuestionSnapshot);
-			using var correctAnswerDocument = JsonDocument.Parse(item.CorrectAnswerSnapshot);
-			using var choicesDocument = JsonDocument.Parse(item.ChoicesSnapshot ?? "[]");
-			using var feedbackDocument = JsonDocument.Parse(item.FeedbackSnapshot ?? "{}");
-
-			var correctOptionId = correctAnswerDocument.RootElement
-				.GetProperty("optionId")
-				.GetString()!;
-
-			var prompt = questionDocument.RootElement
-				.GetProperty("prompt")
-				.GetString() ?? string.Empty;
-
-			var reading = questionDocument.RootElement.TryGetProperty("reading", out var readingElement)
-				? readingElement.GetString()
-				: null;
-
+			var question = item.Question;
+			var correctOptionId = question.CorrectOptionId;
+			var prompt = question.Prompt;
+			var reading = question.Reading;
 			var choices = JsonSerializer.Deserialize<List<QuizChoiceDto>>(
-				choicesDocument.RootElement.GetRawText(),
+				question.ChoicesJson,
 				JsonOptions) ?? [];
 
-			var feedback = feedbackDocument.RootElement.TryGetProperty("adaptive", out var adaptiveElement)
-				? adaptiveElement.GetString() ?? string.Empty
-				: feedbackDocument.RootElement.TryGetProperty(item.IsCorrect == true ? "correct" : "incorrect", out var feedbackElement)
-					? feedbackElement.GetString() ?? string.Empty
-					: string.Empty;
+			var feedback = item.Feedback ?? (item.IsCorrect == true
+				? "Chính xác! Bạn đã chọn đúng đáp án."
+				: "Chưa chính xác.");
 
 			questionResults.Add(new QuizQuestionResultDto(
 				item.Id.Value,
 				item.Position,
-				item.QuestionType,
+				question.QuestionType,
 				prompt,
 				reading,
-				item.SelectedAnswer!,
+				item.SelectedOptionId ?? string.Empty,
 				correctOptionId,
 				item.IsCorrect == true,
 				feedback,
 				choices,
-				item.SrsCard?.State?.DueAt));
+				item.SrsItem?.DueAt));
 		}
 
 		return Result.Success(new QuizAttemptResultResponse(

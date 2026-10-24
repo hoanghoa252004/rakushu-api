@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Rakushu.Application.Abstractions.Infrastructure;
+using Rakushu.Application.Abstractions.Infrastructure.AiService;
 
 namespace Rakushu.Infrastructure.AiService;
 
@@ -55,7 +55,7 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 
 	public async Task<IReadOnlyList<GeneratedQuizQuestion>> GenerateQuestionsAsync(
 		string questionFormat,
-		IReadOnlyList<QuizGenerationCard> cards,
+		IReadOnlyList<QuizGenerationItem> cards,
 		CancellationToken cancellationToken = default)
 	{
 		if (!string.Equals(questionFormat, "MC", StringComparison.OrdinalIgnoreCase))
@@ -91,17 +91,17 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 			return allQuestions;
 		}
 
-		var normalizedCards = cards.Select(card => new QuizGenerationCard(
-			card.CardId,
-			NormalizeHexEncodedJapanese(card.Expression, card.CardId),
-			NormalizeHexEncodedJapanese(card.Reading, card.CardId),
+		var normalizedCards = cards.Select(card => new QuizGenerationItem(
+			card.ItemId,
+			NormalizeHexEncodedJapanese(card.Expression, card.ItemId),
+			NormalizeHexEncodedJapanese(card.Reading, card.ItemId),
 			card.Meaning,
 			card.QuestionDirection)).ToArray();
 		// Do not expose GUIDs as generation identifiers. Short aliases are easier for small local models to copy exactly;
 		// the backend maps aliases back to the authoritative GUIDs after validating the complete batch.
 		var cardIdsByAlias = normalizedCards
-			.Select((card, index) => new { Alias = $"CARD_{index + 1:D3}", card.CardId })
-			.ToDictionary(item => item.Alias, item => item.CardId, StringComparer.OrdinalIgnoreCase);
+			.Select((card, index) => new { Alias = $"CARD_{index + 1:D3}", card.ItemId })
+			.ToDictionary(item => item.Alias, item => item.ItemId, StringComparer.OrdinalIgnoreCase);
 		var payload = JsonSerializer.Serialize(normalizedCards.Select((card, index) => new
 		{
 			cardId = $"CARD_{index + 1:D3}",
@@ -366,13 +366,13 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 		for (int i = 0; i < items.Count; i++)
 		{
 			var idx = i + 1;
-			jsonTemplateBuilder.Append($"    {{ \"index\": {idx}, \"message\": \"...\" }}");
+			jsonTemplateBuilder.Append($"    {{ \"index\": {idx}, \"message\": \"<lời nhận xét cho câu {idx}>\" }}");
 			if (i < items.Count - 1)
 				jsonTemplateBuilder.Append(",");
 			jsonTemplateBuilder.AppendLine();
 		}
 
-		string systemPrompt = "Bạn là gia sư AI tiếng Nhật Rakushu. Bạn luôn xưng hô là 'Bạn', đưa ra nhận xét cá nhân hóa (Adaptive Feedback) dựa trên lịch sử học tập và trả về JSON hợp lệ.";
+		string systemPrompt = "Bạn là gia sư AI tiếng Nhật Rakushu. Bạn luôn xưng hô là 'Bạn', luôn trả về mảng feedback JSON hợp lệ theo đúng cấu trúc yêu cầu. Tuyệt đối không từ chối hoặc xuất thông báo lỗi.";
 		string prompt;
 
 		if (isCorrect)
@@ -502,10 +502,17 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 					if (!string.IsNullOrWhiteSpace(message))
 					{
 						// Sanity check: if item is incorrect, do not allow praise keywords
-						if (!isCorrect && (message.Contains("chúc mừng", StringComparison.OrdinalIgnoreCase) ||
-										   message.Contains("chính xác", StringComparison.OrdinalIgnoreCase) ||
-										   message.Contains("xuất sắc", StringComparison.OrdinalIgnoreCase) ||
-										   message.Contains("làm tốt", StringComparison.OrdinalIgnoreCase)))
+						var isPraise = !isCorrect && (
+							message.Contains("chúc mừng", StringComparison.OrdinalIgnoreCase) ||
+							message.Contains("xuất sắc", StringComparison.OrdinalIgnoreCase) ||
+							message.Contains("làm tốt", StringComparison.OrdinalIgnoreCase) ||
+							(message.Contains("chính xác", StringComparison.OrdinalIgnoreCase) &&
+							 !message.Contains("đáp án chính xác", StringComparison.OrdinalIgnoreCase) &&
+							 !message.Contains("chính xác là", StringComparison.OrdinalIgnoreCase) &&
+							 !message.Contains("nghĩa chính xác", StringComparison.OrdinalIgnoreCase) &&
+							 !message.Contains("từ chính xác", StringComparison.OrdinalIgnoreCase)));
+
+						if (isPraise)
 						{
 							_logger.LogWarning("[QuizLLM] Rejected praise feedback for incorrect item {ItemId}: {Message}", itemId, message);
 						}
@@ -545,7 +552,7 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 			keep_alive = "30m",
 			options = new
 			{
-				temperature = purpose == "quiz_question_generation" ? 0.7 : 0.5,
+				temperature = purpose == "quiz_question_generation" ? 0.7 : 0.3,
 				repeat_penalty = 1.15,
 				top_p = 0.9,
 				num_predict = 4096

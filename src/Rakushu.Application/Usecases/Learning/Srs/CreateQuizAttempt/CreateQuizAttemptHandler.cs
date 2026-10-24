@@ -1,7 +1,6 @@
 using System.Text.Json;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Rakushu.Application.Abstractions.Infrastructure;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Abstractions.Persistence.Queries;
@@ -16,38 +15,41 @@ namespace Rakushu.Application.Usecases.Learning.Srs.CreateQuizAttempt;
 internal sealed class CreateQuizAttemptHandler
 	: IRequestHandler<CreateQuizAttemptCommand, Result<QuizAttemptStartedResponse>>
 {
-	private sealed record QuizCardDetails(SrsCard Card, string Expression, string? Reading, string Meaning);
+	private sealed record QuizItemDetails(SrsItem Item, string Expression, string? Reading, string Meaning);
 
 	private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-	private const string JapaneseToVietnamese = "JapaneseToVietnamese";
-	private const string VietnameseToJapanese = "VietnameseToJapanese";
-	private const string JapaneseToVietnameseQuestionType = "WORD_TO_MEANING_MCQ";
-	private const string VietnameseToJapaneseQuestionType = "MEANING_TO_WORD_MCQ";
+	private const string JapaneseToVietnamese = QuizChoiceBuilder.JapaneseToVietnamese;
+	private const string VietnameseToJapanese = QuizChoiceBuilder.VietnameseToJapanese;
 
+	// CONTEXT & CLOCK
 	private readonly ICurrentUserContext _currentUser;
-	private readonly ISrsCardRepository _cardRepository;
-	private readonly IQuizVocabularyQuery _quizVocabularyQuery;
-	private readonly IQuizAttemptRepository _attemptRepository;
-	private readonly IQuizContentGenerator _quizContentGenerator;
-	private readonly ILogger<CreateQuizAttemptHandler> _logger;
-	private readonly IUnitOfWork _unitOfWork;
 	private readonly ISystemClock _clock;
+
+	// REPOSITORIES & UOW
+	private readonly ISrsItemRepository _itemRepository;
+	private readonly IQuizRepository _quizRepository;
+	private readonly IQuizAttemptRepository _attemptRepository;
+	private readonly IUnitOfWork _unitOfWork;
+
+	// QUERIES & SERVICES
+	private readonly IQuizVocabularyQuery _quizVocabularyQuery;
+	private readonly ILogger<CreateQuizAttemptHandler> _logger;
 
 	public CreateQuizAttemptHandler(
 		ICurrentUserContext currentUser,
-		ISrsCardRepository cardRepository,
+		ISrsItemRepository itemRepository,
 		IQuizVocabularyQuery quizVocabularyQuery,
+		IQuizRepository quizRepository,
 		IQuizAttemptRepository attemptRepository,
-		IQuizContentGenerator quizContentGenerator,
 		ILogger<CreateQuizAttemptHandler> logger,
 		IUnitOfWork unitOfWork,
 		ISystemClock clock)
 	{
 		_currentUser = currentUser;
-		_cardRepository = cardRepository;
+		_itemRepository = itemRepository;
 		_quizVocabularyQuery = quizVocabularyQuery;
+		_quizRepository = quizRepository;
 		_attemptRepository = attemptRepository;
-		_quizContentGenerator = quizContentGenerator;
 		_logger = logger;
 		_unitOfWork = unitOfWork;
 		_clock = clock;
@@ -57,6 +59,7 @@ internal sealed class CreateQuizAttemptHandler
 		CreateQuizAttemptCommand request,
 		CancellationToken cancellationToken)
 	{
+		// 1. Validate User Context
 		var userId = _currentUser.UserId;
 		if (userId is null)
 		{
@@ -64,144 +67,86 @@ internal sealed class CreateQuizAttemptHandler
 				UserErrors.UnauthorizedResourceAccess);
 		}
 
+		// 2. Validate Question Format & Input Items
 		if (!string.Equals(request.QuestionFormat, "MC", StringComparison.OrdinalIgnoreCase))
 		{
 			return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.UnsupportedQuestionFormat);
 		}
 
-		if (request.CardIds is null ||
-			request.CardIds.Count is < 2 or > 50 ||
-			request.CardIds.Any(cardId => cardId == Guid.Empty) ||
-			request.CardIds.Distinct().Count() != request.CardIds.Count)
+		var selectedItemIds = request.ItemIds;
+		if (selectedItemIds is null ||
+			selectedItemIds.Count is < 2 or > 50 ||
+			selectedItemIds.Any(itemId => itemId == Guid.Empty) ||
+			selectedItemIds.Distinct().Count() != selectedItemIds.Count)
 		{
 			return Result.Failure<QuizAttemptStartedResponse>(
-				QuizAttemptErrors.InvalidSelectedCards);
+				QuizAttemptErrors.InvalidSelectedItems);
 		}
 
 		var now = _clock.UtcNow;
 		const bool dueOnly = false;
-		var selectedCardIds = request.CardIds;
-		var cards = await _cardRepository.GetQuizCardsByIdsAsync(
+		var items = await _itemRepository.GetQuizItemsByIdsAsync(
 			userId,
-			selectedCardIds,
+			selectedItemIds,
 			now,
 			dueOnly,
 			cancellationToken);
 
-		if (cards.Count != selectedCardIds.Count)
+		if (items.Count != selectedItemIds.Count)
 		{
 			return Result.Failure<QuizAttemptStartedResponse>(
-				QuizAttemptErrors.InvalidSelectedCards);
+				QuizAttemptErrors.InvalidSelectedItems);
 		}
 
-		var cardsById = cards.ToDictionary(card => card.Id.Value);
-		cards = selectedCardIds.Select(cardId => cardsById[cardId]).ToList();
+		var itemsById = items.ToDictionary(item => item.Id.Value);
+		items = selectedItemIds.Select(itemId => itemsById[itemId]).ToList();
 
-		var cardDetails = cards.Select(card =>
-		{
-			var knowledgeUnit = card.SrsNote.LearningUnit.KnowledgeMeaning.KnowledgeUnit;
-			return new QuizCardDetails(
-				card,
-				knowledgeUnit.Expression,
-				knowledgeUnit.Reading,
-				card.SrsNote.LearningUnit.KnowledgeMeaning.Meaning);
-		}).ToList();
+		var itemDetails = items.Select(item =>
+			new QuizItemDetails(
+				item,
+				item.Expression,
+				item.Reading,
+				item.Meaning)).ToList();
 
-		// Every quiz is Mixed. Balance both directions, then shuffle them across the selected cards.
-		var mixedDirections = Enumerable.Range(0, cardDetails.Count)
-			.Select(index => index % 2 == 0 ? JapaneseToVietnamese : VietnameseToJapanese)
+		// 3. Balance & Shuffle Question Directions (Japanese->Vietnamese vs Vietnamese->Japanese)
+		var halfCount = itemDetails.Count / 2;
+		var mixedDirections = Enumerable.Repeat(JapaneseToVietnamese, halfCount)
+			.Concat(Enumerable.Repeat(VietnameseToJapanese, itemDetails.Count - halfCount))
 			.ToArray();
 		Random.Shared.Shuffle(mixedDirections);
-		var directionsByCardId = cardDetails
-			.Select((detail, index) => new { CardId = detail.Card.Id.Value, Direction = mixedDirections[index] })
-			.ToDictionary(item => item.CardId, item => item.Direction);
 
-		IReadOnlyList<GeneratedQuizQuestion> generatedQuestions;
-		try
-		{
-			// Call the LLM before opening the persistence transaction.
-			generatedQuestions = await _quizContentGenerator.GenerateQuestionsAsync(
-				request.QuestionFormat,
-				cardDetails.Select(detail => new QuizGenerationCard(
-					detail.Card.Id.Value,
-					detail.Expression,
-					detail.Reading,
-					detail.Meaning,
-					directionsByCardId[detail.Card.Id.Value])).ToList(),
-				cancellationToken);
-		}
-		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-		{
-			throw;
-		}
-		catch (Exception exception)
-		{
-			_logger.LogError(exception,
-				"Quiz question generation failed for {CardCount} cards using format {QuestionFormat} and mode {AttemptMode}.",
-				cardDetails.Count, request.QuestionFormat, "SrsReview");
-			return Result.Failure<QuizAttemptStartedResponse>(
-				QuizAttemptErrors.QuizGenerationFailed);
-		}
-
-		var expectedCardIds = cardDetails.Select(detail => detail.Card.Id.Value).ToHashSet();
-		var validationError = QuizGenerationResultValidator.Validate(generatedQuestions, expectedCardIds);
-		if (validationError is not null)
-		{
-			_logger.LogWarning("Quiz LLM result validation failed: {ValidationError}", validationError);
-			return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
-		}
-
-		var questionsByCardId = generatedQuestions.ToDictionary(question => question.CardId);
-		var allCorrectMeanings = cardDetails
-			.Select(detail => detail.Meaning.Trim())
-			.Where(meaning => !string.IsNullOrWhiteSpace(meaning))
-			.ToHashSet(StringComparer.OrdinalIgnoreCase);
+		// 4. Fetch Vocabulary for Random Distractor Selection
 		var vocabularyEntries = await _quizVocabularyQuery.GetQuizVocabularyEntriesAsync(cancellationToken);
-		var allCorrectExpressions = cardDetails.Select(detail => detail.Expression.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+		// 5. Build Questions & Choices Deterministically (1 correct + 3 random distractors)
 		var validatedQuestions = new List<(string Prompt, string? Reading, IReadOnlyList<QuizChoiceDto> Choices, string CorrectChoiceId, string QuestionType, string CorrectAnswerText)>();
 
-		foreach (var detail in cardDetails)
+		for (var index = 0; index < itemDetails.Count; index++)
 		{
-			var generated = questionsByCardId[detail.Card.Id.Value];
-			var questionDirection = directionsByCardId[detail.Card.Id.Value];
-			var promptText = await QuizPromptResolver.ResolveAsync(
-				_quizContentGenerator,
-				_logger,
-				detail.Card.Id.Value,
-				detail.Expression,
-				detail.Reading,
-				detail.Meaning,
-				questionDirection,
-				request.QuestionFormat,
-				generated,
-				cancellationToken);
+			var detail = itemDetails[index];
+			var direction = mixedDirections[index];
 
 			if (!QuizChoiceBuilder.TryBuild(
-				questionDirection,
+				direction,
 				detail.Expression,
 				detail.Meaning,
 				detail.Reading,
 				vocabularyEntries,
-				allCorrectMeanings,
-				allCorrectExpressions,
-				promptText,
 				out var builtQuestion,
 				out var failureReason) || builtQuestion is null)
 			{
 				_logger.LogWarning(
-					"Quiz choice construction failed for card {CardId}: {FailureReason}",
-					detail.Card.Id.Value, failureReason);
+					"Quiz choice construction failed for item {ItemId}: {FailureReason}",
+					detail.Item.Id.Value, failureReason);
 				return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.QuizGenerationFailed);
 			}
 
 			_logger.LogInformation(
-				"[QuizChoices][Selected] CardId={CardId}; Direction={Direction}; Options={Options}; CorrectAnswerIncluded={CorrectAnswerIncluded}",
-				detail.Card.Id.Value,
+				"[QuizChoices][Built] ItemId={ItemId}; Direction={Direction}; Options={Options}; CorrectAnswer={CorrectAnswer}",
+				detail.Item.Id.Value,
 				builtQuestion.Direction,
-				string.Join(" | ", builtQuestion.Choices.Select(choice => choice.Text)),
-				builtQuestion.Choices.Count(choice => string.Equals(
-					choice.Text, builtQuestion.CorrectAnswerText, StringComparison.OrdinalIgnoreCase)) == 1);
+				string.Join(" | ", builtQuestion.Choices.Select(choice => $"{choice.Id}: {choice.Text}")),
+				builtQuestion.CorrectAnswerText);
 
 			validatedQuestions.Add((
 				builtQuestion.Prompt,
@@ -212,14 +157,48 @@ internal sealed class CreateQuizAttemptHandler
 				builtQuestion.CorrectAnswerText));
 		}
 
+		// 6. Persist Quiz and Initial Attempt
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			const string attemptTemplate = "MIXED_DIRECTION_MCQ";
-			const string attemptMode = "SrsReview";
+			var quizResult = Quiz.Create(userId, now);
+			if (quizResult.IsFailure)
+			{
+				return Result.Failure<QuizAttemptStartedResponse>(quizResult.Error);
+			}
+
+			var quiz = quizResult.Value;
+
+			for (var index = 0; index < itemDetails.Count; index++)
+			{
+				var detail = itemDetails[index];
+				var generated = validatedQuestions[index];
+				var choicesJson = JsonSerializer.Serialize(generated.Choices, JsonOptions);
+
+				var questionResult = Question.Create(
+					detail.Item.Id,
+					index + 1,
+					generated.QuestionType,
+					generated.Prompt,
+					generated.Reading,
+					choicesJson,
+					generated.CorrectChoiceId,
+					now);
+
+				if (questionResult.IsFailure)
+				{
+					return Result.Failure<QuizAttemptStartedResponse>(questionResult.Error);
+				}
+
+				var addQuestionResult = quiz.AddQuestion(questionResult.Value);
+				if (addQuestionResult.IsFailure)
+				{
+					return Result.Failure<QuizAttemptStartedResponse>(addQuestionResult.Error);
+				}
+			}
+
 			var attemptResult = QuizAttempt.Create(
 				userId,
-				attemptTemplate,
-				attemptMode,
+				quiz.Id,
 				now);
 
 			if (attemptResult.IsFailure)
@@ -229,34 +208,19 @@ internal sealed class CreateQuizAttemptHandler
 
 			var attempt = attemptResult.Value;
 			var responseQuestions = new List<QuizQuestionDto>();
+			var questionsList = quiz.Questions.OrderBy(q => q.Position).ToList();
 
-			for (var index = 0; index < cardDetails.Count; index++)
+			for (var index = 0; index < questionsList.Count; index++)
 			{
-				var detail = cardDetails[index];
+				var question = questionsList[index];
+				var detail = itemDetails[index];
 				var generated = validatedQuestions[index];
-				var questionSnapshot = JsonSerializer.Serialize(new
-				{
-					prompt = generated.Prompt,
-					reading = generated.Reading
-				}, JsonOptions);
-				var choicesSnapshot = JsonSerializer.Serialize(generated.Choices, JsonOptions);
-				var correctAnswerSnapshot = JsonSerializer.Serialize(
-					new { optionId = generated.CorrectChoiceId }, JsonOptions);
-				var feedbackSnapshot = JsonSerializer.Serialize(new
-				{
-					correct = "Chính xác! Bạn đã chọn đúng đáp án.",
-					incorrect = $"Chưa chính xác. Đáp án đúng là: {generated.CorrectAnswerText}"
-				}, JsonOptions);
 
 				var itemResult = QuizAttemptItem.Create(
-					detail.Card.Id,
+					question.Id,
+					detail.Item.Id,
 					index + 1,
-					generated.QuestionType,
-					questionSnapshot,
-					correctAnswerSnapshot,
-					now,
-					choicesSnapshot,
-					feedbackSnapshot);
+					now);
 
 				if (itemResult.IsFailure)
 				{
@@ -278,11 +242,13 @@ internal sealed class CreateQuizAttemptHandler
 					generated.Choices));
 			}
 
+			_quizRepository.Add(quiz);
 			_attemptRepository.Add(attempt);
+
 			return Result.Success(new QuizAttemptStartedResponse(
 				attempt.Id.Value,
 				attempt.Status.ToString(),
-				attempt.AttemptMode,
+				"SrsReview",
 				attempt.StartedAt,
 				responseQuestions));
 		}, cancellationToken);

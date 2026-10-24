@@ -4,125 +4,136 @@ using Rakushu.Application.Usecases.Learning.Srs.Common;
 namespace Rakushu.Application.Usecases.Learning.Srs.CreateQuizAttempt;
 
 internal sealed record QuizChoiceBuildResult(
-    string Direction,
-    string Prompt,
-    string CorrectAnswerText,
-    IReadOnlyList<QuizChoiceDto> Choices,
-    string CorrectChoiceId,
-    string QuestionType);
+	string Direction,
+	string Prompt,
+	string CorrectAnswerText,
+	IReadOnlyList<QuizChoiceDto> Choices,
+	string CorrectChoiceId,
+	string QuestionType);
 
 /// <summary>
 /// Builds deterministic, backend-owned MCQ choices from authoritative vocabulary data.
-/// This type deliberately does not query persistence or invoke the LLM.
+/// Each question has 1 correct answer and 3 random distractors from knowledge meanings.
 /// </summary>
 internal static class QuizChoiceBuilder
 {
-    private const string JapaneseToVietnamese = "JapaneseToVietnamese";
-    private const string VietnameseToJapanese = "VietnameseToJapanese";
-    private const string JapaneseToVietnameseQuestionType = "WORD_TO_MEANING_MCQ";
-    private const string VietnameseToJapaneseQuestionType = "MEANING_TO_WORD_MCQ";
+	public const string JapaneseToVietnamese = "JapaneseToVietnamese";
+	public const string VietnameseToJapanese = "VietnameseToJapanese";
+	public const string JapaneseToVietnameseQuestionType = "WORD_TO_MEANING_MCQ";
+	public const string VietnameseToJapaneseQuestionType = "MEANING_TO_WORD_MCQ";
 
-    public static bool TryBuild(
-        string direction,
-        string expression,
-        string meaning,
-        string? reading,
-        IReadOnlyList<QuizVocabularyEntry> vocabularyEntries,
-        IReadOnlySet<string> allCorrectMeanings,
-        IReadOnlySet<string> allCorrectExpressions,
-        string prompt,
-        out QuizChoiceBuildResult? result,
-        out string failureReason)
-    {
-        result = null;
-        failureReason = string.Empty;
-        var authoritativeMeaning = meaning.Trim();
-        if (string.IsNullOrWhiteSpace(authoritativeMeaning) || authoritativeMeaning.Length > 300)
-        {
-            failureReason = "The authoritative meaning is empty or exceeds 300 characters.";
-            return false;
-        }
+	public static bool TryBuild(
+		string direction,
+		string expression,
+		string meaning,
+		string? reading,
+		IReadOnlyList<QuizVocabularyEntry> vocabularyEntries,
+		out QuizChoiceBuildResult? result,
+		out string failureReason)
+	{
+		result = null;
+		failureReason = string.Empty;
 
-        var targetMeaningEntries = vocabularyEntries
-            .Where(entry => string.Equals(entry.Meaning.Trim(), authoritativeMeaning, StringComparison.OrdinalIgnoreCase))
-            .Select(entry => entry.Expression.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
+		var authoritativeMeaning = meaning?.Trim() ?? string.Empty;
+		var authoritativeExpression = expression?.Trim() ?? string.Empty;
 
-        if (direction == VietnameseToJapanese && targetMeaningEntries.Count != 1)
-        {
-            direction = JapaneseToVietnamese;
-            prompt = $"Từ tiếng Nhật {expression} có nghĩa là gì trong tiếng Việt?";
-        }
+		if (string.IsNullOrWhiteSpace(authoritativeMeaning))
+		{
+			failureReason = "The authoritative meaning is empty.";
+			return false;
+		}
 
-        var correctAnswerText = direction == JapaneseToVietnamese
-            ? authoritativeMeaning
-            : expression.Trim();
+		if (string.IsNullOrWhiteSpace(authoritativeExpression))
+		{
+			failureReason = "The authoritative expression is empty.";
+			return false;
+		}
 
-        var choicePool = direction == JapaneseToVietnamese
-            ? vocabularyEntries.Select(entry => entry.Meaning)
-                .Select(value => value?.Trim() ?? string.Empty)
-                .Where(value => !string.IsNullOrWhiteSpace(value) && value.Length <= 300)
-                .Where(value => !allCorrectMeanings.Contains(value))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList()
-            : vocabularyEntries
-                .Where(entry => !string.Equals(entry.Meaning.Trim(), authoritativeMeaning, StringComparison.OrdinalIgnoreCase))
-                .Where(entry => !allCorrectExpressions.Contains(entry.Expression.Trim()))
-                .Select(entry => entry.Expression.Trim())
-                .Where(value => !string.IsNullOrWhiteSpace(value) && value.Length <= 100)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+		string prompt;
+		string correctAnswerText;
+		string questionType;
+		List<string> distractors;
 
-        var distinctChoicePool = choicePool
-            .Where(choice => !string.Equals(choice, correctAnswerText, StringComparison.OrdinalIgnoreCase))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
+		if (direction == VietnameseToJapanese)
+		{
+			questionType = VietnameseToJapaneseQuestionType;
+			prompt = $"Từ tiếng Nhật nào có nghĩa là \"{authoritativeMeaning}\"?";
+			correctAnswerText = authoritativeExpression;
 
-        var availableDistractors = distinctChoicePool
-            .OrderBy(_ => Random.Shared.Next())
-            .Take(3)
-            .ToList();
+			var candidateDistractors = vocabularyEntries
+				.Where(entry => !string.IsNullOrWhiteSpace(entry.Expression))
+				.Where(entry => !string.Equals(entry.Expression.Trim(), authoritativeExpression, StringComparison.OrdinalIgnoreCase))
+				.Where(entry => !string.Equals(entry.Meaning.Trim(), authoritativeMeaning, StringComparison.OrdinalIgnoreCase))
+				.Select(entry => entry.Expression.Trim())
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.ToList();
 
-        if (availableDistractors.Count != 3)
-        {
-            failureReason = $"Only {availableDistractors.Count} distinct distractors are available; three are required.";
-            return false;
-        }
+			if (candidateDistractors.Count < 3)
+			{
+				failureReason = $"Only {candidateDistractors.Count} distinct Japanese distractors are available in knowledge base; 3 are required.";
+				return false;
+			}
 
-        var choicesText = availableDistractors;
-        choicesText.Add(correctAnswerText);
-        for (var index = choicesText.Count - 1; index > 0; index--)
-        {
-            var swapIndex = Random.Shared.Next(index + 1);
-            (choicesText[index], choicesText[swapIndex]) = (choicesText[swapIndex], choicesText[index]);
-        }
+			distractors = candidateDistractors
+				.OrderBy(_ => Random.Shared.Next())
+				.Take(3)
+				.ToList();
+		}
+		else
+		{
+			direction = JapaneseToVietnamese;
+			questionType = JapaneseToVietnameseQuestionType;
+			prompt = $"Từ tiếng Nhật \"{authoritativeExpression}\" có nghĩa là gì trong tiếng Việt?";
+			correctAnswerText = authoritativeMeaning;
 
-        var correctIndexes = choicesText
-            .Select((choice, index) => new { choice, index })
-            .Where(item => string.Equals(item.choice, correctAnswerText, StringComparison.OrdinalIgnoreCase))
-            .Select(item => item.index)
-            .ToList();
+			var candidateDistractors = vocabularyEntries
+				.Where(entry => !string.IsNullOrWhiteSpace(entry.Meaning))
+				.Where(entry => !string.Equals(entry.Meaning.Trim(), authoritativeMeaning, StringComparison.OrdinalIgnoreCase))
+				.Select(entry => entry.Meaning.Trim())
+				.Distinct(StringComparer.OrdinalIgnoreCase)
+				.ToList();
 
-        if (correctIndexes.Count != 1)
-        {
-            failureReason = $"Expected exactly one correct answer, found {correctIndexes.Count}.";
-            return false;
-        }
+			if (candidateDistractors.Count < 3)
+			{
+				failureReason = $"Only {candidateDistractors.Count} distinct Vietnamese distractors are available in knowledge base; 3 are required.";
+				return false;
+			}
 
-        var choices = choicesText
-            .Select((text, index) => new QuizChoiceDto(((char)('A' + index)).ToString(), text))
-            .ToList();
+			distractors = candidateDistractors
+				.OrderBy(_ => Random.Shared.Next())
+				.Take(3)
+				.ToList();
+		}
 
-        result = new QuizChoiceBuildResult(
-            direction,
-            prompt,
-            correctAnswerText,
-            choices,
-            choices[correctIndexes[0]].Id,
-            direction == JapaneseToVietnamese
-                ? JapaneseToVietnameseQuestionType
-                : VietnameseToJapaneseQuestionType);
-        return true;
-    }
+		// Combine 3 distractors and 1 correct answer, then shuffle
+		var allChoices = distractors.Concat([correctAnswerText]).ToList();
+		for (var index = allChoices.Count - 1; index > 0; index--)
+		{
+			var swapIndex = Random.Shared.Next(index + 1);
+			(allChoices[index], allChoices[swapIndex]) = (allChoices[swapIndex], allChoices[index]);
+		}
+
+		var choices = allChoices
+			.Select((text, index) => new QuizChoiceDto(((char)('A' + index)).ToString(), text))
+			.ToList();
+
+		var correctChoice = choices.FirstOrDefault(c =>
+			string.Equals(c.Text, correctAnswerText, StringComparison.OrdinalIgnoreCase));
+
+		if (correctChoice is null)
+		{
+			failureReason = "Could not locate correct choice after shuffle.";
+			return false;
+		}
+
+		result = new QuizChoiceBuildResult(
+			direction,
+			prompt,
+			correctAnswerText,
+			choices,
+			correctChoice.Id,
+			questionType);
+
+		return true;
+	}
 }

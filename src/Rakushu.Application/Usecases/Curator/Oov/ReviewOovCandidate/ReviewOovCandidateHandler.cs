@@ -1,5 +1,5 @@
 using MediatR;
-using Rakushu.Application.Abstractions.Infrastructure;
+using Rakushu.Application.Abstractions.Infrastructure.AiService;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;

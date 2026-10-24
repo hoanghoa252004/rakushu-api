@@ -106,12 +106,9 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<DictionaryEntry> DictionaryEntries => Set<DictionaryEntry>();
 
 	// SRS and Quiz
-	public DbSet<SrsNote> SrsNotes => Set<SrsNote>();
-	public DbSet<SrsCard> SrsCards => Set<SrsCard>();
-	public DbSet<SrsCardState> SrsCardStates => Set<SrsCardState>();
-	public DbSet<SrsReviewLog> SrsReviewLogs => Set<SrsReviewLog>();
-	public DbSet<SrsSession> SrsSessions => Set<SrsSession>();
-	public DbSet<SrsSessionItem> SrsSessionItems => Set<SrsSessionItem>();
+	public DbSet<SrsItem> SrsItems => Set<SrsItem>();
+	public DbSet<Quiz> Quizzes => Set<Quiz>();
+	public DbSet<Question> Questions => Set<Question>();
 	public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
 	public DbSet<QuizAttemptItem> QuizAttemptItems => Set<QuizAttemptItem>();
 

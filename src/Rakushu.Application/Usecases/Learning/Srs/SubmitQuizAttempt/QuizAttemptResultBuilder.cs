@@ -12,103 +12,51 @@ internal static class QuizAttemptResultBuilder
 	public static Result<QuizAttemptResultResponse> Build(
 		QuizAttempt attempt,
 		IReadOnlyDictionary<Guid, QuizAnswerSubmission> answersByItemId,
-		DateTimeOffset now,
-		ISrsCardRepository cardRepository)
+		DateTimeOffset now)
 	{
 		var questionResults = new List<QuizQuestionResultDto>();
 
 		foreach (var item in attempt.Items.OrderBy(item => item.Position))
 		{
-			using var questionDocument = JsonDocument.Parse(item.QuestionSnapshot);
-			using var correctAnswerDocument = JsonDocument.Parse(item.CorrectAnswerSnapshot);
-			using var choicesDocument = JsonDocument.Parse(item.ChoicesSnapshot ?? "[]");
-			using var feedbackDocument = JsonDocument.Parse(item.FeedbackSnapshot ?? "{}");
-
-			var correctOptionId = correctAnswerDocument.RootElement
-				.GetProperty("optionId")
-				.GetString()!;
-
-			var prompt = questionDocument.RootElement
-				.GetProperty("prompt")
-				.GetString() ?? string.Empty;
-
-			var reading = questionDocument.RootElement.TryGetProperty("reading", out var readingElement)
-				? readingElement.GetString()
-				: null;
-
+			var question = item.Question;
+			var correctOptionId = question.CorrectOptionId;
+			var prompt = question.Prompt;
+			var reading = question.Reading;
 			var choices = JsonSerializer.Deserialize<List<QuizChoiceDto>>(
-				choicesDocument.RootElement.GetRawText(),
+				question.ChoicesJson,
 				JsonOptions) ?? [];
 
-			var feedback = feedbackDocument.RootElement.TryGetProperty("adaptive", out var adaptiveElement)
-				? adaptiveElement.GetString() ?? string.Empty
-				: feedbackDocument.RootElement.TryGetProperty(item.IsCorrect == true ? "correct" : "incorrect", out var feedbackElement)
-					? feedbackElement.GetString() ?? string.Empty
-					: string.Empty;
+			var srsItem = item.SrsItem;
+			var submittedElapsedMs = answersByItemId[item.Id.Value].ElapsedMs;
+			var elapsedMs = QuizAnswerQualityScorer.NormalizeElapsedMs(submittedElapsedMs);
+			var isCorrect = item.IsCorrect == true;
+			var quality = item.Quality ?? QuizAnswerQualityScorer.Calculate(
+				isCorrect,
+				elapsedMs,
+				!string.IsNullOrWhiteSpace(item.SelectedOptionId));
 
-			if (attempt.AttemptMode == "SrsReview")
+			var reviewResult = srsItem.RecordReview(quality, now);
+			if (reviewResult.IsFailure)
 			{
-				var card = item.SrsCard;
-				var state = card.State;
-
-				if (state is null)
-				{
-					return Result.Failure<QuizAttemptResultResponse>(
-						SrsCardErrors.CardStateMissing);
-				}
-
-				var previousDueAt = state.DueAt;
-				var previousIntervalDays = state.IntervalDays;
-				var previousEaseFactor = state.EasinessFactor;
-				var previousRepetitions = state.Repetitions;
-
-				var submittedElapsedMs = answersByItemId[item.Id.Value].ElapsedMs;
-				var elapsedMs = QuizAnswerQualityScorer.NormalizeElapsedMs(submittedElapsedMs);
-				var quality = QuizAnswerQualityScorer.Calculate(
-					item.IsCorrect == true,
-					elapsedMs,
-					!string.IsNullOrWhiteSpace(item.SelectedAnswer));
-				var rating = SrsReviewRating.FromQuality(quality);
-				var reviewResult = card.RecordReview(quality, now);
-
-				if (reviewResult.IsFailure)
-				{
-					return Result.Failure<QuizAttemptResultResponse>(reviewResult.Error);
-				}
-
-				var reviewLog = SrsReviewLog.Create(
-					card.Id,
-					null,
-					item.Id,
-					rating,
-					quality,
-					now,
-					elapsedMs,
-					previousDueAt,
-					state.DueAt,
-					previousIntervalDays,
-					state.IntervalDays,
-					previousEaseFactor,
-					state.EasinessFactor,
-					previousRepetitions,
-					state.Repetitions,
-					now);
-
-				cardRepository.AddReviewLog(reviewLog);
+				return Result.Failure<QuizAttemptResultResponse>(reviewResult.Error);
 			}
+
+			var feedback = item.Feedback ?? (isCorrect
+				? "Chính xác! Bạn đã chọn đúng đáp án."
+				: "Chưa chính xác.");
 
 			questionResults.Add(new QuizQuestionResultDto(
 				item.Id.Value,
 				item.Position,
-				item.QuestionType,
+				question.QuestionType,
 				prompt,
 				reading,
-				item.SelectedAnswer ?? string.Empty,
+				item.SelectedOptionId ?? string.Empty,
 				correctOptionId,
-				item.IsCorrect == true,
+				isCorrect,
 				feedback,
 				choices,
-				item.SrsCard.State?.DueAt));
+				srsItem.DueAt));
 		}
 
 		return Result.Success(new QuizAttemptResultResponse(

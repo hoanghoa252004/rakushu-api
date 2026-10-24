@@ -1,6 +1,5 @@
 using System.Text.Json;
 using MediatR;
-using Rakushu.Application.Abstractions.Infrastructure;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Usecases.Learning.Srs.Common;
@@ -35,25 +34,27 @@ internal sealed class SubmitQuizAttemptHandler
 		return false;
 	}
 
+	// CONTEXT & CLOCK
 	private readonly ICurrentUserContext _currentUser;
-	private readonly IQuizAttemptRepository _attemptRepository;
-	private readonly IQuizAttemptFeedbackService _feedbackService;
-	private readonly ISrsCardRepository _cardRepository;
-	private readonly IUnitOfWork _unitOfWork;
 	private readonly ISystemClock _clock;
+
+	// REPOSITORIES & UOW
+	private readonly IQuizAttemptRepository _attemptRepository;
+	private readonly IUnitOfWork _unitOfWork;
+
+	// SERVICES
+	private readonly IQuizAttemptFeedbackService _feedbackService;
 
 	public SubmitQuizAttemptHandler(
 		ICurrentUserContext currentUser,
 		IQuizAttemptRepository attemptRepository,
 		IQuizAttemptFeedbackService feedbackService,
-		ISrsCardRepository cardRepository,
 		IUnitOfWork unitOfWork,
 		ISystemClock clock)
 	{
 		_currentUser = currentUser;
 		_attemptRepository = attemptRepository;
 		_feedbackService = feedbackService;
-		_cardRepository = cardRepository;
 		_unitOfWork = unitOfWork;
 		_clock = clock;
 	}
@@ -62,15 +63,29 @@ internal sealed class SubmitQuizAttemptHandler
 		SubmitQuizAttemptCommand request,
 		CancellationToken cancellationToken)
 	{
+		// 1. Validate User Context
+		var userId = _currentUser.UserId;
+		if (userId is null)
+		{
+			return Result.Failure<QuizAttemptResultResponse>(
+				UserErrors.UnauthorizedResourceAccess);
+		}
+
+		var answers = request.Answers;
+		if (answers is null ||
+			answers.Count == 0 ||
+			answers.Any(answer => answer.ItemId == Guid.Empty || string.IsNullOrWhiteSpace(answer.SelectedOptionId)) ||
+			answers.Select(answer => answer.ItemId).Distinct().Count() != answers.Count)
+		{
+			return Result.Failure<QuizAttemptResultResponse>(
+				QuizAttemptErrors.InvalidQuizAnswer);
+		}
+
+		var now = _clock.UtcNow;
+
+		// 2. Execute Review Submission in Transaction
 		var submissionResult = await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var userId = _currentUser.UserId;
-			if (userId is null)
-			{
-				return Result.Failure<QuizAttemptResultResponse>(
-					UserErrors.UnauthorizedResourceAccess);
-			}
-
 			var attempt = await _attemptRepository.GetForUserAsync(
 				QuizAttemptId.From(request.AttemptId),
 				userId,
@@ -88,91 +103,69 @@ internal sealed class SubmitQuizAttemptHandler
 					QuizAttemptErrors.QuizNotInProgress);
 			}
 
-			if (request.Answers is null ||
-				request.Answers.Count != attempt.Items.Count ||
-				request.Answers.Select(answer => answer.ItemId).Distinct().Count() != request.Answers.Count)
-			{
-				return Result.Failure<QuizAttemptResultResponse>(
-					QuizAttemptErrors.QuizHasUnansweredItems);
-			}
-
-			if (request.Answers.Any(answer => answer.ElapsedMs is < 0))
+			if (attempt.Items.Count != answers.Count)
 			{
 				return Result.Failure<QuizAttemptResultResponse>(
 					QuizAttemptErrors.InvalidQuizAnswer);
 			}
 
-			var itemsById = attempt.Items.ToDictionary(item => item.Id.Value);
-			var answersByItemId = request.Answers.ToDictionary(answer => answer.ItemId);
-
-			foreach (var answer in request.Answers)
+			var answersByItemId = answers.ToDictionary(answer => answer.ItemId);
+			if (!attempt.Items.All(item => answersByItemId.ContainsKey(item.Id.Value)))
 			{
-				if (!itemsById.TryGetValue(answer.ItemId, out var item))
-				{
-					return Result.Failure<QuizAttemptResultResponse>(
-						QuizAttemptErrors.InvalidQuizAnswer);
-				}
-
-				if (string.IsNullOrWhiteSpace(answer.SelectedOptionId))
-					continue;
-
-				using var choicesDocument = JsonDocument.Parse(item.ChoicesSnapshot ?? "[]");
-				var isValidOption = choicesDocument.RootElement
-					.EnumerateArray()
-					.Any(choice =>
-						TryGetPropertyIgnoreCase(choice, "id", out var id) &&
-						id.ValueKind == JsonValueKind.String &&
-						string.Equals(
-							id.GetString(),
-							answer.SelectedOptionId,
-							StringComparison.Ordinal));
-
-				if (!isValidOption)
-				{
-					return Result.Failure<QuizAttemptResultResponse>(
-						QuizAttemptErrors.InvalidQuizAnswer);
-				}
+				return Result.Failure<QuizAttemptResultResponse>(
+					QuizAttemptErrors.InvalidQuizAnswer);
 			}
 
-			var now = _clock.UtcNow;
-
-			foreach (var answer in request.Answers)
+			// 3. Record Answer for Each Item
+			foreach (var item in attempt.Items)
 			{
-				var item = itemsById[answer.ItemId];
-
-				using var correctAnswerDocument = JsonDocument.Parse(item.CorrectAnswerSnapshot);
-				var correctOptionId = correctAnswerDocument.RootElement
-					.GetProperty("optionId")
-					.GetString()!;
-
+				var answer = answersByItemId[item.Id.Value];
+				var question = item.Question;
 				var isCorrect = string.Equals(
-					correctOptionId,
 					answer.SelectedOptionId,
-					StringComparison.Ordinal);
+					question.CorrectOptionId,
+					StringComparison.OrdinalIgnoreCase);
 
-				var recordAnswerResult = attempt.RecordAnswer(
-					answer.ItemId,
-					answer.SelectedOptionId ?? string.Empty,
+				var elapsedMs = QuizAnswerQualityScorer.NormalizeElapsedMs(answer.ElapsedMs);
+				var quality = QuizAnswerQualityScorer.Calculate(
 					isCorrect,
+					elapsedMs,
+					!string.IsNullOrWhiteSpace(answer.SelectedOptionId));
+
+				var answerResult = attempt.RecordAnswer(
+					item.Id.Value,
+					answer.SelectedOptionId,
+					isCorrect,
+					elapsedMs ?? 0,
+					quality,
+					null,
 					now);
 
-				if (recordAnswerResult.IsFailure)
+				if (answerResult.IsFailure)
 				{
-					return Result.Failure<QuizAttemptResultResponse>(recordAnswerResult.Error);
+					return Result.Failure<QuizAttemptResultResponse>(answerResult.Error);
 				}
 			}
 
+			// 4. Mark Quiz Attempt as Completed
 			var completeResult = attempt.Complete(now);
 			if (completeResult.IsFailure)
 			{
 				return Result.Failure<QuizAttemptResultResponse>(completeResult.Error);
 			}
 
-			return QuizAttemptResultBuilder.Build(
+			// 5. Build Initial Result & Update SM-2 Metrics
+			var builderResult = QuizAttemptResultBuilder.Build(
 				attempt,
 				answersByItemId,
-				now,
-				_cardRepository);
+				now);
+
+			if (builderResult.IsFailure)
+			{
+				return Result.Failure<QuizAttemptResultResponse>(builderResult.Error);
+			}
+
+			return Result.Success(builderResult.Value);
 		}, cancellationToken);
 
 		if (submissionResult.IsFailure)
@@ -180,6 +173,7 @@ internal sealed class SubmitQuizAttemptHandler
 			return submissionResult;
 		}
 
+		// 6. Enrich with Adaptive Feedback asynchronously
 		var resultWithFeedback = await _feedbackService.ApplyAsync(
 			submissionResult.Value,
 			cancellationToken);

@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Rakushu.Application.Abstractions.Infrastructure;
+using Rakushu.Application.Abstractions.Infrastructure.AiService;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Usecases.Learning.Srs.Common;
 using Rakushu.Domain.Common.Contract;
@@ -50,17 +50,17 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 			_currentUser.UserId!,
 			cancellationToken);
 		var feedbackItemsById = feedbackAttempt?.Items.ToDictionary(item => item.Id.Value);
-		IReadOnlyDictionary<Guid, QuizCardAnswerHistory> answerHistoryByCardId =
-			new Dictionary<Guid, QuizCardAnswerHistory>();
+		IReadOnlyDictionary<Guid, QuizItemAnswerHistory> answerHistoryByItemId =
+			new Dictionary<Guid, QuizItemAnswerHistory>();
 
 		if (feedbackAttempt is not null && _currentUser.UserId is { } feedbackUserId)
 		{
-			var cardIds = feedbackAttempt.Items.Select(item => item.SrsCardId.Value).Distinct().ToArray();
+			var itemIds = feedbackAttempt.Items.Select(item => item.SrsItemId.Value).Distinct().ToArray();
 			try
 			{
-				answerHistoryByCardId = await _attemptRepository.GetAnswerHistoryByCardAsync(
+				answerHistoryByItemId = await _attemptRepository.GetAnswerHistoryByItemAsync(
 					feedbackUserId,
-					cardIds,
+					itemIds,
 					QuizAttemptId.From(feedbackAttempt.Id.Value),
 					cancellationToken);
 			}
@@ -76,18 +76,18 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 			}
 		}
 
-		IReadOnlyDictionary<Guid, IReadOnlyList<QuizCardFeedbackHistory>> feedbackHistoryByCardId =
-			new Dictionary<Guid, IReadOnlyList<QuizCardFeedbackHistory>>();
+		IReadOnlyDictionary<Guid, IReadOnlyList<QuizItemFeedbackHistory>> feedbackHistoryByItemId =
+			new Dictionary<Guid, IReadOnlyList<QuizItemFeedbackHistory>>();
 		if (feedbackAttempt is not null && _currentUser.UserId is { } historyUserId)
 		{
-			var cardIds = feedbackAttempt.Items.Select(item => item.SrsCardId.Value).Distinct().ToArray();
+			var itemIds = feedbackAttempt.Items.Select(item => item.SrsItemId.Value).Distinct().ToArray();
 			try
 			{
-				feedbackHistoryByCardId = await _attemptRepository.GetFeedbackHistoryByCardAsync(
+				feedbackHistoryByItemId = await _attemptRepository.GetFeedbackHistoryByItemAsync(
 					historyUserId,
-					cardIds,
+					itemIds,
 					QuizAttemptId.From(feedbackAttempt.Id.Value),
-					maxEntriesPerCard: 3,
+					maxEntriesPerItem: 3,
 					cancellationToken);
 			}
 			catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -107,12 +107,12 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 			QuizAttemptItem? feedbackItem = null;
 			var hasFeedbackItem = feedbackItemsById is not null &&
 				feedbackItemsById.TryGetValue(question.ItemId, out feedbackItem);
-			var cardId = hasFeedbackItem ? feedbackItem!.SrsCardId.Value : Guid.Empty;
-			var history = answerHistoryByCardId.TryGetValue(cardId, out var cardHistory)
-				? cardHistory
-				: new QuizCardAnswerHistory(0, 0, 0);
-			var previousFeedback = feedbackHistoryByCardId.TryGetValue(cardId, out var cardFeedback)
-				? cardFeedback.Select(ToFeedbackHistoryEntry).ToArray()
+			var srsItemId = hasFeedbackItem ? feedbackItem!.SrsItemId.Value : Guid.Empty;
+			var history = answerHistoryByItemId.TryGetValue(srsItemId, out var itemHistory)
+				? itemHistory
+				: new QuizItemAnswerHistory(0, 0, 0);
+			var previousFeedback = feedbackHistoryByItemId.TryGetValue(srsItemId, out var itemFeedback)
+				? itemFeedback.Select(ToFeedbackHistoryEntry).ToArray()
 				: Array.Empty<QuizFeedbackHistoryEntry>();
 
 			var selectedChoice = question.Choices?.FirstOrDefault(c => string.Equals(c.Id, question.SelectedOptionId, StringComparison.OrdinalIgnoreCase))?.Text
@@ -182,8 +182,7 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 					var feedback = ResolveFeedback(
 						feedbackPromptsByItemId[item.Id.Value],
 						adaptiveFeedback);
-					item.UpdateFeedbackSnapshot(JsonSerializer.Serialize(
-						new { adaptive = feedback }, JsonOptions));
+					item.UpdateFeedback(feedback);
 				}
 
 				return Result.Success();
@@ -204,7 +203,7 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 		return submissionResult with { Results = updatedResults };
 	}
 
-	private static QuizFeedbackHistoryEntry ToFeedbackHistoryEntry(QuizCardFeedbackHistory history)
+	private static QuizFeedbackHistoryEntry ToFeedbackHistoryEntry(QuizItemFeedbackHistory history)
 	{
 		var selectedAnswer = ResolveChoiceText(history.ChoicesSnapshot, history.SelectedAnswer);
 		var correctAnswer = ResolveCorrectAnswerText(history.CorrectAnswerSnapshot, history.ChoicesSnapshot);
@@ -303,6 +302,14 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 			return message.Trim();
 		}
 
-		return string.Empty;
+		// Fallback when LLM is unavailable or fails to return feedback for this item
+		if (prompt.IsCorrect)
+		{
+			return "Chính xác! Bạn đã ghi nhớ đúng từ vựng này.";
+		}
+
+		return !string.IsNullOrWhiteSpace(prompt.CorrectAnswer)
+			? $"Chưa chính xác. Đáp án đúng là \"{prompt.CorrectAnswer}\". Hãy chú ý ôn tập lại từ này nhé!"
+			: "Chưa chính xác. Hãy chú ý ôn tập lại từ này nhé!";
 	}
 }

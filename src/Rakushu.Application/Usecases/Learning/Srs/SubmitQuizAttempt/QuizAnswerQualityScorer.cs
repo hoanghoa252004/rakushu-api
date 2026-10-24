@@ -25,7 +25,13 @@ public static class QuizAnswerQualityScorer
 			return 0;
 
 		if (!isCorrect)
+		{
+			// Complete blackout / severe hesitation (>= 8s or timeout) scores 0; normal incorrect scores 1.
+			if (elapsedMs is null || elapsedMs >= NormalResponseThresholdMs)
+				return 0;
+
 			return 1;
+		}
 
 		if (elapsedMs is null ||
 			elapsedMs < MinimumPlausibleResponseMs ||

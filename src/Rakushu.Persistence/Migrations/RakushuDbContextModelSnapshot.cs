@@ -1505,6 +1505,95 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("oov_candidates", (string)null);
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.Question", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ChoicesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("choices");
+
+                    b.Property<string>("CorrectOptionId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("correct_option_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<string>("Prompt")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("prompt");
+
+                    b.Property<string>("QuestionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("question_type");
+
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("quiz_id");
+
+                    b.Property<string>("Reading")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("reading");
+
+                    b.Property<Guid>("SrsItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("srs_item_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_questions");
+
+                    b.HasIndex("SrsItemId")
+                        .HasDatabaseName("ix_questions_srs_item_id");
+
+                    b.HasIndex("QuizId", "Position")
+                        .IsUnique()
+                        .HasDatabaseName("ix_questions_quiz_id_position");
+
+                    b.ToTable("questions", "srs");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.Quiz", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("TotalQuestions")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_questions");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_quizzes");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_quizzes_user_id");
+
+                    b.ToTable("quizzes", "srs");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttempt", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1514,14 +1603,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<int>("AnsweredItems")
                         .HasColumnType("integer")
                         .HasColumnName("answered_items");
-
-                    b.Property<string>("AttemptMode")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("Practice")
-                        .HasColumnName("attempt_mode");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1535,410 +1616,14 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("QuizId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("quiz_id");
+
                     b.Property<decimal?>("Score")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("score");
-
-                    b.Property<Guid?>("SourceAttemptId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("source_attempt_id");
-
-                    b.Property<DateTimeOffset>("StartedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("started_at");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("Created")
-                        .HasColumnName("status");
-
-                    b.Property<string>("TemplateCode")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasDefaultValue("WORD_TO_MEANING_MCQ")
-                        .HasColumnName("template_code");
-
-                    b.Property<int>("TotalItems")
-                        .HasColumnType("integer")
-                        .HasColumnName("total_items");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_quiz_attempts");
-
-                    b.HasIndex("SourceAttemptId")
-                        .HasDatabaseName("ix_quiz_attempts_source_attempt_id");
-
-                    b.HasIndex("UserId", "StartedAt")
-                        .HasDatabaseName("ix_quiz_attempts_user_id_started_at");
-
-                    b.ToTable("quiz_attempts", "srs", t =>
-                        {
-                            t.HasCheckConstraint("ck_quiz_attempts_completed_at", "status <> 'Completed' OR completed_at IS NOT NULL");
-
-                            t.HasCheckConstraint("ck_quiz_attempts_counts", "total_items >= 0 AND answered_items >= 0 AND correct_items >= 0 AND correct_items <= answered_items AND answered_items <= total_items");
-
-                            t.HasCheckConstraint("ck_quiz_attempts_mode", "attempt_mode IN ('SrsReview', 'Practice')");
-
-                            t.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");
-
-                            t.HasCheckConstraint("ck_quiz_attempts_status", "status IN ('Created', 'InProgress', 'Completed', 'Abandoned')");
-                        });
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttemptItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset?>("AnsweredAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("answered_at");
-
-                    b.Property<string>("ChoicesSnapshot")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("choices_snapshot");
-
-                    b.Property<string>("CorrectAnswerSnapshot")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("correct_answer_snapshot");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("FeedbackSnapshot")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("feedback_snapshot");
-
-                    b.Property<bool?>("IsCorrect")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_correct");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer")
-                        .HasColumnName("position");
-
-                    b.Property<string>("QuestionSnapshot")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("question_snapshot");
-
-                    b.Property<string>("QuestionType")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("WORD_TO_MEANING_MCQ")
-                        .HasColumnName("question_type");
-
-                    b.Property<Guid>("QuizAttemptId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("quiz_attempt_id");
-
-                    b.Property<string>("SelectedAnswer")
-                        .HasColumnType("text")
-                        .HasColumnName("selected_answer");
-
-                    b.Property<Guid>("SrsCardId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("srs_card_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_quiz_attempt_items");
-
-                    b.HasIndex("SrsCardId")
-                        .HasDatabaseName("ix_quiz_attempt_items_srs_card_id");
-
-                    b.HasIndex("QuizAttemptId", "Position")
-                        .IsUnique()
-                        .HasDatabaseName("ix_quiz_attempt_items_quiz_attempt_id_position");
-
-                    b.ToTable("quiz_attempt_items", "srs", t =>
-                        {
-                            t.HasCheckConstraint("ck_quiz_attempt_items_position", "position > 0");
-                        });
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsCard", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("SrsNoteId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("srs_note_id");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("New")
-                        .HasColumnName("status");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_srs_cards");
-
-                    b.HasIndex("SrsNoteId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_srs_cards_srs_note_id");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("ix_srs_cards_status");
-
-                    b.ToTable("srs_cards", "srs", t =>
-                        {
-                            t.HasCheckConstraint("ck_srs_cards_status", "status IN ('New', 'Learning', 'Review', 'Suspended', 'Archived')");
-                        });
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsCardState", b =>
-                {
-                    b.Property<Guid>("SrsCardId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("srs_card_id");
-
-                    b.Property<DateTimeOffset>("DueAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("due_at");
-
-                    b.Property<double>("EasinessFactor")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("double precision")
-                        .HasDefaultValue(2.5)
-                        .HasColumnName("easiness_factor");
-
-                    b.Property<int>("IntervalDays")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("interval_days");
-
-                    b.Property<int>("Lapses")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("lapses");
-
-                    b.Property<DateTimeOffset?>("LastReviewAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_review_at");
-
-                    b.Property<int>("Repetitions")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("repetitions");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("SrsCardId")
-                        .HasName("pk_srs_card_states");
-
-                    b.HasIndex("DueAt")
-                        .HasDatabaseName("ix_srs_card_states_due_at");
-
-                    b.ToTable("srs_card_states", "srs", t =>
-                        {
-                            t.HasCheckConstraint("ck_srs_card_states_easiness_factor", "easiness_factor >= 1.3");
-
-                            t.HasCheckConstraint("ck_srs_card_states_interval_days", "interval_days >= 0");
-
-                            t.HasCheckConstraint("ck_srs_card_states_lapses", "lapses >= 0");
-
-                            t.HasCheckConstraint("ck_srs_card_states_repetitions", "repetitions >= 0");
-                        });
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsNote", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset?>("ArchivedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("archived_at");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("LearningUnitId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("learning_unit_id");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_srs_notes");
-
-                    b.HasIndex("LearningUnitId")
-                        .HasDatabaseName("ix_srs_notes_learning_unit_id");
-
-                    b.HasIndex("UserId", "CreatedAt")
-                        .HasDatabaseName("ix_srs_notes_user_id_created_at");
-
-                    b.HasIndex("UserId", "LearningUnitId")
-                        .HasDatabaseName("ix_srs_notes_user_id_learning_unit_id");
-
-                    b.ToTable("srs_notes", "srs");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsReviewLog", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int?>("ElapsedMs")
-                        .HasColumnType("integer")
-                        .HasColumnName("elapsed_ms");
-
-                    b.Property<DateTimeOffset?>("NextDueAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("next_due_at");
-
-                    b.Property<double?>("NextEasinessFactor")
-                        .HasColumnType("double precision")
-                        .HasColumnName("next_easiness_factor");
-
-                    b.Property<int?>("NextIntervalDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("next_interval_days");
-
-                    b.Property<int?>("NextRepetitions")
-                        .HasColumnType("integer")
-                        .HasColumnName("next_repetitions");
-
-                    b.Property<DateTimeOffset?>("PreviousDueAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("previous_due_at");
-
-                    b.Property<double?>("PreviousEasinessFactor")
-                        .HasColumnType("double precision")
-                        .HasColumnName("previous_easiness_factor");
-
-                    b.Property<int?>("PreviousIntervalDays")
-                        .HasColumnType("integer")
-                        .HasColumnName("previous_interval_days");
-
-                    b.Property<int?>("PreviousRepetitions")
-                        .HasColumnType("integer")
-                        .HasColumnName("previous_repetitions");
-
-                    b.Property<int>("Quality")
-                        .HasColumnType("integer")
-                        .HasColumnName("quality");
-
-                    b.Property<Guid?>("QuizAttemptItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("quiz_attempt_item_id");
-
-                    b.Property<string>("Rating")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("rating");
-
-                    b.Property<DateTimeOffset>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
-
-                    b.Property<string>("SchedulerVersion")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasDefaultValue("SM2-v1")
-                        .HasColumnName("scheduler_version");
-
-                    b.Property<Guid>("SrsCardId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("srs_card_id");
-
-                    b.Property<Guid?>("SrsSessionItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("srs_session_item_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_srs_review_logs");
-
-                    b.HasIndex("QuizAttemptItemId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_srs_review_logs_quiz_attempt_item_id");
-
-                    b.HasIndex("SrsSessionItemId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_srs_review_logs_srs_session_item_id");
-
-                    b.HasIndex("SrsCardId", "ReviewedAt")
-                        .HasDatabaseName("ix_srs_review_logs_srs_card_id_reviewed_at");
-
-                    b.ToTable("srs_review_logs", "srs", t =>
-                        {
-                            t.HasCheckConstraint("ck_srs_review_logs_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
-
-                            t.HasCheckConstraint("ck_srs_review_logs_quality", "quality BETWEEN 0 AND 5");
-
-                            t.HasCheckConstraint("ck_srs_review_logs_single_source", "(srs_session_item_id IS NOT NULL AND quiz_attempt_item_id IS NULL) OR (srs_session_item_id IS NULL AND quiz_attempt_item_id IS NOT NULL)");
-                        });
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("completed_at");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("ReviewedItems")
-                        .HasColumnType("integer")
-                        .HasColumnName("reviewed_items");
 
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1965,22 +1650,101 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_srs_sessions");
+                        .HasName("pk_quiz_attempts");
+
+                    b.HasIndex("QuizId")
+                        .HasDatabaseName("ix_quiz_attempts_quiz_id");
 
                     b.HasIndex("UserId", "StartedAt")
-                        .HasDatabaseName("ix_srs_sessions_user_id_started_at");
+                        .HasDatabaseName("ix_quiz_attempts_user_id_started_at");
 
-                    b.ToTable("srs_sessions", "srs", t =>
+                    b.ToTable("quiz_attempts", "srs", t =>
                         {
-                            t.HasCheckConstraint("ck_srs_sessions_completed_at", "status <> 'Completed' OR completed_at IS NOT NULL");
+                            t.HasCheckConstraint("ck_quiz_attempts_completed_at", "status <> 'Completed' OR completed_at IS NOT NULL");
 
-                            t.HasCheckConstraint("ck_srs_sessions_counts", "reviewed_items >= 0 AND total_items >= 0 AND reviewed_items <= total_items");
+                            t.HasCheckConstraint("ck_quiz_attempts_counts", "total_items >= 0 AND answered_items >= 0 AND correct_items >= 0 AND correct_items <= answered_items AND answered_items <= total_items");
 
-                            t.HasCheckConstraint("ck_srs_sessions_status", "status IN ('InProgress', 'Completed', 'Abandoned')");
+                            t.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");
+
+                            t.HasCheckConstraint("ck_quiz_attempts_status", "status IN ('Created', 'InProgress', 'Completed', 'Abandoned')");
                         });
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsSessionItem", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttemptItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AnsweredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("answered_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("ElapsedMs")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("elapsed_ms");
+
+                    b.Property<string>("Feedback")
+                        .HasColumnType("text")
+                        .HasColumnName("feedback");
+
+                    b.Property<bool?>("IsCorrect")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_correct");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<int?>("Quality")
+                        .HasColumnType("integer")
+                        .HasColumnName("quality");
+
+                    b.Property<Guid>("QuestionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_id");
+
+                    b.Property<Guid>("QuizAttemptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("quiz_attempt_id");
+
+                    b.Property<string>("SelectedOptionId")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("selected_option_id");
+
+                    b.Property<Guid>("SrsItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("srs_item_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_quiz_attempt_items");
+
+                    b.HasIndex("QuestionId")
+                        .HasDatabaseName("ix_quiz_attempt_items_question_id");
+
+                    b.HasIndex("SrsItemId")
+                        .HasDatabaseName("ix_quiz_attempt_items_srs_item_id");
+
+                    b.HasIndex("QuizAttemptId", "Position")
+                        .IsUnique()
+                        .HasDatabaseName("ix_quiz_attempt_items_quiz_attempt_id_position");
+
+                    b.ToTable("quiz_attempt_items", "srs", t =>
+                        {
+                            t.HasCheckConstraint("ck_quiz_attempt_items_position", "position > 0");
+
+                            t.HasCheckConstraint("ck_quiz_attempt_items_quality", "quality IS NULL OR (quality >= 0 AND quality <= 5)");
+                        });
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -1990,54 +1754,105 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<int?>("ElapsedMs")
-                        .HasColumnType("integer")
-                        .HasColumnName("elapsed_ms");
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
-                    b.Property<int>("Position")
-                        .HasColumnType("integer")
-                        .HasColumnName("position");
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_at");
 
-                    b.Property<string>("Rating")
+                    b.Property<double>("EasinessFactor")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(2.5)
+                        .HasColumnName("easiness_factor");
+
+                    b.Property<string>("Expression")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("expression");
+
+                    b.Property<int>("IntervalDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("interval_days");
+
+                    b.Property<Guid>("KnowledgeMeaningId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("knowledge_meaning_id");
+
+                    b.Property<int>("Lapses")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("lapses");
+
+                    b.Property<DateTimeOffset?>("LastReviewAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_review_at");
+
+                    b.Property<string>("Meaning")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("meaning");
+
+                    b.Property<string>("Reading")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("reading");
+
+                    b.Property<int>("Repetitions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("repetitions");
+
+                    b.Property<Guid?>("SourceLearningUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_learning_unit_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
-                        .HasColumnName("rating");
+                        .HasDefaultValue("New")
+                        .HasColumnName("status");
 
-                    b.Property<DateTimeOffset?>("ReviewedAt")
+                    b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
+                        .HasColumnName("updated_at");
 
-                    b.Property<DateTimeOffset>("ShownAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("shown_at");
-
-                    b.Property<Guid>("SrsCardId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
-                        .HasColumnName("srs_card_id");
-
-                    b.Property<Guid>("SrsSessionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("srs_session_id");
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_srs_session_items");
+                        .HasName("pk_srs_items");
 
-                    b.HasIndex("SrsCardId")
-                        .HasDatabaseName("ix_srs_session_items_srs_card_id");
+                    b.HasIndex("DueAt")
+                        .HasDatabaseName("ix_srs_items_due_at");
 
-                    b.HasIndex("SrsSessionId", "Position")
+                    b.HasIndex("KnowledgeMeaningId")
+                        .HasDatabaseName("ix_srs_items_knowledge_meaning_id");
+
+                    b.HasIndex("SourceLearningUnitId")
+                        .HasDatabaseName("ix_srs_items_source_learning_unit_id");
+
+                    b.HasIndex("UserId", "KnowledgeMeaningId")
                         .IsUnique()
-                        .HasDatabaseName("ix_srs_session_items_srs_session_id_position");
+                        .HasDatabaseName("ix_srs_items_user_id_knowledge_meaning_id");
 
-                    b.HasIndex("SrsSessionId", "SrsCardId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_srs_session_items_srs_session_id_srs_card_id");
+                    b.HasIndex("UserId", "Status", "DueAt")
+                        .HasDatabaseName("ix_srs_items_user_id_status_due_at");
 
-                    b.ToTable("srs_session_items", "srs", t =>
+                    b.ToTable("srs_items", "srs", t =>
                         {
-                            t.HasCheckConstraint("ck_srs_session_items_elapsed_ms", "elapsed_ms IS NULL OR elapsed_ms >= 0");
-
-                            t.HasCheckConstraint("ck_srs_session_items_position", "position > 0");
+                            t.HasCheckConstraint("ck_srs_items_status", "status IN ('New', 'Learning', 'Review', 'Suspended', 'Ignored')");
                         });
                 });
 
@@ -2812,28 +2627,69 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("OovCandidate");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.Question", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Srs.Quiz", "Quiz")
+                        .WithMany("Questions")
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_questions_quizzes_quiz_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsItem", "SrsItem")
+                        .WithMany()
+                        .HasForeignKey("SrsItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_questions_srs_items_srs_item_id");
+
+                    b.Navigation("Quiz");
+
+                    b.Navigation("SrsItem");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.Quiz", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_quizzes_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttempt", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.Srs.QuizAttempt", "SourceAttempt")
-                        .WithMany()
-                        .HasForeignKey("SourceAttemptId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_quiz_attempts_quiz_attempts_source_attempt_id");
+                    b.HasOne("Rakushu.Domain.Entities.Srs.Quiz", "Quiz")
+                        .WithMany("Attempts")
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_quiz_attempts_quizzes_quiz_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_quiz_attempts_users_user_id");
 
-                    b.Navigation("SourceAttempt");
+                    b.Navigation("Quiz");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttemptItem", b =>
                 {
+                    b.HasOne("Rakushu.Domain.Entities.Srs.Question", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_quiz_attempt_items_questions_question_id");
+
                     b.HasOne("Rakushu.Domain.Entities.Srs.QuizAttempt", "QuizAttempt")
                         .WithMany("Items")
                         .HasForeignKey("QuizAttemptId")
@@ -2841,118 +2697,47 @@ namespace Rakushu.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_quiz_attempt_items_quiz_attempts_quiz_attempt_id");
 
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsCard", "SrsCard")
+                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsItem", "SrsItem")
                         .WithMany()
-                        .HasForeignKey("SrsCardId")
+                        .HasForeignKey("SrsItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_quiz_attempt_items_srs_cards_srs_card_id");
+                        .HasConstraintName("fk_quiz_attempt_items_srs_items_srs_item_id");
+
+                    b.Navigation("Question");
 
                     b.Navigation("QuizAttempt");
 
-                    b.Navigation("SrsCard");
+                    b.Navigation("SrsItem");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsCard", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsItem", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsNote", "SrsNote")
-                        .WithOne()
-                        .HasForeignKey("Rakushu.Domain.Entities.Srs.SrsCard", "SrsNoteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_srs_cards_srs_notes_srs_note_id");
-
-                    b.Navigation("SrsNote");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsCardState", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsCard", "SrsCard")
-                        .WithOne("State")
-                        .HasForeignKey("Rakushu.Domain.Entities.Srs.SrsCardState", "SrsCardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_srs_card_states_srs_cards_srs_card_id");
-
-                    b.Navigation("SrsCard");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsNote", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Material.LearningUnit.LearningUnit", "LearningUnit")
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", "KnowledgeMeaning")
                         .WithMany()
-                        .HasForeignKey("LearningUnitId")
+                        .HasForeignKey("KnowledgeMeaningId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_srs_notes_learning_units_learning_unit_id");
+                        .HasConstraintName("fk_srs_items_knowledge_meanings_knowledge_meaning_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.LearningUnit.LearningUnit", "SourceLearningUnit")
+                        .WithMany()
+                        .HasForeignKey("SourceLearningUnitId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_srs_items_learning_units_source_learning_unit_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_srs_notes_users_user_id");
-
-                    b.Navigation("LearningUnit");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsReviewLog", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Srs.QuizAttemptItem", null)
-                        .WithMany()
-                        .HasForeignKey("QuizAttemptItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_srs_review_logs_quiz_attempt_items_quiz_attempt_item_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsCard", "SrsCard")
-                        .WithMany()
-                        .HasForeignKey("SrsCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_srs_review_logs_srs_cards_srs_card_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsSessionItem", null)
-                        .WithMany()
-                        .HasForeignKey("SrsSessionItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_srs_review_logs_srs_session_items_srs_session_item_id");
-
-                    b.Navigation("SrsCard");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsSession", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_srs_sessions_users_user_id");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsSessionItem", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsCard", "SrsCard")
-                        .WithMany()
-                        .HasForeignKey("SrsCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_srs_session_items_srs_cards_srs_card_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SrsSession", "SrsSession")
-                        .WithMany("Items")
-                        .HasForeignKey("SrsSessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_srs_session_items_srs_sessions_srs_session_id");
+                        .HasConstraintName("fk_srs_items_users_user_id");
 
-                    b.Navigation("SrsCard");
+                    b.Navigation("KnowledgeMeaning");
 
-                    b.Navigation("SrsSession");
+                    b.Navigation("SourceLearningUnit");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
@@ -3185,17 +2970,14 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("CuratorReview");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.Quiz", b =>
+                {
+                    b.Navigation("Attempts");
+
+                    b.Navigation("Questions");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuizAttempt", b =>
-                {
-                    b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsCard", b =>
-                {
-                    b.Navigation("State");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SrsSession", b =>
                 {
                     b.Navigation("Items");
                 });

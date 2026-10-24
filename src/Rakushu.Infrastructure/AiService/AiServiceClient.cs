@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Rakushu.Application.Abstractions.Infrastructure;
+using Rakushu.Application.Abstractions.Infrastructure.AiService;
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;

@@ -7,38 +7,81 @@ namespace Rakushu.Persistence.Configurations.Srs;
 
 internal sealed class QuizAttemptConfiguration : IEntityTypeConfiguration<QuizAttempt>
 {
-    public void Configure(EntityTypeBuilder<QuizAttempt> builder)
-    {
-        builder.ToTable("quiz_attempts", "srs", table =>
-        {
-            table.HasCheckConstraint("ck_quiz_attempts_counts", "total_items >= 0 AND answered_items >= 0 AND correct_items >= 0 AND correct_items <= answered_items AND answered_items <= total_items");
-            table.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");            table.HasCheckConstraint("ck_quiz_attempts_status", "status IN ('Created', 'InProgress', 'Completed', 'Abandoned')");
-            table.HasCheckConstraint("ck_quiz_attempts_mode", "attempt_mode IN ('SrsReview', 'Practice')");
-            table.HasCheckConstraint("ck_quiz_attempts_completed_at", "status <> 'Completed' OR completed_at IS NOT NULL");
-        });
+	public void Configure(EntityTypeBuilder<QuizAttempt> builder)
+	{
+		// Schema, Table & Constraints
+		builder.ToTable("quiz_attempts", "srs", table =>
+		{
+			table.HasCheckConstraint("ck_quiz_attempts_counts", "total_items >= 0 AND answered_items >= 0 AND correct_items >= 0 AND correct_items <= answered_items AND answered_items <= total_items");
+			table.HasCheckConstraint("ck_quiz_attempts_score", "score IS NULL OR (score >= 0 AND score <= 100)");
+			table.HasCheckConstraint("ck_quiz_attempts_status", "status IN ('Created', 'InProgress', 'Completed', 'Abandoned')");
+			table.HasCheckConstraint("ck_quiz_attempts_completed_at", "status <> 'Completed' OR completed_at IS NOT NULL");
+		});
 
-        builder.HasKey(attempt => attempt.Id);
-        builder.Property(attempt => attempt.Id)
-            .HasConversion(id => id.Value, value => QuizAttemptId.From(value));
+		// Id
+		builder.HasKey(attempt => attempt.Id);
+		builder.Property(attempt => attempt.Id)
+			.HasConversion(id => id.Value, value => QuizAttemptId.From(value));
 
-        builder.Property(attempt => attempt.UserId)
-            .HasConversion(id => id.Value, value => UserId.From(value))
-            .IsRequired();
+		// QuizId
+		builder.Property(attempt => attempt.QuizId)
+			.HasConversion(id => id.Value, value => QuizId.From(value))
+			.IsRequired();
 
-        builder.Property(attempt => attempt.TemplateCode).HasMaxLength(100).HasDefaultValue("WORD_TO_MEANING_MCQ").IsRequired();
-        builder.Property(attempt => attempt.AttemptMode).HasMaxLength(20).HasDefaultValue("Practice").IsRequired();
-        builder.Property(attempt => attempt.Status)
-            .HasConversion(status => status.ToString(), value => Enum.Parse<QuizAttemptStatus>(value))
-            .HasMaxLength(20)
-            .HasDefaultValue(QuizAttemptStatus.Created)
-            .IsRequired();
-        builder.Property(attempt => attempt.Score).HasPrecision(5, 2);
+		// UserId
+		builder.Property(attempt => attempt.UserId)
+			.HasConversion(id => id.Value, value => UserId.From(value))
+			.IsRequired();
 
-        builder.HasOne(attempt => attempt.User).WithMany().HasForeignKey(attempt => attempt.UserId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(attempt => attempt.SourceAttempt).WithMany().HasForeignKey(attempt => attempt.SourceAttemptId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasMany(attempt => attempt.Items).WithOne(item => item.QuizAttempt).HasForeignKey(item => item.QuizAttemptId).OnDelete(DeleteBehavior.Cascade);
+		// Status
+		builder.Property(attempt => attempt.Status)
+			.HasConversion(status => status.ToString(), value => Enum.Parse<QuizAttemptStatus>(value))
+			.HasMaxLength(20)
+			.HasDefaultValue(QuizAttemptStatus.InProgress)
+			.IsRequired();
 
-        builder.HasIndex(attempt => new { attempt.UserId, attempt.StartedAt });
-        builder.HasIndex(attempt => attempt.SourceAttemptId);
-    }
+		// Score & Counts
+		builder.Property(attempt => attempt.Score)
+			.HasPrecision(5, 2);
+
+		builder.Property(attempt => attempt.TotalItems).IsRequired();
+		builder.Property(attempt => attempt.AnsweredItems).IsRequired();
+		builder.Property(attempt => attempt.CorrectItems).IsRequired();
+
+		// Timestamps
+		builder.Property(attempt => attempt.StartedAt)
+			.HasColumnType("timestamp with time zone")
+			.IsRequired();
+
+		builder.Property(attempt => attempt.CompletedAt)
+			.HasColumnType("timestamp with time zone");
+
+		builder.Property(attempt => attempt.CreatedAt)
+			.HasColumnType("timestamp with time zone")
+			.IsRequired();
+
+		builder.Property(attempt => attempt.UpdatedAt)
+			.HasColumnType("timestamp with time zone")
+			.IsRequired();
+
+		// Relationships
+		builder.HasOne(attempt => attempt.User)
+			.WithMany()
+			.HasForeignKey(attempt => attempt.UserId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		builder.HasOne(attempt => attempt.Quiz)
+			.WithMany(quiz => quiz.Attempts)
+			.HasForeignKey(attempt => attempt.QuizId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		builder.HasMany(attempt => attempt.Items)
+			.WithOne(item => item.QuizAttempt)
+			.HasForeignKey(item => item.QuizAttemptId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		// Indexes
+		builder.HasIndex(attempt => new { attempt.UserId, attempt.StartedAt });
+		builder.HasIndex(attempt => attempt.QuizId);
+	}
 }

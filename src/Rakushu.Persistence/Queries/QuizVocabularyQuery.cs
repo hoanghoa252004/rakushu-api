@@ -15,20 +15,18 @@ internal sealed class QuizVocabularyQuery : IQuizVocabularyQuery
 	public async Task<IReadOnlyList<QuizVocabularyEntry>> GetQuizVocabularyEntriesAsync(
 		CancellationToken cancellationToken = default)
 	{
-		// Filter mapped entity properties before projecting to the record; EF Core cannot translate
-		// a Where over a constructed record.
-		var entries = await _context.LearningUnits
+		var entries = await _context.KnowledgeMeanings
 			.AsNoTracking()
-			.Where(unit =>
-				unit.KnowledgeMeaning.KnowledgeUnit.Expression != null &&
-				unit.KnowledgeMeaning.KnowledgeUnit.Expression.Trim() != string.Empty &&
-				unit.KnowledgeMeaning.Meaning != null &&
-				unit.KnowledgeMeaning.Meaning.Trim() != string.Empty)
-			.Select(unit => new
+			.Where(km =>
+				km.KnowledgeUnit.Expression != null &&
+				km.KnowledgeUnit.Expression.Trim() != string.Empty &&
+				km.Meaning != null &&
+				km.Meaning.Trim() != string.Empty)
+			.Select(km => new
 			{
-				Expression = unit.KnowledgeMeaning.KnowledgeUnit.Expression,
-				Reading = unit.KnowledgeMeaning.KnowledgeUnit.Reading,
-				Meaning = unit.KnowledgeMeaning.Meaning
+				Expression = km.KnowledgeUnit.Expression,
+				Reading = km.KnowledgeUnit.Reading,
+				Meaning = km.Meaning
 			})
 			.Distinct()
 			.ToListAsync(cancellationToken);
