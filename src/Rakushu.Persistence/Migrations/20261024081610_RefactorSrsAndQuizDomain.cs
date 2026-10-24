@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,6 +11,8 @@ namespace Rakushu.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("TRUNCATE TABLE srs.quiz_attempt_items, srs.quiz_attempts, srs.srs_cards CASCADE;");
+
             migrationBuilder.DropForeignKey(
                 name: "fk_quiz_attempts_quiz_attempts_source_attempt_id",
                 schema: "srs",
