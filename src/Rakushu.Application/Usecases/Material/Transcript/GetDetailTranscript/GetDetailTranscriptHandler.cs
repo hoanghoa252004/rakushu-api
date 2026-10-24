@@ -15,7 +15,7 @@ using Rakushu.Domain.Entities.Material.Transcript.TranscriptItem;
 using Rakushu.Domain.Entities.Material.Video;
 using System.Security.AccessControl;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.GetTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.GetDetailTranscript;
 
 internal sealed class GetDetailTranscriptHandler : IRequestHandler<GetDetailTranscriptQuery, Result<PaginatedList<TranscriptSegmentDetailDto>>>
 {

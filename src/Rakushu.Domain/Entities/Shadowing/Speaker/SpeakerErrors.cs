@@ -19,4 +19,12 @@ public static class SpeakerErrors
 	public static readonly Error InvalidThemeColor = Error.Validation(
 		"SPEAKER.INVALID_THEME_COLOR",
 		"Speaker theme color must be a valid hexadecimal color code (e.g., #3B82F6).");
+
+	public static readonly Error CodeAlreadyExists = Error.Conflict(
+		"SPEAKER.CODE_ALREADY_EXISTS",
+		"A speaker with this code already exists.");
+
+	public static readonly Error InUse = Error.Conflict(
+		"SPEAKER.IN_USE",
+		"The speaker is used by transcripts and cannot be deleted.");
 }

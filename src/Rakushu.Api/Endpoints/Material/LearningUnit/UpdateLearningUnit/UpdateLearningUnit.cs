@@ -1,27 +1,30 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
+using Rakushu.Api.Endpoints.Material.Transcript;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Material.LearningUnit.AddLearningUnit;
+using Rakushu.Application.Usecases.Material.LearningUnit.UpdateLearningUnit;
 using Rakushu.Domain.Entities.Identity.Role;
 
-namespace Rakushu.Api.Endpoints.Material.Transcript.AddLearningUnit;
+namespace Rakushu.Api.Endpoints.Material.LearningUnit.UpdateLearningUnit;
 
-internal sealed class AddLearningUnit : IEndpoint
+internal sealed class UpdateLearningUnit : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapTranscriptEndpoints()
-			.MapPost("/segments/{segmentId:guid}/learning-units", async (
+			.MapPut("/segments/{segmentId:guid}/learning-units/{learningUnitId:guid}", async (
 				[FromRoute] Guid videoId,
 				[FromRoute] Guid segmentId,
-				[FromBody] AddLearningUnitRequest request,
+				[FromRoute] Guid learningUnitId,
+				[FromBody] UpdateLearningUnitRequest request,
 				ISender sender,
 				CancellationToken cancellationToken = default) =>
 			{
-				var command = new AddLearningUnitCommand(
+				var command = new UpdateLearningUnitCommand(
 					videoId,
 					segmentId,
+					learningUnitId,
 					request.KnowledgeMeaningId,
 					request.StartTokenIndex,
 					request.EndTokenIndex);
@@ -30,9 +33,9 @@ internal sealed class AddLearningUnit : IEndpoint
 				return result.MatchOk();
 			})
 			.WithTags("Learning Units")
-			.WithName("AddSegmentLearningUnit")
+			.WithName("UpdateSegmentLearningUnit")
 			.WithSummary("Curator")
-			.WithDescription("Adds a learning unit to a segment. The knowledge meaning must exist and its knowledge unit must be active.")
+			.WithDescription("Updates a learning unit of a segment (full update). The knowledge meaning must exist and its knowledge unit must be active.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
@@ -41,7 +44,7 @@ internal sealed class AddLearningUnit : IEndpoint
 	}
 }
 
-public sealed record AddLearningUnitRequest(
+public sealed record UpdateLearningUnitRequest(
 	Guid KnowledgeMeaningId,
 	int StartTokenIndex,
 	int EndTokenIndex);

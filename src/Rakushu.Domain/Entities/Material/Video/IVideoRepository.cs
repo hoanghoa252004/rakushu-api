@@ -22,5 +22,8 @@ public interface IVideoRepository : IBaseRepository<Video, VideoId>
 	Task<IReadOnlyList<Video>> GetProcessingVideosWithReviewedTranscriptForTranslateAsync(
 		int batchSize,
 	CancellationToken cancellationToken = default);
-	
+
+	Task<IReadOnlyList<Video>> GetProcessingVideosWithProcessedResultAsync(
+		int batchSize,
+		CancellationToken cancellationToken = default);
 }

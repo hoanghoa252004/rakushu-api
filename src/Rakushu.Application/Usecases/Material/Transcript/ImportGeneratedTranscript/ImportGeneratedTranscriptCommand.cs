@@ -6,6 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.ImportTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.ImportGeneratedTranscript;
 
 public sealed record ImportGeneratedTranscriptCommand : IRequest<Result>;

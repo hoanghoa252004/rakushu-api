@@ -1,11 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
+using Rakushu.Api.Endpoints.Material.Transcript;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Material.LearningUnit.RemoveLearningUnit;
 using Rakushu.Domain.Entities.Identity.Role;
 
-namespace Rakushu.Api.Endpoints.Material.Transcript.RemoveLearningUnit;
+namespace Rakushu.Api.Endpoints.Material.LearningUnit.RemoveLearningUnit;
 
 internal sealed class RemoveLearningUnit : IEndpoint
 {

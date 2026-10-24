@@ -68,6 +68,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IKnowledgeCollectionRepository, KnowledgeCollectionRepository>();
 		services.AddScoped<ITokenRepository, TokenRepository>();
 		services.AddScoped<IKnowledgeUnitRepository, KnowledgeUnitRepository>();
+		services.AddScoped<Rakushu.Domain.Entities.Material.LearningUnit.ILearningUnitRepository, LearningUnitRepository>();
 		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
 		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
 		services.AddScoped<ISpeakerRepository, SpeakerRepository>();

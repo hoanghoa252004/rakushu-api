@@ -1,12 +1,11 @@
 using MediatR;
-using Rakushu.Application.Usecases.Material.Transcript;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
 using TranscriptEntity = Rakushu.Domain.Entities.Material.Transcript.Transcript;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.CreateTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.ImportOfficialTranscript;
 
 internal sealed class ImportOfficialTranscriptHandler : IRequestHandler<ImportOfficialTranscriptCommand, Result>
 {

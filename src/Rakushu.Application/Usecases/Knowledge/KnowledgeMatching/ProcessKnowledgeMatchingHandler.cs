@@ -1,12 +1,11 @@
 ﻿using MediatR;
-using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeCollection;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMatchingCandidate;
 using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 
-namespace Rakushu.Application.Features.KnowledgeMatching.Handlers;
+namespace Rakushu.Application.Usecases.Knowledge.KnowledgeMatching;
 
 public sealed class ProcessKnowledgeMatchingHandler: IRequestHandler<ProcessKnowledgeMatchingCommand, Result<IReadOnlyList<KnowledgeMatchCandidate>>>
 {

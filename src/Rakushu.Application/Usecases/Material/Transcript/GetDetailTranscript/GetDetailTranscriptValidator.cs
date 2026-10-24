@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.GetTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.GetDetailTranscript;
 
 internal sealed class GetDetailTranscriptValidator : AbstractValidator<GetDetailTranscriptQuery>
 {
