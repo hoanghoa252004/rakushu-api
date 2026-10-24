@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
-using Rakushu.Application.Abstractions.Infrastructure.Translation;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Subtitle;

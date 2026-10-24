@@ -1,7 +1,7 @@
 using MediatR;
 using Rakushu.Domain.Common.Results;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.CreateTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.ImportOfficialTranscript;
 
 public sealed record ImportOfficialTranscriptCommand(
 	Guid VideoId,

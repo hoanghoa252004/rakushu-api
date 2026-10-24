@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Rakushu.Application.Usecases.Material.Transcript.ImportTranscript;
+using Rakushu.Application.Usecases.Material.Transcript.ImportGeneratedTranscript;
 using System;
 using System.Collections.Generic;
 using System.Linq;

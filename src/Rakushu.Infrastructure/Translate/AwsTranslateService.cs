@@ -2,10 +2,10 @@
 using Amazon.Translate;
 using Amazon.Translate.Model;
 using Microsoft.Extensions.Options;
-using Rakushu.Application.Abstractions.Infrastructure.Translation;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Infrastructure.Extensions.Options;
 
-namespace Rakushu.Infrastructure.Translation;
+namespace Rakushu.Infrastructure.Translate;
 
 internal sealed class AwsTranslateService : ITranslateService
 {

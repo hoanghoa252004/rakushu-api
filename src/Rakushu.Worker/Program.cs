@@ -2,7 +2,7 @@ using Rakushu.Application.Extensions;
 using Rakushu.Domain.Extentions;
 using Rakushu.Infrastructure.Extensions;
 using Rakushu.Persistence.Extensions;
-using Rakushu.Worker.Extensions;
+using Rakushu.Worker;
 
 var builder = Host.CreateApplicationBuilder(args);
 

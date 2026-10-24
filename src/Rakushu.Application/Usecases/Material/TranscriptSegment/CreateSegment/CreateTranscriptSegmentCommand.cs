@@ -10,5 +10,7 @@ public sealed record CreateTranscriptSegmentCommand(
 	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
+	SubtitleInput Subtitle,
+	IReadOnlyList<TranscriptItemInput> Items,
 	int? Sequence = null
 ) : IRequest<Result<Guid>>;

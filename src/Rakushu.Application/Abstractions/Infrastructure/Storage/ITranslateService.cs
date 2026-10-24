@@ -1,4 +1,4 @@
-﻿namespace Rakushu.Application.Abstractions.Infrastructure.Translation;
+﻿namespace Rakushu.Application.Abstractions.Infrastructure.Storage;
 
 public interface ITranslateService
 {

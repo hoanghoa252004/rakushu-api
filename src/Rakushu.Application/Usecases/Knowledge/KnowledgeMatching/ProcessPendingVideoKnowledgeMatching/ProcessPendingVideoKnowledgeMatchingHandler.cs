@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching.ProcessPendingVideoKnowledgeMatching;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.ContentKnowledgeCollection;
@@ -11,7 +10,7 @@ using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
 
-namespace Rakushu.Application.Features.KnowledgeMatching.Handlers;
+namespace Rakushu.Application.Usecases.Knowledge.KnowledgeMatching.ProcessPendingVideoKnowledgeMatching;
 
 public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 	: IRequestHandler<ProcessPendingVideoKnowledgeMatchingCommand, Result>
@@ -175,7 +174,7 @@ public static class LearningUnitMapper
 {
 	public static LearningUnit Map(
 		KnowledgeMatchCandidate candidate,
-		KnowledgeMeaning knowledgeMeaning,
+		Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning knowledgeMeaning,
 		double confidence = 1.0)
 	{
 		return LearningUnit.Create(

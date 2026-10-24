@@ -20,6 +20,19 @@ internal sealed class CreateTranscriptSegmentValidator : AbstractValidator<Creat
 		RuleFor(x => x.EndTime)
 			.GreaterThan(TimeSpan.Zero).WithMessage("EndTime must be positive");
 
+		RuleFor(x => x.SpeakerId)
+			.NotEmpty().WithMessage("SpeakerId is required");
+
+		RuleFor(x => x.Subtitle)
+			.NotNull().WithMessage("Subtitle is required")
+			.SetValidator(new SubtitleInputValidator());
+
+		RuleFor(x => x.Items)
+			.NotNull().WithMessage("Items is required");
+
+		RuleForEach(x => x.Items)
+			.SetValidator(new TranscriptItemInputValidator());
+
 		RuleFor(x => x.Sequence)
 			.GreaterThan(0).When(x => x.Sequence.HasValue).WithMessage("Sequence must be greater than 0");
 	}

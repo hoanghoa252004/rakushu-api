@@ -18,6 +18,7 @@ using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Domain.Entities.Subscriptions.Plan;
@@ -63,12 +64,14 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();
 		services.AddScoped<ISeriesRepository, SeriesRepository>();
 		services.AddScoped<IKnowledgeMeaningRepository, KnowledgeMeaningRepository>();
-		services.AddScoped<IKnowledgeEmbeddingRepository, KnowledgeEmbeddingRepository>();
+		//services.AddScoped<IKnowledgeEmbeddingRepository, KnowledgeEmbeddingRepository>();
 		services.AddScoped<IKnowledgeCollectionRepository, KnowledgeCollectionRepository>();
 		services.AddScoped<ITokenRepository, TokenRepository>();
 		services.AddScoped<IKnowledgeUnitRepository, KnowledgeUnitRepository>();
+		services.AddScoped<Rakushu.Domain.Entities.Material.LearningUnit.ILearningUnitRepository, LearningUnitRepository>();
 		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
 		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
+		services.AddScoped<ISpeakerRepository, SpeakerRepository>();
 
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

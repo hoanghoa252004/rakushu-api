@@ -10,7 +10,7 @@ using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Material.Video.MediaAsset;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.ImportTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.ImportGeneratedTranscript;
 
 public sealed class ImportGeneratedTranscriptHandler
 	: IRequestHandler<ImportGeneratedTranscriptCommand, Result>

@@ -1,9 +1,8 @@
 using MediatR;
 using Rakushu.Application.Common.Pagination;
-using Rakushu.Application.Usecases.Material.Transcript;
 using Rakushu.Domain.Common.Results;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.GetTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.GetDetailTranscript;
 
 public sealed record GetDetailTranscriptQuery(
 	Guid VideoId,

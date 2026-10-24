@@ -37,6 +37,13 @@ public sealed class Subtitle : Entity<SubtitleId>
 		Sequence = sequence;
 	}
 
+	public void Update(LanguageCode languageCode, string text, int sequence)
+	{
+		LanguageCode = languageCode;
+		Text = text;
+		Sequence = sequence;
+	}
+
 	public static Result<Subtitle> Create(
 		TranscriptSegmentId transcriptSegmentId,
 		LanguageCode languageCode,

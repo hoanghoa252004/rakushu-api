@@ -4,9 +4,9 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Material.Transcript;
-using Rakushu.Application.Usecases.Material.Transcript.GetTranscript;
+using Rakushu.Application.Usecases.Material.Transcript.GetDetailTranscript;
 
-namespace Rakushu.Api.Endpoints.Material.Transcript.GetTranscript;
+namespace Rakushu.Api.Endpoints.Material.Transcript.GetDetailTranscript;
 
 internal sealed class GetDetailTranscript : IEndpoint
 {

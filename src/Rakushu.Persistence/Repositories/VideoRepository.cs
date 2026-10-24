@@ -23,6 +23,18 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 				.ThenInclude(t => t.TranscriptSegments)
 					.ThenInclude(ts => ts.Bunsetsus)
 						.ThenInclude(b => b.Tokens)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSpeakers)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(ts => ts.TranscriptItems)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(ts => ts.Subtitle)
+			.Include(v => v.Transcript)
+				.ThenInclude(t => t!.TranscriptSegments)
+					.ThenInclude(ts => ts.LearningUnits)
+			.AsSplitQuery()
 			.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
 	}
 
@@ -128,6 +140,23 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			)
 			.Take(batchSize)
 			.OrderBy(v => v.CreatedAt)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<Video>> GetProcessingVideosWithProcessedResultAsync(int batchSize, CancellationToken cancellationToken = default)
+	{
+		return await _context.Videos
+			.Where(v =>
+				v.Status == VideoStatus.Processing &&
+				v.Transcript != null &&
+				v.Transcript.TranscriptSegments.Count() > 0 &&
+				v.Transcript.TranscriptSegments.SelectMany(s => s.TranscriptItems).Count() > 0 &&
+				v.Transcript.TranscriptSegments.Count(s => s.Subtitle != null) > 0 &&
+				v.Transcript.TranscriptSegments.SelectMany(s => s.Bunsetsus).Count() > 0 &&
+				v.Transcript.TranscriptSegments.SelectMany(s => s.Bunsetsus).SelectMany(b => b.Tokens).Count() > 0 &&
+				v.Transcript.TranscriptSegments.SelectMany(s => s.LearningUnits).Count() > 0)
+			.OrderBy(v => v.CreatedAt)
+			.Take(batchSize)
 			.ToListAsync(cancellationToken);
 	}
 }

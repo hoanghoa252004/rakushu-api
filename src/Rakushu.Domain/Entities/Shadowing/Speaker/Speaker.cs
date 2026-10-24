@@ -80,6 +80,32 @@ public sealed class Speaker : Entity<SpeakerId>
 			updatedAt));
 	}
 
+	public Result Update(
+		string name,
+		string japaneseName,
+		string? avatarKey,
+		string? description,
+		string themeColor,
+		DateTimeOffset updatedAt)
+	{
+		if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 200)
+			return Result.Failure(SpeakerErrors.InvalidName);
+
+		if (description?.Length > 1000)
+			return Result.Failure(SpeakerErrors.InvalidDescription);
+
+		if (!IsValidHexColor(themeColor))
+			return Result.Failure(SpeakerErrors.InvalidThemeColor);
+
+		Name = name.Trim();
+		JapaneseName = japaneseName;
+		AvatarKey = avatarKey;
+		Description = description?.Trim();
+		ThemeColor = themeColor;
+		UpdatedAt = updatedAt;
+		return Result.Success();
+	}
+
 	private static bool IsValidHexColor(string? color)
 	{
 		if (string.IsNullOrWhiteSpace(color) || color.Length != 7)

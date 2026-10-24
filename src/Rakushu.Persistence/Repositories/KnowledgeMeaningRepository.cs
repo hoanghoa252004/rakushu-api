@@ -19,6 +19,7 @@ public sealed class KnowledgeMeaningRepository : BaseRepository<KnowledgeMeaning
 	{
 		return await _context.KnowledgeMeanings
 			.Include(m => m.LearningUnits)
+			.Include(m => m.KnowledgeUnit)
 			.SingleOrDefaultAsync(m => m.Id == id, cancellationToken);
 	}
 

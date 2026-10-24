@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Rakushu.Application.Usecases.Material.Transcript.CreateTranscript;
+namespace Rakushu.Application.Usecases.Material.Transcript.ImportOfficialTranscript;
 
 internal sealed class ImportOfficialTranscriptValidator : AbstractValidator<ImportOfficialTranscriptCommand>
 {

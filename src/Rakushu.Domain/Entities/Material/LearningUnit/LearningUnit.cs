@@ -54,4 +54,18 @@ public sealed class LearningUnit : AggregateRoot<LearningUnitId>
 			DetectionMethod = detectionMethod
 		};
 	}
+
+	public void Update(
+		KnowledgeMeaning knowledgeMeaning,
+		int startTokenIndex,
+		int endTokenIndex)
+	{
+		KnowledgeMeaningId = knowledgeMeaning.Id;
+		KnowledgeMeaning = knowledgeMeaning;
+		StartTokenIndex = startTokenIndex;
+		EndTokenIndex = endTokenIndex;
+		Confidence = 1.0;
+		IsReviewed = true;
+		DetectionMethod = MatchingMethod.CuratorDefine;
+	}
 }

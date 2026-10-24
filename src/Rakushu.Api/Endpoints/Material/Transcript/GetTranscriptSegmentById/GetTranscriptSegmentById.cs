@@ -6,7 +6,7 @@ using Rakushu.Application.Usecases.Material.Transcript;
 using Rakushu.Application.Usecases.Material.TranscriptSegment.GetSegmentById;
 using Rakushu.Domain.Entities.Identity.Role;
 
-namespace Rakushu.Api.Endpoints.Material.Transcript.GetSegmentById;
+namespace Rakushu.Api.Endpoints.Material.Transcript.GetTranscriptSegmentById;
 
 internal sealed class GetTranscriptSegmentById : IEndpoint
 {

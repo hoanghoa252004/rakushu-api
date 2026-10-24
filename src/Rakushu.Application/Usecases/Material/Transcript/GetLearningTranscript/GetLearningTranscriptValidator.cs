@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Rakushu.Application.Usecases.Material.Transcript.GetTranscript;
 using System;
 using System.Collections.Generic;
 using System.Linq;

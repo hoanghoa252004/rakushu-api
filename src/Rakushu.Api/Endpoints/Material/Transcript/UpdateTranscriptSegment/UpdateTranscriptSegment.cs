@@ -23,9 +23,12 @@ internal sealed class UpdateTranscriptSegment : IEndpoint
 				var command = new UpdateTranscriptSegmentCommand(
 					videoId,
 					segmentId,
+					request.SpeakerId,
 					request.Text,
 					request.StartTime,
 					request.EndTime,
+					request.Subtitle,
+					request.Items ?? [],
 					request.Sequence);
 
 				var result = await sender.Send(command, cancellationToken);
@@ -44,7 +47,10 @@ internal sealed class UpdateTranscriptSegment : IEndpoint
 }
 
 public sealed record UpdateSegmentRequest(
+	Guid SpeakerId,
 	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
+	Rakushu.Application.Usecases.Material.TranscriptSegment.SubtitleInput Subtitle,
+	List<Rakushu.Application.Usecases.Material.TranscriptSegment.TranscriptItemInput>? Items,
 	int? Sequence = null);

@@ -92,6 +92,42 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		return Result.Success();
 	}
 
+	public void SetSpeaker(TranscriptSpeakerId transcriptSpeakerId)
+	{
+		TranscriptSpeakerId = transcriptSpeakerId;
+	}
+
+	public void ClearBunsetsus()
+	{
+		_bunsetsus.Clear();
+	}
+
+	public void ClearItems()
+	{
+		_transcriptItems.Clear();
+	}
+
+	public Result RemoveLearningUnit(LearningUnit.LearningUnitId learningUnitId)
+	{
+		var item = _learningUnits.FirstOrDefault(x => x.Id == learningUnitId);
+		if (item is null)
+			return Result.Failure(LearningUnit.LearningUnitErrors.NotFound);
+
+		_learningUnits.Remove(item);
+		return Result.Success();
+	}
+
+	public Result<Subtitle.Subtitle> UpsertSubtitle(
+		LanguageCode languageCode,
+		string text)
+	{
+		if (Subtitle is null)
+			return AddSubtitle(languageCode, text);
+
+		Subtitle.Update(languageCode, text, Sequence);
+		return Result.Success(Subtitle);
+	}
+
 	public Result<Bunsetsu.Bunsetsu> AddBunsetsu(Material.Bunsetsu.Bunsetsu bunsetsu)
 	{
 		_bunsetsus.Add(bunsetsu);
