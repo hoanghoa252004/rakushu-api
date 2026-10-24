@@ -60,29 +60,8 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 			var currentCount = transcript.TranscriptSegments.Count;
 			var sequence = request.Sequence ?? (currentCount + 1);
 
-			if (sequence < 1 || sequence > currentCount + 1)
-				return Result.Failure<Guid>(TranscriptSegmentErrors.InvalidSequence);
-
-			// If inserting in the middle, shift affected segments
-			if (sequence <= currentCount)
-			{
-				var segmentsToShift = transcript.TranscriptSegments
-					.Where(s => s.Sequence >= sequence)
-					.OrderByDescending(s => s.Sequence)
-					.ToList();
-
-				foreach (var seg in segmentsToShift)
-				{
-					var updateResult = transcript.UpdateSegmentSequence(
-						TranscriptSegmentId.From(seg.Id.Value),
-						seg.Sequence + 1);
-
-					if (updateResult.IsFailure)
-						return Result.Failure<Guid>(updateResult.Error);
-				}
-			}
-
-			var segmentResult = transcript.AddSegment(
+			// Sequence validation and shifting are handled by the domain
+			var segmentResult = transcript.InsertSegment(
 				transcriptSpeaker.Id,
 				request.Text,
 				request.StartTime,
