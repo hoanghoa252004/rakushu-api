@@ -39,6 +39,12 @@ public static class VideoStatusTransition
 		},
 		{
 			VideoStatus.Archived , new HashSet<VideoStatus>()
+		},
+		{
+			VideoStatus.Ready , new HashSet<VideoStatus>
+			{
+				VideoStatus.Archived
+			}
 		}
 	};
 

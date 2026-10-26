@@ -12,13 +12,15 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 	public async Task<LearningUnit?> GetDetailByIdAsync(LearningUnitId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.LearningUnits
-			.AsNoTracking()
+			//.AsNoTracking()
 			.Include(l => l.KnowledgeMeaning)
 				.ThenInclude(m => m.KnowledgeUnit)
 					.ThenInclude(u => u.KnowledgeCollection)
+
 			.Include(l => l.KnowledgeMeaning)
 				.ThenInclude(m => m.KnowledgeUnit)
 					.ThenInclude(u => u.Meanings)
+
 			.AsSplitQuery()
 			.FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
 	}
@@ -31,7 +33,7 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 		CancellationToken cancellationToken = default)
 	{
 		var query = _context.LearningUnits
-			.AsNoTracking()
+			//.AsNoTracking()
 			.Where(l => l.TranscriptSegment.Transcript.VideoId == videoId);
 
 		if (knowledgeType.HasValue)

@@ -65,8 +65,13 @@ public sealed partial class Transcript : Entity<TranscriptId>
 		return Result.Success();
 	}
 
-	public void SetStorageKey(string storageKey)
+	public void MarkAsReviewed()
 	{
+		IsReviewed = true;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void SetStorageKey(string storageKey)	{
 		StorageKey = storageKey;
 		SourceType = TranscriptSource.Official;
 		UpdatedAt = DateTimeOffset.UtcNow;
