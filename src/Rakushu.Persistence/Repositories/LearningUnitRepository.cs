@@ -19,6 +19,10 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 
 			.Include(l => l.KnowledgeMeaning)
 				.ThenInclude(m => m.KnowledgeUnit)
+					.ThenInclude(u => u.ProficiencyLevel)
+
+			.Include(l => l.KnowledgeMeaning)
+				.ThenInclude(m => m.KnowledgeUnit)
 					.ThenInclude(u => u.Meanings)
 
 			.AsSplitQuery()
@@ -45,6 +49,9 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 			.Include(l => l.KnowledgeMeaning)
 				.ThenInclude(m => m.KnowledgeUnit)
 					.ThenInclude(u => u.KnowledgeCollection)
+			.Include(l => l.KnowledgeMeaning)
+				.ThenInclude(m => m.KnowledgeUnit)
+					.ThenInclude(u => u.ProficiencyLevel)
 			.OrderBy(l => l.TranscriptSegment.Sequence)
 			.ThenBy(l => l.StartTokenIndex)
 			.Skip((pageNumber - 1) * pageSize)

@@ -10,4 +10,17 @@ public sealed record ProficiencyLevelDto(
 	string? Description,
 	DateTimeOffset CreatedAt,
 	DateTimeOffset UpdatedAt
-	);
+	)
+{
+	internal static ProficiencyLevelDto From(Domain.Entities.Knowledge.ProficiencyLevel.ProficiencyLevel level) =>
+		new(
+			level.Id.Value,
+			level.Code,
+			level.Name,
+			level.JapaneseName,
+			level.SortOrder,
+			level.IsActive,
+			level.Description,
+			level.CreatedAt,
+			level.UpdatedAt);
+}
