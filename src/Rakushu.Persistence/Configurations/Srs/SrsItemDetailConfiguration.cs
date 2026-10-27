@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
-using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Persistence.Configurations.Srs;
 
@@ -18,11 +18,16 @@ internal sealed class SrsItemDetailConfiguration : IEntityTypeConfiguration<SrsI
 				id => id.Value,
 				value => SrsItemDetailId.From(value));
 
-		builder.Property(d => d.SavedItemId)
+		builder.Property(d => d.SrsScheduleId)
 			.HasConversion(
 				id => id.Value,
-				value => SavedItemId.From(value))
+				value => SrsScheduleId.From(value))
 			.IsRequired();
+
+		builder.HasOne(d => d.SrsSchedule)
+			.WithMany(s => s.Details)
+			.HasForeignKey(d => d.SrsScheduleId)
+			.OnDelete(DeleteBehavior.Cascade);
 
 		builder.Property(d => d.QuizAttemptItemId)
 			.HasConversion(
@@ -55,6 +60,6 @@ internal sealed class SrsItemDetailConfiguration : IEntityTypeConfiguration<SrsI
 		builder.Property(d => d.ReviewedAt)
 			.IsRequired();
 
-		builder.HasIndex(d => new { d.SavedItemId, d.ReviewedAt });
+		builder.HasIndex(d => new { d.SrsScheduleId, d.ReviewedAt });
 	}
 }

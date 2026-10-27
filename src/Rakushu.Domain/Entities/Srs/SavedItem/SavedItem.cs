@@ -2,7 +2,6 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Domain.Entities.Srs.SavedItem;
@@ -25,9 +24,6 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 	public KnowledgeMeaning KnowledgeMeaning { get; private set; } = null!;
 	public SrsSchedule.SrsSchedule? Schedule { get; private set; }
 
-	private readonly List<SrsItemDetail.SrsItemDetail> _details = [];
-	public IReadOnlyCollection<SrsItemDetail.SrsItemDetail> Details => _details.AsReadOnly();
-
 	private SavedItem() { }
 	private SavedItem(SavedItemId id) : base(id) { }
 
@@ -48,11 +44,25 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 			UserId = userId,
 			KnowledgeMeaningId = knowledgeMeaningId,
 			Expression = expression.Trim(),
-			Reading = string.IsNullOrWhiteSpace(reading) ? null : reading.Trim(),
+			Reading = reading?.Trim(),
 			Meaning = meaning.Trim(),
 			SavedAt = now,
 			CreatedAt = now
 		});
+	}
+
+	public Result UpdateSnapshot(string expression, string? reading, string meaning)
+	{
+		if (string.IsNullOrWhiteSpace(expression))
+			return Result.Failure(SavedItemErrors.EmptyExpression);
+
+		if (string.IsNullOrWhiteSpace(meaning))
+			return Result.Failure(SavedItemErrors.EmptyMeaning);
+
+		Expression = expression.Trim();
+		Reading = reading?.Trim();
+		Meaning = meaning.Trim();
+		return Result.Success();
 	}
 
 	private static Result Validate(

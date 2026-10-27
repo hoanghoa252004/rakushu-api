@@ -354,7 +354,7 @@ namespace Rakushu.Persistence.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    saved_item_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    srs_schedule_id = table.Column<Guid>(type: "uuid", nullable: false),
                     quiz_attempt_item_id = table.Column<Guid>(type: "uuid", nullable: true),
                     review_number = table.Column<int>(type: "integer", nullable: false),
                     quality = table.Column<int>(type: "integer", nullable: false),
@@ -375,10 +375,10 @@ namespace Rakushu.Persistence.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
-                        name: "fk_srs_item_details_saved_items_saved_item_id",
-                        column: x => x.saved_item_id,
+                        name: "fk_srs_item_details_srs_schedules_srs_schedule_id",
+                        column: x => x.srs_schedule_id,
                         principalSchema: "srs",
-                        principalTable: "saved_items",
+                        principalTable: "srs_schedules",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -513,10 +513,10 @@ namespace Rakushu.Persistence.Migrations
                 column: "quiz_attempt_item_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_srs_item_details_saved_item_id_reviewed_at",
+                name: "ix_srs_item_details_srs_schedule_id_reviewed_at",
                 schema: "srs",
                 table: "srs_item_details",
-                columns: new[] { "saved_item_id", "reviewed_at" });
+                columns: new[] { "srs_schedule_id", "reviewed_at" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_srs_schedules_saved_item_id",
@@ -548,15 +548,15 @@ namespace Rakushu.Persistence.Migrations
                 schema: "srs");
 
             migrationBuilder.DropTable(
-                name: "srs_schedules",
-                schema: "srs");
-
-            migrationBuilder.DropTable(
                 name: "reports",
                 schema: "curation");
 
             migrationBuilder.DropTable(
                 name: "quiz_attempt_items",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "srs_schedules",
                 schema: "srs");
 
             migrationBuilder.DropTable(

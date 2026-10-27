@@ -43,5 +43,10 @@ internal sealed class SrsScheduleConfiguration : IEntityTypeConfiguration<SrsSch
 			.IsRequired();
 
 		builder.HasIndex(s => new { s.Status, s.DueAt });
+
+		builder.HasMany(s => s.Details)
+			.WithOne(d => d.SrsSchedule)
+			.HasForeignKey(d => d.SrsScheduleId)
+			.OnDelete(DeleteBehavior.Cascade);
 	}
 }

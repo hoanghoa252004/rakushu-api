@@ -65,10 +65,5 @@ internal sealed class SavedItemConfiguration : IEntityTypeConfiguration<SavedIte
 			.WithOne(sch => sch.SavedItem)
 			.HasForeignKey<SrsSchedule>(sch => sch.SavedItemId)
 			.OnDelete(DeleteBehavior.Cascade);
-
-		builder.HasMany(si => si.Details)
-			.WithOne(d => d.SavedItem)
-			.HasForeignKey(d => d.SavedItemId)
-			.OnDelete(DeleteBehavior.Cascade);
 	}
 }

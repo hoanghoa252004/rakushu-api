@@ -1971,9 +1971,9 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("reviewed_at");
 
-                    b.Property<Guid>("SavedItemId")
+                    b.Property<Guid>("SrsScheduleId")
                         .HasColumnType("uuid")
-                        .HasColumnName("saved_item_id");
+                        .HasColumnName("srs_schedule_id");
 
                     b.HasKey("Id")
                         .HasName("pk_srs_item_details");
@@ -1981,8 +1981,8 @@ namespace Rakushu.Persistence.Migrations
                     b.HasIndex("QuizAttemptItemId")
                         .HasDatabaseName("ix_srs_item_details_quiz_attempt_item_id");
 
-                    b.HasIndex("SavedItemId", "ReviewedAt")
-                        .HasDatabaseName("ix_srs_item_details_saved_item_id_reviewed_at");
+                    b.HasIndex("SrsScheduleId", "ReviewedAt")
+                        .HasDatabaseName("ix_srs_item_details_srs_schedule_id_reviewed_at");
 
                     b.ToTable("srs_item_details", "srs");
                 });
@@ -2950,16 +2950,16 @@ namespace Rakushu.Persistence.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_srs_item_details_quiz_attempt_items_quiz_attempt_item_id");
 
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", "SavedItem")
+                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", "SrsSchedule")
                         .WithMany("Details")
-                        .HasForeignKey("SavedItemId")
+                        .HasForeignKey("SrsScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_srs_item_details_saved_items_saved_item_id");
+                        .HasConstraintName("fk_srs_item_details_srs_schedules_srs_schedule_id");
 
                     b.Navigation("QuizAttemptItem");
 
-                    b.Navigation("SavedItem");
+                    b.Navigation("SrsSchedule");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
@@ -3218,9 +3218,12 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", b =>
                 {
-                    b.Navigation("Details");
-
                     b.Navigation("Schedule");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
+                {
+                    b.Navigation("Details");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Feature.Feature", b =>

@@ -1,5 +1,6 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 
 namespace Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
@@ -14,6 +15,9 @@ public sealed class SrsSchedule : Entity<SrsScheduleId>
 
 	// NAVIGATION PROPERTIES
 	public SavedItem SavedItem { get; private set; } = null!;
+
+	private readonly List<SrsItemDetail.SrsItemDetail> _details = [];
+	public IReadOnlyCollection<SrsItemDetail.SrsItemDetail> Details => _details.AsReadOnly();
 
 	private SrsSchedule() { }
 	private SrsSchedule(SrsScheduleId id) : base(id) { }

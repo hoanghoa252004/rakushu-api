@@ -7,8 +7,8 @@ public static class SrsItemDetailErrors
 	public static readonly Error NotFound = Error.NotFound(
 		"SRS_ITEM_DETAIL.NOT_FOUND", "The SRS item detail was not found.");
 
-	public static readonly Error InvalidSavedItemId = Error.Validation(
-		"SRS_ITEM_DETAIL.INVALID_SAVED_ITEM_ID", "Saved item ID cannot be empty.");
+	public static readonly Error InvalidSrsScheduleId = Error.Validation(
+		"SRS_ITEM_DETAIL.INVALID_SRS_SCHEDULE_ID", "SRS schedule ID cannot be empty.");
 
 	public static readonly Error InvalidReviewNumber = Error.Validation(
 		"SRS_ITEM_DETAIL.INVALID_REVIEW_NUMBER", "Review number must be greater than zero.");

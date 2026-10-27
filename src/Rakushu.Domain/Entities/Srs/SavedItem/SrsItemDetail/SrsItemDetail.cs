@@ -1,12 +1,13 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 
 public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 {
-	public SavedItemId SavedItemId { get; private set; } = null!;
+	public SrsScheduleId SrsScheduleId { get; private set; } = null!;
 	public QuizAttemptItemId? QuizAttemptItemId { get; private set; }
 	public int ReviewNumber { get; private set; }
 	public int Quality { get; private set; }
@@ -17,14 +18,14 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 	public DateTimeOffset ReviewedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
-	public SavedItem SavedItem { get; private set; } = null!;
+	public SrsSchedule.SrsSchedule SrsSchedule { get; private set; } = null!;
 	public QuizAttemptItem? QuizAttemptItem { get; private set; }
 
 	private SrsItemDetail() { }
 	private SrsItemDetail(SrsItemDetailId id) : base(id) { }
 
 	public static Result<SrsItemDetail> Create(
-		SavedItemId savedItemId,
+		SrsScheduleId srsScheduleId,
 		int reviewNumber,
 		int quality,
 		int intervalDays,
@@ -34,13 +35,13 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 		DateTimeOffset reviewedAt,
 		QuizAttemptItemId? quizAttemptItemId = null)
 	{
-		var validation = Validate(savedItemId, reviewNumber, quality);
+		var validation = Validate(srsScheduleId, reviewNumber, quality);
 		if (validation.IsFailure)
 			return Result.Failure<SrsItemDetail>(validation.Error);
 
 		return Result.Success(new SrsItemDetail(SrsItemDetailId.Create())
 		{
-			SavedItemId = savedItemId,
+			SrsScheduleId = srsScheduleId,
 			QuizAttemptItemId = quizAttemptItemId,
 			ReviewNumber = reviewNumber,
 			Quality = quality,
@@ -52,10 +53,10 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 		});
 	}
 
-	private static Result Validate(SavedItemId savedItemId, int reviewNumber, int quality)
+	private static Result Validate(SrsScheduleId srsScheduleId, int reviewNumber, int quality)
 	{
-		if (savedItemId is null || savedItemId.Value == Guid.Empty)
-			return Result.Failure(SrsItemDetailErrors.InvalidSavedItemId);
+		if (srsScheduleId is null || srsScheduleId.Value == Guid.Empty)
+			return Result.Failure(SrsItemDetailErrors.InvalidSrsScheduleId);
 
 		if (reviewNumber < 1)
 			return Result.Failure(SrsItemDetailErrors.InvalidReviewNumber);
