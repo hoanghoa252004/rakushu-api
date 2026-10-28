@@ -62,6 +62,11 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 		return Result.Success();
 	}
 
+	public void UpdateFeedback(string? feedback)
+	{
+		Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
+	}
+
 	private static Result Validate(QuestionId questionId, int position)
 	{
 		if (questionId is null || questionId.Value == Guid.Empty)

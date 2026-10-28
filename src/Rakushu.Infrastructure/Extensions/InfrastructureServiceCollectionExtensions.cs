@@ -1,3 +1,6 @@
+using Rakushu.Application.Abstractions.Infrastructure;
+using Rakushu.Application.Abstractions.Infrastructure.AiService;
+using Rakushu.Infrastructure.AiService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -63,7 +66,8 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
 
 		// AI SERVICE CLIENT
-		services.AddHttpClient<Rakushu.Application.Abstractions.Infrastructure.IAiServiceClient, Rakushu.Infrastructure.AiService.AiServiceClient>();
+		services.AddHttpClient<IAiServiceClient, AiServiceClient>();
+		services.AddHttpClient<IQuizContentGenerator, OllamaQuizContentGenerator>();
 
 		return services;
 	}

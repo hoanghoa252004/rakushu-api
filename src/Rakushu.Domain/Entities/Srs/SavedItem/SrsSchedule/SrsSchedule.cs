@@ -7,7 +7,7 @@ namespace Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 public sealed class SrsSchedule : Entity<SrsScheduleId>
 {
 	public SavedItemId SavedItemId { get; private set; } = null!;
-	public SrsStatus Status { get; private set; } = SrsStatus.New;
+	public SrsStatus Status { get; private set; } = SrsStatus.Learning;
 	public DateTimeOffset DueAt { get; private set; }
 	public DateTimeOffset? LastReviewedAt { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
@@ -32,11 +32,16 @@ public sealed class SrsSchedule : Entity<SrsScheduleId>
 		return Result.Success(new SrsSchedule(SrsScheduleId.Create())
 		{
 			SavedItemId = savedItemId,
-			Status = SrsStatus.New,
+			Status = SrsStatus.Learning,
 			DueAt = now,
 			CreatedAt = now,
 			UpdatedAt = now
 		});
+	}
+
+	public void AddDetail(SrsItemDetail.SrsItemDetail detail)
+	{
+		_details.Add(detail);
 	}
 
 	public void UpdateSchedule(SrsStatus status, DateTimeOffset dueAt, DateTimeOffset reviewedAt)
@@ -65,5 +70,32 @@ public sealed class SrsSchedule : Entity<SrsScheduleId>
 		Status = targetStatus;
 		UpdatedAt = now;
 		return Result.Success();
+	}
+
+	public Result MarkAsIgnored(DateTimeOffset now)
+	{
+		if (Status == SrsStatus.Ignored)
+			return Result.Failure(SrsScheduleErrors.AlreadyIgnored);
+
+		Status = SrsStatus.Ignored;
+		UpdatedAt = now;
+		return Result.Success();
+	}
+
+	public SrsStatus ResolveStatus(DateTimeOffset now)
+	{
+		if (Status is SrsStatus.Suspended or SrsStatus.Ignored)
+			return Status;
+
+		var today = now.Date;
+		var dueDate = DueAt.Date;
+
+		if (dueDate < today)
+			return SrsStatus.Overdue;
+
+		if (dueDate == today || DueAt <= now)
+			return SrsStatus.Due_today;
+
+		return Status; // Learning or Review
 	}
 }

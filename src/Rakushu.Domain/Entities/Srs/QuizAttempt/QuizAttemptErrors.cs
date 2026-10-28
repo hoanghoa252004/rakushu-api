@@ -18,4 +18,16 @@ public static class QuizAttemptErrors
 
 	public static readonly Error AlreadyCompleted = Error.Conflict(
 		"QUIZ_ATTEMPT.ALREADY_COMPLETED", "The quiz attempt has already been completed.");
+
+	public static readonly Error NotCompleted = Error.Validation(
+		"QUIZ_ATTEMPT.NOT_COMPLETED", "Only completed quiz attempts can be retried.");
+
+	public static readonly Error NoMistakesToRetry = Error.Validation(
+		"QUIZ_ATTEMPT.NO_MISTAKES", "There are no mistake questions in this quiz attempt to retry.");
+
+	public static readonly Error AttemptExpired = Error.Validation(
+		"QUIZ_ATTEMPT.EXPIRED", "The quiz attempt has exceeded the 1-hour time limit and has been abandoned.");
+
+	public static readonly Error ActiveAttemptInProgress = Error.Conflict(
+		"QUIZ_ATTEMPT.ACTIVE_ATTEMPT_EXISTS", "You already have an active quiz attempt in progress. Please complete or cancel it before starting a new one.");
 }

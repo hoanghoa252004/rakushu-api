@@ -19,6 +19,10 @@ using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
+using Rakushu.Domain.Entities.Srs.BankQuestion;
+using Rakushu.Domain.Entities.Srs.Quiz;
+using Rakushu.Domain.Entities.Srs.QuizAttempt;
+using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Domain.Entities.Subscriptions.Plan;
@@ -73,10 +77,14 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
 		services.AddScoped<ISpeakerRepository, SpeakerRepository>();
 
+		// SRS Repositories
+		services.AddScoped<ISavedItemRepository, SavedItemRepository>();
+		services.AddScoped<IBankQuestionRepository, BankQuestionRepository>();
+		services.AddScoped<IQuizRepository, QuizRepository>();
+		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
 		return services;
 	}
 }
-

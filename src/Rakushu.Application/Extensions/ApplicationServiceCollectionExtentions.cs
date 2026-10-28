@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+using Rakushu.Application.Usecases.Learning.Srs.SubmitQuizAttempt;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Behaviors;
 using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching;
@@ -39,6 +40,8 @@ public static class ApplicationServiceCollectionExtentions
 		services.AddScoped<IKnowledgeMatcher, WordMatcher>();
 		services.AddScoped<IKnowledgeMatcher, CollocationMatcher>();
 		services.AddScoped<IKnowledgeMatcher, GrammarMatcher>();
+
+		services.AddScoped<IQuizAttemptFeedbackService, QuizAttemptFeedbackService>();
 
 		return services;
 	}

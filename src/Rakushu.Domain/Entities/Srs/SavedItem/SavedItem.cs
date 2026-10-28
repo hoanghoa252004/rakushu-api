@@ -51,6 +51,11 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 		});
 	}
 
+	public void AttachSchedule(SrsSchedule.SrsSchedule schedule)
+	{
+		Schedule = schedule;
+	}
+
 	public Result UpdateSnapshot(string expression, string? reading, string meaning)
 	{
 		if (string.IsNullOrWhiteSpace(expression))

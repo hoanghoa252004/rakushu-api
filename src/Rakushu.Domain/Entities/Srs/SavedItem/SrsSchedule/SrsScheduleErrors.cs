@@ -15,4 +15,7 @@ public static class SrsScheduleErrors
 
 	public static readonly Error NotSuspended = Error.Conflict(
 		"SRS_SCHEDULE.NOT_SUSPENDED", "The vocabulary item is not currently suspended.");
+
+	public static readonly Error AlreadyIgnored = Error.Conflict(
+		"SRS_SCHEDULE.ALREADY_IGNORED", "The vocabulary item is already ignored.");
 }

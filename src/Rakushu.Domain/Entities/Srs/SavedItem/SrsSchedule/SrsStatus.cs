@@ -2,9 +2,10 @@ namespace Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 public enum SrsStatus
 {
-	New = 0,
-	Learning = 1,
-	Review = 2,
-	Suspended = 3,
-	Ignored = 4
+	Learning = 0,
+	Due_today = 1,
+	Overdue = 2,
+	Review = 3,
+	Suspended = 4,
+	Ignored = 5
 }

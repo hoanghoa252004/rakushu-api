@@ -63,6 +63,13 @@ internal static class SwaggerExtension
 				Description = "APIs for shadowing."
 			});
 
+			options.SwaggerDoc("srs", new OpenApiInfo
+			{
+				Title = "SRS API",
+				Version = "v1",
+				Description = "APIs for Spaced Repetition System (SRS) vocabulary notebook and quiz sessions."
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -103,7 +110,7 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/material/swagger.json", "Material API");
 			options.SwaggerEndpoint("/swagger/knowledge/swagger.json", "Knowledge API");
 			options.SwaggerEndpoint("/swagger/shadowing/swagger.json", "Shadowing API");
-
+			options.SwaggerEndpoint("/swagger/srs/swagger.json", "SRS API");
 		});
 
 		return app;

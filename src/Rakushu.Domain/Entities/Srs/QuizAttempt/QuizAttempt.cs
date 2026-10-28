@@ -87,6 +87,9 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		UpdatedAt = now;
 	}
 
+	public bool IsExpired(DateTimeOffset now, TimeSpan timeout) =>
+		Status == QuizAttemptStatus.InProgress && (now - StartedAt) > timeout;
+
 	private static Result Validate(UserId userId, QuizId quizId)
 	{
 		if (userId is null || userId.Value == Guid.Empty)
