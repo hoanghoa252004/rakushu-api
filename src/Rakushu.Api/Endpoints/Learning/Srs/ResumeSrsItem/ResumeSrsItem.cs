@@ -10,7 +10,7 @@ internal sealed class ResumeSrsItem : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsItemEndpoints()
 			.MapPatch("/items/{id:guid}/resume", async (
 				Guid id,
 				ISender sender,

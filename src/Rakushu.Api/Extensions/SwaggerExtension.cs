@@ -67,7 +67,7 @@ internal static class SwaggerExtension
 			{
 				Title = "SRS API",
 				Version = "v1",
-				Description = "APIs for Spaced Repetition System (SRS) vocabulary notebook and quiz sessions."
+				Description = "APIs for Spaced Repetition System (SRS) including Vocabulary Items, Quizzes, and Flashcard Sessions."
 			});
 
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

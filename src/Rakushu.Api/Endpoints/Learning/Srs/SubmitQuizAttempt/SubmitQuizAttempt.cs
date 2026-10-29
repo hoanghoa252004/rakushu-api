@@ -11,7 +11,7 @@ internal sealed class SubmitQuizAttempt : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsQuizEndpoints()
 			.MapPost("/quiz-attempts/{id:guid}/submit", async (
 				Guid id,
 				[FromBody] SubmitQuizAttemptRequestDto dto,

@@ -6,6 +6,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
@@ -44,6 +45,7 @@ internal sealed class SaveSrsItemHandler : IRequestHandler<SaveSrsItemCommand, R
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			var meaningId = KnowledgeMeaningId.From(request.MeaningId);
+			var segmentId = TranscriptSegmentId.From(request.TranscriptSegmentId);
 			var meaning = await _knowledgeMeaningRepository.GetByIdAsync(meaningId, cancellationToken);
 			if (meaning is null)
 				return Result.Failure<SrsItemDto>(KnowledgeMeaningErrors.NotFound);
@@ -53,6 +55,15 @@ internal sealed class SaveSrsItemHandler : IRequestHandler<SaveSrsItemCommand, R
 
 			if (existingItem is not null)
 			{
+				if (existingItem.TranscriptSegmentId != segmentId)
+				{
+					var updateSegmentResult = existingItem.SetTranscriptSegment(segmentId);
+					if (updateSegmentResult.IsFailure)
+						return Result.Failure<SrsItemDto>(updateSegmentResult.Error);
+
+					_savedItemRepository.Update(existingItem);
+				}
+
 				return Result.Success(new SrsItemDto(
 					existingItem.Id.Value,
 					existingItem.KnowledgeMeaningId.Value,
@@ -75,7 +86,8 @@ internal sealed class SaveSrsItemHandler : IRequestHandler<SaveSrsItemCommand, R
 				expression,
 				reading,
 				definition,
-				now);
+				now,
+				segmentId);
 
 			if (savedItemResult.IsFailure)
 				return Result.Failure<SrsItemDto>(savedItemResult.Error);
@@ -94,10 +106,10 @@ internal sealed class SaveSrsItemHandler : IRequestHandler<SaveSrsItemCommand, R
 				savedItem.Expression,
 				savedItem.Reading,
 				savedItem.Meaning,
-				savedItem.Schedule!.ResolveStatus(now).ToString(),
-				savedItem.Schedule.DueAt,
-				savedItem.Schedule.LastReviewedAt,
+				SrsStatus.Learning.ToString(),
+				scheduleResult.Value.DueAt,
+				null,
 				savedItem.SavedAt));
-		}, cancellationToken);
+		});
 	}
 }

@@ -11,7 +11,7 @@ internal sealed class RetryQuizAttempt : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsQuizEndpoints()
 			.MapPost("/quiz-attempts/{id:guid}/retry", async (
 				Guid id,
 				[FromBody] RetryQuizAttemptRequestDto? dto,

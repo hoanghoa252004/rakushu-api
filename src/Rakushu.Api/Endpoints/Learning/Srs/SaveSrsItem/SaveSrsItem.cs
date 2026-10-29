@@ -11,19 +11,19 @@ internal sealed class SaveSrsItem : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsItemEndpoints()
 			.MapPost("/items", async (
 				[FromBody] SaveSrsItemRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new SaveSrsItemCommand(dto.MeaningId);
+				var command = new SaveSrsItemCommand(dto.MeaningId, dto.TranscriptSegmentId);
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchCreated("GetSrsItems", item => new { id = item.Id });
 			})
 			.WithName("SaveSrsItem")
 			.WithSummary("Save a vocabulary meaning into personal SRS notebook")
-			.WithDescription("Creates a saved item snapshot and initializes its SM-2 review schedule with New status and due today.")
+			.WithDescription("Creates a saved item snapshot with transcript segment context and initializes its SM-2 review schedule with New status and due today.")
 			.RequireAuthorization()
 			.Produces<SrsItemDto>(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
@@ -33,4 +33,6 @@ internal sealed class SaveSrsItem : IEndpoint
 	}
 }
 
-internal sealed record SaveSrsItemRequestDto(Guid MeaningId);
+internal sealed record SaveSrsItemRequestDto(
+	Guid MeaningId,
+	Guid TranscriptSegmentId);

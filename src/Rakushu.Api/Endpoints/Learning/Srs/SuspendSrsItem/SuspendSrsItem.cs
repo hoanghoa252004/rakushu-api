@@ -10,7 +10,7 @@ internal sealed class SuspendSrsItem : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsItemEndpoints()
 			.MapPatch("/items/{id:guid}/suspend", async (
 				Guid id,
 				ISender sender,

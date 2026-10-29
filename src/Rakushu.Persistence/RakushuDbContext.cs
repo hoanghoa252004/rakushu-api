@@ -43,6 +43,8 @@ using Rakushu.Domain.Entities.Srs.Quiz;
 using Rakushu.Domain.Entities.Srs.Quiz.Question;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
+using Rakushu.Domain.Entities.Srs.FlashcardSession;
+using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
@@ -121,6 +123,8 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<Question> Questions => Set<Question>();
 	public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
 	public DbSet<QuizAttemptItem> QuizAttemptItems => Set<QuizAttemptItem>();
+	public DbSet<FlashcardSession> FlashcardSessions => Set<FlashcardSession>();
+	public DbSet<FlashcardSessionItem> FlashcardSessionItems => Set<FlashcardSessionItem>();
 
 	// Curation & Issue Reporting
 	public DbSet<IssueCategory> IssueCategories => Set<IssueCategory>();

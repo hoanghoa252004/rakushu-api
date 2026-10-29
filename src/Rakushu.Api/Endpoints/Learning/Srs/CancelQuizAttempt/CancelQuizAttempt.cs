@@ -9,7 +9,7 @@ internal sealed class CancelQuizAttempt : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsQuizEndpoints()
 			.MapPost("/quiz-attempts/{id:guid}/cancel", async (
 				Guid id,
 				ISender sender,

@@ -14,4 +14,12 @@ public interface ILearningUnitRepository : IBaseRepository<LearningUnit, Learnin
 		int pageNumber,
 		int pageSize,
 		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyDictionary<Guid, LearningUnitMediaContext>> GetMediaContextByMeaningIdsAsync(
+		IReadOnlyCollection<Guid> meaningIds,
+		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyDictionary<Guid, LearningUnitMediaContext>> GetMediaContextBySegmentIdsAsync(
+		IReadOnlyCollection<Guid> segmentIds,
+		CancellationToken cancellationToken = default);
 }

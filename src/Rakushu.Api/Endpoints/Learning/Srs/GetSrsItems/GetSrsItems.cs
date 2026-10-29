@@ -11,7 +11,7 @@ internal sealed class GetSrsItems : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsItemEndpoints()
 			.MapGet("/items", async (
 				[FromQuery] string? status,
 				[FromQuery] int? page,

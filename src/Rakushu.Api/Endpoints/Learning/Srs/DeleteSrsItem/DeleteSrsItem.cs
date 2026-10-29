@@ -9,7 +9,7 @@ internal sealed class DeleteSrsItem : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsItemEndpoints()
 			.MapDelete("/items/{id:guid}", async (
 				Guid id,
 				ISender sender,

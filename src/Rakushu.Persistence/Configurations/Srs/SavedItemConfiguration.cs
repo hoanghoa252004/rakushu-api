@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
@@ -39,6 +40,18 @@ internal sealed class SavedItemConfiguration : IEntityTypeConfiguration<SavedIte
 		builder.HasOne(si => si.KnowledgeMeaning)
 			.WithMany()
 			.HasForeignKey(si => si.KnowledgeMeaningId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		builder.Property(si => si.TranscriptSegmentId)
+			.HasConversion(
+				id => id.Value,
+				value => TranscriptSegmentId.From(value))
+			.IsRequired();
+
+		builder.HasOne(si => si.TranscriptSegment)
+			.WithMany()
+			.HasForeignKey(si => si.TranscriptSegmentId)
+			.IsRequired()
 			.OnDelete(DeleteBehavior.Cascade);
 
 		builder.Property(si => si.Expression)

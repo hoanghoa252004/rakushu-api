@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
@@ -39,6 +40,16 @@ internal sealed class SrsItemDetailConfiguration : IEntityTypeConfiguration<SrsI
 			.HasForeignKey(d => d.QuizAttemptItemId)
 			.OnDelete(DeleteBehavior.SetNull);
 
+		builder.Property(d => d.FlashcardSessionItemId)
+			.HasConversion(
+				id => id != null ? id.Value : (Guid?)null,
+				value => value.HasValue ? FlashcardSessionItemId.From(value.Value) : null);
+
+		builder.HasOne(d => d.FlashcardSessionItem)
+			.WithMany()
+			.HasForeignKey(d => d.FlashcardSessionItemId)
+			.OnDelete(DeleteBehavior.SetNull);
+
 		builder.Property(d => d.ReviewNumber)
 			.IsRequired();
 
@@ -59,7 +70,5 @@ internal sealed class SrsItemDetailConfiguration : IEntityTypeConfiguration<SrsI
 
 		builder.Property(d => d.ReviewedAt)
 			.IsRequired();
-
-		builder.HasIndex(d => new { d.SrsScheduleId, d.ReviewedAt });
 	}
 }

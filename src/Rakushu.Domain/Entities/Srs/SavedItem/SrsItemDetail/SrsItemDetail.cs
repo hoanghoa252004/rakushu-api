@@ -1,5 +1,6 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
@@ -9,6 +10,7 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 {
 	public SrsScheduleId SrsScheduleId { get; private set; } = null!;
 	public QuizAttemptItemId? QuizAttemptItemId { get; private set; }
+	public FlashcardSessionItemId? FlashcardSessionItemId { get; private set; }
 	public int ReviewNumber { get; private set; }
 	public int Quality { get; private set; }
 	public int IntervalDays { get; private set; }
@@ -20,6 +22,7 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 	// NAVIGATION PROPERTIES
 	public SrsSchedule.SrsSchedule SrsSchedule { get; private set; } = null!;
 	public QuizAttemptItem? QuizAttemptItem { get; private set; }
+	public FlashcardSessionItem? FlashcardSessionItem { get; private set; }
 
 	private SrsItemDetail() { }
 	private SrsItemDetail(SrsItemDetailId id) : base(id) { }
@@ -33,7 +36,8 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 		int repetitions,
 		int lapses,
 		DateTimeOffset reviewedAt,
-		QuizAttemptItemId? quizAttemptItemId = null)
+		QuizAttemptItemId? quizAttemptItemId = null,
+		FlashcardSessionItemId? flashcardSessionItemId = null)
 	{
 		var validation = Validate(srsScheduleId, reviewNumber, quality);
 		if (validation.IsFailure)
@@ -43,6 +47,7 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 		{
 			SrsScheduleId = srsScheduleId,
 			QuizAttemptItemId = quizAttemptItemId,
+			FlashcardSessionItemId = flashcardSessionItemId,
 			ReviewNumber = reviewNumber,
 			Quality = quality,
 			IntervalDays = Math.Max(0, intervalDays),

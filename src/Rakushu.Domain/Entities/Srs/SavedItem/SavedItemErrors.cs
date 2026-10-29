@@ -13,6 +13,9 @@ public static class SavedItemErrors
 	public static readonly Error InvalidMeaningId = Error.Validation(
 		"SAVED_ITEM.INVALID_MEANING_ID", "Knowledge meaning ID cannot be empty.");
 
+	public static readonly Error InvalidTranscriptSegmentId = Error.Validation(
+		"SAVED_ITEM.INVALID_TRANSCRIPT_SEGMENT_ID", "Transcript segment ID cannot be empty.");
+
 	public static readonly Error EmptyExpression = Error.Validation(
 		"SAVED_ITEM.EMPTY_EXPRESSION", "Expression cannot be empty.");
 

@@ -2,6 +2,7 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Domain.Entities.Srs.SavedItem;
@@ -10,6 +11,7 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 {
 	public UserId UserId { get; private set; } = null!;
 	public KnowledgeMeaningId KnowledgeMeaningId { get; private set; } = null!;
+	public TranscriptSegmentId TranscriptSegmentId { get; private set; } = null!;
 
 	// Vocabulary Snapshot
 	public string Expression { get; private set; } = null!;
@@ -22,6 +24,7 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 	// NAVIGATION PROPERTIES
 	public User User { get; private set; } = null!;
 	public KnowledgeMeaning KnowledgeMeaning { get; private set; } = null!;
+	public TranscriptSegment TranscriptSegment { get; private set; } = null!;
 	public SrsSchedule.SrsSchedule? Schedule { get; private set; }
 
 	private SavedItem() { }
@@ -33,9 +36,10 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 		string expression,
 		string? reading,
 		string meaning,
-		DateTimeOffset now)
+		DateTimeOffset now,
+		TranscriptSegmentId transcriptSegmentId)
 	{
-		var validation = Validate(userId, knowledgeMeaningId, expression, meaning);
+		var validation = Validate(userId, knowledgeMeaningId, transcriptSegmentId, expression, meaning);
 		if (validation.IsFailure)
 			return Result.Failure<SavedItem>(validation.Error);
 
@@ -43,6 +47,7 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 		{
 			UserId = userId,
 			KnowledgeMeaningId = knowledgeMeaningId,
+			TranscriptSegmentId = transcriptSegmentId,
 			Expression = expression.Trim(),
 			Reading = reading?.Trim(),
 			Meaning = meaning.Trim(),
@@ -54,6 +59,15 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 	public void AttachSchedule(SrsSchedule.SrsSchedule schedule)
 	{
 		Schedule = schedule;
+	}
+
+	public Result SetTranscriptSegment(TranscriptSegmentId transcriptSegmentId)
+	{
+		if (transcriptSegmentId is null || transcriptSegmentId.Value == Guid.Empty)
+			return Result.Failure(SavedItemErrors.InvalidTranscriptSegmentId);
+
+		TranscriptSegmentId = transcriptSegmentId;
+		return Result.Success();
 	}
 
 	public Result UpdateSnapshot(string expression, string? reading, string meaning)
@@ -73,6 +87,7 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 	private static Result Validate(
 		UserId userId,
 		KnowledgeMeaningId knowledgeMeaningId,
+		TranscriptSegmentId transcriptSegmentId,
 		string expression,
 		string meaning)
 	{
@@ -81,6 +96,9 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 
 		if (knowledgeMeaningId is null || knowledgeMeaningId.Value == Guid.Empty)
 			return Result.Failure(SavedItemErrors.InvalidMeaningId);
+
+		if (transcriptSegmentId is null || transcriptSegmentId.Value == Guid.Empty)
+			return Result.Failure(SavedItemErrors.InvalidTranscriptSegmentId);
 
 		if (string.IsNullOrWhiteSpace(expression))
 			return Result.Failure(SavedItemErrors.EmptyExpression);

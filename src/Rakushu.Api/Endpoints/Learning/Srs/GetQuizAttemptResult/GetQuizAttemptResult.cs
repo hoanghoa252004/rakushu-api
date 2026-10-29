@@ -10,7 +10,7 @@ internal sealed class GetQuizAttemptResult : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsEndpoints()
+		app.MapSrsQuizEndpoints()
 			.MapGet("/quiz-attempts/{attemptId:guid}/result", async (
 				Guid attemptId,
 				ISender sender,
