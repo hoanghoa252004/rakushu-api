@@ -51,7 +51,11 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 				: elapsedMs >= 5_000 ? 4
 				: 5;
 
-			var choices = QuizOptionParser.Parse(question.ChoicesJson);
+			var typeCode = question.QuestionType?.Code;
+			var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
+			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
+
+			IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.ChoicesJson);
 			answerResults.Add(new QuizAnswerResultDto(
 				question.Id.Value,
 				question.Position,
@@ -64,7 +68,8 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 				elapsedMs,
 				quality,
 				attemptItem?.Feedback,
-				question.BankQuestion?.Explanation));
+				question.BankQuestion?.Explanation,
+				typeCode));
 		}
 
 		return Result.Success(new QuizAttemptResultResponse(

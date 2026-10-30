@@ -134,12 +134,20 @@ internal sealed class RetryQuizAttemptHandler : IRequestHandler<RetryQuizAttempt
 
 			var clientQuestions = quizToUse.Questions
 				.OrderBy(q => q.Position)
-				.Select(q => new QuizQuestionDto(
-					q.Id.Value,
-					q.Position,
-					q.Prompt,
-					q.Reading,
-					QuizOptionParser.Parse(q.ChoicesJson)))
+				.Select(q =>
+				{
+					var typeCode = q.QuestionType?.Code;
+					var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
+					               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
+					IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(q.ChoicesJson);
+					return new QuizQuestionDto(
+						q.Id.Value,
+						q.Position,
+						q.Prompt,
+						q.Reading,
+						choices,
+						typeCode);
+				})
 				.ToList();
 
 			return Result.Success(new QuizAttemptStartedResponse(

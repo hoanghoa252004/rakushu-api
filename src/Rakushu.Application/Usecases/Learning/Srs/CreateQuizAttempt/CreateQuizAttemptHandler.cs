@@ -235,13 +235,18 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 				var question = questionResult.Value;
 				quiz.AddQuestion(question);
 
-				var choices = QuizOptionParser.Parse(question.ChoicesJson);
+				var questionTypeCode = bankQ.QuestionType?.Code;
+				var isTyping = string.Equals(questionTypeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
+				               string.Equals(questionTypeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
+
+				IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.ChoicesJson);
 				clientQuestions.Add(new QuizQuestionDto(
 					question.Id.Value,
 					position,
 					question.Prompt,
 					question.Reading,
-					choices));
+					choices,
+					questionTypeCode));
 
 				position++;
 			}

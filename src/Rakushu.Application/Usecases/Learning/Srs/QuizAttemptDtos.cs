@@ -7,7 +7,8 @@ public sealed record QuizQuestionDto(
 	int Position,
 	string Prompt,
 	string? Reading,
-	IReadOnlyList<QuizOptionDto> Choices);
+	IReadOnlyList<QuizOptionDto> Choices,
+	string? QuestionType = null);
 
 public sealed record QuizAttemptStartedResponse(
 	Guid AttemptId,
@@ -30,7 +31,8 @@ public sealed record QuizAnswerResultDto(
 	int ElapsedMs,
 	int Quality,
 	string? Feedback,
-	string? Explanation);
+	string? Explanation,
+	string? QuestionType = null);
 
 public sealed record QuizAttemptResultResponse(
 	Guid AttemptId,
@@ -44,3 +46,4 @@ public sealed record QuizAttemptResultResponse(
 	DateTimeOffset StartedAt,
 	DateTimeOffset? CompletedAt,
 	IReadOnlyList<QuizAnswerResultDto> Answers);
+

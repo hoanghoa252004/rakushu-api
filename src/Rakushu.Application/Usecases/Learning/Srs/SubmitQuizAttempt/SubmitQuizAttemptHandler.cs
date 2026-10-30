@@ -72,11 +72,16 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 			{
 				answersDict.TryGetValue(question.Id.Value, out var submission);
 
+				var typeCode = question.QuestionType?.Code;
+				var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
+				               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
+
 				bool isUnanswered = string.IsNullOrWhiteSpace(submission?.SelectedOptionId);
-				bool isCorrect = !isUnanswered && string.Equals(
+				bool isCorrect = !isUnanswered && CheckIsCorrect(
 					submission!.SelectedOptionId,
 					question.CorrectOptionId,
-					StringComparison.OrdinalIgnoreCase);
+					question.ChoicesJson,
+					typeCode);
 
 				int elapsedMs = submission?.ElapsedMs ?? 0;
 
@@ -154,7 +159,7 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 					}
 				}
 
-				var choices = QuizOptionParser.Parse(question.ChoicesJson);
+				IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.ChoicesJson);
 				answerResults.Add(new QuizAnswerResultDto(
 					question.Id.Value,
 					question.Position,
@@ -167,7 +172,8 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 					elapsedMs,
 					quality,
 					null,
-					question.BankQuestion?.Explanation));
+					question.BankQuestion?.Explanation,
+					typeCode));
 			}
 
 			var completeResult = attempt.Complete(now);
@@ -193,5 +199,76 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 
 		var enrichedResult = await _feedbackService.ApplyAsync(result.Value, cancellationToken);
 		return Result.Success(enrichedResult);
+	}
+
+	private static bool CheckIsCorrect(
+		string? userAnswer,
+		string correctOptionId,
+		string choicesJson,
+		string? questionTypeCode)
+	{
+		if (string.IsNullOrWhiteSpace(userAnswer))
+			return false;
+
+		userAnswer = userAnswer.Trim(' ', '\t', '\r', '\n', '\u3000');
+		correctOptionId = correctOptionId.Trim(' ', '\t', '\r', '\n', '\u3000');
+
+		// 1. Direct case-insensitive match (e.g. multiple-choice "A" == "A" or exact text match)
+		if (string.Equals(userAnswer, correctOptionId, StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		// 2. Check if user answered with the option text when correctOptionId is an option key ("A", "B", etc.)
+		var options = QuizOptionParser.Parse(choicesJson);
+		var correctOption = options.FirstOrDefault(o => string.Equals(o.Id, correctOptionId, StringComparison.OrdinalIgnoreCase));
+		if (correctOption is not null && string.Equals(userAnswer, correctOption.Text.Trim(' ', '\t', '\r', '\n', '\u3000'), StringComparison.OrdinalIgnoreCase))
+			return true;
+
+		// 3. For typing questions or general alternatives in choicesJson:
+		// Check against alternative texts / IDs in choicesJson
+		if (options.Any(o => string.Equals(userAnswer, o.Text.Trim(' ', '\t', '\r', '\n', '\u3000'), StringComparison.OrdinalIgnoreCase) ||
+							 string.Equals(userAnswer, o.Id.Trim(' ', '\t', '\r', '\n', '\u3000'), StringComparison.OrdinalIgnoreCase)))
+		{
+			return true;
+		}
+
+		// 4. Special handling for TYPE_MEANING:
+		// Normalize punctuation (dots, parentheses, slashes, commas, whitespace)
+		if (string.Equals(questionTypeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase))
+		{
+			return IsMeaningMatch(userAnswer, correctOptionId);
+		}
+
+		return false;
+	}
+
+	private static bool IsMeaningMatch(string userAnswer, string correctMeaning)
+	{
+		static string Clean(string s)
+		{
+			var t = s.Trim(' ', '\t', '\r', '\n', '\u3000', '.', '…', '!', '?', '"', '\'');
+			return t.ToLowerInvariant();
+		}
+
+		var cleanUser = Clean(userAnswer);
+		var cleanCorrect = Clean(correctMeaning);
+
+		if (cleanUser == cleanCorrect)
+			return true;
+
+		// Also check without parentheses, e.g. "Đã đến (khiêm nhường ngữ)" -> "Đã đến"
+		var correctWithoutParens = System.Text.RegularExpressions.Regex.Replace(cleanCorrect, @"\s*\([^)]*\)", "").Trim();
+		if (cleanUser == correctWithoutParens)
+			return true;
+
+		// Check synonyms split by comma or semicolon or slash
+		var parts = cleanCorrect.Split(new[] { ',', ';', '/' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+		foreach (var p in parts)
+		{
+			var cleanPart = Clean(System.Text.RegularExpressions.Regex.Replace(p, @"\s*\([^)]*\)", ""));
+			if (cleanUser == cleanPart)
+				return true;
+		}
+
+		return false;
 	}
 }

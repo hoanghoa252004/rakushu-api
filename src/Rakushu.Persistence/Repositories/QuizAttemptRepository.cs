@@ -20,6 +20,9 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 			.Include(qa => qa.Quiz)
 				.ThenInclude(q => q.Questions)
 					.ThenInclude(qn => qn.BankQuestion)
+			.Include(qa => qa.Quiz)
+				.ThenInclude(q => q.Questions)
+					.ThenInclude(qn => qn.QuestionType)
 			.SingleOrDefaultAsync(qa => qa.Id == id, cancellationToken);
 	}
 
@@ -31,6 +34,7 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 			.Include(qa => qa.Items)
 			.Include(qa => qa.Quiz)
 				.ThenInclude(q => q.Questions)
+					.ThenInclude(qn => qn.QuestionType)
 			.FirstOrDefaultAsync(qa => qa.UserId == userId && qa.Status == QuizAttemptStatus.InProgress, cancellationToken);
 	}
 
