@@ -29,4 +29,9 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		int page = 1,
 		int pageSize = 20,
 		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<string>> GetRandomDistractorMeaningsAsync(
+		IEnumerable<KnowledgeMeaningId> excludeMeaningIds,
+		int count,
+		CancellationToken cancellationToken = default);
 }

@@ -99,4 +99,54 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 
 		return (items, totalCount);
 	}
+
+	public async Task<IReadOnlyList<string>> GetRandomDistractorMeaningsAsync(
+		IEnumerable<KnowledgeMeaningId> excludeMeaningIds,
+		int count,
+		CancellationToken cancellationToken = default)
+	{
+		var excludeList = excludeMeaningIds.ToList();
+
+		var meanings = await _context.KnowledgeMeanings
+			.AsNoTracking()
+			.Where(km => !excludeList.Contains(km.Id) && !string.IsNullOrWhiteSpace(km.Meaning))
+			.Select(km => km.Meaning)
+			.Distinct()
+			.Take(count * 4)
+			.ToListAsync(cancellationToken);
+
+		if (meanings.Count < count)
+		{
+			var savedMeanings = await _context.SavedItems
+				.AsNoTracking()
+				.Where(si => !excludeList.Contains(si.KnowledgeMeaningId) && !string.IsNullOrWhiteSpace(si.Meaning))
+				.Select(si => si.Meaning)
+				.Distinct()
+				.Take(count * 4)
+				.ToListAsync(cancellationToken);
+
+			meanings = meanings.Concat(savedMeanings).Distinct().ToList();
+		}
+
+		if (meanings.Count < count)
+		{
+			var defaultPool = new[]
+			{
+				"Điểm thắc mắc, nghi vấn",
+				"Nội dung được thảo luận",
+				"Vấn đề cần giải quyết",
+				"Lịch trình, kế hoạch dự kiến",
+				"Phương pháp thực hiện",
+				"Kết quả kiểm tra, đánh giá",
+				"Tùy trường hợp, có khi ...",
+				"Nếu có điều gì xảy ra",
+				"Nội dung được ghi chép",
+				"Khi ..., vào dịp ..."
+			};
+
+			meanings = meanings.Concat(defaultPool.Where(p => !meanings.Contains(p))).ToList();
+		}
+
+		return meanings.OrderBy(_ => Random.Shared.Next()).Take(count).ToList();
+	}
 }

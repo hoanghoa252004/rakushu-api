@@ -5,7 +5,25 @@ public interface IQuizContentGenerator
 	Task<IReadOnlyDictionary<Guid, string>> GenerateAdaptiveFeedbackAsync(
 		IReadOnlyList<QuizFeedbackPrompt> questions,
 		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyDictionary<Guid, GeneratedQuizPromptAndExplanation>> GenerateQuizContentBatchAsync(
+		IReadOnlyList<GenerateQuizContentPrompt> prompts,
+		CancellationToken cancellationToken = default);
 }
+
+public sealed record GenerateQuizContentPrompt(
+	Guid MeaningId,
+	string Expression,
+	string? Reading,
+	string Meaning,
+	string? ContextSentence = null
+);
+
+public sealed record GeneratedQuizPromptAndExplanation(
+	Guid MeaningId,
+	string Prompt,
+	string Explanation
+);
 
 public sealed record QuizFeedbackPrompt(
 	Guid QuestionId,

@@ -89,6 +89,113 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 		}
 	}
 
+	public async Task<IReadOnlyDictionary<Guid, GeneratedQuizPromptAndExplanation>> GenerateQuizContentBatchAsync(
+		IReadOnlyList<GenerateQuizContentPrompt> prompts,
+		CancellationToken cancellationToken = default)
+	{
+		if (prompts.Count == 0)
+		{
+			return new Dictionary<Guid, GeneratedQuizPromptAndExplanation>();
+		}
+
+		try
+		{
+			var itemsBuilder = new System.Text.StringBuilder();
+			for (int i = 0; i < prompts.Count; i++)
+			{
+				var p = prompts[i];
+				var idx = i + 1;
+				itemsBuilder.AppendLine($"Mục {idx} (meaningId: \"{p.MeaningId}\"):");
+				itemsBuilder.AppendLine($"- Từ/ngữ pháp: {p.Expression}");
+				if (!string.IsNullOrWhiteSpace(p.Reading))
+					itemsBuilder.AppendLine($"- Cách đọc: {p.Reading}");
+				itemsBuilder.AppendLine($"- Nghĩa tiếng Việt: {p.Meaning}");
+				if (!string.IsNullOrWhiteSpace(p.ContextSentence))
+					itemsBuilder.AppendLine($"- Câu ngữ cảnh: {p.ContextSentence}");
+				itemsBuilder.AppendLine();
+			}
+
+			var jsonTemplateBuilder = new System.Text.StringBuilder();
+			for (int i = 0; i < prompts.Count; i++)
+			{
+				var p = prompts[i];
+				jsonTemplateBuilder.Append($$"""
+					    {
+					      "meaningId": "{{p.MeaningId}}",
+					      "prompt": "Từ/ngữ pháp 「{{p.Expression}}」 có ý nghĩa là gì?",
+					      "explanation": "「{{p.Expression}}」{{(string.IsNullOrWhiteSpace(p.Reading) ? "" : $"({p.Reading})")}} có nghĩa là: {{p.Meaning}}."
+					    }
+					""");
+				if (i < prompts.Count - 1)
+					jsonTemplateBuilder.Append(",");
+				jsonTemplateBuilder.AppendLine();
+			}
+
+			const string systemPrompt = "Bạn là chuyên gia sư phạm tiếng Nhật của Rakushu. Bạn luôn trả về JSON hợp lệ theo đúng cấu trúc yêu cầu, không kèm bất kỳ giải thích ngoài JSON.";
+
+			var prompt = $$"""
+				Dưới đây là danh sách từ vựng/ngữ pháp tiếng Nhật cần tạo câu hỏi trắc nghiệm và lời giải thích:
+				{{itemsBuilder}}
+
+				YÊU CẦU:
+				1. Với mỗi từ vựng, hãy viết một câu hỏi trắc nghiệm ngắn gọn, tự nhiên bằng tiếng Việt (trường "prompt") để kiểm tra ý nghĩa của từ vựng đó.
+				2. Viết một lời giải thích ngắn gọn, rõ ràng (trường "explanation") về ý nghĩa, cách đọc và cách dùng của từ vựng đó trong tiếng Nhật.
+				3. BẮT BUỘC trả về đủ tất cả {{prompts.Count}} mục ứng với meaningId tương ứng.
+
+				Chỉ trả về JSON hợp lệ có cấu trúc chính xác như sau:
+				{
+				  "items": [
+				{{jsonTemplateBuilder}}
+				  ]
+				}
+				""";
+
+			using var responseDoc = await CallForJsonAsync(
+				prompt,
+				"generate_quiz_content",
+				cancellationToken,
+				systemPrompt);
+
+			var result = new Dictionary<Guid, GeneratedQuizPromptAndExplanation>();
+
+			if (responseDoc.RootElement.TryGetProperty("items", out var itemsElement) &&
+				itemsElement.ValueKind == JsonValueKind.Array)
+			{
+				foreach (var el in itemsElement.EnumerateArray())
+				{
+					if (el.TryGetProperty("meaningId", out var idProp) &&
+						Guid.TryParse(idProp.GetString(), out var meaningId) &&
+						el.TryGetProperty("prompt", out var promptProp) &&
+						el.TryGetProperty("explanation", out var expProp))
+					{
+						var promptText = promptProp.GetString()?.Trim();
+						var expText = expProp.GetString()?.Trim();
+
+						if (!string.IsNullOrWhiteSpace(promptText) && !string.IsNullOrWhiteSpace(expText))
+						{
+							result[meaningId] = new GeneratedQuizPromptAndExplanation(meaningId, promptText, expText);
+						}
+					}
+				}
+			}
+
+			_logger.LogInformation(
+				"[QuizLLM][GeneratedContent] Model={Model}; Generated {Count}/{Total} items",
+				_model, result.Count, prompts.Count);
+
+			return result;
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			throw;
+		}
+		catch (Exception exception)
+		{
+			_logger.LogWarning(exception, "[QuizLLM] LLM quiz content generation failed: {Message}", exception.Message);
+			return new Dictionary<Guid, GeneratedQuizPromptAndExplanation>();
+		}
+	}
+
 	private static string BuildHistoryContextText(QuizFeedbackPrompt item, bool isCorrect)
 	{
 		var lastEntry = item.PreviousFeedbackHistory?.FirstOrDefault();
