@@ -6,12 +6,8 @@ internal sealed class SaveSrsItemValidator : AbstractValidator<SaveSrsItemComman
 {
 	public SaveSrsItemValidator()
 	{
-		RuleFor(x => x.MeaningId)
+		RuleFor(x => x.LearningUnitId)
 			.NotEmpty()
-			.WithMessage("Meaning ID is required.");
-
-		RuleFor(x => x.TranscriptSegmentId)
-			.NotEmpty()
-			.WithMessage("Transcript segment ID is required.");
+			.WithMessage("Learning unit ID is required.");
 	}
 }

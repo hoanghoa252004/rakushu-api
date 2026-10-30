@@ -14,7 +14,6 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 	public async Task<LearningUnit?> GetDetailByIdAsync(LearningUnitId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.LearningUnits
-			.AsNoTracking()
 			.Include(l => l.KnowledgeMeaning)
 				.ThenInclude(m => m.KnowledgeUnit)
 					.ThenInclude(u => u.KnowledgeCollection)

@@ -43,9 +43,6 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 		builder.Property(bq => bq.Prompt)
 			.IsRequired();
 
-		builder.Property(bq => bq.AudioUrl)
-			.HasMaxLength(500);
-
 		builder.Property(bq => bq.ChoicesJson)
 			.HasColumnType("jsonb")
 			.IsRequired();

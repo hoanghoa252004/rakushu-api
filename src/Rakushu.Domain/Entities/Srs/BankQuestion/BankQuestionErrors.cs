@@ -18,4 +18,16 @@ public static class BankQuestionErrors
 
 	public static readonly Error EmptyCorrectChoice = Error.Validation(
 		"BANK_QUESTION.EMPTY_CORRECT_CHOICE", "Correct choice ID cannot be empty.");
+
+	public static readonly Error ChoiceNotFound = Error.Validation(
+		"BANK_QUESTION.CHOICE_NOT_FOUND", "The correct choice ID does not exist in the choices list.");
+
+	public static readonly Error InvalidDifficulty = Error.Validation(
+		"BANK_QUESTION.INVALID_DIFFICULTY", "Difficulty must be Easy, Medium, or Hard.");
+
+	public static readonly Error MeaningNotFound = Error.NotFound(
+		"BANK_QUESTION.MEANING_NOT_FOUND", "The specified knowledge meaning does not exist.");
+
+	public static readonly Error QuestionTypeNotFound = Error.NotFound(
+		"BANK_QUESTION.QUESTION_TYPE_NOT_FOUND", "The specified question type does not exist.");
 }

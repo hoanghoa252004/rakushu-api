@@ -1541,11 +1541,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("AudioUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("audio_url");
-
                     b.Property<string>("ChoicesJson")
                         .IsRequired()
                         .HasColumnType("jsonb")

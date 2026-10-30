@@ -139,7 +139,6 @@ internal sealed class RetryQuizAttemptHandler : IRequestHandler<RetryQuizAttempt
 					q.Position,
 					q.Prompt,
 					q.Reading,
-					q.BankQuestion?.AudioUrl,
 					QuizOptionParser.Parse(q.ChoicesJson)))
 				.ToList();
 

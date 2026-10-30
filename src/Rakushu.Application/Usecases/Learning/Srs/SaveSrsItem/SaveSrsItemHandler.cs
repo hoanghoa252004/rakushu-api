@@ -5,8 +5,7 @@ using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
-using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
@@ -15,20 +14,20 @@ namespace Rakushu.Application.Usecases.Learning.Srs.SaveSrsItem;
 internal sealed class SaveSrsItemHandler : IRequestHandler<SaveSrsItemCommand, Result<SrsItemDto>>
 {
 	private readonly ISavedItemRepository _savedItemRepository;
-	private readonly IKnowledgeMeaningRepository _knowledgeMeaningRepository;
+	private readonly ILearningUnitRepository _learningUnitRepository;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public SaveSrsItemHandler(
 		ISavedItemRepository savedItemRepository,
-		IKnowledgeMeaningRepository knowledgeMeaningRepository,
+		ILearningUnitRepository learningUnitRepository,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_savedItemRepository = savedItemRepository;
-		_knowledgeMeaningRepository = knowledgeMeaningRepository;
+		_learningUnitRepository = learningUnitRepository;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
@@ -44,11 +43,14 @@ internal sealed class SaveSrsItemHandler : IRequestHandler<SaveSrsItemCommand, R
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var meaningId = KnowledgeMeaningId.From(request.MeaningId);
-			var segmentId = TranscriptSegmentId.From(request.TranscriptSegmentId);
-			var meaning = await _knowledgeMeaningRepository.GetByIdAsync(meaningId, cancellationToken);
-			if (meaning is null)
-				return Result.Failure<SrsItemDto>(KnowledgeMeaningErrors.NotFound);
+			var learningUnitId = LearningUnitId.From(request.LearningUnitId);
+			var learningUnit = await _learningUnitRepository.GetDetailByIdAsync(learningUnitId, cancellationToken);
+			if (learningUnit is null)
+				return Result.Failure<SrsItemDto>(LearningUnitErrors.NotFound);
+
+			var meaningId = learningUnit.KnowledgeMeaningId;
+			var segmentId = learningUnit.TranscriptSegmentId;
+			var meaning = learningUnit.KnowledgeMeaning;
 
 			var existingItem = await _savedItemRepository.GetByUserAndMeaningAsync(userId, meaningId, cancellationToken);
 			var now = _systemClock.UtcNow;
@@ -76,9 +78,9 @@ internal sealed class SaveSrsItemHandler : IRequestHandler<SaveSrsItemCommand, R
 					existingItem.SavedAt));
 			}
 
-			var expression = meaning.KnowledgeUnit?.Expression ?? meaning.Meaning;
-			var reading = meaning.KnowledgeUnit?.Reading;
-			var definition = meaning.Meaning;
+			var expression = meaning?.KnowledgeUnit?.Expression ?? meaning?.Meaning ?? string.Empty;
+			var reading = meaning?.KnowledgeUnit?.Reading;
+			var definition = meaning?.Meaning ?? string.Empty;
 
 			var savedItemResult = SavedItem.Create(
 				userId,

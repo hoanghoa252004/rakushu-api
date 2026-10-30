@@ -7,7 +7,6 @@ public sealed record QuizQuestionDto(
 	int Position,
 	string Prompt,
 	string? Reading,
-	string? AudioUrl,
 	IReadOnlyList<QuizOptionDto> Choices);
 
 public sealed record QuizAttemptStartedResponse(

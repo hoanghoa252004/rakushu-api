@@ -125,7 +125,6 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 					position,
 					question.Prompt,
 					question.Reading,
-					bankQ.AudioUrl,
 					choices));
 
 				position++;

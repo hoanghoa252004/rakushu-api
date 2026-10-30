@@ -10,7 +10,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 	public KnowledgeMeaningId KnowledgeMeaningId { get; private set; } = null!;
 	public QuestionTypeId QuestionTypeId { get; private set; } = null!;
 	public string Prompt { get; private set; } = null!;
-	public string? AudioUrl { get; private set; }
 	public string ChoicesJson { get; private set; } = "[]";
 	public string CorrectChoiceId { get; private set; } = null!;
 	public string? Explanation { get; private set; }
@@ -34,7 +33,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		string choicesJson,
 		string correctChoiceId,
 		DateTimeOffset now,
-		string? audioUrl = null,
 		string? explanation = null,
 		string difficulty = "Medium",
 		bool isActive = true)
@@ -48,7 +46,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 			KnowledgeMeaningId = knowledgeMeaningId,
 			QuestionTypeId = questionTypeId,
 			Prompt = prompt.Trim(),
-			AudioUrl = string.IsNullOrWhiteSpace(audioUrl) ? null : audioUrl.Trim(),
 			ChoicesJson = string.IsNullOrWhiteSpace(choicesJson) ? "[]" : choicesJson.Trim(),
 			CorrectChoiceId = correctChoiceId.Trim(),
 			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
@@ -63,7 +60,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		string prompt,
 		string choicesJson,
 		string correctChoiceId,
-		string? audioUrl,
 		string? explanation,
 		string difficulty,
 		DateTimeOffset now)
@@ -71,7 +67,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		Prompt = prompt.Trim();
 		ChoicesJson = choicesJson.Trim();
 		CorrectChoiceId = correctChoiceId.Trim();
-		AudioUrl = string.IsNullOrWhiteSpace(audioUrl) ? null : audioUrl.Trim();
 		Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim();
 		Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim();
 		UpdatedAt = now;
