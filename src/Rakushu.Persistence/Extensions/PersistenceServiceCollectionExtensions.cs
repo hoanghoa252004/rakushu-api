@@ -4,6 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Usecases.Embedding;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Entities.Curation.IssueCategory;
+using Rakushu.Domain.Entities.Curation.Report;
+using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
@@ -85,6 +88,11 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IQuizRepository, QuizRepository>();
 		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 		services.AddScoped<IFlashcardSessionRepository, FlashcardSessionRepository>();
+
+		// Curation Repositories
+		services.AddScoped<IIssueCategoryRepository, IssueCategoryRepository>();
+		services.AddScoped<IReportRepository, ReportRepository>();
+		services.AddScoped<IIssueDetailRepository, IssueDetailRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();

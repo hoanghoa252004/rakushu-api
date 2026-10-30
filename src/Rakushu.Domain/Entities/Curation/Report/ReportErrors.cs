@@ -15,4 +15,13 @@ public static class ReportErrors
 
 	public static readonly Error InvalidStatusTransition = Error.Validation(
 		"REPORT.INVALID_STATUS_TRANSITION", "Invalid status transition for report.");
+
+	public static readonly Error AlreadyResolved = Error.Validation(
+		"REPORT.ALREADY_RESOLVED", "The report has already been resolved.");
+
+	public static readonly Error AlreadyDismissed = Error.Validation(
+		"REPORT.ALREADY_DISMISSED", "The report has already been dismissed.");
+
+	public static readonly Error EmptyCuratorNotes = Error.Validation(
+		"REPORT.EMPTY_CURATOR_NOTES", "Curator notes cannot be empty.");
 }

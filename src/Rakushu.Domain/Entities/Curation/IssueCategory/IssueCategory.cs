@@ -50,6 +50,15 @@ public sealed class IssueCategory : AggregateRoot<IssueCategoryId>
 		return CurrentCount >= Threshold;
 	}
 
+	public void DecrementCount(DateTimeOffset now)
+	{
+		if (CurrentCount > 0)
+		{
+			CurrentCount--;
+			UpdatedAt = now;
+		}
+	}
+
 	public void ResetCount(DateTimeOffset now)
 	{
 		CurrentCount = 0;
