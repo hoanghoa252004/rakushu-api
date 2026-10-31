@@ -3,6 +3,7 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Knowledge.KnowledgeUnit.GetKnowledgeUnitById;
+using Rakushu.Application.Usecases.Knowledge.ProficiencyLevel;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
@@ -97,6 +98,7 @@ internal sealed class GetKnowledgeUnitsHandler : IRequestHandler<GetKnowledgeUni
 				u.Id.Value,
 				u.KnowledgeCollectionId.Value,
 				u.ProficiencyLevelId.Value,
+				ProficiencyLevelDto.From(u.ProficiencyLevel),
 				u.KnowledgeType,
 				u.Expression,
 				u.Reading,

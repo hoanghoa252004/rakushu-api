@@ -19,6 +19,7 @@ public sealed class KnowledgeUnitRepository : BaseRepository<KnowledgeUnit, Know
 	public override async Task<KnowledgeUnit?> GetByIdAsync(KnowledgeUnitId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.KnowledgeUnits
+			.Include(x => x.ProficiencyLevel)
 			.Include(x => x.Meanings)
 			.Include(u => u.Elements)
 				.ThenInclude(e => e.JapanesePartOfSpeech)
@@ -46,6 +47,7 @@ public sealed class KnowledgeUnitRepository : BaseRepository<KnowledgeUnit, Know
 	public override async Task<IEnumerable<KnowledgeUnit>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
 		return await _context.KnowledgeUnits
+			.Include(u => u.ProficiencyLevel)
 			.Include(u => u.Elements)
 					.ThenInclude(e => e.JapanesePartOfSpeech)
 				.Include(u => u.Elements)

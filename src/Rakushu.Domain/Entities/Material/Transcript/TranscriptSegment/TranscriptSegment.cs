@@ -147,16 +147,17 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	internal void SetSequence(int newSequence)
 	{
 		Sequence = newSequence;
+		Subtitle?.SetSequence(newSequence);
 	}
 
 	internal void IncrementSequence()
 	{
-		Sequence++;
+		SetSequence(Sequence + 1);
 	}
 
 	internal void DecrementSequence()
 	{
-		Sequence--;
+		SetSequence(Sequence - 1);
 	}
 
 	public Result<TranscriptItem.TranscriptItem> AddItem(
