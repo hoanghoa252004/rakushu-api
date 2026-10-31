@@ -17,13 +17,13 @@ internal sealed class SaveSrsItem : IEndpoint
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new SaveSrsItemCommand(dto.LearningUnitId);
+				var command = new SaveSrsItemCommand(dto.MeaningId);
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchCreated("GetSrsItems", item => new { id = item.Id });
 			})
 			.WithName("SaveSrsItem")
 			.WithSummary("Save a vocabulary meaning into personal SRS notebook")
-			.WithDescription("Accepts a learning unit ID, extracts its knowledge meaning and transcript segment context, creates a saved item snapshot and initializes its SM-2 review schedule.")
+			.WithDescription("Accepts a knowledge meaning ID, extracts its vocabulary details, creates a saved item and initializes its SM-2 review schedule.")
 			.RequireAuthorization()
 			.Produces<SrsItemDto>(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
@@ -33,4 +33,4 @@ internal sealed class SaveSrsItem : IEndpoint
 	}
 }
 
-internal sealed record SaveSrsItemRequestDto(Guid LearningUnitId);
+internal sealed record SaveSrsItemRequestDto(Guid MeaningId);

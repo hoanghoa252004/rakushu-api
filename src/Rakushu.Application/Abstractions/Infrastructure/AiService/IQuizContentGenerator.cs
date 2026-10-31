@@ -16,7 +16,7 @@ public sealed record GenerateQuizContentPrompt(
 	string Expression,
 	string? Reading,
 	string Meaning,
-	string? ContextSentence = null
+	string ContextSentence
 );
 
 public sealed record GeneratedQuizPromptAndExplanation(

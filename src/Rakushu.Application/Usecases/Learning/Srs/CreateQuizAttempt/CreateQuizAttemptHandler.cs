@@ -7,6 +7,7 @@ using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.Quiz;
@@ -22,6 +23,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 {
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly IBankQuestionRepository _bankQuestionRepository;
+	private readonly ILearningUnitRepository _learningUnitRepository;
 	private readonly IQuizRepository _quizRepository;
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly IQuizContentGenerator _quizContentGenerator;
@@ -32,6 +34,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 	public CreateQuizAttemptHandler(
 		ISavedItemRepository savedItemRepository,
 		IBankQuestionRepository bankQuestionRepository,
+		ILearningUnitRepository learningUnitRepository,
 		IQuizRepository quizRepository,
 		IQuizAttemptRepository quizAttemptRepository,
 		IQuizContentGenerator quizContentGenerator,
@@ -41,6 +44,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 	{
 		_savedItemRepository = savedItemRepository;
 		_bankQuestionRepository = bankQuestionRepository;
+		_learningUnitRepository = learningUnitRepository;
 		_quizRepository = quizRepository;
 		_quizAttemptRepository = quizAttemptRepository;
 		_quizContentGenerator = quizContentGenerator;
@@ -95,12 +99,21 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 
 			if (itemsNeedingQuestions.Count > 0)
 			{
-				var llmPrompts = itemsNeedingQuestions.Select(item => new GenerateQuizContentPrompt(
-					item.KnowledgeMeaningId.Value,
-					item.Expression,
-					item.Reading,
-					item.Meaning,
-					item.TranscriptSegment?.Text)).ToList();
+				var needingMeaningGuids = itemsNeedingQuestions.Select(i => i.KnowledgeMeaningId.Value).ToList();
+				var mediaContexts = await _learningUnitRepository.GetMediaContextByMeaningIdsAsync(needingMeaningGuids, cancellationToken);
+
+				var llmPrompts = itemsNeedingQuestions.Select(item =>
+				{
+					mediaContexts.TryGetValue(item.KnowledgeMeaningId.Value, out var mediaContext);
+					var contextSentence = mediaContext?.OriginalSentence ?? item.Expression;
+
+					return new GenerateQuizContentPrompt(
+						item.KnowledgeMeaningId.Value,
+						item.Expression,
+						item.Reading,
+						item.Meaning,
+						ContextSentence: contextSentence);
+				}).ToList();
 
 				var llmResults = await _quizContentGenerator.GenerateQuizContentBatchAsync(llmPrompts, cancellationToken);
 

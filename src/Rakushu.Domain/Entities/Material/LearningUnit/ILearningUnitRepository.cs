@@ -19,6 +19,11 @@ public interface ILearningUnitRepository : IBaseRepository<LearningUnit, Learnin
 		IReadOnlyCollection<Guid> meaningIds,
 		CancellationToken cancellationToken = default);
 
+	Task<IReadOnlyDictionary<Guid, IReadOnlyList<LearningUnitMediaContext>>> GetMediaContextsByMeaningIdsAsync(
+		IReadOnlyCollection<Guid> meaningIds,
+		int maxVideosPerMeaning = 5,
+		CancellationToken cancellationToken = default);
+
 	Task<IReadOnlyDictionary<Guid, LearningUnitMediaContext>> GetMediaContextBySegmentIdsAsync(
 		IReadOnlyCollection<Guid> segmentIds,
 		CancellationToken cancellationToken = default);

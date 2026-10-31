@@ -16,6 +16,7 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 	{
 		return await _context.FlashcardSessions
 			.Include(fs => fs.Items)
+				.ThenInclude(i => i.SavedItem)
 			.SingleOrDefaultAsync(fs => fs.Id == id, cancellationToken);
 	}
 
@@ -25,6 +26,7 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 	{
 		return await _context.FlashcardSessions
 			.Include(fs => fs.Items)
+				.ThenInclude(i => i.SavedItem)
 			.FirstOrDefaultAsync(
 				fs => fs.UserId == userId && fs.Status == FlashcardSessionStatus.InProgress,
 				cancellationToken);

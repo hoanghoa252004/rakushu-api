@@ -1646,43 +1646,14 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<TimeSpan?>("EndTime")
-                        .HasColumnType("interval")
-                        .HasColumnName("end_time");
-
-                    b.Property<int?>("EndTokenIndex")
-                        .HasColumnType("integer")
-                        .HasColumnName("end_token_index");
-
-                    b.Property<string>("Expression")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("expression");
-
                     b.Property<Guid>("FlashcardSessionId")
                         .HasColumnType("uuid")
                         .HasColumnName("flashcard_session_id");
-
-                    b.Property<string>("Meaning")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("meaning");
-
-                    b.Property<string>("OriginalSentence")
-                        .HasColumnType("text")
-                        .HasColumnName("original_sentence");
 
                     b.Property<string>("Rating")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("rating");
-
-                    b.Property<string>("Reading")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("reading");
 
                     b.Property<DateTimeOffset?>("ReviewedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1691,33 +1662,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<Guid>("SavedItemId")
                         .HasColumnType("uuid")
                         .HasColumnName("saved_item_id");
-
-                    b.Property<TimeSpan?>("StartTime")
-                        .HasColumnType("interval")
-                        .HasColumnName("start_time");
-
-                    b.Property<int?>("StartTokenIndex")
-                        .HasColumnType("integer")
-                        .HasColumnName("start_token_index");
-
-                    b.Property<string>("StorageKey")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("storage_key");
-
-                    b.Property<string>("TranslatedSentence")
-                        .HasColumnType("text")
-                        .HasColumnName("translated_sentence");
-
-                    b.Property<string>("VideoSourceUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("video_source_url");
-
-                    b.Property<string>("VideoTitle")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("video_title");
 
                     b.HasKey("Id")
                         .HasName("pk_flashcard_session_items");
@@ -2039,10 +1983,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("saved_at");
 
-                    b.Property<Guid>("TranscriptSegmentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("transcript_segment_id");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
@@ -2052,9 +1992,6 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasIndex("KnowledgeMeaningId")
                         .HasDatabaseName("ix_saved_items_knowledge_meaning_id");
-
-                    b.HasIndex("TranscriptSegmentId")
-                        .HasDatabaseName("ix_saved_items_transcript_segment_id");
 
                     b.HasIndex("UserId", "KnowledgeMeaningId")
                         .IsUnique()
@@ -3100,13 +3037,6 @@ namespace Rakushu.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_saved_items_knowledge_meanings_knowledge_meaning_id");
 
-                    b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
-                        .WithMany()
-                        .HasForeignKey("TranscriptSegmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_saved_items_transcript_segments_transcript_segment_id");
-
                     b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -3115,8 +3045,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasConstraintName("fk_saved_items_users_user_id");
 
                     b.Navigation("KnowledgeMeaning");
-
-                    b.Navigation("TranscriptSegment");
 
                     b.Navigation("User");
                 });

@@ -110,8 +110,7 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 				if (!string.IsNullOrWhiteSpace(p.Reading))
 					itemsBuilder.AppendLine($"- Cách đọc: {p.Reading}");
 				itemsBuilder.AppendLine($"- Nghĩa tiếng Việt: {p.Meaning}");
-				if (!string.IsNullOrWhiteSpace(p.ContextSentence))
-					itemsBuilder.AppendLine($"- Câu ngữ cảnh: {p.ContextSentence}");
+				itemsBuilder.AppendLine($"- Câu ngữ cảnh: {p.ContextSentence}");
 				itemsBuilder.AppendLine();
 			}
 
@@ -122,7 +121,7 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 				jsonTemplateBuilder.Append($$"""
 					    {
 					      "meaningId": "{{p.MeaningId}}",
-					      "prompt": "Từ/ngữ pháp 「{{p.Expression}}」 có ý nghĩa là gì?",
+					      "prompt": "Từ/ngữ pháp 「{{p.Expression}}」 trong ngữ cảnh trên có ý nghĩa là gì?",
 					      "explanation": "「{{p.Expression}}」{{(string.IsNullOrWhiteSpace(p.Reading) ? "" : $"({p.Reading})")}} có nghĩa là: {{p.Meaning}}."
 					    }
 					""");
@@ -138,8 +137,8 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 				{{itemsBuilder}}
 
 				YÊU CẦU:
-				1. Với mỗi từ vựng, hãy viết một câu hỏi trắc nghiệm ngắn gọn, tự nhiên bằng tiếng Việt (trường "prompt") để kiểm tra ý nghĩa của từ vựng đó.
-				2. Viết một lời giải thích ngắn gọn, rõ ràng (trường "explanation") về ý nghĩa, cách đọc và cách dùng của từ vựng đó trong tiếng Nhật.
+				1. Với mỗi từ vựng, hãy dựa vào "Câu ngữ cảnh" thực tế trong bài học để viết một câu hỏi trắc nghiệm ngắn gọn, tự nhiên bằng tiếng Việt (trường "prompt") để kiểm tra ý nghĩa của từ vựng đó trong ngữ cảnh.
+				2. Viết một lời giải thích ngắn gọn, rõ ràng (trường "explanation") về ý nghĩa, cách đọc và cách dùng của từ vựng đó trong câu ngữ cảnh.
 				3. BẮT BUỘC trả về đủ tất cả {{prompts.Count}} mục ứng với meaningId tương ứng.
 
 				Chỉ trả về JSON hợp lệ có cấu trúc chính xác như sau:

@@ -89,18 +89,9 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 				return Result.Failure<FlashcardSessionDetailDto>(FlashcardSessionErrors.EmptyItems);
 			}
 
-			// 1. Fetch multimedia context for segments and fallback meanings
-			var segmentGuids = eligibleItems
-				.Select(x => x.TranscriptSegmentId.Value)
-				.Distinct()
-				.ToList();
-
-			var segmentContexts = segmentGuids.Count > 0
-				? await _learningUnitRepository.GetMediaContextBySegmentIdsAsync(segmentGuids, cancellationToken)
-				: new Dictionary<Guid, LearningUnitMediaContext>();
-
+			// 1. Fetch multimedia contexts dynamically by meaning IDs
 			var meaningGuids = eligibleItems.Select(x => x.KnowledgeMeaningId.Value).Distinct().ToList();
-			var meaningContexts = await _learningUnitRepository.GetMediaContextByMeaningIdsAsync(meaningGuids, cancellationToken);
+			var meaningContexts = await _learningUnitRepository.GetMediaContextsByMeaningIdsAsync(meaningGuids, maxVideosPerMeaning: 5, cancellationToken);
 
 			// 2. Create Flashcard Session Aggregate
 			var sessionResult = FlashcardSession.Create(userId, now);
@@ -112,72 +103,48 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 
 			foreach (var savedItem in eligibleItems)
 			{
-				LearningUnitMediaContext? media = null;
-				if (segmentContexts.TryGetValue(savedItem.TranscriptSegmentId.Value, out var segMedia))
-				{
-					media = segMedia;
-				}
-				else
-				{
-					meaningContexts.TryGetValue(savedItem.KnowledgeMeaningId.Value, out media);
-				}
-
-				string? videoUrl = null;
-				if (!string.IsNullOrWhiteSpace(media?.StorageKey))
-				{
-					try
-					{
-						videoUrl = await _storageService.CreatePresignedReadUrlAsync(media.StorageKey, cancellationToken);
-					}
-					catch
-					{
-						videoUrl = media.SourceUrl;
-					}
-				}
-				else if (!string.IsNullOrWhiteSpace(media?.SourceUrl))
-				{
-					videoUrl = media.SourceUrl;
-				}
-
 				var sessionItemResult = FlashcardSessionItem.Create(
 					session.Id,
-					savedItem.Id,
-					savedItem.Expression,
-					savedItem.Reading,
-					savedItem.Meaning,
-					media?.VideoTitle,
-					media?.StorageKey,
-					media?.SourceUrl,
-					media?.StartTime,
-					media?.EndTime,
-					media?.OriginalSentence,
-					media?.TranslatedSentence,
-					media?.StartTokenIndex,
-					media?.EndTokenIndex);
+					savedItem.Id);
 
 				if (sessionItemResult.IsFailure)
 					return Result.Failure<FlashcardSessionDetailDto>(sessionItemResult.Error);
 
 				session.AddItem(sessionItemResult.Value);
 
-				FlashcardVideoDto? videoDto = null;
-				if (media != null)
+				var videoContextDtos = new List<FlashcardMediaContextDto>();
+				if (meaningContexts.TryGetValue(savedItem.KnowledgeMeaningId.Value, out var mediaList))
 				{
-					videoDto = new FlashcardVideoDto(
-						media.VideoTitle,
-						videoUrl,
-						media.StartTime,
-						media.EndTime);
-				}
+					foreach (var media in mediaList)
+					{
+						string? videoUrl = null;
+						if (!string.IsNullOrWhiteSpace(media.StorageKey))
+						{
+							try
+							{
+								videoUrl = await _storageService.CreatePresignedReadUrlAsync(media.StorageKey, cancellationToken);
+							}
+							catch
+							{
+								videoUrl = media.SourceUrl;
+							}
+						}
+						else if (!string.IsNullOrWhiteSpace(media.SourceUrl))
+						{
+							videoUrl = media.SourceUrl;
+						}
 
-				FlashcardSubtitleDto? subtitleDto = null;
-				if (!string.IsNullOrWhiteSpace(media?.OriginalSentence))
-				{
-					subtitleDto = new FlashcardSubtitleDto(
-						media.OriginalSentence,
-						media.TranslatedSentence,
-						media.StartTokenIndex,
-						media.EndTokenIndex);
+						videoContextDtos.Add(new FlashcardMediaContextDto(
+							media.VideoId,
+							media.VideoTitle,
+							videoUrl,
+							media.StartTime,
+							media.EndTime,
+							media.OriginalSentence,
+							media.TranslatedSentence,
+							media.StartTokenIndex,
+							media.EndTokenIndex));
+					}
 				}
 
 				itemDtos.Add(new FlashcardItemDto(
@@ -185,8 +152,7 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 					savedItem.Expression,
 					savedItem.Reading,
 					savedItem.Meaning,
-					videoDto,
-					subtitleDto));
+					videoContextDtos));
 			}
 
 			_flashcardSessionRepository.Add(session);

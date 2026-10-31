@@ -107,6 +107,72 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 		return result;
 	}
 
+	public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<LearningUnitMediaContext>>> GetMediaContextsByMeaningIdsAsync(
+		IReadOnlyCollection<Guid> meaningIds,
+		int maxVideosPerMeaning = 5,
+		CancellationToken cancellationToken = default)
+	{
+		if (meaningIds == null || meaningIds.Count == 0)
+			return new Dictionary<Guid, IReadOnlyList<LearningUnitMediaContext>>();
+
+		var typedMeaningIds = meaningIds.Select(KnowledgeMeaningId.From).ToList();
+
+		var learningUnits = await _context.LearningUnits
+			.AsNoTracking()
+			.Where(lu => typedMeaningIds.Contains(lu.KnowledgeMeaningId))
+			.Include(lu => lu.TranscriptSegment)
+				.ThenInclude(ts => ts.Transcript)
+					.ThenInclude(t => t.Video)
+						.ThenInclude(v => v.MediaAssets)
+			.Include(lu => lu.TranscriptSegment)
+				.ThenInclude(ts => ts.Subtitle)
+			.ToListAsync(cancellationToken);
+
+		var result = new Dictionary<Guid, IReadOnlyList<LearningUnitMediaContext>>();
+
+		foreach (var group in learningUnits.GroupBy(lu => lu.KnowledgeMeaningId.Value))
+		{
+			var list = new List<LearningUnitMediaContext>();
+			var seenVideos = new HashSet<Guid>();
+
+			foreach (var lu in group)
+			{
+				var segment = lu.TranscriptSegment;
+				var video = segment?.Transcript?.Video;
+				if (video is null || segment is null)
+					continue;
+
+				// Distinct by VideoId to show different videos containing this word
+				if (!seenVideos.Add(video.Id.Value))
+					continue;
+
+				var videoAsset = video.MediaAssets
+					.FirstOrDefault(a => a.AssetType == Rakushu.Domain.Entities.Material.Video.MediaAsset.MediaAssetType.Video);
+
+				list.Add(new LearningUnitMediaContext(
+					group.Key,
+					video.Id.Value,
+					video.Title,
+					videoAsset?.StorageKey,
+					video.SourceUrl,
+					segment.StartTime,
+					segment.EndTime,
+					segment.Text,
+					segment.Subtitle?.Text,
+					lu.StartTokenIndex,
+					lu.EndTokenIndex,
+					segment.Id.Value));
+
+				if (list.Count >= maxVideosPerMeaning)
+					break;
+			}
+
+			result[group.Key] = list;
+		}
+
+		return result;
+	}
+
 	public async Task<IReadOnlyDictionary<Guid, LearningUnitMediaContext>> GetMediaContextBySegmentIdsAsync(
 		IReadOnlyCollection<Guid> segmentIds,
 		CancellationToken cancellationToken = default)

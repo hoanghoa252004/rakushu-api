@@ -1,14 +1,13 @@
 namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards;
 
-public sealed record FlashcardVideoDto(
-	string Title,
+public sealed record FlashcardMediaContextDto(
+	Guid VideoId,
+	string VideoTitle,
 	string? VideoUrl,
 	TimeSpan? StartTime,
-	TimeSpan? EndTime);
-
-public sealed record FlashcardSubtitleDto(
-	string OriginalText,
-	string? TranslatedText,
+	TimeSpan? EndTime,
+	string? OriginalSentence,
+	string? TranslatedSentence,
 	int? StartTokenIndex,
 	int? EndTokenIndex);
 
@@ -17,8 +16,7 @@ public sealed record FlashcardItemDto(
 	string Expression,
 	string? Reading,
 	string Meaning,
-	FlashcardVideoDto? Video,
-	FlashcardSubtitleDto? Subtitle);
+	IReadOnlyList<FlashcardMediaContextDto> VideoContexts);
 
 public sealed record FlashcardSessionDetailDto(
 	Guid SessionId,
