@@ -4,6 +4,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 
@@ -39,17 +40,30 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 			if (transcript is null)
 				return Result.Failure<Guid>(TranscriptErrors.NotFound);
 
-			// Validate the speaker exists in the Speaker table
-			var speakerId = SpeakerId.From(request.SpeakerId);
-			var speaker = await _speakerRepository.GetByIdAsync(speakerId, cancellationToken);
-			if (speaker is null)
-				return Result.Failure<Guid>(SpeakerErrors.NotFound);
-
-			// Get or create the transcript speaker for this speaker
-			var transcriptSpeaker = transcript.TranscriptSpeakers.FirstOrDefault(x => x.SpeakerId == speakerId);
-			if (transcriptSpeaker is null)
+			TranscriptSpeaker? transcriptSpeaker;
+			if (request.SpeakerId is not null)
 			{
-				var addSpeakerResult = transcript.AddSpeaker(speaker.Code, speakerId);
+				// Validate the speaker exists in the Speaker table
+				var speakerId = SpeakerId.From(request.SpeakerId.Value);
+				var speaker = await _speakerRepository.GetByIdAsync(speakerId, cancellationToken);
+				if (speaker is null)
+					return Result.Failure<Guid>(SpeakerErrors.NotFound);
+
+				// Get or create the transcript speaker for this speaker
+				transcriptSpeaker = transcript.TranscriptSpeakers.FirstOrDefault(x => x.SpeakerId == speakerId);
+				if (transcriptSpeaker is null)
+				{
+					var addSpeakerResult = transcript.AddSpeaker(speaker.Code, speakerId);
+					if (addSpeakerResult.IsFailure)
+						return Result.Failure<Guid>(addSpeakerResult.Error);
+
+					transcriptSpeaker = addSpeakerResult.Value;
+				}
+			}
+			else
+			{
+				// No speaker provided: use an unassigned transcript speaker
+				var addSpeakerResult = transcript.AddSpeaker("UNKNOWN");
 				if (addSpeakerResult.IsFailure)
 					return Result.Failure<Guid>(addSpeakerResult.Error);
 
@@ -74,10 +88,13 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 
 			var segment = segmentResult.Value;
 
-			// Subtitle
-			var subtitleResult = segment.AddSubtitle(request.Subtitle.LanguageCode, request.Subtitle.Text);
-			if (subtitleResult.IsFailure)
-				return Result.Failure<Guid>(subtitleResult.Error);
+			// Subtitle (optional)
+			if (request.Subtitle is not null)
+			{
+				var subtitleResult = segment.AddSubtitle(request.Subtitle.LanguageCode, request.Subtitle.Text);
+				if (subtitleResult.IsFailure)
+					return Result.Failure<Guid>(subtitleResult.Error);
+			}
 
 			// Transcript items
 			foreach (var item in request.Items.OrderBy(x => x.Sequence))

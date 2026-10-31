@@ -47,10 +47,10 @@ internal sealed class UpdateTranscriptSegment : IEndpoint
 }
 
 public sealed record UpdateSegmentRequest(
-	Guid SpeakerId,
+	Guid? SpeakerId,
 	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
-	Rakushu.Application.Usecases.Material.TranscriptSegment.SubtitleInput Subtitle,
+	Rakushu.Application.Usecases.Material.TranscriptSegment.SubtitleInput? Subtitle,
 	List<Rakushu.Application.Usecases.Material.TranscriptSegment.TranscriptItemInput>? Items,
 	int? Sequence = null);

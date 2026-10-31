@@ -6,11 +6,11 @@ namespace Rakushu.Application.Usecases.Material.TranscriptSegment.CreateSegment;
 
 public sealed record CreateTranscriptSegmentCommand(
 	Guid VideoId,
-	Guid SpeakerId,
+	Guid? SpeakerId,
 	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
-	SubtitleInput Subtitle,
+	SubtitleInput? Subtitle,
 	IReadOnlyList<TranscriptItemInput> Items,
 	int? Sequence = null
 ) : IRequest<Result<Guid>>;

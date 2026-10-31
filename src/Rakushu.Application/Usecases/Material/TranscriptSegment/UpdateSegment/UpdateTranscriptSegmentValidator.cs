@@ -24,11 +24,11 @@ internal sealed class UpdateTranscriptSegmentValidator : AbstractValidator<Updat
 			.GreaterThan(TimeSpan.Zero).WithMessage("EndTime must be positive");
 
 		RuleFor(x => x.SpeakerId)
-			.NotEmpty().WithMessage("SpeakerId is required");
+			.NotEmpty().When(x => x.SpeakerId.HasValue).WithMessage("SpeakerId is invalid");
 
-		RuleFor(x => x.Subtitle)
-			.NotNull().WithMessage("Subtitle is required")
-			.SetValidator(new SubtitleInputValidator());
+		RuleFor(x => x.Subtitle!)
+			.SetValidator(new SubtitleInputValidator())
+			.When(x => x.Subtitle is not null);
 
 		RuleFor(x => x.Items)
 			.NotNull().WithMessage("Items is required");
