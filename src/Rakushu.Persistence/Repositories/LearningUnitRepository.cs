@@ -101,7 +101,8 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 				segment.Subtitle?.Text,
 				lu.StartTokenIndex,
 				lu.EndTokenIndex,
-				segment.Id.Value);
+				segment.Id.Value,
+				lu.Id.Value);
 		}
 
 		return result;
@@ -161,7 +162,8 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 					segment.Subtitle?.Text,
 					lu.StartTokenIndex,
 					lu.EndTokenIndex,
-					segment.Id.Value));
+					segment.Id.Value,
+					lu.Id.Value));
 
 				if (list.Count >= maxVideosPerMeaning)
 					break;

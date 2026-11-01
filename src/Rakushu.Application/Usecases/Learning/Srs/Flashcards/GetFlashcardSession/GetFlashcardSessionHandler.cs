@@ -98,7 +98,7 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 					}
 
 					videoContextDtos.Add(new FlashcardMediaContextDto(
-						media.VideoId,
+						media.LearningUnitId ?? Guid.Empty,
 						media.VideoTitle,
 						videoUrl,
 						media.StartTime,

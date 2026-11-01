@@ -12,4 +12,5 @@ public sealed record LearningUnitMediaContext(
 	string? TranslatedSentence,
 	int StartTokenIndex,
 	int EndTokenIndex,
-	Guid? TranscriptSegmentId = null);
+	Guid? TranscriptSegmentId = null,
+	Guid? LearningUnitId = null);

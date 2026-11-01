@@ -1,7 +1,7 @@
 namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards;
 
 public sealed record FlashcardMediaContextDto(
-	Guid VideoId,
+	Guid LearningUnitId,
 	string VideoTitle,
 	string? VideoUrl,
 	TimeSpan? StartTime,
