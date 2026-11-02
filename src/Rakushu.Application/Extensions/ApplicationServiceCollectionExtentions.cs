@@ -1,4 +1,4 @@
-using Rakushu.Application.Usecases.Learning.Srs.SubmitQuizAttempt;
+using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Behaviors;

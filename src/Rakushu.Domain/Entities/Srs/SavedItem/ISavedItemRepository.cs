@@ -35,4 +35,9 @@ public interface ISavedItemRepository : IBaseRepository<SavedItem, SavedItemId>
 		IEnumerable<SavedItemId> ids,
 		UserId userId,
 		CancellationToken cancellationToken = default);
+
+	Task<SrsDashboardMetrics> GetDashboardMetricsAsync(
+		UserId userId,
+		DateTimeOffset now,
+		CancellationToken cancellationToken = default);
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Srs.SavedItem;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Persistence.Repositories;
@@ -94,6 +95,108 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 			.Include(si => si.KnowledgeMeaning)
 			.Where(si => si.UserId == userId && idList.Contains(si.Id))
 			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<SrsDashboardMetrics> GetDashboardMetricsAsync(
+		UserId userId,
+		DateTimeOffset now,
+		CancellationToken cancellationToken = default)
+	{
+		var today = now.Date;
+		var thirtyDaysAgo = now.AddDays(-30);
+
+		// 1. Load active saved items for this user with schedule and latest detail
+		var activeItems = await _context.SavedItems
+			.AsNoTracking()
+			.Where(si => si.UserId == userId && (si.Schedule == null || (si.Schedule.Status != SrsStatus.Suspended && si.Schedule.Status != SrsStatus.Ignored)))
+			.Select(si => new
+			{
+				HasSchedule = si.Schedule != null,
+				Status = si.Schedule != null ? si.Schedule.Status : SrsStatus.Learning,
+				DueAt = si.Schedule != null ? (DateTimeOffset?)si.Schedule.DueAt : null,
+				LatestDetail = si.Schedule != null ? si.Schedule.Details
+					.OrderByDescending(d => d.ReviewNumber)
+					.Select(d => new
+					{
+						d.IntervalDays,
+						d.EasinessFactor,
+						d.Lapses,
+						d.Repetitions
+					})
+					.FirstOrDefault() : null
+			})
+			.ToListAsync(cancellationToken);
+
+		int totalActiveWords = activeItems.Count;
+		int dueTodayCount = 0;
+		int overdueCount = 0;
+		int leechCount = 0;
+		int masteredWordsCount = 0;
+
+		foreach (var item in activeItems)
+		{
+			// Check Due / Overdue
+			if (item.DueAt.HasValue)
+			{
+				var dueDate = item.DueAt.Value.Date;
+				if (dueDate < today)
+				{
+					overdueCount++;
+				}
+				else if (dueDate == today || item.DueAt.Value <= now)
+				{
+					dueTodayCount++;
+				}
+			}
+
+			// Check Leech: EF <= 1.3001 OR Lapses >= 8
+			if (item.LatestDetail != null)
+			{
+				if (item.LatestDetail.EasinessFactor <= 1.3001 || item.LatestDetail.Lapses >= 8)
+				{
+					leechCount++;
+				}
+
+				// Check Mastered: Interval >= 21 days
+				if (item.LatestDetail.IntervalDays >= 21)
+				{
+					masteredWordsCount++;
+				}
+			}
+		}
+
+		double masteryRate = totalActiveWords > 0
+			? Math.Round((double)masteredWordsCount / totalActiveWords * 100.0, 1)
+			: 0.0;
+
+		// 2. Query 30-day review logs for True Retention Rate
+		var recentLogs = await _context.Set<SrsItemDetail>()
+			.AsNoTracking()
+			.Where(d => d.ReviewedAt >= thirtyDaysAgo
+				&& d.SrsSchedule.SavedItem.UserId == userId
+				&& (d.SrsSchedule.Status == SrsStatus.Learning || d.SrsSchedule.Status == SrsStatus.Review))
+			.Select(d => d.Quality)
+			.ToListAsync(cancellationToken);
+
+		int totalReviews30Days = recentLogs.Count;
+		int successfulReviews30Days = recentLogs.Count(q => q >= 3);
+		double trueRetentionRate = totalReviews30Days > 0
+			? Math.Round((double)successfulReviews30Days / totalReviews30Days * 100.0, 1)
+			: 0.0;
+
+		int totalDueCount = overdueCount + dueTodayCount;
+
+		return new SrsDashboardMetrics(
+			TotalDueCount: totalDueCount,
+			DueTodayCount: dueTodayCount,
+			OverdueCount: overdueCount,
+			TotalActiveWords: totalActiveWords,
+			TrueRetentionRate: trueRetentionRate,
+			SuccessfulReviewsLast30Days: successfulReviews30Days,
+			TotalReviewsLast30Days: totalReviews30Days,
+			LeechCount: leechCount,
+			MasteryRate: masteryRate,
+			MasteredWordsCount: masteredWordsCount);
 	}
 
 	private IQueryable<SavedItem> BuildUserItemsQuery(
