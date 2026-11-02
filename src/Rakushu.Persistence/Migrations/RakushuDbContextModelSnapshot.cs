@@ -1312,6 +1312,469 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("videos", "material");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("EvaluatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("evaluator_id");
+
+                    b.Property<string>("OveralFeedback")
+                        .HasColumnType("text")
+                        .HasColumnName("overal_feedback");
+
+                    b.Property<decimal?>("OverallScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("overall_score");
+
+                    b.Property<Guid>("ShadowingAttemptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_attempt_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_assessments");
+
+                    b.HasIndex("EvaluatorId")
+                        .HasDatabaseName("ix_shadowing_assessments_evaluator_id");
+
+                    b.HasIndex("ShadowingAttemptId")
+                        .HasDatabaseName("ix_shadowing_assessments_shadowing_attempt_id");
+
+                    b.ToTable("shadowing_assessments", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessmentDetail.ShadowingAssessmentDetail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal?>("AccuracyScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("accuracy_score");
+
+                    b.Property<string>("Feedback")
+                        .HasColumnType("text")
+                        .HasColumnName("feedback");
+
+                    b.Property<decimal?>("IntensitySimilarityScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("intensity_similarity_score");
+
+                    b.Property<decimal?>("PitchSimilarityScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("pitch_similarity_score");
+
+                    b.Property<Guid>("ShadowingAssessmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_assessment_id");
+
+                    b.Property<Guid>("ShadowingAttemptDetailId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_attempt_detail_id");
+
+                    b.Property<decimal?>("TimingScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("timing_score");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_assessment_details");
+
+                    b.HasIndex("ShadowingAttemptDetailId")
+                        .HasDatabaseName("ix_shadowing_assessment_details_shadowing_attempt_detail_id");
+
+                    b.HasIndex("ShadowingAssessmentId", "ShadowingAttemptDetailId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_assessment_details_shadowing_assessment_id_shadow");
+
+                    b.ToTable("shadowing_assessment_details", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<Guid>("ShadowingSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_session_id");
+
+                    b.Property<Guid>("ShadowingSessionMemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_session_member_id");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_attempts");
+
+                    b.HasIndex("ShadowingSessionId")
+                        .HasDatabaseName("ix_shadowing_attempts_shadowing_session_id");
+
+                    b.HasIndex("ShadowingSessionMemberId")
+                        .HasDatabaseName("ix_shadowing_attempts_shadowing_session_member_id");
+
+                    b.ToTable("shadowing_attempts", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AudioKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("audio_key");
+
+                    b.Property<long?>("DurationMs")
+                        .HasColumnType("bigint")
+                        .HasColumnName("duration_ms");
+
+                    b.Property<Guid>("ShadowingAttemptId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_attempt_id");
+
+                    b.Property<Guid>("ShadowingRoleLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_role_line_id");
+
+                    b.Property<DateTimeOffset?>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_attempt_details");
+
+                    b.HasIndex("ShadowingRoleLineId")
+                        .HasDatabaseName("ix_shadowing_attempt_details_shadowing_role_line_id");
+
+                    b.HasIndex("ShadowingAttemptId", "ShadowingRoleLineId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_attempt_details_shadowing_attempt_id_shadowing_ro");
+
+                    b.ToTable("shadowing_attempt_details", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("video_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_materials");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_materials_code");
+
+                    b.HasIndex("VideoId", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_materials_video_id_version");
+
+                    b.ToTable("shadowing_materials", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ShadowingMaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_material_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("SpeakerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("speaker_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_roles");
+
+                    b.HasIndex("SpeakerId")
+                        .HasDatabaseName("ix_shadowing_roles_speaker_id");
+
+                    b.HasIndex("ShadowingMaterialId", "SortOrder")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_roles_shadowing_material_id_sort_order");
+
+                    b.HasIndex("ShadowingMaterialId", "SpeakerId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_roles_shadowing_material_id_speaker_id");
+
+                    b.ToTable("shadowing_roles", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AudioKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("audio_key");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval")
+                        .HasColumnName("end_time");
+
+                    b.Property<Guid>("ShadowingMaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_material_id");
+
+                    b.Property<Guid>("ShadowingRoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_role_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval")
+                        .HasColumnName("start_time");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("text");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_role_lines");
+
+                    b.HasIndex("ShadowingRoleId")
+                        .HasDatabaseName("ix_shadowing_role_lines_shadowing_role_id");
+
+                    b.HasIndex("ShadowingMaterialId", "SortOrder")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_role_lines_shadowing_material_id_sort_order");
+
+                    b.ToTable("shadowing_role_lines", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
+
+                    b.Property<DateTimeOffset>("ScheduledStartAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("scheduled_start_at");
+
+                    b.Property<Guid>("ShadowingMaterialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_material_id");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("visibility");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_sessions");
+
+                    b.HasIndex("HostId")
+                        .HasDatabaseName("ix_shadowing_sessions_host_id");
+
+                    b.HasIndex("ShadowingMaterialId")
+                        .HasDatabaseName("ix_shadowing_sessions_shadowing_material_id");
+
+                    b.ToTable("shadowing_sessions", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSessionInvitation.ShadowingSessionInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ExpiredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expired_at");
+
+                    b.Property<Guid>("HostId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("host_id");
+
+                    b.Property<Guid>("LearnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("learner_id");
+
+                    b.Property<DateTimeOffset?>("ResponsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("responsed_at");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<Guid>("ShadowingSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_session_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_session_invitations");
+
+                    b.HasIndex("HostId")
+                        .HasDatabaseName("ix_shadowing_session_invitations_host_id");
+
+                    b.HasIndex("LearnerId")
+                        .HasDatabaseName("ix_shadowing_session_invitations_learner_id");
+
+                    b.HasIndex("ShadowingSessionId", "LearnerId")
+                        .HasDatabaseName("ix_shadowing_session_invitations_shadowing_session_id_learner_");
+
+                    b.ToTable("shadowing_session_invitations", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember.ShadowingSessionMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("JoinType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("join_type");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("joined_at");
+
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid>("ShadowingRoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_role_id");
+
+                    b.Property<Guid>("ShadowingSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_session_id");
+
+                    b.Property<Guid?>("ShadowingSessionInvitationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_session_invitation_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shadowing_session_members");
+
+                    b.HasIndex("MemberId")
+                        .HasDatabaseName("ix_shadowing_session_members_member_id");
+
+                    b.HasIndex("ShadowingRoleId")
+                        .HasDatabaseName("ix_shadowing_session_members_shadowing_role_id");
+
+                    b.HasIndex("ShadowingSessionInvitationId")
+                        .HasDatabaseName("ix_shadowing_session_members_shadowing_session_invitation_id");
+
+                    b.HasIndex("ShadowingSessionId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_session_members_shadowing_session_id_member_id");
+
+                    b.ToTable("shadowing_session_members", "shadowing");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2125,6 +2588,220 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Series");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", null)
+                        .WithMany()
+                        .HasForeignKey("EvaluatorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_shadowing_assessments_users_evaluator_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttempt", "ShadowingAttempt")
+                        .WithMany("Assessments")
+                        .HasForeignKey("ShadowingAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_assessments_shadowing_attempts_shadowing_attempt_");
+
+                    b.Navigation("ShadowingAttempt");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessmentDetail.ShadowingAssessmentDetail", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment", "ShadowingAssessment")
+                        .WithMany("Details")
+                        .HasForeignKey("ShadowingAssessmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_assessment_details_shadowing_assessments_shadowin");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetail", "ShadowingAttemptDetail")
+                        .WithMany("AssessmentDetails")
+                        .HasForeignKey("ShadowingAttemptDetailId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_assessment_details_shadowing_attempt_details_shad");
+
+                    b.Navigation("ShadowingAssessment");
+
+                    b.Navigation("ShadowingAttemptDetail");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttempt", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", "ShadowingSession")
+                        .WithMany("Attempts")
+                        .HasForeignKey("ShadowingSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_attempts_shadowing_sessions_shadowing_session_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember.ShadowingSessionMember", "ShadowingSessionMember")
+                        .WithMany("Attempts")
+                        .HasForeignKey("ShadowingSessionMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_attempts_shadowing_session_members_shadowing_sess");
+
+                    b.Navigation("ShadowingSession");
+
+                    b.Navigation("ShadowingSessionMember");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetail", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttempt", "ShadowingAttempt")
+                        .WithMany("Details")
+                        .HasForeignKey("ShadowingAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_attempt_details_shadowing_attempts_shadowing_atte");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLine", "ShadowingRoleLine")
+                        .WithMany()
+                        .HasForeignKey("ShadowingRoleLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_attempt_details_shadowing_role_lines_shadowing_ro");
+
+                    b.Navigation("ShadowingAttempt");
+
+                    b.Navigation("ShadowingRoleLine");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", null)
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_materials_videos_video_id");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", "ShadowingMaterial")
+                        .WithMany("Roles")
+                        .HasForeignKey("ShadowingMaterialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_roles_shadowing_materials_shadowing_material_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", "Speaker")
+                        .WithMany()
+                        .HasForeignKey("SpeakerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_roles_speakers_speaker_id");
+
+                    b.Navigation("ShadowingMaterial");
+
+                    b.Navigation("Speaker");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLine", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", "ShadowingMaterial")
+                        .WithMany("RoleLines")
+                        .HasForeignKey("ShadowingMaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_role_lines_shadowing_materials_shadowing_material");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", "ShadowingRole")
+                        .WithMany("RoleLines")
+                        .HasForeignKey("ShadowingRoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_role_lines_shadowing_roles_shadowing_role_id");
+
+                    b.Navigation("ShadowingMaterial");
+
+                    b.Navigation("ShadowingRole");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_sessions_users_host_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", "ShadowingMaterial")
+                        .WithMany("Sessions")
+                        .HasForeignKey("ShadowingMaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_sessions_shadowing_materials_shadowing_material_id");
+
+                    b.Navigation("ShadowingMaterial");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSessionInvitation.ShadowingSessionInvitation", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", null)
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_session_invitations_users_host_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", null)
+                        .WithMany()
+                        .HasForeignKey("LearnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_session_invitations_users_learner_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", null)
+                        .WithMany()
+                        .HasForeignKey("ShadowingSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_session_invitations_shadowing_sessions_shadowing_");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember.ShadowingSessionMember", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_session_members_users_member_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", "ShadowingRole")
+                        .WithMany("Members")
+                        .HasForeignKey("ShadowingRoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_session_members_shadowing_roles_shadowing_role_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", "ShadowingSession")
+                        .WithMany("Members")
+                        .HasForeignKey("ShadowingSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_session_members_shadowing_sessions_shadowing_sess");
+
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingSessionInvitation.ShadowingSessionInvitation", "ShadowingSessionInvitation")
+                        .WithMany()
+                        .HasForeignKey("ShadowingSessionInvitationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_shadowing_session_members_shadowing_session_invitations_sha");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("ShadowingRole");
+
+                    b.Navigation("ShadowingSession");
+
+                    b.Navigation("ShadowingSessionInvitation");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Subscriptions.Feature.Feature", "Feature")
@@ -2345,6 +3022,51 @@ namespace Rakushu.Persistence.Migrations
 
                     b.Navigation("Transcript")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment", b =>
+                {
+                    b.Navigation("Details");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttempt", b =>
+                {
+                    b.Navigation("Assessments");
+
+                    b.Navigation("Details");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetail", b =>
+                {
+                    b.Navigation("AssessmentDetails");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", b =>
+                {
+                    b.Navigation("RoleLines");
+
+                    b.Navigation("Roles");
+
+                    b.Navigation("Sessions");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("RoleLines");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", b =>
+                {
+                    b.Navigation("Attempts");
+
+                    b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember.ShadowingSessionMember", b =>
+                {
+                    b.Navigation("Attempts");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.Speaker.Speaker", b =>

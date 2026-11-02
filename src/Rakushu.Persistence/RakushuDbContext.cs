@@ -29,6 +29,16 @@ using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Material.Video.MediaAsset;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessmentDetail;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail;
+using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
+using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
+using Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSession;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSessionInvitation;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Subscriptions.Entitlement;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
@@ -98,6 +108,16 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 
 	// Shadowing
 	public DbSet<Speaker> Speakers => Set<Speaker>();
+	public DbSet<ShadowingAssessment> ShadowingAssessments => Set<ShadowingAssessment>();
+	public DbSet<ShadowingAssessmentDetail> ShadowingAssessmentDetails => Set<ShadowingAssessmentDetail>();
+	public DbSet<ShadowingAttempt> ShadowingAttempts => Set<ShadowingAttempt>();
+	public DbSet<ShadowingAttemptDetail> ShadowingAttemptDetails => Set<ShadowingAttemptDetail>();
+	public DbSet<ShadowingMaterial> ShadowingMaterials => Set<ShadowingMaterial>();
+	public DbSet<ShadowingRole> ShadowingRoles => Set<ShadowingRole>();
+	public DbSet<ShadowingRoleLine> ShadowingRoleLines => Set<ShadowingRoleLine>();
+	public DbSet<ShadowingSession> ShadowingSessions => Set<ShadowingSession>();
+	public DbSet<ShadowingSessionInvitation> ShadowingSessionInvitations => Set<ShadowingSessionInvitation>();
+	public DbSet<ShadowingSessionMember> ShadowingSessionMembers => Set<ShadowingSessionMember>();
 
 
 
