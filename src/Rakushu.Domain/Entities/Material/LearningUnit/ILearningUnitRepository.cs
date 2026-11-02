@@ -27,4 +27,8 @@ public interface ILearningUnitRepository : IBaseRepository<LearningUnit, Learnin
 	Task<IReadOnlyDictionary<Guid, LearningUnitMediaContext>> GetMediaContextBySegmentIdsAsync(
 		IReadOnlyCollection<Guid> segmentIds,
 		CancellationToken cancellationToken = default);
+
+	Task<(LearningUnit? Unit, IReadOnlyList<LearningUnit> SegmentUnits)> GetCurationContextByIdAsync(
+		LearningUnitId id,
+		CancellationToken cancellationToken = default);
 }

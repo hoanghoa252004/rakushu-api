@@ -56,7 +56,10 @@ internal sealed class GetKnowledgeMeaningsHandler : IRequestHandler<GetKnowledge
 				m.SortOrder,
 				m.Meaning,
 				m.JapaneseMeaning,
-				m.Description))
+				m.Description,
+				unit.Expression,
+				unit.Reading,
+				unit.KnowledgeType.ToString()))
 			.ToList();
 
 		return Result.Success(items);

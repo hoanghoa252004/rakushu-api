@@ -228,4 +228,38 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 
 		return result;
 	}
+
+	public async Task<(LearningUnit? Unit, IReadOnlyList<LearningUnit> SegmentUnits)> GetCurationContextByIdAsync(
+		LearningUnitId id,
+		CancellationToken cancellationToken = default)
+	{
+		var unit = await _context.LearningUnits
+			.AsNoTracking()
+			.Include(lu => lu.KnowledgeMeaning)
+				.ThenInclude(km => km.KnowledgeUnit)
+			.Include(lu => lu.TranscriptSegment)
+				.ThenInclude(ts => ts.Transcript)
+					.ThenInclude(t => t.Video)
+						.ThenInclude(v => v.MediaAssets)
+			.Include(lu => lu.TranscriptSegment)
+				.ThenInclude(ts => ts.Subtitle)
+			.Include(lu => lu.TranscriptSegment)
+				.ThenInclude(ts => ts.Bunsetsus)
+					.ThenInclude(b => b.Tokens)
+						.ThenInclude(tok => tok.JapanesePartOfSpeech)
+			.AsSplitQuery()
+			.FirstOrDefaultAsync(lu => lu.Id == id, cancellationToken);
+
+		if (unit is null)
+			return (null, Array.Empty<LearningUnit>());
+
+		var segmentUnits = await _context.LearningUnits
+			.AsNoTracking()
+			.Where(lu => lu.TranscriptSegmentId == unit.TranscriptSegmentId)
+			.Include(lu => lu.KnowledgeMeaning)
+				.ThenInclude(km => km.KnowledgeUnit)
+			.ToListAsync(cancellationToken);
+
+		return (unit, segmentUnits);
+	}
 }
