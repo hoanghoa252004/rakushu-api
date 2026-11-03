@@ -21,6 +21,9 @@ public sealed class User : AggregateRoot<UserId>
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES----------
+	// ShadowingMaterialRequests
+	private readonly List<Shadowing.ShadowingMaterialRequest.ShadowingMaterialRequest> _shadowingMaterialRequests = new();
+	public IReadOnlyCollection<Shadowing.ShadowingMaterialRequest.ShadowingMaterialRequest> ShadowingMaterialRequests => _shadowingMaterialRequests.AsReadOnly();
 	// Role:
 	public Role.Role Role { get; private set; } = null!;
 

@@ -15,7 +15,6 @@ public sealed class ShadowingAssessment : Entity<ShadowingAssessmentId>
 	public ShadowingAssessmentType Type { get; private set; }
 
 	// Null for automated assessment.
-	public UserId? EvaluatorId { get; private set; }
 	public decimal? OverallScore { get; private set; }
 	public string? OveralFeedback { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }

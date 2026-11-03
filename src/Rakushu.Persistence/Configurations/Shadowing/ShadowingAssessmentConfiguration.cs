@@ -37,16 +37,6 @@ internal sealed class ShadowingAssessmentConfiguration : IEntityTypeConfiguratio
 			.HasConversion<string>()
 			.IsRequired();
 
-		// EvaluatorId
-		builder.Property(a => a.EvaluatorId)
-			.HasConversion(
-				id => id!.Value,
-				value => UserId.From(value));
-		builder.HasOne<User>()
-			.WithMany()
-			.HasForeignKey(a => a.EvaluatorId)
-			.OnDelete(DeleteBehavior.Restrict);
-
 		// OverallScore
 		builder.Property(a => a.OverallScore)
 			.HasPrecision(5, 2);
