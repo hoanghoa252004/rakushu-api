@@ -25,7 +25,7 @@ internal sealed class GetSrsItems : IEndpoint
 			})
 			.WithName("GetSrsItems")
 			.WithSummary("Get saved vocabulary items for the current user")
-			.WithDescription("Returns saved vocabulary items with their SM-2 scheduling metrics. Filter by status: 'All', 'Due_today' (or 'Due'), 'Overdue', 'Learning', 'Review', 'Suspended'.")
+			.WithDescription("Returns saved vocabulary items with their SM-2 scheduling metrics and dynamic multi-video contexts (where each item appears across lesson videos). Filter by status: 'All', 'Due_today' (or 'Due'), 'Overdue', 'Learning', 'Review', 'Suspended'.")
 			.RequireAuthorization()
 			.Produces<IReadOnlyList<SrsItemDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
