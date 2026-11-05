@@ -47,8 +47,7 @@ internal sealed class ShadowingMaterialConfiguration : IEntityTypeConfiguration<
 		builder.Property(m => m.ShadowingMaterialRequestId)
 			.HasConversion(
 				id => id.Value,
-				value => ShadowingMaterialRequestId.From(value))
-			.IsRequired();
+				value => ShadowingMaterialRequestId.From(value));
 		builder.HasOne(x => x.ShadowingMaterialRequest)
 			.WithMany(v => v.ShadowingMaterials)
 			.HasForeignKey(m => m.ShadowingMaterialRequestId)

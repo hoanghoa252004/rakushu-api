@@ -18,6 +18,10 @@ using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
+using Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest;
+using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
+using Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
@@ -72,6 +76,10 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
 		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
 		services.AddScoped<ISpeakerRepository, SpeakerRepository>();
+		services.AddScoped<IShadowingMaterialRequestRepository, ShadowingMaterialRequestRepository>();
+		services.AddScoped<IShadowingMaterialRepository, ShadowingMaterialRepository>();
+		services.AddScoped<IShadowingRoleRepository, ShadowingRoleRepository>();
+		services.AddScoped<IShadowingRoleLineRepository, ShadowingRoleLineRepository>();
 
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

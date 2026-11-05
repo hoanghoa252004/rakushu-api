@@ -1,4 +1,5 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 using System;
@@ -29,4 +30,42 @@ public sealed class ShadowingRole : Entity<ShadowingRoleId>
 	// ShadowingRoleLines
 	private readonly List<ShadowingRoleLine.ShadowingRoleLine> _roleLines = new();
 	public IReadOnlyCollection<ShadowingRoleLine.ShadowingRoleLine> RoleLines => _roleLines.AsReadOnly();
+
+	private ShadowingRole() { }
+
+	private ShadowingRole(
+		ShadowingRoleId id,
+		ShadowingMaterialId shadowingMaterialId,
+		SpeakerId speakerId,
+		int sortOrder) : base(id)
+	{
+		ShadowingMaterialId = shadowingMaterialId;
+		SpeakerId = speakerId;
+		SortOrder = sortOrder;
+	}
+
+	public static Result<ShadowingRole> Create(
+		ShadowingMaterialId shadowingMaterialId,
+		SpeakerId speakerId,
+		int sortOrder)
+	{
+		if (sortOrder < 1)
+			return Result.Failure<ShadowingRole>(ShadowingRoleErrors.InvalidSortOrder);
+
+		return Result.Success(new ShadowingRole(
+			ShadowingRoleId.Create(),
+			shadowingMaterialId,
+			speakerId,
+			sortOrder));
+	}
+
+	public Result Update(SpeakerId speakerId, int sortOrder)
+	{
+		if (sortOrder < 1)
+			return Result.Failure(ShadowingRoleErrors.InvalidSortOrder);
+
+		SpeakerId = speakerId;
+		SortOrder = sortOrder;
+		return Result.Success();
+	}
 }

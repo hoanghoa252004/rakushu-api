@@ -22,6 +22,10 @@ public sealed class AwsSettings
 
 	// Translate settings
 	public string TranslateDataAccessRoleArn { get; set; } = string.Empty;
+	// MediaConvert settings
+	public string MediaConvertEndpoint { get; set; } = string.Empty;
+	public string MediaConvertRoleArn { get; set; } = string.Empty;
+
 	// NLP settings
 	public string NlpBaseUrl { get; set; } = string.Empty;
 

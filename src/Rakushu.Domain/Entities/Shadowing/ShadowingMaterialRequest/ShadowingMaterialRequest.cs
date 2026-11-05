@@ -1,4 +1,5 @@
 ﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
@@ -33,4 +34,60 @@ public sealed class ShadowingMaterialRequest : Entity<ShadowingMaterialRequestId
 	public IReadOnlyCollection<ShadowingMaterial.ShadowingMaterial> ShadowingMaterials => _shadowingMaterials.AsReadOnly();
 
 	private ShadowingMaterialRequest() { }
+
+	private ShadowingMaterialRequest(
+		ShadowingMaterialRequestId id,
+		string code,
+		VideoId videoId,
+		UserId learnerId,
+		DateTimeOffset now) : base(id)
+	{
+		Code = code;
+		VideoId = videoId;
+		LearnerId = learnerId;
+		Status = ShadowingMaterialRequestStatus.Pending;
+		RequestedAt = now;
+		UpdatedAt = now;
+	}
+
+	public static Result<ShadowingMaterialRequest> Create(
+		string code,
+		VideoId videoId,
+		UserId learnerId,
+		DateTimeOffset now)
+	{
+		if (string.IsNullOrWhiteSpace(code))
+			return Result.Failure<ShadowingMaterialRequest>(ShadowingMaterialRequestErrors.InvalidCode);
+
+		return Result.Success(new ShadowingMaterialRequest(
+			ShadowingMaterialRequestId.Create(),
+			code.Trim(),
+			videoId,
+			learnerId,
+			now));
+	}
+
+	public Result ChangeStatus(
+		ShadowingMaterialRequestStatus newStatus,
+		string? rejectReason,
+		DateTimeOffset now)
+	{
+		if (!ShadowingMaterialRequestStatusTransition.IsAllowed(Status, newStatus))
+			return Result.Failure(ShadowingMaterialRequestErrors.InvalidStatusTransition);
+
+		if (newStatus == ShadowingMaterialRequestStatus.Rejected)
+		{
+			if (string.IsNullOrWhiteSpace(rejectReason))
+				return Result.Failure(ShadowingMaterialRequestErrors.RejectReasonRequired);
+
+			RejectReason = rejectReason.Trim();
+		}
+
+		if (newStatus == ShadowingMaterialRequestStatus.Completed)
+			CompletedAt = now;
+
+		Status = newStatus;
+		UpdatedAt = now;
+		return Result.Success();
+	}
 }
