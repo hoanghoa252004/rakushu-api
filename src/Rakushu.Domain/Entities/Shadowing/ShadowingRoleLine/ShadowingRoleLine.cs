@@ -1,5 +1,6 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 using System;
@@ -32,11 +33,22 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 	public ShadowingRole.ShadowingRole ShadowingRole { get; private set; } = null!;
 
 	// ShadowingRoleLineTranscriptSegments
-	//private readonly List<ShadowingRoleLineTranscriptSegment>
-	//	_transcriptSegments = new();
+	private readonly List<ShadowingRoleLineTranscriptSegment> _transcriptSegments = new();
 
-	//public IReadOnlyCollection<ShadowingRoleLineTranscriptSegment>
-	//	TranscriptSegments => _transcriptSegments.AsReadOnly();
+	public IReadOnlyCollection<ShadowingRoleLineTranscriptSegment> TranscriptSegments => _transcriptSegments.AsReadOnly();
+
+	public void SetSortOrder(int sortOrder) => SortOrder = sortOrder;
+
+	public void SetSegments(IEnumerable<TranscriptSegmentId> segmentIds)
+	{
+		var target = segmentIds.Select(s => s.Value).ToHashSet();
+
+		_transcriptSegments.RemoveAll(x => !target.Contains(x.TranscriptSegmentId.Value));
+
+		var existing = _transcriptSegments.Select(x => x.TranscriptSegmentId.Value).ToHashSet();
+		foreach (var id in target.Where(id => !existing.Contains(id)))
+			_transcriptSegments.Add(new ShadowingRoleLineTranscriptSegment(Id, TranscriptSegmentId.From(id), ShadowingMaterialId));
+	}
 
 	private ShadowingRoleLine() { }
 

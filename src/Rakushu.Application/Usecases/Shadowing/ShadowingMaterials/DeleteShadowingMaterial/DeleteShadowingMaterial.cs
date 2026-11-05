@@ -29,7 +29,7 @@ internal sealed class DeleteShadowingMaterialHandler(
 			if (material is null)
 				return Result.Failure(ShadowingMaterialErrors.NotFound);
 
-			if (material.Status != ShadowingMaterialStatus.Processing)
+			if (material.Status != ShadowingMaterialStatus.Processing || material.Status != ShadowingMaterialStatus.Reviewing)
 				return Result.Failure(ShadowingMaterialErrors.CannotDelete);
 
 			repository.Delete(material);

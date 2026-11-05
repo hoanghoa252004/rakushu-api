@@ -121,19 +121,17 @@ internal sealed class GetShadowingRoleLinesEndpoint : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapGroup("/api/shadowing-materials/{materialId:guid}/lines")
+		app.MapGroup("/api/shadowing-roles/{shadowingRoleId:guid}/lines")
 			.WithTags("ShadowingRoleLine").WithGroupName("shadowing")
 			.MapGet("/", async (
-				[FromRoute] Guid materialId,
+				[FromRoute] Guid shadowingRoleId,
 				ISender sender,
-				[FromQuery] Guid? speakerId = null,
-				[FromQuery] Guid? roleId = null,
 				[FromQuery] int pageNumber = 1,
 				[FromQuery] int pageSize = 10,
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(
-					new GetShadowingRoleLinesQuery(materialId, speakerId, roleId, pageNumber, pageSize), cancellationToken);
+					new GetShadowingRoleLinesQuery(shadowingRoleId, pageNumber, pageSize), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingRoleLines")
@@ -150,17 +148,16 @@ internal sealed class CreateShadowingRoleLineEndpoint : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapGroup("/api/shadowing-materials/{materialId:guid}/lines")
+		app.MapGroup("/api/shadowing-roles/{shadowingRoleId:guid}/lines")
 			.WithTags("ShadowingRoleLine").WithGroupName("shadowing")
 			.MapPost("/", async (
-				[FromRoute] Guid materialId,
-				[FromBody] ShadowingRoleLineRequestDto request,
+				[FromRoute] Guid shadowingRoleId,
+				[FromBody] CreateShadowingRoleLineRequestDto request,
 				ISender sender,
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(new CreateShadowingRoleLineCommand(
-					materialId, request.RoleId, request.SortOrder, request.Text,
-					request.StartTime, request.EndTime, request.AudioKey), cancellationToken);
+					shadowingRoleId, request.TranscriptSegmentIds), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("CreateShadowingRoleLine")
@@ -175,13 +172,11 @@ internal sealed class CreateShadowingRoleLineEndpoint : IEndpoint
 	}
 }
 
+public sealed record CreateShadowingRoleLineRequestDto(List<Guid> TranscriptSegmentIds);
+
 public sealed record ShadowingRoleLineRequestDto(
 	Guid RoleId,
-	int SortOrder,
-	string Text,
-	TimeSpan StartTime,
-	TimeSpan EndTime,
-	string AudioKey);
+	List<Guid> TranscriptSegmentIds);
 
 internal sealed class UpdateShadowingRoleLineEndpoint : IEndpoint
 {
@@ -196,8 +191,7 @@ internal sealed class UpdateShadowingRoleLineEndpoint : IEndpoint
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(new UpdateShadowingRoleLineCommand(
-					lineId, request.RoleId, request.SortOrder, request.Text,
-					request.StartTime, request.EndTime, request.AudioKey), cancellationToken);
+					lineId, request.RoleId, request.TranscriptSegmentIds), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("UpdateShadowingRoleLine")

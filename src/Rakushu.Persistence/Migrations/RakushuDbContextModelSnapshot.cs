@@ -1491,10 +1491,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<Guid>("ShadowingMaterialRequestId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("shadowing_material_request_id");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1518,73 +1514,11 @@ namespace Rakushu.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_shadowing_materials");
 
-                    b.HasIndex("ShadowingMaterialRequestId")
-                        .HasDatabaseName("ix_shadowing_materials_shadowing_material_request_id");
-
                     b.HasIndex("VideoId", "Version")
                         .IsUnique()
                         .HasDatabaseName("ix_shadowing_materials_video_id_version");
 
                     b.ToTable("shadowing_materials", "shadowing");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest.ShadowingMaterialRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("code");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("completed_at");
-
-                    b.Property<Guid>("LearnerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("learner_id");
-
-                    b.Property<string>("RejectReason")
-                        .HasColumnType("text")
-                        .HasColumnName("reject_reason");
-
-                    b.Property<DateTimeOffset>("RequestedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("requested_at");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("status");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid>("VideoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("video_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_shadowing_material_requests");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("ix_shadowing_material_requests_code");
-
-                    b.HasIndex("LearnerId")
-                        .HasDatabaseName("ix_shadowing_material_requests_learner_id");
-
-                    b.HasIndex("VideoId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_shadowing_material_requests_video_id");
-
-                    b.ToTable("shadowing_material_requests", "shadowing");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", b =>
@@ -2720,42 +2654,12 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest.ShadowingMaterialRequest", "ShadowingMaterialRequest")
-                        .WithMany("ShadowingMaterials")
-                        .HasForeignKey("ShadowingMaterialRequestId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_shadowing_materials_shadowing_material_requests_shadowing_m");
-
                     b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
                         .WithMany("ShadowingMaterials")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_shadowing_materials_videos_video_id");
-
-                    b.Navigation("ShadowingMaterialRequest");
-
-                    b.Navigation("Video");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest.ShadowingMaterialRequest", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "Learner")
-                        .WithMany("ShadowingMaterialRequests")
-                        .HasForeignKey("LearnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_shadowing_material_requests_users_learner_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
-                        .WithOne("ShadowingMaterialRequest")
-                        .HasForeignKey("Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest.ShadowingMaterialRequest", "VideoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_shadowing_material_requests_videos_video_id");
-
-                    b.Navigation("Learner");
 
                     b.Navigation("Video");
                 });
@@ -2786,7 +2690,7 @@ namespace Rakushu.Persistence.Migrations
                     b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", "ShadowingMaterial")
                         .WithMany("RoleLines")
                         .HasForeignKey("ShadowingMaterialId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_shadowing_role_lines_shadowing_materials_shadowing_material");
 
@@ -3009,8 +2913,6 @@ namespace Rakushu.Persistence.Migrations
 
                     b.Navigation("Series");
 
-                    b.Navigation("ShadowingMaterialRequests");
-
                     b.Navigation("Subscriptions");
 
                     b.Navigation("Videos");
@@ -3103,8 +3005,6 @@ namespace Rakushu.Persistence.Migrations
                 {
                     b.Navigation("MediaAssets");
 
-                    b.Navigation("ShadowingMaterialRequest");
-
                     b.Navigation("ShadowingMaterials");
 
                     b.Navigation("Transcript")
@@ -3135,11 +3035,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Roles");
 
                     b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest.ShadowingMaterialRequest", b =>
-                {
-                    b.Navigation("ShadowingMaterials");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", b =>

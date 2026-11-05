@@ -38,6 +38,8 @@ internal sealed class DeleteShadowingRoleLineHandler(
 				return Result.Failure(ShadowingMaterialErrors.NotEditable);
 
 			repository.Delete(line);
+			await unitOfWork.SaveChangesAsync(cancellationToken);
+			await repository.RecomputeSortOrdersAsync(line.ShadowingMaterialId, cancellationToken);
 			return Result.Success();
 		}, cancellationToken);
 	}

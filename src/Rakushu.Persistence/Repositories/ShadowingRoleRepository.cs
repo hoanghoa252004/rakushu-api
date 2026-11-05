@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
@@ -32,6 +33,26 @@ public sealed class ShadowingRoleRepository
 			r => r.ShadowingMaterialId == materialId
 				&& r.SpeakerId == speakerId
 				&& (excludeId == null || r.Id != excludeId),
+			cancellationToken);
+	}
+
+	public async Task<bool> VideoHasSpeakerAsync(
+		VideoId videoId,
+		SpeakerId speakerId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.TranscriptSpeakers.AnyAsync(
+			ts => ts.SpeakerId == speakerId && ts.Transcript.VideoId == videoId,
+			cancellationToken);
+	}
+
+	public async Task<bool> HasRoleWithoutLinesAsync(
+		ShadowingMaterialId materialId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingRoles.AnyAsync(
+			r => r.ShadowingMaterialId == materialId
+				&& !_context.ShadowingRoleLines.Any(l => l.ShadowingRoleId == r.Id),
 			cancellationToken);
 	}
 

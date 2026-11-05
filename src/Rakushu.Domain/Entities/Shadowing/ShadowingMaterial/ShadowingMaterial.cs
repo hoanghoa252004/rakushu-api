@@ -1,7 +1,6 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Video;
-using Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +13,6 @@ public sealed class ShadowingMaterial : Entity<ShadowingMaterialId>
 {
 	public MaterialType Type { get; private set; }
 	public ShadowingMaterialStatus Status { get; private set; }
-	public ShadowingMaterialRequestId? ShadowingMaterialRequestId { get; private set; }
 	public VideoId VideoId { get; private set; } = null!;
 	public int Version { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
@@ -22,9 +20,6 @@ public sealed class ShadowingMaterial : Entity<ShadowingMaterialId>
 	// NAVIGATION PROPERTIES
 	// Video
 	public Video Video { get; private set; } = null!;
-
-	// ShadowingMaterialRequest
-	public ShadowingMaterialRequest.ShadowingMaterialRequest? ShadowingMaterialRequest { get; private set; }
 
 	// ShadowingRoles
 	private readonly List<ShadowingRole.ShadowingRole> _roles = new();
@@ -44,14 +39,12 @@ public sealed class ShadowingMaterial : Entity<ShadowingMaterialId>
 	private ShadowingMaterial(
 		ShadowingMaterialId id,
 		MaterialType type,
-		ShadowingMaterialRequestId? shadowingMaterialRequestId,
 		VideoId videoId,
 		int version,
 		DateTimeOffset createdAt) : base(id)
 	{
 		Type = type;
 		Status = ShadowingMaterialStatus.Processing;
-		ShadowingMaterialRequestId = shadowingMaterialRequestId;
 		VideoId = videoId;
 		Version = version;
 		CreatedAt = createdAt;
@@ -59,7 +52,6 @@ public sealed class ShadowingMaterial : Entity<ShadowingMaterialId>
 
 	public static Result<ShadowingMaterial> Create(
 		MaterialType type,
-		ShadowingMaterialRequestId? shadowingMaterialRequestId,
 		VideoId videoId,
 		int version,
 		DateTimeOffset createdAt)
@@ -67,16 +59,9 @@ public sealed class ShadowingMaterial : Entity<ShadowingMaterialId>
 		if (!Enum.IsDefined(type))
 			return Result.Failure<ShadowingMaterial>(ShadowingMaterialErrors.InvalidType);
 
-		if (type == MaterialType.RequestedByLearner && shadowingMaterialRequestId is null)
-			return Result.Failure<ShadowingMaterial>(ShadowingMaterialErrors.RequestRequired);
-
-		if (type == MaterialType.Curated && shadowingMaterialRequestId is not null)
-			return Result.Failure<ShadowingMaterial>(ShadowingMaterialErrors.CuratedCannotHaveRequest);
-
 		return Result.Success(new ShadowingMaterial(
 			ShadowingMaterialId.Create(),
 			type,
-			shadowingMaterialRequestId,
 			videoId,
 			version,
 			createdAt));

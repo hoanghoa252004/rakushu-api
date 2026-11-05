@@ -28,6 +28,22 @@ public static class ShadowingRoleLineErrors
 		"SHADOWING_ROLE_LINE.SORT_ORDER_ALREADY_EXISTS",
 		"A role line with this sort order already exists in the shadowing material.");
 
+	public static readonly Error TranscriptSegmentsRequired = Error.Validation(
+		"SHADOWING_ROLE_LINE.TRANSCRIPT_SEGMENTS_REQUIRED",
+		"At least one transcript segment is required.");
+
+	public static readonly Error TranscriptSegmentNotFound = Error.NotFound(
+		"SHADOWING_ROLE_LINE.TRANSCRIPT_SEGMENT_NOT_FOUND",
+		"One or more transcript segments were not found in the video of the material.");
+
+	public static readonly Error TranscriptSegmentAlreadyUsed = Error.Conflict(
+		"SHADOWING_ROLE_LINE.TRANSCRIPT_SEGMENT_ALREADY_USED",
+		"One or more transcript segments are already used by another line in this material.");
+
+	public static readonly Error TranscriptSegmentsNotContiguous = Error.Validation(
+		"SHADOWING_ROLE_LINE.TRANSCRIPT_SEGMENTS_NOT_CONTIGUOUS",
+		"The transcript segments must be adjacent to each other.");
+
 	public static readonly Error RoleNotInMaterial = Error.Validation(
 		"SHADOWING_ROLE_LINE.ROLE_NOT_IN_MATERIAL",
 		"The role does not belong to the shadowing material.");

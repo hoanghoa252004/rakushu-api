@@ -12,7 +12,6 @@ public sealed record ShadowingMaterialDto(
 	Guid Id,
 	string Type,
 	string Status,
-	Guid? ShadowingMaterialRequestId,
 	Guid VideoId,
 	int Version,
 	DateTimeOffset CreatedAt,
@@ -55,7 +54,6 @@ public sealed record ShadowingMaterialDto(
 		m.Id.Value,
 		m.Type.ToString(),
 		m.Status.ToString(),
-		m.ShadowingMaterialRequestId?.Value,
 		m.VideoId.Value,
 		m.Version,
 		m.CreatedAt);

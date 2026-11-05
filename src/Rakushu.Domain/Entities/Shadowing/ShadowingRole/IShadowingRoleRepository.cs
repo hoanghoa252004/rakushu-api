@@ -1,4 +1,5 @@
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 
@@ -20,5 +21,14 @@ public interface IShadowingRoleRepository : IBaseRepository<ShadowingRole, Shado
 		ShadowingMaterialId materialId,
 		int sortOrder,
 		ShadowingRoleId? excludeId,
+		CancellationToken cancellationToken = default);
+
+	Task<bool> VideoHasSpeakerAsync(
+		VideoId videoId,
+		SpeakerId speakerId,
+		CancellationToken cancellationToken = default);
+
+	Task<bool> HasRoleWithoutLinesAsync(
+		ShadowingMaterialId materialId,
 		CancellationToken cancellationToken = default);
 }

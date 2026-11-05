@@ -48,6 +48,8 @@ internal sealed class UpdateShadowingRoleHandler(
 
 			if (await repository.SpeakerExistsAsync(role.ShadowingMaterialId, speakerId, roleId, cancellationToken))
 				return Result.Failure(ShadowingRoleErrors.SpeakerAlreadyExists);
+			if (!await repository.VideoHasSpeakerAsync(material.VideoId, speakerId, cancellationToken))
+				return Result.Failure(ShadowingRoleErrors.SpeakerNotInTranscript);
 			if (await repository.SortOrderExistsAsync(role.ShadowingMaterialId, request.SortOrder, roleId, cancellationToken))
 				return Result.Failure(ShadowingRoleErrors.SortOrderAlreadyExists);
 

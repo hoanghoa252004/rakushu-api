@@ -38,9 +38,9 @@ internal sealed class CreateShadowingMaterialEndpoint : IEndpoint
 				return result.MatchCreated("GetShadowingMaterialById", id => new { videoId, materialId = id });
 			})
 			.WithName("CreateShadowingMaterial")
-			.WithSummary("Curator")
-			.WithDescription("Creates a Curated shadowing material (not linked to any request) for a Ready video. Status starts as Processing.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.WithSummary("Learner, Curator")
+			.WithDescription("Creates a shadowing material. Status starts as Processing. Learner can only create one material for their video once time.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
 			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status404NotFound)
@@ -58,7 +58,6 @@ internal sealed class GetShadowingMaterialsEndpoint : IEndpoint
 				ISender sender,
 				[FromQuery] int pageNumber = 1,
 				[FromQuery] int pageSize = 10,
-				[FromQuery] Guid? requestId = null,
 				[FromQuery] MaterialType? type = null,
 				[FromQuery] ShadowingMaterialStatus? status = null,
 				[FromQuery] int linePageNumber = 1,
@@ -66,12 +65,12 @@ internal sealed class GetShadowingMaterialsEndpoint : IEndpoint
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(
-					new GetShadowingMaterialsQuery(pageNumber, pageSize, videoId, requestId, type, status, linePageNumber, linePageSize), cancellationToken);
+					new GetShadowingMaterialsQuery(pageNumber, pageSize, videoId, type, status, linePageNumber, linePageSize), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingMaterials")
 			.WithSummary("Learner, Curator")
-			.WithDescription("Gets materials of a video with paging, filter by requestId, type, status. Learner only sees Ready materials (status filter ignored); Curator sees all.")
+			.WithDescription("Gets materials of a video with paging, filter by type, status. Learner only sees Ready materials (status filter ignored); Curator sees all.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
 			.Produces<PaginatedList<ShadowingMaterialDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

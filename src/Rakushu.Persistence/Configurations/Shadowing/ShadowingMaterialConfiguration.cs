@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
-using Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest;
 
 namespace Rakushu.Persistence.Configurations.Shadowing;
 
@@ -41,16 +40,6 @@ internal sealed class ShadowingMaterialConfiguration : IEntityTypeConfiguration<
 		builder.HasOne<Video>(x => x.Video)
 			.WithMany(v => v.ShadowingMaterials)
 			.HasForeignKey(m => m.VideoId)
-			.OnDelete(DeleteBehavior.Restrict);
-
-		// ShadowingMaterialRequestId
-		builder.Property(m => m.ShadowingMaterialRequestId)
-			.HasConversion(
-				id => id.Value,
-				value => ShadowingMaterialRequestId.From(value));
-		builder.HasOne(x => x.ShadowingMaterialRequest)
-			.WithMany(v => v.ShadowingMaterials)
-			.HasForeignKey(m => m.ShadowingMaterialRequestId)
 			.OnDelete(DeleteBehavior.Restrict);
 
 		// Version

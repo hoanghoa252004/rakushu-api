@@ -3,7 +3,7 @@ using MediatR;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
-using Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest;
+using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 
 namespace Rakushu.Application.Usecases.Shadowing.ShadowingMaterials.ChangeShadowingMaterialStatus;
 
@@ -21,7 +21,7 @@ internal sealed class ChangeShadowingMaterialStatusValidator : AbstractValidator
 
 internal sealed class ChangeShadowingMaterialStatusHandler(
 	IShadowingMaterialRepository repository,
-	IShadowingMaterialRequestRepository requestRepository,
+	IShadowingRoleRepository roleRepository,
 	IUnitOfWork unitOfWork)
 	: IRequestHandler<ChangeShadowingMaterialStatusCommand, Result>
 {
@@ -33,23 +33,14 @@ internal sealed class ChangeShadowingMaterialStatusHandler(
 			if (material is null)
 				return Result.Failure(ShadowingMaterialErrors.NotFound);
 
+			if (request.Status == ShadowingMaterialStatus.Ready
+				&& await roleRepository.HasRoleWithoutLinesAsync(material.Id, cancellationToken))
+				return Result.Failure(ShadowingMaterialErrors.RolesMissingLines);
+
 			var changed = material.ChangeStatus(request.Status);
 			if (changed.IsFailure)
 				return changed;
 
-			if (request.Status == ShadowingMaterialStatus.Ready && material.ShadowingMaterialRequestId is not null)
-			{
-				var linked = await requestRepository.GetByIdAsync(material.ShadowingMaterialRequestId, cancellationToken);
-				if (linked is not null)
-				{
-					var completed = linked.ChangeStatus(ShadowingMaterialRequestStatus.Completed, null, DateTimeOffset.UtcNow);
-					if (completed.IsFailure)
-						return completed;
-					requestRepository.Update(linked);
-				}
-			}
-
-			repository.Update(material);
 			return Result.Success();
 		}, cancellationToken);
 	}

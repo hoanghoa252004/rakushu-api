@@ -11,9 +11,7 @@ using Rakushu.Domain.Entities.Shadowing.Speaker;
 namespace Rakushu.Application.Usecases.Shadowing.ShadowingRoleLines.GetShadowingRoleLines;
 
 public sealed record GetShadowingRoleLinesQuery(
-	Guid MaterialId,
-	Guid? SpeakerId,
-	Guid? RoleId,
+	Guid RoleId,
 	int PageNumber,
 	int PageSize) : IRequest<Result<PaginatedList<ShadowingRoleLineDto>>>;
 
@@ -21,7 +19,7 @@ internal sealed class GetShadowingRoleLinesValidator : AbstractValidator<GetShad
 {
 	public GetShadowingRoleLinesValidator()
 	{
-		RuleFor(x => x.MaterialId).NotEmpty();
+		RuleFor(x => x.RoleId).NotEmpty();
 		RuleFor(x => x.PageNumber).GreaterThan(0).WithMessage("PageNumber must be greater than 0");
 		RuleFor(x => x.PageSize).InclusiveBetween(1, 100).WithMessage("PageSize must be between 1 and 100");
 	}
@@ -29,16 +27,22 @@ internal sealed class GetShadowingRoleLinesValidator : AbstractValidator<GetShad
 
 internal sealed class GetShadowingRoleLinesHandler(
 	IShadowingRoleLineRepository repository,
+	IShadowingRoleRepository roleRepository,
 	IStorageService storageService)
 	: IRequestHandler<GetShadowingRoleLinesQuery, Result<PaginatedList<ShadowingRoleLineDto>>>
 {
 	public async Task<Result<PaginatedList<ShadowingRoleLineDto>>> Handle(
 		GetShadowingRoleLinesQuery request, CancellationToken cancellationToken)
 	{
+		var roleId = ShadowingRoleId.From(request.RoleId);
+		var role = await roleRepository.GetByIdAsync(roleId, cancellationToken);
+		if (role is null)
+			return Result.Failure<PaginatedList<ShadowingRoleLineDto>>(ShadowingRoleErrors.NotFound);
+
 		var (items, total) = await repository.GetPagedAsync(
-			ShadowingMaterialId.From(request.MaterialId),
-			request.SpeakerId.HasValue ? SpeakerId.From(request.SpeakerId.Value) : null,
-			request.RoleId.HasValue ? ShadowingRoleId.From(request.RoleId.Value) : null,
+			role.ShadowingMaterialId,
+			null,
+			roleId,
 			request.PageNumber,
 			request.PageSize,
 			cancellationToken);

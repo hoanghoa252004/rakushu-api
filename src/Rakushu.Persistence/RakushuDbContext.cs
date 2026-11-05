@@ -34,7 +34,6 @@ using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessmentD
 using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
-using Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
 using Rakushu.Domain.Entities.Shadowing.ShadowingSession;
@@ -119,7 +118,6 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<ShadowingSession> ShadowingSessions => Set<ShadowingSession>();
 	public DbSet<ShadowingSessionInvitation> ShadowingSessionInvitations => Set<ShadowingSessionInvitation>();
 	public DbSet<ShadowingSessionMember> ShadowingSessionMembers => Set<ShadowingSessionMember>();
-	public DbSet<ShadowingMaterialRequest> ShadowingMaterialRequests => Set<ShadowingMaterialRequest>();
 
 
 

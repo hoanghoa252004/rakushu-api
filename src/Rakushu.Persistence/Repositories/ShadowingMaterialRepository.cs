@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
-using Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -10,6 +9,12 @@ public sealed class ShadowingMaterialRepository
 	: BaseRepository<ShadowingMaterial, ShadowingMaterialId>, IShadowingMaterialRepository
 {
 	public ShadowingMaterialRepository(RakushuDbContext context) : base(context) { }
+
+	public async Task<bool> ExistsByVideoAndTypeAsync(VideoId videoId, MaterialType type, CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingMaterials
+			.AnyAsync(m => m.VideoId == videoId && m.Type == type, cancellationToken);
+	}
 
 	public async Task<int> GetNextVersionAsync(VideoId videoId, CancellationToken cancellationToken = default)
 	{
@@ -21,19 +26,10 @@ public sealed class ShadowingMaterialRepository
 		return (max ?? 0) + 1;
 	}
 
-	public async Task<ShadowingMaterial?> GetByRequestIdAsync(
-		ShadowingMaterialRequestId requestId,
-		CancellationToken cancellationToken = default)
-	{
-		return await _context.ShadowingMaterials
-			.FirstOrDefaultAsync(m => m.ShadowingMaterialRequestId == requestId, cancellationToken);
-	}
-
 	public async Task<(IReadOnlyList<ShadowingMaterial> Items, int TotalCount)> GetPagedAsync(
 		int pageNumber,
 		int pageSize,
 		VideoId? videoId,
-		ShadowingMaterialRequestId? requestId,
 		MaterialType? type,
 		ShadowingMaterialStatus? status,
 		CancellationToken cancellationToken = default)
@@ -42,8 +38,6 @@ public sealed class ShadowingMaterialRepository
 
 		if (videoId is not null)
 			query = query.Where(m => m.VideoId == videoId);
-		if (requestId is not null)
-			query = query.Where(m => m.ShadowingMaterialRequestId == requestId);
 		if (type is not null)
 			query = query.Where(m => m.Type == type);
 		if (status is not null)

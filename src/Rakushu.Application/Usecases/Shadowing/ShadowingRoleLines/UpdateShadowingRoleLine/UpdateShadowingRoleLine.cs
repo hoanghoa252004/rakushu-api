@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
@@ -11,11 +12,7 @@ namespace Rakushu.Application.Usecases.Shadowing.ShadowingRoleLines.UpdateShadow
 public sealed record UpdateShadowingRoleLineCommand(
 	Guid LineId,
 	Guid RoleId,
-	int SortOrder,
-	string Text,
-	TimeSpan StartTime,
-	TimeSpan EndTime,
-	string AudioKey) : IRequest<Result>;
+	IReadOnlyList<Guid> TranscriptSegmentIds) : IRequest<Result>;
 
 internal sealed class UpdateShadowingRoleLineValidator : AbstractValidator<UpdateShadowingRoleLineCommand>
 {
@@ -23,11 +20,8 @@ internal sealed class UpdateShadowingRoleLineValidator : AbstractValidator<Updat
 	{
 		RuleFor(x => x.LineId).NotEmpty();
 		RuleFor(x => x.RoleId).NotEmpty();
-		RuleFor(x => x.SortOrder).GreaterThan(0);
-		RuleFor(x => x.Text).NotEmpty();
-		RuleFor(x => x.StartTime).GreaterThanOrEqualTo(TimeSpan.Zero);
-		RuleFor(x => x.EndTime).GreaterThan(x => x.StartTime).WithMessage("EndTime must be greater than StartTime");
-		RuleFor(x => x.AudioKey).NotEmpty().MaximumLength(500);
+		RuleFor(x => x.TranscriptSegmentIds).NotEmpty().WithMessage("At least one transcript segment is required");
+		RuleForEach(x => x.TranscriptSegmentIds).NotEmpty();
 	}
 }
 
@@ -35,6 +29,7 @@ internal sealed class UpdateShadowingRoleLineHandler(
 	IShadowingRoleLineRepository repository,
 	IShadowingRoleRepository roleRepository,
 	IShadowingMaterialRepository materialRepository,
+	IAudioClipService audioClipService,
 	IUnitOfWork unitOfWork)
 	: IRequestHandler<UpdateShadowingRoleLineCommand, Result>
 {
@@ -43,7 +38,7 @@ internal sealed class UpdateShadowingRoleLineHandler(
 		return await unitOfWork.ExecuteAsync(async () =>
 		{
 			var lineId = ShadowingRoleLineId.From(request.LineId);
-			var line = await repository.GetByIdAsync(lineId, cancellationToken);
+			var line = await repository.GetByIdWithSegmentsAsync(lineId, cancellationToken);
 			if (line is null)
 				return Result.Failure(ShadowingRoleLineErrors.NotFound);
 
@@ -59,15 +54,36 @@ internal sealed class UpdateShadowingRoleLineHandler(
 			if (role.ShadowingMaterialId != line.ShadowingMaterialId)
 				return Result.Failure(ShadowingRoleLineErrors.RoleNotInMaterial);
 
-			if (await repository.SortOrderExistsAsync(line.ShadowingMaterialId, request.SortOrder, lineId, cancellationToken))
-				return Result.Failure(ShadowingRoleLineErrors.SortOrderAlreadyExists);
+			var resolved = await RoleLineSegmentResolver.ResolveAsync(
+				repository, material, request.TranscriptSegmentIds, lineId, cancellationToken);
+			if (resolved.IsFailure)
+				return Result.Failure(resolved.Error);
+
+			var audioKey = line.AudioKey;
+			var oldIds = line.TranscriptSegments.Select(x => x.TranscriptSegmentId.Value).ToHashSet();
+			if (!oldIds.SetEquals(resolved.Value.Ids.Select(x => x.Value)))
+			{
+				var sourceKey = await materialRepository.GetVideoSourceKeyAsync(material.VideoId, cancellationToken);
+				if (string.IsNullOrWhiteSpace(sourceKey))
+					return Result.Failure(ShadowingMaterialErrors.VideoNotReady);
+
+				audioKey = await audioClipService.ExtractClipAsync(
+					sourceKey,
+					$"shadowing/{material.Id.Value}/lines/{Guid.NewGuid()}",
+					resolved.Value.StartTime,
+					resolved.Value.EndTime,
+					cancellationToken);
+			}
 
 			var updated = line.Update(
-				role.Id, request.SortOrder, request.Text, request.StartTime, request.EndTime, request.AudioKey);
+				role.Id, line.SortOrder, resolved.Value.Text, resolved.Value.StartTime, resolved.Value.EndTime, audioKey);
 			if (updated.IsFailure)
 				return updated;
 
+			line.SetSegments(resolved.Value.Ids);
 			repository.Update(line);
+			await unitOfWork.SaveChangesAsync(cancellationToken);
+			await repository.RecomputeSortOrdersAsync(line.ShadowingMaterialId, cancellationToken);
 			return Result.Success();
 		}, cancellationToken);
 	}

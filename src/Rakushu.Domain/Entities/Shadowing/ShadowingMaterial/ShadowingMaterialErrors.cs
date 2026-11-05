@@ -20,6 +20,18 @@ public static class ShadowingMaterialErrors
 		"SHADOWING_MATERIAL.CURATED_CANNOT_HAVE_REQUEST",
 		"A curated material cannot be linked to a request.");
 
+	public static readonly Error RolesMissingLines = Error.Validation(
+		"SHADOWING_MATERIAL.ROLES_MISSING_LINES",
+		"All roles must have at least one line before the material can be Ready.");
+
+	public static readonly Error LearnerNotAllowed = Error.Forbidden(
+		"SHADOWING_MATERIAL.LEARNER_NOT_ALLOWED",
+		"A learner can only create a material for their own video.");
+
+	public static readonly Error LearnerMaterialAlreadyExists = Error.Conflict(
+		"SHADOWING_MATERIAL.LEARNER_MATERIAL_ALREADY_EXISTS",
+		"A learner can only create one material for their video.");
+
 	public static readonly Error VideoNotReady = Error.Validation(
 		"SHADOWING_MATERIAL.VIDEO_NOT_READY",
 		"A shadowing material can only be created for a video with Ready status.");

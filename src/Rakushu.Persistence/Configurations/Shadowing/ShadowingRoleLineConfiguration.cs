@@ -29,7 +29,7 @@ internal sealed class ShadowingRoleLineConfiguration : IEntityTypeConfiguration<
 		builder.HasOne(l => l.ShadowingMaterial)
 			.WithMany(m => m.RoleLines)
 			.HasForeignKey(l => l.ShadowingMaterialId)
-			.OnDelete(DeleteBehavior.Restrict);
+			.OnDelete(DeleteBehavior.Cascade);
 
 		// ShadowingRoleId
 		builder.Property(l => l.ShadowingRoleId)
@@ -45,8 +45,15 @@ internal sealed class ShadowingRoleLineConfiguration : IEntityTypeConfiguration<
 		// SortOrder
 		builder.Property(l => l.SortOrder)
 			.IsRequired();
-		builder.HasIndex(l => new { l.ShadowingMaterialId, l.SortOrder })
-			.IsUnique();
+		builder.HasIndex(l => new { l.ShadowingMaterialId, l.SortOrder });
+
+		// TranscriptSegments
+		builder.HasMany(l => l.TranscriptSegments)
+			.WithOne(x => x.ShadowingRoleLine)
+			.HasForeignKey(x => x.ShadowingRoleLineId)
+			.OnDelete(DeleteBehavior.Cascade);
+		builder.Navigation(l => l.TranscriptSegments)
+			.UsePropertyAccessMode(PropertyAccessMode.Field);
 
 		// Text
 		builder.Property(l => l.Text)

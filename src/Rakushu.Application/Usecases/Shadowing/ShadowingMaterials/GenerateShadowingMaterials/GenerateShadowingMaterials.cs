@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
@@ -21,7 +22,7 @@ internal sealed class GenerateShadowingMaterialsHandler(
 	ILogger<GenerateShadowingMaterialsHandler> logger)
 	: IRequestHandler<GenerateShadowingMaterialsCommand, Result<int>>
 {
-	private sealed record Group(SpeakerId SpeakerId, string Text, TimeSpan Start, TimeSpan End);
+	private sealed record Group(SpeakerId SpeakerId, string Text, TimeSpan Start, TimeSpan End, List<TranscriptSegmentId> SegmentIds);
 
 	public async Task<Result<int>> Handle(GenerateShadowingMaterialsCommand request, CancellationToken cancellationToken)
 	{
@@ -60,9 +61,12 @@ internal sealed class GenerateShadowingMaterialsHandler(
 
 			var last = groups.Count > 0 ? groups[^1] : null;
 			if (last is not null && last.SpeakerId == speakerId)
+			{
+				last.SegmentIds.Add(s.Id);
 				groups[^1] = last with { Text = last.Text + s.Text, End = s.EndTime };
+			}
 			else
-				groups.Add(new Group(speakerId, s.Text, s.StartTime, s.EndTime));
+				groups.Add(new Group(speakerId, s.Text, s.StartTime, s.EndTime, [s.Id]));
 		}
 
 		if (groups.Count == 0)
@@ -104,6 +108,7 @@ internal sealed class GenerateShadowingMaterialsHandler(
 				if (lineResult.IsFailure)
 					return Result.Failure(lineResult.Error);
 
+				lineResult.Value.SetSegments(g.SegmentIds);
 				roleLineRepository.Add(lineResult.Value);
 			}
 

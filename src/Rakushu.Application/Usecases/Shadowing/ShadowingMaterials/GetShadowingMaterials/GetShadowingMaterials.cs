@@ -9,7 +9,6 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
-using Rakushu.Domain.Entities.Shadowing.ShadowingMaterialRequest;
 
 namespace Rakushu.Application.Usecases.Shadowing.ShadowingMaterials.GetShadowingMaterials;
 
@@ -17,7 +16,6 @@ public sealed record GetShadowingMaterialsQuery(
 	int PageNumber,
 	int PageSize,
 	Guid? VideoId,
-	Guid? RequestId,
 	MaterialType? Type,
 	ShadowingMaterialStatus? Status,
 	int LinePageNumber = 1,
@@ -55,7 +53,6 @@ internal sealed class GetShadowingMaterialsHandler(
 			request.PageNumber,
 			request.PageSize,
 			request.VideoId.HasValue ? VideoId.From(request.VideoId.Value) : null,
-			request.RequestId.HasValue ? ShadowingMaterialRequestId.From(request.RequestId.Value) : null,
 			request.Type,
 			status,
 			cancellationToken);
