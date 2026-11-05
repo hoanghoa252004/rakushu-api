@@ -65,8 +65,13 @@ public sealed partial class Transcript : Entity<TranscriptId>
 		return Result.Success();
 	}
 
-	public void SetStorageKey(string storageKey)
+	public void MarkAsReviewed()
 	{
+		IsReviewed = true;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void SetStorageKey(string storageKey)	{
 		StorageKey = storageKey;
 		SourceType = TranscriptSource.Official;
 		UpdatedAt = DateTimeOffset.UtcNow;
@@ -104,6 +109,25 @@ public sealed partial class Transcript : Entity<TranscriptId>
 		UpdatedAt = updatedAt;
 
 		return segmentResult;
+	}
+
+	public Result<TranscriptSegment.TranscriptSegment> InsertSegment(
+		TranscriptSpeakerId transcriptSpeakerId,
+		string text,
+		TimeSpan startTime,
+		TimeSpan endTime,
+		int sequence,
+		DateTimeOffset updatedAt)
+	{
+		if (sequence < 1 || sequence > _transcriptSegments.Count + 1)
+			return Result.Failure<TranscriptSegment.TranscriptSegment>(TranscriptSegment.TranscriptSegmentErrors.InvalidSequence);
+
+		foreach (var seg in _transcriptSegments.Where(s => s.Sequence >= sequence).OrderByDescending(s => s.Sequence).ToList())
+		{
+			seg.IncrementSequence();
+		}
+
+		return AddSegment(transcriptSpeakerId, text, startTime, endTime, sequence, updatedAt);
 	}
 
 	public Result RemoveSegment(TranscriptSegment.TranscriptSegmentId segmentId)

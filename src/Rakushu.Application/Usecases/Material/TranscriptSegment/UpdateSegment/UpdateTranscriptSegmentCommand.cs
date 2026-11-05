@@ -7,11 +7,11 @@ namespace Rakushu.Application.Usecases.Material.TranscriptSegment.UpdateSegment;
 public sealed record UpdateTranscriptSegmentCommand(
 	Guid VideoId,
 	Guid SegmentId,
-	Guid SpeakerId,
+	Guid? SpeakerId,
 	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
-	SubtitleInput Subtitle,
+	SubtitleInput? Subtitle,
 	IReadOnlyList<TranscriptItemInput> Items,
 	int? Sequence = null
 ) : IRequest<Result>;

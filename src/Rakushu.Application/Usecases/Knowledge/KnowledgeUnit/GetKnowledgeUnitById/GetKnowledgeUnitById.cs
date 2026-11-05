@@ -1,5 +1,6 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Usecases.Knowledge.ProficiencyLevel;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
@@ -14,6 +15,7 @@ public sealed record KnowledgeUnitDto(
 	Guid Id,
 	Guid KnowledgeCollectionId,
 	Guid ProficiencyLevelId,
+	ProficiencyLevelDto ProficiencyLevel,
 	KnowledgeUnitType KnowledgeType,
 	string Expression,
 	string Reading,
@@ -46,6 +48,7 @@ internal sealed class GetKnowledgeUnitByIdHandler : IRequestHandler<GetKnowledge
 			unit.Id.Value,
 			unit.KnowledgeCollectionId.Value,
 			unit.ProficiencyLevelId.Value,
+			ProficiencyLevelDto.From(unit.ProficiencyLevel),
 			unit.KnowledgeType,
 			unit.Expression,
 			unit.Reading,

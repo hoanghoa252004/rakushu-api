@@ -45,10 +45,10 @@ internal sealed class CreateTranscriptSegment : IEndpoint
 }
 
 public sealed record CreateSegmentRequest(
-	Guid SpeakerId,
+	Guid? SpeakerId,
 	string Text,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
-	SubtitleInput Subtitle,
+	SubtitleInput? Subtitle,
 	List<TranscriptItemInput>? Items,
 	int? Sequence = null);

@@ -1,6 +1,7 @@
 using FluentValidation;
 using MediatR;
 using Rakushu.Application.Common.Pagination;
+using Rakushu.Application.Usecases.Knowledge.ProficiencyLevel;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using Rakushu.Domain.Entities.Material.LearningUnit;
@@ -20,7 +21,8 @@ public sealed record LearningUnitKnowledgeUnitDto(
 	string Expression,
 	string Reading,
 	bool IsActive,
-	LearningUnitKnowledgeCollectionDto KnowledgeCollection);
+	LearningUnitKnowledgeCollectionDto KnowledgeCollection,
+	ProficiencyLevelDto ProficiencyLevel);
 
 public sealed record LearningUnitMeaningDto(
 	Guid Id,
@@ -67,7 +69,8 @@ internal static class LearningUnitMapper2
 				u.KnowledgeCollection.Id.Value,
 				u.KnowledgeCollection.Code,
 				u.KnowledgeCollection.Name,
-				u.KnowledgeCollection.CollectionType.ToString()));
+				u.KnowledgeCollection.CollectionType.ToString()),
+							ProficiencyLevelDto.From(u.ProficiencyLevel));
 
 	internal static LearningUnitMeaningDto MapMeaning(
 		Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning m, bool isUsed) =>

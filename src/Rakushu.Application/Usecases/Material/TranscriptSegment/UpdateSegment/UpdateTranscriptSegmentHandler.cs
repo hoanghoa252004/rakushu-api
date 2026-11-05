@@ -4,6 +4,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 
@@ -47,20 +48,24 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 			if (segment is null)
 				return Result.Failure(TranscriptSegmentErrors.NotFound);
 
-			// Validate speaker
-			var speakerId = SpeakerId.From(request.SpeakerId);
-			var speaker = await _speakerRepository.GetByIdAsync(speakerId, cancellationToken);
-			if (speaker is null)
-				return Result.Failure(SpeakerErrors.NotFound);
-
-			var transcriptSpeaker = transcript.TranscriptSpeakers.FirstOrDefault(x => x.SpeakerId == speakerId);
-			if (transcriptSpeaker is null)
+			// Validate speaker (optional)
+			TranscriptSpeaker? transcriptSpeaker = null;
+			if (request.SpeakerId is not null)
 			{
-				var addSpeakerResult = transcript.AddSpeaker(speaker.Code, speakerId);
-				if (addSpeakerResult.IsFailure)
-					return Result.Failure(addSpeakerResult.Error);
+				var speakerId = SpeakerId.From(request.SpeakerId.Value);
+				var speaker = await _speakerRepository.GetByIdAsync(speakerId, cancellationToken);
+				if (speaker is null)
+					return Result.Failure(SpeakerErrors.NotFound);
 
-				transcriptSpeaker = addSpeakerResult.Value;
+				transcriptSpeaker = transcript.TranscriptSpeakers.FirstOrDefault(x => x.SpeakerId == speakerId);
+				if (transcriptSpeaker is null)
+				{
+					var addSpeakerResult = transcript.AddSpeaker(speaker.Code, speakerId);
+					if (addSpeakerResult.IsFailure)
+						return Result.Failure(addSpeakerResult.Error);
+
+					transcriptSpeaker = addSpeakerResult.Value;
+				}
 			}
 
 			// Sequence
@@ -83,12 +88,16 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 			if (updateResult.IsFailure)
 				return Result.Failure(updateResult.Error);
 
-			segment.SetSpeaker(transcriptSpeaker.Id);
+			if (transcriptSpeaker is not null)
+				segment.SetSpeaker(transcriptSpeaker.Id);
 
-			// Subtitle
-			var subtitleResult = segment.UpsertSubtitle(request.Subtitle.LanguageCode, request.Subtitle.Text);
-			if (subtitleResult.IsFailure)
-				return Result.Failure(subtitleResult.Error);
+			// Subtitle (optional)
+			if (request.Subtitle is not null)
+			{
+				var subtitleResult = segment.UpsertSubtitle(request.Subtitle.LanguageCode, request.Subtitle.Text);
+				if (subtitleResult.IsFailure)
+					return Result.Failure(subtitleResult.Error);
+			}
 
 			// Items: full replacement
 			segment.ClearItems();
