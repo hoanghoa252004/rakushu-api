@@ -34,4 +34,8 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		IEnumerable<KnowledgeMeaningId> excludeMeaningIds,
 		int count,
 		CancellationToken cancellationToken = default);
+
+	Task<bool> HasBeenUsedInQuizAsync(
+		BankQuestionId id,
+		CancellationToken cancellationToken = default);
 }

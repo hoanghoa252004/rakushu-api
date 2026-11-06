@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
@@ -65,7 +65,7 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 			}
 
 			var answersDict = request.Answers.ToDictionary(a => a.QuestionId);
-			var questions = attempt.Quiz.Questions.OrderBy(q => q.Position).ToList();
+			var questions = attempt.Quiz.Questions.OrderBy(q => q.Sequence).ToList();
 			var answerResults = new List<QuizAnswerResultDto>();
 
 			foreach (var question in questions)
@@ -79,8 +79,8 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 				bool isUnanswered = string.IsNullOrWhiteSpace(submission?.SelectedOptionId);
 				bool isCorrect = !isUnanswered && CheckIsCorrect(
 					submission!.SelectedOptionId,
-					question.CorrectOptionId,
-					question.ChoicesJson,
+					question.CorrectAnswer,
+					question.Answers,
 					typeCode);
 
 				int elapsedMs = submission?.ElapsedMs ?? 0;
@@ -99,7 +99,7 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 
 				var attemptItemResult = QuizAttemptItem.Create(
 					question.Id,
-					question.Position,
+					question.Sequence,
 					now);
 
 				if (attemptItemResult.IsFailure)
@@ -159,15 +159,15 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 					}
 				}
 
-				IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.ChoicesJson);
+				IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.Answers);
 				answerResults.Add(new QuizAnswerResultDto(
 					question.Id.Value,
-					question.Position,
-					question.Prompt,
-					question.Reading,
+					question.Sequence,
+					question.QuestionText,
+					null,
 					choices,
 					submission?.SelectedOptionId,
-					question.CorrectOptionId,
+					question.CorrectAnswer,
 					isCorrect,
 					elapsedMs,
 					quality,

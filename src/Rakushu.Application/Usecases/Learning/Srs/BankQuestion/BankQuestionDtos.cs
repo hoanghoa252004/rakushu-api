@@ -1,5 +1,9 @@
 namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion;
 
+public sealed record QuestionAnswerDto(
+	string Id,
+	string Text);
+
 public sealed record BankQuestionChoiceDto(
 	string Id,
 	string Text);
@@ -11,7 +15,7 @@ public sealed record BankQuestionSummaryDto(
 	string? Meaning,
 	Guid QuestionTypeId,
 	string? QuestionTypeCode,
-	string Prompt,
+	string Question,
 	string Difficulty,
 	bool IsActive,
 	DateTimeOffset CreatedAt);
@@ -23,9 +27,9 @@ public sealed record BankQuestionDetailDto(
 	string? Meaning,
 	Guid QuestionTypeId,
 	string? QuestionTypeCode,
-	string Prompt,
-	IReadOnlyList<BankQuestionChoiceDto> Choices,
-	string CorrectChoiceId,
+	string Question,
+	IReadOnlyList<QuestionAnswerDto> Answers,
+	string CorrectAnswer,
 	string? Explanation,
 	string Difficulty,
 	bool IsActive,

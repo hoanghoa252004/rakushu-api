@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Usecases.Learning.Srs;
@@ -37,7 +37,7 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 		var itemsDict = attempt.Items.ToDictionary(i => i.QuestionId);
 		var answerResults = new List<QuizAnswerResultDto>();
 
-		foreach (var question in attempt.Quiz.Questions.OrderBy(q => q.Position))
+		foreach (var question in attempt.Quiz.Questions.OrderBy(q => q.Sequence))
 		{
 			itemsDict.TryGetValue(question.Id, out var attemptItem);
 
@@ -55,15 +55,15 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 			var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
 			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
 
-			IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.ChoicesJson);
+			IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.Answers);
 			answerResults.Add(new QuizAnswerResultDto(
 				question.Id.Value,
-				question.Position,
-				question.Prompt,
-				question.Reading,
+				question.Sequence,
+				question.QuestionText,
+				null,
 				choices,
 				attemptItem?.SelectedOptionId,
-				question.CorrectOptionId,
+				question.CorrectAnswer,
 				isCorrect,
 				elapsedMs,
 				quality,

@@ -5,8 +5,8 @@ namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.UpdateBankQuest
 
 public sealed record UpdateBankQuestionCommand(
 	Guid Id,
-	string Prompt,
-	IReadOnlyList<BankQuestionChoiceDto> Choices,
-	string CorrectChoiceId,
+	string Question,
+	IReadOnlyList<QuestionAnswerDto> Answers,
+	string CorrectAnswer,
 	string? Explanation = null,
 	string Difficulty = "Medium") : IRequest<Result>;

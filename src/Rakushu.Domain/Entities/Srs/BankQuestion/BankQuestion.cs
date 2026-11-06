@@ -9,9 +9,9 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 {
 	public KnowledgeMeaningId KnowledgeMeaningId { get; private set; } = null!;
 	public QuestionTypeId QuestionTypeId { get; private set; } = null!;
-	public string Prompt { get; private set; } = null!;
-	public string ChoicesJson { get; private set; } = "[]";
-	public string CorrectChoiceId { get; private set; } = null!;
+	public string Question { get; private set; } = null!;
+	public string Answers { get; private set; } = "[]";
+	public string CorrectAnswer { get; private set; } = null!;
 	public string? Explanation { get; private set; }
 	public string Difficulty { get; private set; } = "Medium";
 	public bool IsActive { get; private set; }
@@ -29,15 +29,15 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 	public static Result<BankQuestion> Create(
 		KnowledgeMeaningId knowledgeMeaningId,
 		QuestionTypeId questionTypeId,
-		string prompt,
-		string choicesJson,
-		string correctChoiceId,
+		string question,
+		string answers,
+		string correctAnswer,
 		DateTimeOffset now,
 		string? explanation = null,
 		string difficulty = "Medium",
 		bool isActive = true)
 	{
-		var validation = Validate(knowledgeMeaningId, questionTypeId, prompt, correctChoiceId);
+		var validation = Validate(knowledgeMeaningId, questionTypeId, question, correctAnswer);
 		if (validation.IsFailure)
 			return Result.Failure<BankQuestion>(validation.Error);
 
@@ -45,9 +45,9 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		{
 			KnowledgeMeaningId = knowledgeMeaningId,
 			QuestionTypeId = questionTypeId,
-			Prompt = prompt.Trim(),
-			ChoicesJson = string.IsNullOrWhiteSpace(choicesJson) ? "[]" : choicesJson.Trim(),
-			CorrectChoiceId = correctChoiceId.Trim(),
+			Question = question.Trim(),
+			Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim(),
+			CorrectAnswer = correctAnswer.Trim(),
 			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
 			Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim(),
 			IsActive = isActive,
@@ -57,24 +57,18 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 	}
 
 	public void Update(
-		string prompt,
-		string choicesJson,
-		string correctChoiceId,
+		string question,
+		string answers,
+		string correctAnswer,
 		string? explanation,
 		string difficulty,
 		DateTimeOffset now)
 	{
-		Prompt = prompt.Trim();
-		ChoicesJson = choicesJson.Trim();
-		CorrectChoiceId = correctChoiceId.Trim();
+		Question = question.Trim();
+		Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim();
+		CorrectAnswer = correctAnswer.Trim();
 		Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim();
 		Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim();
-		UpdatedAt = now;
-	}
-
-	public void Deactivate(DateTimeOffset now)
-	{
-		IsActive = false;
 		UpdatedAt = now;
 	}
 
@@ -84,11 +78,23 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		UpdatedAt = now;
 	}
 
+	public void Deactivate(DateTimeOffset now)
+	{
+		IsActive = false;
+		UpdatedAt = now;
+	}
+
+	public void ToggleStatus(bool isActive, DateTimeOffset now)
+	{
+		IsActive = isActive;
+		UpdatedAt = now;
+	}
+
 	private static Result Validate(
 		KnowledgeMeaningId knowledgeMeaningId,
 		QuestionTypeId questionTypeId,
-		string prompt,
-		string correctChoiceId)
+		string question,
+		string correctAnswer)
 	{
 		if (knowledgeMeaningId is null || knowledgeMeaningId.Value == Guid.Empty)
 			return Result.Failure(BankQuestionErrors.InvalidMeaning);
@@ -96,10 +102,10 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		if (questionTypeId is null || questionTypeId.Value == Guid.Empty)
 			return Result.Failure(BankQuestionErrors.InvalidType);
 
-		if (string.IsNullOrWhiteSpace(prompt))
+		if (string.IsNullOrWhiteSpace(question))
 			return Result.Failure(BankQuestionErrors.EmptyPrompt);
 
-		if (string.IsNullOrWhiteSpace(correctChoiceId))
+		if (string.IsNullOrWhiteSpace(correctAnswer))
 			return Result.Failure(BankQuestionErrors.EmptyCorrectChoice);
 
 		return Result.Success();

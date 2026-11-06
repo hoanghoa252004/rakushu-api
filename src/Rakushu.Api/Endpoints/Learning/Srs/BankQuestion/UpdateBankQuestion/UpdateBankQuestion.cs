@@ -12,7 +12,8 @@ internal sealed class UpdateBankQuestion : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsBankQuestionEndpoints()
+		app.MapSrsQuestionEndpoints()
+			// 1. Endpoint
 			.MapPut("/{id:guid}", async (
 				[FromRoute] Guid id,
 				[FromBody] UpdateBankQuestionRequest request,
@@ -21,21 +22,24 @@ internal sealed class UpdateBankQuestion : IEndpoint
 			{
 				var command = new UpdateBankQuestionCommand(
 					id,
-					request.Prompt,
-					request.Choices,
-					request.CorrectChoiceId,
+					request.Question,
+					request.Answers,
+					request.CorrectAnswer,
 					request.Explanation,
 					request.Difficulty);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchNoContent();
 			})
+			// 2. Description
 			.WithName("UpdateBankQuestion")
-			.WithSummary("Update bank question details")
-			.WithDescription("Allows linguistic curators and admins to update the prompt, choices, correct choice, explanation, or difficulty of a bank question.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
+			.WithSummary("Curator")
+			.WithDescription("Updates the question content, answer options, correct answer, explanation, or difficulty level of a bank question.")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			// 4. Response
 			.Produces(StatusCodes.Status204NoContent)
-			.ProducesProblem(StatusCodes.Status400BadRequest)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
@@ -44,8 +48,8 @@ internal sealed class UpdateBankQuestion : IEndpoint
 }
 
 public sealed record UpdateBankQuestionRequest(
-	string Prompt,
-	IReadOnlyList<BankQuestionChoiceDto> Choices,
-	string CorrectChoiceId,
+	string Question,
+	IReadOnlyList<QuestionAnswerDto> Answers,
+	string CorrectAnswer,
 	string? Explanation = null,
 	string Difficulty = "Medium");

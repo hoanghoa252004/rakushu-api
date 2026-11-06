@@ -22,8 +22,8 @@ internal sealed class GetBankQuestionByIdHandler : IRequestHandler<GetBankQuesti
 		if (bq is null)
 			return Result.Failure<BankQuestionDetailDto>(BankQuestionErrors.NotFound);
 
-		var parsedChoices = QuizOptionParser.Parse(bq.ChoicesJson)
-			.Select(opt => new BankQuestionChoiceDto(opt.Id, opt.Text))
+		var parsedAnswers = QuizOptionParser.Parse(bq.Answers)
+			.Select(opt => new QuestionAnswerDto(opt.Id, opt.Text))
 			.ToList();
 
 		var dto = new BankQuestionDetailDto(
@@ -33,9 +33,9 @@ internal sealed class GetBankQuestionByIdHandler : IRequestHandler<GetBankQuesti
 			bq.KnowledgeMeaning?.Meaning,
 			bq.QuestionTypeId.Value,
 			bq.QuestionType?.Code,
-			bq.Prompt,
-			parsedChoices,
-			bq.CorrectChoiceId,
+			bq.Question,
+			parsedAnswers,
+			bq.CorrectAnswer,
 			bq.Explanation,
 			bq.Difficulty,
 			bq.IsActive,

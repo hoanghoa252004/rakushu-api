@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
-using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.Quiz;
 using Rakushu.Domain.Entities.Srs.Quiz.Question;
 using Rakushu.Domain.Entities.Srs.SavedItem;
@@ -12,7 +11,7 @@ internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
 {
 	public void Configure(EntityTypeBuilder<Question> builder)
 	{
-		builder.ToTable("questions", "srs");
+		builder.ToTable("quiz_items", "srs");
 
 		builder.HasKey(qn => qn.Id);
 		builder.Property(qn => qn.Id)
@@ -38,44 +37,33 @@ internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
 			.OnDelete(DeleteBehavior.Cascade);
 
 		builder.Property(qn => qn.BankQuestionId)
+			.HasColumnName("question_id")
 			.HasConversion(
-				id => id != null ? id.Value : (Guid?)null,
-				value => value.HasValue ? BankQuestionId.From(value.Value) : null);
+				id => id.Value,
+				value => BankQuestionId.From(value))
+			.IsRequired();
 
 		builder.HasOne(qn => qn.BankQuestion)
 			.WithMany()
 			.HasForeignKey(qn => qn.BankQuestionId)
-			.OnDelete(DeleteBehavior.SetNull);
+			.OnDelete(DeleteBehavior.Cascade);
 
-		builder.Property(qn => qn.QuestionTypeId)
-			.HasConversion(
-				id => id.Value,
-				value => QuestionTypeId.From(value))
+		builder.Property(qn => qn.Sequence)
+			.HasColumnName("sequence")
 			.IsRequired();
 
-		builder.HasOne(qn => qn.QuestionType)
-			.WithMany()
-			.HasForeignKey(qn => qn.QuestionTypeId)
-			.OnDelete(DeleteBehavior.Restrict);
-
-		builder.Property(qn => qn.Position)
+		builder.Property(qn => qn.QuestionText)
+			.HasColumnName("question")
 			.IsRequired();
 
-		builder.Property(qn => qn.Prompt)
-			.IsRequired();
-
-		builder.Property(qn => qn.Reading)
-			.HasMaxLength(100);
-
-		builder.Property(qn => qn.ChoicesJson)
+		builder.Property(qn => qn.Answers)
+			.HasColumnName("answers")
 			.HasColumnType("jsonb")
 			.IsRequired();
 
-		builder.Property(qn => qn.CorrectOptionId)
+		builder.Property(qn => qn.CorrectAnswer)
+			.HasColumnName("correct_answer")
 			.HasMaxLength(50)
-			.IsRequired();
-
-		builder.Property(qn => qn.CreatedAt)
 			.IsRequired();
 	}
 }

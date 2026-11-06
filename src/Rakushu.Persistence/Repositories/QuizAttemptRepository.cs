@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 using Rakushu.Domain.Entities.Srs.SavedItem;
@@ -119,8 +119,8 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 					item.AnsweredAt!.Value,
 					item.IsCorrect!.Value,
 					item.SelectedOptionId,
-					item.Question.ChoicesJson,
-					item.Question.CorrectOptionId,
+					item.Question.Answers,
+					item.Question.CorrectAnswer,
 					item.Feedback)
 			})
 			.ToListAsync(cancellationToken);

@@ -29,7 +29,7 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 			meaningId,
 			request.QuestionTypeId,
 			request.Difficulty,
-			request.IsActive,
+			request.IsActive ?? true,
 			page,
 			pageSize,
 			cancellationToken);
@@ -41,7 +41,7 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 			bq.KnowledgeMeaning?.Meaning,
 			bq.QuestionTypeId.Value,
 			bq.QuestionType?.Code,
-			bq.Prompt,
+			bq.Question,
 			bq.Difficulty,
 			bq.IsActive,
 			bq.CreatedAt)).ToList();

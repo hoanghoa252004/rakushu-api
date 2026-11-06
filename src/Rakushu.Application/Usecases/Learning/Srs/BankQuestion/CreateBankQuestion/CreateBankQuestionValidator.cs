@@ -16,26 +16,26 @@ public sealed class CreateBankQuestionValidator : AbstractValidator<CreateBankQu
 			.NotEmpty()
 			.WithMessage("Question type ID cannot be empty.");
 
-		RuleFor(x => x.Prompt)
+		RuleFor(x => x.Question)
 			.NotEmpty()
 			.MaximumLength(1000)
-			.WithMessage("Prompt cannot be empty or exceed 1000 characters.");
+			.WithMessage("Question cannot be empty or exceed 1000 characters.");
 
-		RuleFor(x => x.Choices)
+		RuleFor(x => x.Answers)
 			.NotNull()
 			.Must(c => c != null && c.Count >= 2 && c.Count <= 6)
-			.WithMessage("Choices must contain between 2 and 6 options.");
+			.WithMessage("Answers must contain between 2 and 6 options.");
 
-		RuleForEach(x => x.Choices)
+		RuleForEach(x => x.Answers)
 			.ChildRules(choice =>
 			{
-				choice.RuleFor(c => c.Id).NotEmpty().WithMessage("Choice ID cannot be empty.");
-				choice.RuleFor(c => c.Text).NotEmpty().WithMessage("Choice text cannot be empty.");
+				choice.RuleFor(c => c.Id).NotEmpty().WithMessage("Answer ID cannot be empty.");
+				choice.RuleFor(c => c.Text).NotEmpty().WithMessage("Answer text cannot be empty.");
 			});
 
-		RuleFor(x => x.CorrectChoiceId)
+		RuleFor(x => x.CorrectAnswer)
 			.NotEmpty()
-			.WithMessage("Correct choice ID cannot be empty.");
+			.WithMessage("Correct answer cannot be empty.");
 
 		RuleFor(x => x.Difficulty)
 			.Must(d => ValidDifficulties.Contains(d, StringComparer.OrdinalIgnoreCase))

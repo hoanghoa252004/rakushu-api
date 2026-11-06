@@ -12,7 +12,8 @@ internal sealed class GetBankQuestions : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsBankQuestionEndpoints()
+		app.MapSrsQuestionEndpoints()
+			// 1. Endpoint
 			.MapGet("", async (
 				[FromQuery] Guid? meaningId,
 				[FromQuery] Guid? questionTypeId,
@@ -34,10 +35,13 @@ internal sealed class GetBankQuestions : IEndpoint
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
+			// 2. Description
 			.WithName("GetBankQuestions")
-			.WithSummary("List bank questions with filters")
-			.WithDescription("Allows linguistic curators and admins to query bank questions by knowledge meaning, question type, difficulty, and active status.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
+			.WithSummary("Curator")
+			.WithDescription("Retrieves a paginated list of bank questions with optional filters by knowledge meaning, question type, difficulty, and active status.")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			// 4. Response
 			.Produces<IReadOnlyList<BankQuestionSummaryDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)

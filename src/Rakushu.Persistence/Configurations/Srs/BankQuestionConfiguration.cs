@@ -10,7 +10,7 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 {
 	public void Configure(EntityTypeBuilder<BankQuestion> builder)
 	{
-		builder.ToTable("bank_questions", "srs");
+		builder.ToTable("questions", "srs");
 
 		builder.HasKey(bq => bq.Id);
 		builder.Property(bq => bq.Id)
@@ -40,14 +40,17 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 			.HasForeignKey(bq => bq.QuestionTypeId)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		builder.Property(bq => bq.Prompt)
+		builder.Property(bq => bq.Question)
+			.HasColumnName("question")
 			.IsRequired();
 
-		builder.Property(bq => bq.ChoicesJson)
+		builder.Property(bq => bq.Answers)
+			.HasColumnName("answers")
 			.HasColumnType("jsonb")
 			.IsRequired();
 
-		builder.Property(bq => bq.CorrectChoiceId)
+		builder.Property(bq => bq.CorrectAnswer)
+			.HasColumnName("correct_answer")
 			.HasMaxLength(50)
 			.IsRequired();
 

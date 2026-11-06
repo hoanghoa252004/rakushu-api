@@ -32,10 +32,10 @@ internal sealed class CreateBankQuestionHandler : IRequestHandler<CreateBankQues
 		CreateBankQuestionCommand request,
 		CancellationToken cancellationToken)
 	{
-		bool correctChoiceExists = request.Choices.Any(c =>
-			string.Equals(c.Id.Trim(), request.CorrectChoiceId.Trim(), StringComparison.OrdinalIgnoreCase));
+		bool correctAnswerExists = request.Answers.Any(c =>
+			string.Equals(c.Id.Trim(), request.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase));
 
-		if (!correctChoiceExists)
+		if (!correctAnswerExists)
 		{
 			return Result.Failure<Guid>(BankQuestionErrors.ChoiceNotFound);
 		}
@@ -55,21 +55,21 @@ internal sealed class CreateBankQuestionHandler : IRequestHandler<CreateBankQues
 				return Result.Failure<Guid>(BankQuestionErrors.QuestionTypeNotFound);
 			}
 
-			var choicesPayload = request.Choices.Select(c => new
+			var answersPayload = request.Answers.Select(c => new
 			{
 				id = c.Id.Trim(),
 				text = c.Text.Trim()
 			});
 
-			string choicesJson = JsonSerializer.Serialize(choicesPayload);
+			string answersJson = JsonSerializer.Serialize(answersPayload);
 			var now = _systemClock.UtcNow;
 
 			var createResult = Domain.Entities.Srs.BankQuestion.BankQuestion.Create(
 				meaningId,
 				QuestionTypeId.From(request.QuestionTypeId),
-				request.Prompt,
-				choicesJson,
-				request.CorrectChoiceId,
+				request.Question,
+				answersJson,
+				request.CorrectAnswer,
 				now,
 				request.Explanation,
 				request.Difficulty,

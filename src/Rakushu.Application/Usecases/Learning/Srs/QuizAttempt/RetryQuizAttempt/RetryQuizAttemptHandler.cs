@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
@@ -79,7 +79,7 @@ internal sealed class RetryQuizAttemptHandler : IRequestHandler<RetryQuizAttempt
 
 				var wrongQuestions = sourceAttempt.Quiz.Questions
 					.Where(q => wrongQuestionIds.Contains(q.Id))
-					.OrderBy(q => q.Position)
+					.OrderBy(q => q.Sequence)
 					.ToList();
 
 				if (wrongQuestions.Count == 0)
@@ -95,14 +95,11 @@ internal sealed class RetryQuizAttemptHandler : IRequestHandler<RetryQuizAttempt
 				{
 					var newQuestionResult = Question.Create(
 						q.SavedItemId,
-						q.QuestionTypeId,
+						q.BankQuestionId,
 						pos++,
-						q.Prompt,
-						q.Reading,
-						q.ChoicesJson,
-						q.CorrectOptionId,
-						now,
-						q.BankQuestionId);
+						q.QuestionText,
+						q.Answers,
+						q.CorrectAnswer);
 
 					if (newQuestionResult.IsSuccess)
 					{
@@ -133,18 +130,18 @@ internal sealed class RetryQuizAttemptHandler : IRequestHandler<RetryQuizAttempt
 			_quizAttemptRepository.Add(newAttempt);
 
 			var clientQuestions = quizToUse.Questions
-				.OrderBy(q => q.Position)
+				.OrderBy(q => q.Sequence)
 				.Select(q =>
 				{
 					var typeCode = q.QuestionType?.Code;
 					var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
 					               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
-					IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(q.ChoicesJson);
+					IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(q.Answers);
 					return new QuizQuestionDto(
 						q.Id.Value,
-						q.Position,
-						q.Prompt,
-						q.Reading,
+						q.Sequence,
+						q.QuestionText,
+						null,
 						choices,
 						typeCode);
 				})

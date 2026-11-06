@@ -4,15 +4,15 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 
-namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.ToggleBankQuestionStatus;
+namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.DeleteQuestion;
 
-internal sealed class ToggleBankQuestionStatusHandler : IRequestHandler<ToggleBankQuestionStatusCommand, Result>
+internal sealed class DeleteQuestionHandler : IRequestHandler<DeleteQuestionCommand, Result>
 {
 	private readonly IBankQuestionRepository _bankQuestionRepository;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
-	public ToggleBankQuestionStatusHandler(
+	public DeleteQuestionHandler(
 		IBankQuestionRepository bankQuestionRepository,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
@@ -23,26 +23,30 @@ internal sealed class ToggleBankQuestionStatusHandler : IRequestHandler<ToggleBa
 	}
 
 	public async Task<Result> Handle(
-		ToggleBankQuestionStatusCommand request,
+		DeleteQuestionCommand request,
 		CancellationToken cancellationToken)
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			var questionId = BankQuestionId.From(request.Id);
 			var question = await _bankQuestionRepository.GetByIdAsync(questionId, cancellationToken);
-			if (question is null)
+			if (question is null || !question.IsActive)
 			{
 				return Result.Failure(BankQuestionErrors.NotFound);
 			}
 
-			var now = _systemClock.UtcNow;
-			if (request.IsActive)
+			bool hasBeenUsed = await _bankQuestionRepository.HasBeenUsedInQuizAsync(questionId, cancellationToken);
+
+			if (hasBeenUsed)
 			{
-				question.Activate(now);
+				// Case 2: Đã có người dùng làm bài thi => Soft delete (chuyển isActive = false để bảo vệ tính toàn vẹn lịch sử)
+				question.Deactivate(_systemClock.UtcNow);
+				_bankQuestionRepository.Update(question);
 			}
 			else
 			{
-				question.Deactivate(now);
+				// Case 1: Câu hỏi mới tạo / chưa từng ai làm => Xóa cứng hoàn toàn khỏi cơ sở dữ liệu
+				_bankQuestionRepository.Delete(question);
 			}
 
 			return Result.Success();

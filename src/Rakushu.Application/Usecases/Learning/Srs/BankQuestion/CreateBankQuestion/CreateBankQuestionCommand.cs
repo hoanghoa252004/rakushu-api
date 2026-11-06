@@ -6,9 +6,9 @@ namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.CreateBankQuest
 public sealed record CreateBankQuestionCommand(
 	Guid KnowledgeMeaningId,
 	Guid QuestionTypeId,
-	string Prompt,
-	IReadOnlyList<BankQuestionChoiceDto> Choices,
-	string CorrectChoiceId,
+	string Question,
+	IReadOnlyList<QuestionAnswerDto> Answers,
+	string CorrectAnswer,
 	string? Explanation = null,
 	string Difficulty = "Medium",
 	bool IsActive = true) : IRequest<Result<Guid>>;

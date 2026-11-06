@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.QuestionType;
@@ -76,7 +76,8 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 
 		if (questionTypeId.HasValue)
 		{
-			query = query.Where(bq => bq.QuestionTypeId.Value == questionTypeId.Value);
+			var targetTypeId = QuestionTypeId.From(questionTypeId.Value);
+			query = query.Where(bq => bq.QuestionTypeId == targetTypeId);
 		}
 
 		if (!string.IsNullOrWhiteSpace(difficulty))
@@ -148,5 +149,13 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		}
 
 		return meanings.OrderBy(_ => Random.Shared.Next()).Take(count).ToList();
+	}
+
+	public async Task<bool> HasBeenUsedInQuizAsync(
+		BankQuestionId id,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.Questions
+			.AnyAsync(qi => qi.BankQuestionId == id, cancellationToken);
 	}
 }

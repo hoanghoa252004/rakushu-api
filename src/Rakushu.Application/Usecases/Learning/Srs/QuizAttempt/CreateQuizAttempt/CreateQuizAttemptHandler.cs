@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.AiService;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
@@ -233,14 +233,11 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 
 				var questionResult = Question.Create(
 					item.Id,
-					bankQ.QuestionTypeId,
+					bankQ.Id,
 					position,
-					bankQ.Prompt,
-					item.Reading,
-					bankQ.ChoicesJson,
-					bankQ.CorrectChoiceId,
-					now,
-					bankQ.Id);
+					bankQ.Question,
+					bankQ.Answers,
+					bankQ.CorrectAnswer);
 
 				if (questionResult.IsFailure)
 					continue;
@@ -252,12 +249,12 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 				var isTyping = string.Equals(questionTypeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
 				               string.Equals(questionTypeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
 
-				IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.ChoicesJson);
+				IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.Answers);
 				clientQuestions.Add(new QuizQuestionDto(
 					question.Id.Value,
 					position,
-					question.Prompt,
-					question.Reading,
+					question.QuestionText,
+					null,
 					choices,
 					questionTypeCode));
 
