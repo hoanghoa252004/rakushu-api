@@ -46,5 +46,11 @@ internal sealed class KnowledgeMeaningConfiguration : IEntityTypeConfiguration<K
 
 		// Description
 		builder.Property(km => km.Description);
+
+		// IsActive
+		builder.Property(km => km.IsActive)
+			.HasColumnName("is_active")
+			.HasDefaultValue(true)
+			.IsRequired();
 	}
 }

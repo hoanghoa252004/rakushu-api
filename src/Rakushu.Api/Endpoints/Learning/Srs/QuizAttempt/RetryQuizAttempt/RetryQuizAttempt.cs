@@ -25,7 +25,7 @@ internal sealed class RetryQuizAttempt : IEndpoint
 				return result.MatchCreated("GetSrsQuizAttemptResult", resp => new { attemptId = resp.AttemptId });
 			})
 			.WithName("RetrySrsQuizAttempt")
-			.WithSummary("Retry a completed quiz attempt (All questions or MistakesOnly)")
+			.WithSummary("Learner")
 			.WithDescription("Creates a new practice attempt from an existing completed quiz. Practice attempts run in PracticeAll or PracticeMistakes mode and do not alter SM-2 metrics.")
 			.RequireAuthorization()
 			.Produces<QuizAttemptStartedResponse>(StatusCodes.Status201Created)

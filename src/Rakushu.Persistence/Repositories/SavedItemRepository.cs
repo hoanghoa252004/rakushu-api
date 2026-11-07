@@ -2,15 +2,24 @@ using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Srs.SavedItem;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 
 namespace Rakushu.Persistence.Repositories;
 
-public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>, ISavedItemRepository
+internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>, ISavedItemRepository
 {
-	public SavedItemRepository(RakushuDbContext context) : base(context)
+	public SavedItemRepository(RakushuDbContext context) : base(context) { }
+
+	public override async Task<SavedItem?> GetByIdAsync(
+		SavedItemId id,
+		CancellationToken cancellationToken = default)
 	{
+		return await _context.SavedItems
+			.Include(si => si.Schedule)
+			.Include(si => si.KnowledgeMeaning)
+				.ThenInclude(km => km.KnowledgeUnit)
+			.FirstOrDefaultAsync(si => si.Id == id, cancellationToken);
 	}
 
 	public async Task<SavedItem?> GetByIdWithScheduleAsync(
@@ -19,9 +28,14 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 	{
 		return await _context.SavedItems
 			.Include(si => si.Schedule)
-				.ThenInclude(s => s!.Details)
+				.ThenInclude(sch => sch!.Details)
+					.ThenInclude(d => d.QuizAttemptItem)
+			.Include(si => si.Schedule)
+				.ThenInclude(sch => sch!.Details)
+					.ThenInclude(d => d.FlashcardSessionItem)
 			.Include(si => si.KnowledgeMeaning)
-			.SingleOrDefaultAsync(si => si.Id == id, cancellationToken);
+				.ThenInclude(km => km.KnowledgeUnit)
+			.FirstOrDefaultAsync(si => si.Id == id, cancellationToken);
 	}
 
 	public async Task<SavedItem?> GetByUserAndMeaningAsync(
@@ -32,23 +46,24 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 		return await _context.SavedItems
 			.Include(si => si.Schedule)
 			.Include(si => si.KnowledgeMeaning)
-			.SingleOrDefaultAsync(
+				.ThenInclude(km => km.KnowledgeUnit)
+			.FirstOrDefaultAsync(
 				si => si.UserId == userId && si.KnowledgeMeaningId == meaningId,
 				cancellationToken);
 	}
 
 	public async Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
 		UserId userId,
-		SrsStatus? statusFilter,
-		bool dueOnly,
+		bool? isActive,
+		bool? dueOnly,
 		int page,
 		int pageSize,
 		CancellationToken cancellationToken = default)
 	{
-		var query = BuildUserItemsQuery(userId, statusFilter, dueOnly);
+		var query = BuildUserItemsQuery(userId, isActive, dueOnly);
 
 		return await query
-			.OrderBy(si => si.Schedule != null ? si.Schedule.DueAt : si.CreatedAt)
+			.OrderBy(si => si.Schedule != null ? si.Schedule.DueAt : si.SavedAt)
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
 			.ToListAsync(cancellationToken);
@@ -56,11 +71,11 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 
 	public async Task<int> CountUserItemsAsync(
 		UserId userId,
-		SrsStatus? statusFilter,
-		bool dueOnly,
+		bool? isActive,
+		bool? dueOnly,
 		CancellationToken cancellationToken = default)
 	{
-		var query = BuildUserItemsQuery(userId, statusFilter, dueOnly);
+		var query = BuildUserItemsQuery(userId, isActive, dueOnly);
 		return await query.CountAsync(cancellationToken);
 	}
 
@@ -73,11 +88,11 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 		return await _context.SavedItems
 			.Include(si => si.Schedule)
 			.Include(si => si.KnowledgeMeaning)
+				.ThenInclude(km => km.KnowledgeUnit)
 			.Where(si => si.UserId == userId
+				&& si.IsActive
 				&& si.Schedule != null
-				&& si.Schedule.DueAt <= now
-				&& si.Schedule.Status != SrsStatus.Suspended
-				&& si.Schedule.Status != SrsStatus.Ignored)
+				&& si.Schedule.DueAt <= now)
 			.OrderBy(si => si.Schedule!.DueAt)
 			.Take(limit)
 			.ToListAsync(cancellationToken);
@@ -91,9 +106,10 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 		var idList = ids.ToList();
 		return await _context.SavedItems
 			.Include(si => si.Schedule)
-				.ThenInclude(s => s!.Details)
+				.ThenInclude(sch => sch!.Details)
 			.Include(si => si.KnowledgeMeaning)
-			.Where(si => si.UserId == userId && idList.Contains(si.Id))
+				.ThenInclude(km => km.KnowledgeUnit)
+			.Where(si => idList.Contains(si.Id) && si.UserId == userId && si.IsActive)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -108,11 +124,10 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 		// 1. Load active saved items for this user with schedule and latest detail
 		var activeItems = await _context.SavedItems
 			.AsNoTracking()
-			.Where(si => si.UserId == userId && (si.Schedule == null || (si.Schedule.Status != SrsStatus.Suspended && si.Schedule.Status != SrsStatus.Ignored)))
+			.Where(si => si.UserId == userId && si.IsActive)
 			.Select(si => new
 			{
 				HasSchedule = si.Schedule != null,
-				Status = si.Schedule != null ? si.Schedule.Status : SrsStatus.Learning,
 				DueAt = si.Schedule != null ? (DateTimeOffset?)si.Schedule.DueAt : null,
 				LatestDetail = si.Schedule != null ? si.Schedule.Details
 					.OrderByDescending(d => d.ReviewNumber)
@@ -135,7 +150,6 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 
 		foreach (var item in activeItems)
 		{
-			// Check Due / Overdue
 			if (item.DueAt.HasValue)
 			{
 				var dueDate = item.DueAt.Value.Date;
@@ -149,7 +163,6 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 				}
 			}
 
-			// Check Leech: EF <= 1.3001 OR Lapses >= 8
 			if (item.LatestDetail != null)
 			{
 				if (item.LatestDetail.EasinessFactor <= 1.3001 || item.LatestDetail.Lapses >= 8)
@@ -157,7 +170,6 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 					leechCount++;
 				}
 
-				// Check Mastered: Interval >= 21 days
 				if (item.LatestDetail.IntervalDays >= 21)
 				{
 					masteredWordsCount++;
@@ -170,11 +182,11 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 			: 0.0;
 
 		// 2. Query 30-day review logs for True Retention Rate
-		var recentLogs = await _context.Set<SrsItemDetail>()
+		var recentLogs = await _context.Set<SrsScheduleDetail>()
 			.AsNoTracking()
 			.Where(d => d.ReviewedAt >= thirtyDaysAgo
 				&& d.SrsSchedule.SavedItem.UserId == userId
-				&& (d.SrsSchedule.Status == SrsStatus.Learning || d.SrsSchedule.Status == SrsStatus.Review))
+				&& d.SrsSchedule.SavedItem.IsActive)
 			.Select(d => d.Quality)
 			.ToListAsync(cancellationToken);
 
@@ -201,54 +213,39 @@ public sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemId>
 
 	private IQueryable<SavedItem> BuildUserItemsQuery(
 		UserId userId,
-		SrsStatus? statusFilter,
-		bool dueOnly)
+		bool? isActive,
+		bool? dueOnly)
 	{
 		var query = _context.SavedItems
 			.Include(si => si.Schedule)
 			.Include(si => si.KnowledgeMeaning)
+				.ThenInclude(km => km.KnowledgeUnit)
 			.Where(si => si.UserId == userId);
 
-		var now = DateTimeOffset.UtcNow;
-		var todayStart = new DateTimeOffset(now.Year, now.Month, now.Day, 0, 0, 0, TimeSpan.Zero);
-		var tomorrowStart = todayStart.AddDays(1);
+		if (isActive.HasValue)
+		{
+			query = query.Where(si => si.IsActive == isActive.Value);
+		}
 
-		if (dueOnly || statusFilter == SrsStatus.Due_today)
+		if (dueOnly == true)
 		{
-			query = query.Where(si => si.Schedule != null
-				&& si.Schedule.DueAt <= now
-				&& si.Schedule.Status != SrsStatus.Suspended
-				&& si.Schedule.Status != SrsStatus.Ignored);
+			var now = DateTimeOffset.UtcNow;
+			query = query.Where(si => si.Schedule != null && si.Schedule.DueAt <= now);
 		}
-		else if (statusFilter == SrsStatus.Overdue)
+		else if (dueOnly == false)
 		{
-			query = query.Where(si => si.Schedule != null
-				&& si.Schedule.DueAt < todayStart
-				&& si.Schedule.Status != SrsStatus.Suspended
-				&& si.Schedule.Status != SrsStatus.Ignored);
-		}
-		else if (statusFilter == SrsStatus.Suspended)
-		{
-			query = query.Where(si => si.Schedule != null && si.Schedule.Status == SrsStatus.Suspended);
-		}
-		else if (statusFilter == SrsStatus.Learning)
-		{
-			query = query.Where(si => si.Schedule != null
-				&& si.Schedule.Status == SrsStatus.Learning
-				&& si.Schedule.DueAt >= tomorrowStart);
-		}
-		else if (statusFilter == SrsStatus.Review)
-		{
-			query = query.Where(si => si.Schedule != null
-				&& si.Schedule.Status == SrsStatus.Review
-				&& si.Schedule.DueAt >= tomorrowStart);
-		}
-		else
-		{
-			// All: exclude Ignored
-			query = query.Where(si => si.Schedule == null || si.Schedule.Status != SrsStatus.Ignored);
+			var now = DateTimeOffset.UtcNow;
+			query = query.Where(si => si.Schedule != null && si.Schedule.DueAt > now);
 		}
 
 		return query;
+	}
+
+	public async Task<bool> HasAnyWithMeaningIdAsync(
+		KnowledgeMeaningId meaningId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.SavedItems
+			.AnyAsync(si => si.KnowledgeMeaningId == meaningId, cancellationToken);
 	}
 }

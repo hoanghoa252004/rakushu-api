@@ -1,7 +1,11 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Srs.SavedItem.DeleteSrsItem;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Srs.SavedItem.DeleteSrsItem;
 
@@ -9,8 +13,8 @@ internal sealed class DeleteSrsItem : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsItemEndpoints()
-			.MapDelete("/items/{id:guid}", async (
+		app.MapSrsSavedItemEndpoints()
+			.MapDelete("/{id:guid}", async (
 				Guid id,
 				ISender sender,
 				CancellationToken cancellationToken) =>
@@ -20,12 +24,13 @@ internal sealed class DeleteSrsItem : IEndpoint
 				return result.MatchNoContent();
 			})
 			.WithName("DeleteSrsItem")
-			.WithSummary("Remove a saved vocabulary item from personal SRS notebook")
+			.WithSummary("Learner")
 			.WithDescription("Permanently removes the saved item and cascade-deletes its review schedule and history.")
-			.RequireAuthorization()
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}

@@ -20,7 +20,7 @@ internal sealed class CancelQuizAttempt : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("CancelSrsQuizAttempt")
-			.WithSummary("Cancel an in-progress quiz attempt")
+			.WithSummary("Learner")
 			.WithDescription("Abandons an in-progress quiz attempt without updating SRS schedules or awarding scores, freeing the learner to start a new quiz attempt.")
 			.RequireAuthorization()
 			.Produces(StatusCodes.Status200OK)

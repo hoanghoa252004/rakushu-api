@@ -23,7 +23,7 @@ internal sealed class CreateQuizAttempt : IEndpoint
 				return result.MatchCreated("GetSrsQuizAttemptResult", resp => new { attemptId = resp.AttemptId });
 			})
 			.WithName("CreateSrsQuizAttempt")
-			.WithSummary("Generate an SRS quiz session from selected vocabulary items")
+			.WithSummary("Learner")
 			.WithDescription("Creates an SRS quiz attempt sourced directly from curated bank questions for learner-selected vocabulary items.")
 			.RequireAuthorization()
 			.Produces<QuizAttemptStartedResponse>(StatusCodes.Status201Created)

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
@@ -9,7 +9,7 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.SavedItem;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 
@@ -139,9 +139,9 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 							quality,
 							now);
 
-						savedItem.Schedule.UpdateSchedule(sm2.NewStatus, sm2.DueAt, now);
+						savedItem.Schedule.UpdateSchedule(sm2.DueAt, now);
 
-						var detailResult = SrsItemDetail.Create(
+						var detailResult = SrsScheduleDetail.Create(
 							savedItem.Schedule.Id,
 							nextReviewNumber,
 							quality,

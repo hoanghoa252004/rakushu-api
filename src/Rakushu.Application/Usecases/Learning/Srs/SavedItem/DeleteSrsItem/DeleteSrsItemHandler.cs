@@ -1,6 +1,5 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
-using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
@@ -12,18 +11,15 @@ internal sealed class DeleteSrsItemHandler : IRequestHandler<DeleteSrsItemComman
 {
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly ICurrentUserContext _currentUserContext;
-	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public DeleteSrsItemHandler(
 		ISavedItemRepository savedItemRepository,
 		ICurrentUserContext currentUserContext,
-		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_savedItemRepository = savedItemRepository;
 		_currentUserContext = currentUserContext;
-		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
 
@@ -42,15 +38,16 @@ internal sealed class DeleteSrsItemHandler : IRequestHandler<DeleteSrsItemComman
 			if (item is null || item.UserId != userId)
 				return Result.Failure(SavedItemErrors.NotFound);
 
-			var now = _systemClock.UtcNow;
-
-			// Per diagram: Learner deletes word transitions SrsSchedule to Ignored
-			if (item.Schedule is not null)
+			bool hasReviewHistory = item.Schedule != null && item.Schedule.Details.Count > 0;
+			if (hasReviewHistory)
 			{
-				item.Schedule.MarkAsIgnored(now);
+				// Case 2: Đã có lịch sử ôn tập/bài thi => Xóa mềm (Deactivate) để bảo toàn tính toàn vẹn
+				item.Deactivate();
+				_savedItemRepository.Update(item);
 			}
 			else
 			{
+				// Case 1: Chưa từng ôn tập lần nào => Xóa cứng hoàn toàn khỏi cơ sở dữ liệu
 				_savedItemRepository.Delete(item);
 			}
 

@@ -22,7 +22,7 @@ internal sealed class CancelFlashcardSession : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("CancelFlashcardSession")
-			.WithSummary("Cancel an active flashcard session")
+			.WithSummary("Learner")
 			.WithDescription("Abandons an in-progress flashcard session so the learner can start another one without waiting for timeout.")
 			.RequireAuthorization()
 			.Produces(StatusCodes.Status200OK)

@@ -9,7 +9,7 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
 using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.SavedItem;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
@@ -135,9 +135,9 @@ internal sealed class SubmitFlashcardSessionHandler : IRequestHandler<SubmitFlas
 					quality,
 					now);
 
-				schedule.UpdateSchedule(sm2.NewStatus, sm2.DueAt, now);
+				schedule.UpdateSchedule(sm2.DueAt, now);
 
-				var detailResult = SrsItemDetail.Create(
+				var detailResult = SrsScheduleDetail.Create(
 					schedule.Id,
 					reviewNumber,
 					quality,
@@ -161,8 +161,7 @@ internal sealed class SubmitFlashcardSessionHandler : IRequestHandler<SubmitFlas
 					quality,
 					sm2.IntervalDays,
 					sm2.Repetitions,
-					sm2.DueAt,
-					sm2.NewStatus.ToString()));
+					sm2.DueAt));
 			}
 
 			var submitResult = session.Submit(now);

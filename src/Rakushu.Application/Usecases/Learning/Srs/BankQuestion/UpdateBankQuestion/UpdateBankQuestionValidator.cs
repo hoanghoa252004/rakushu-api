@@ -20,7 +20,11 @@ public sealed class UpdateBankQuestionValidator : AbstractValidator<UpdateBankQu
 		RuleFor(x => x.Answers)
 			.NotNull()
 			.Must(c => c != null && c.Count >= 2 && c.Count <= 6)
-			.WithMessage("Answers must contain between 2 and 6 options.");
+			.WithMessage("Answers must contain between 2 and 6 options.")
+			.Must(c => c == null || c.Select(a => a.Id.Trim().ToLowerInvariant()).Distinct().Count() == c.Count)
+			.WithMessage("Answer IDs must be unique.")
+			.Must(c => c == null || c.Select(a => a.Text.Trim().ToLowerInvariant()).Distinct().Count() == c.Count)
+			.WithMessage("Answer choices cannot have identical text.");
 
 		RuleForEach(x => x.Answers)
 			.ChildRules(choice =>

@@ -23,7 +23,7 @@ internal sealed class GetFlashcardSession : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetFlashcardSession")
-			.WithSummary("Get flashcard session details and items")
+			.WithSummary("Learner")
 			.WithDescription("Retrieves the specified flashcard session with all vocabulary cards, multimedia video context, and bilingual subtitles.")
 			.RequireAuthorization()
 			.Produces<FlashcardSessionDetailDto>(StatusCodes.Status200OK)

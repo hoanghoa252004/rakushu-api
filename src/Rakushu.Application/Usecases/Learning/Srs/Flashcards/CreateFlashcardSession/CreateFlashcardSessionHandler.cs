@@ -81,7 +81,7 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 
 			// Filter eligible items (not suspended)
 			var eligibleItems = savedItems
-				.Where(item => item.Schedule == null || item.Schedule.Status != SrsStatus.Suspended)
+				.Where(item => item.IsActive)
 				.ToList();
 
 			if (eligibleItems.Count == 0)

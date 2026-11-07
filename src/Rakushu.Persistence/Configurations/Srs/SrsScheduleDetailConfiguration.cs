@@ -2,22 +2,22 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 
 namespace Rakushu.Persistence.Configurations.Srs;
 
-internal sealed class SrsItemDetailConfiguration : IEntityTypeConfiguration<SrsItemDetail>
+internal sealed class SrsScheduleDetailConfiguration : IEntityTypeConfiguration<SrsScheduleDetail>
 {
-	public void Configure(EntityTypeBuilder<SrsItemDetail> builder)
+	public void Configure(EntityTypeBuilder<SrsScheduleDetail> builder)
 	{
-		builder.ToTable("srs_item_details", "srs");
+		builder.ToTable("srs_schedule_details", "srs");
 
 		builder.HasKey(d => d.Id);
 		builder.Property(d => d.Id)
 			.HasConversion(
 				id => id.Value,
-				value => SrsItemDetailId.From(value));
+				value => SrsScheduleDetailId.From(value));
 
 		builder.Property(d => d.SrsScheduleId)
 			.HasConversion(

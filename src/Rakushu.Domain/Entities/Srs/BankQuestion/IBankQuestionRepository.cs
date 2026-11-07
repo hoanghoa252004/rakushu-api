@@ -38,4 +38,17 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 	Task<bool> HasBeenUsedInQuizAsync(
 		BankQuestionId id,
 		CancellationToken cancellationToken = default);
+
+	Task<bool> ExistsDuplicateAsync(
+		KnowledgeMeaningId meaningId,
+		Guid questionTypeId,
+		string questionText,
+		BankQuestionId? excludeId = null,
+		CancellationToken cancellationToken = default);
+
+	Task<BankQuestion?> FindDuplicateAsync(
+		KnowledgeMeaningId meaningId,
+		Guid questionTypeId,
+		string questionText,
+		CancellationToken cancellationToken = default);
 }

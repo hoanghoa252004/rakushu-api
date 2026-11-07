@@ -23,7 +23,7 @@ internal sealed class CreateFlashcardSession : IEndpoint
 				return result.MatchCreated("GetFlashcardSession", resp => new { id = resp.SessionId });
 			})
 			.WithName("CreateFlashcardSession")
-			.WithSummary("Create a flashcard study session with video context and subtitles")
+			.WithSummary("Learner")
 			.WithDescription("Initializes a new flashcard review session for user-selected vocabulary items, embedding corresponding video segments and bilingual subtitles.")
 			.RequireAuthorization()
 			.Produces<FlashcardSessionDetailDto>(StatusCodes.Status201Created)

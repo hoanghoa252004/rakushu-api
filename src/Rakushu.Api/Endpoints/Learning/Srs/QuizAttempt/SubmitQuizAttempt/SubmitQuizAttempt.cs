@@ -27,7 +27,7 @@ internal sealed class SubmitQuizAttempt : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("SubmitSrsQuizAttempt")
-			.WithSummary("Submit answers for a quiz attempt and calculate SM-2 progress")
+			.WithSummary("Learner")
 			.WithDescription("Submits learner answers, scores questions, applies SuperMemo-2 quality tiers (1: unanswered, 2: incorrect, 3-5: speed tiers), updates schedules and logs audit details.")
 			.RequireAuthorization()
 			.Produces<QuizAttemptResultResponse>(StatusCodes.Status200OK)

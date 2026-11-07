@@ -5,10 +5,22 @@ namespace Rakushu.Api.Endpoints.Learning.Srs;
 
 internal static class SrsEndpointGroupExtension
 {
+	internal static RouteGroupBuilder MapSrsSavedItemEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/srs/saved-items")
+			.WithTags("Saved Items")
+			.WithGroupName("srs");
+	}
+
 	internal static RouteGroupBuilder MapSrsItemEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/srs")
-			.WithTags("SRS Items")
+		return app.MapSrsSavedItemEndpoints();
+	}
+
+	internal static RouteGroupBuilder MapSrsScheduleEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/srs/schedules")
+			.WithTags("Schedule")
 			.WithGroupName("srs");
 	}
 

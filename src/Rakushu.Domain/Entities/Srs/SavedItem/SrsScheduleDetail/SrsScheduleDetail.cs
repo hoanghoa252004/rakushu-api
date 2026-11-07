@@ -4,9 +4,9 @@ using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
-namespace Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
+namespace Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 
-public sealed class SrsItemDetail : Entity<SrsItemDetailId>
+public sealed class SrsScheduleDetail : Entity<SrsScheduleDetailId>
 {
 	public SrsScheduleId SrsScheduleId { get; private set; } = null!;
 	public QuizAttemptItemId? QuizAttemptItemId { get; private set; }
@@ -24,10 +24,10 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 	public QuizAttemptItem? QuizAttemptItem { get; private set; }
 	public FlashcardSessionItem? FlashcardSessionItem { get; private set; }
 
-	private SrsItemDetail() { }
-	private SrsItemDetail(SrsItemDetailId id) : base(id) { }
+	private SrsScheduleDetail() { }
+	private SrsScheduleDetail(SrsScheduleDetailId id) : base(id) { }
 
-	public static Result<SrsItemDetail> Create(
+	public static Result<SrsScheduleDetail> Create(
 		SrsScheduleId srsScheduleId,
 		int reviewNumber,
 		int quality,
@@ -41,9 +41,9 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 	{
 		var validation = Validate(srsScheduleId, reviewNumber, quality);
 		if (validation.IsFailure)
-			return Result.Failure<SrsItemDetail>(validation.Error);
+			return Result.Failure<SrsScheduleDetail>(validation.Error);
 
-		return Result.Success(new SrsItemDetail(SrsItemDetailId.Create())
+		return Result.Success(new SrsScheduleDetail(SrsScheduleDetailId.Create())
 		{
 			SrsScheduleId = srsScheduleId,
 			QuizAttemptItemId = quizAttemptItemId,
@@ -61,13 +61,13 @@ public sealed class SrsItemDetail : Entity<SrsItemDetailId>
 	private static Result Validate(SrsScheduleId srsScheduleId, int reviewNumber, int quality)
 	{
 		if (srsScheduleId is null || srsScheduleId.Value == Guid.Empty)
-			return Result.Failure(SrsItemDetailErrors.InvalidSrsScheduleId);
+			return Result.Failure(SrsScheduleDetailErrors.InvalidSrsScheduleId);
 
 		if (reviewNumber < 1)
-			return Result.Failure(SrsItemDetailErrors.InvalidReviewNumber);
+			return Result.Failure(SrsScheduleDetailErrors.InvalidReviewNumber);
 
 		if (quality is < 0 or > 5)
-			return Result.Failure(SrsItemDetailErrors.InvalidQuality);
+			return Result.Failure(SrsScheduleDetailErrors.InvalidQuality);
 
 		return Result.Success();
 	}

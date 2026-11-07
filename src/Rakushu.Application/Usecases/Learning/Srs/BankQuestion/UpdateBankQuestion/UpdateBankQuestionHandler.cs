@@ -35,6 +35,24 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 			return Result.Failure(BankQuestionErrors.ChoiceNotFound);
 		}
 
+		bool duplicateChoiceIds = request.Answers
+			.GroupBy(c => c.Id.Trim(), StringComparer.OrdinalIgnoreCase)
+			.Any(g => g.Count() > 1);
+
+		if (duplicateChoiceIds)
+		{
+			return Result.Failure(BankQuestionErrors.DuplicateChoiceId);
+		}
+
+		bool duplicateChoiceTexts = request.Answers
+			.GroupBy(c => c.Text.Trim(), StringComparer.OrdinalIgnoreCase)
+			.Any(g => g.Count() > 1);
+
+		if (duplicateChoiceTexts)
+		{
+			return Result.Failure(BankQuestionErrors.DuplicateChoiceText);
+		}
+
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			var questionId = BankQuestionId.From(request.Id);
@@ -42,6 +60,18 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 			if (question is null)
 			{
 				return Result.Failure(BankQuestionErrors.NotFound);
+			}
+
+			bool isDuplicate = await _bankQuestionRepository.ExistsDuplicateAsync(
+				question.KnowledgeMeaningId,
+				question.QuestionTypeId.Value,
+				request.Question,
+				excludeId: questionId,
+				cancellationToken: cancellationToken);
+
+			if (isDuplicate)
+			{
+				return Result.Failure(BankQuestionErrors.DuplicateQuestion);
 			}
 
 			var answersPayload = request.Answers.Select(c => new

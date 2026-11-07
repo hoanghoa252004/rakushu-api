@@ -1,4 +1,4 @@
-﻿using Rakushu.Domain.Common;
+using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using System;
@@ -15,6 +15,7 @@ public sealed class KnowledgeMeaning : Entity<KnowledgeMeaningId>
 	public string Meaning { get; private set; } = null!;
 	public string JapaneseMeaning { get; private set; } = null!;
 	public string? Description { get; private set; }
+	public bool IsActive { get; private set; } = true;
 	public KnowledgeUnitId KnowledgeUnitId { get; private set; } = null!;
 
 	// NAVIGATION PROPERTIES
@@ -47,7 +48,8 @@ public sealed class KnowledgeMeaning : Entity<KnowledgeMeaningId>
 			SortOrder = sortOrder,
 			Meaning = meaning,
 			JapaneseMeaning = japaneseMeaning,
-			Description = description
+			Description = description,
+			IsActive = true
 		});
 	}
 
@@ -63,6 +65,16 @@ public sealed class KnowledgeMeaning : Entity<KnowledgeMeaningId>
 		Description = description;
 
 		return Result.Success();
+	}
+
+	public void Activate()
+	{
+		IsActive = true;
+	}
+
+	public void Deactivate()
+	{
+		IsActive = false;
 	}
 
 	private static Result Validate(int sortOrder, string meaning, string japaneseMeaning)

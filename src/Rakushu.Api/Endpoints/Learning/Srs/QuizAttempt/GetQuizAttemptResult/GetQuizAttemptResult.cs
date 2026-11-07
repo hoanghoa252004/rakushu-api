@@ -21,7 +21,7 @@ internal sealed class GetQuizAttemptResult : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetSrsQuizAttemptResult")
-			.WithSummary("Retrieve detailed results and explanations for a completed quiz attempt")
+			.WithSummary("Learner")
 			.WithDescription("Retrieves the score, answered options, correct answers, and curated explanations from bank questions.")
 			.RequireAuthorization()
 			.Produces<QuizAttemptResultResponse>(StatusCodes.Status200OK)

@@ -24,7 +24,7 @@ internal sealed class SubmitFlashcardSession : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("SubmitFlashcardSession")
-			.WithSummary("Submit flashcard self-evaluation ratings and update SM-2 schedule")
+			.WithSummary("Learner")
 			.WithDescription("Submits ratings ('Forgot', 'Hard', 'Easy') for all flashcard items, calculates SM-2 spaced repetition intervals, and records review history.")
 			.RequireAuthorization()
 			.Produces<FlashcardSessionResultDto>(StatusCodes.Status200OK)

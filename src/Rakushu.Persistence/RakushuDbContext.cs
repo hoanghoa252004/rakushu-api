@@ -46,7 +46,7 @@ using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
 using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.SavedItem;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
@@ -118,7 +118,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<BankQuestion> BankQuestions => Set<BankQuestion>();
 	public DbSet<SavedItem> SavedItems => Set<SavedItem>();
 	public DbSet<SrsSchedule> SrsSchedules => Set<SrsSchedule>();
-	public DbSet<SrsItemDetail> SrsItemDetails => Set<SrsItemDetail>();
+	public DbSet<SrsScheduleDetail> SrsScheduleDetails => Set<SrsScheduleDetail>();
 	public DbSet<Quiz> Quizzes => Set<Quiz>();
 	public DbSet<Question> Questions => Set<Question>();
 	public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();

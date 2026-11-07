@@ -38,8 +38,7 @@ public sealed record FlashcardItemResultDto(
 	int Quality,
 	int IntervalDays,
 	int Repetitions,
-	DateTimeOffset NextDueAt,
-	string NewStatus);
+	DateTimeOffset NextDueAt);
 
 public sealed record FlashcardSessionResultDto(
 	Guid SessionId,

@@ -40,11 +40,29 @@ internal sealed class CreateBankQuestionHandler : IRequestHandler<CreateBankQues
 			return Result.Failure<Guid>(BankQuestionErrors.ChoiceNotFound);
 		}
 
+		bool duplicateChoiceIds = request.Answers
+			.GroupBy(c => c.Id.Trim(), StringComparer.OrdinalIgnoreCase)
+			.Any(g => g.Count() > 1);
+
+		if (duplicateChoiceIds)
+		{
+			return Result.Failure<Guid>(BankQuestionErrors.DuplicateChoiceId);
+		}
+
+		bool duplicateChoiceTexts = request.Answers
+			.GroupBy(c => c.Text.Trim(), StringComparer.OrdinalIgnoreCase)
+			.Any(g => g.Count() > 1);
+
+		if (duplicateChoiceTexts)
+		{
+			return Result.Failure<Guid>(BankQuestionErrors.DuplicateChoiceText);
+		}
+
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
 			var meaningId = KnowledgeMeaningId.From(request.KnowledgeMeaningId);
 			var meaning = await _knowledgeMeaningRepository.GetByIdAsync(meaningId, cancellationToken);
-			if (meaning is null)
+			if (meaning is null || !meaning.IsActive)
 			{
 				return Result.Failure<Guid>(BankQuestionErrors.MeaningNotFound);
 			}
@@ -53,6 +71,39 @@ internal sealed class CreateBankQuestionHandler : IRequestHandler<CreateBankQues
 			if (!questionTypeExists)
 			{
 				return Result.Failure<Guid>(BankQuestionErrors.QuestionTypeNotFound);
+			}
+
+			var existing = await _bankQuestionRepository.FindDuplicateAsync(
+				meaningId,
+				request.QuestionTypeId,
+				request.Question,
+				cancellationToken);
+
+			if (existing is not null)
+			{
+				if (existing.IsActive)
+				{
+					return Result.Failure<Guid>(BankQuestionErrors.DuplicateQuestion);
+				}
+
+				// If previously soft-deleted, reactivate and refresh with latest answers and details
+				var reactivateAnswersPayload = request.Answers.Select(c => new
+				{
+					id = c.Id.Trim(),
+					text = c.Text.Trim()
+				});
+
+				string reactivateAnswersJson = JsonSerializer.Serialize(reactivateAnswersPayload);
+				var reactivateNow = _systemClock.UtcNow;
+
+				existing.Reactivate(
+					reactivateAnswersJson,
+					request.CorrectAnswer,
+					request.Explanation,
+					request.Difficulty,
+					reactivateNow);
+
+				return Result.Success(existing.Id.Value);
 			}
 
 			var answersPayload = request.Answers.Select(c => new

@@ -72,21 +72,24 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		UpdatedAt = now;
 	}
 
-	public void Activate(DateTimeOffset now)
-	{
-		IsActive = true;
-		UpdatedAt = now;
-	}
-
 	public void Deactivate(DateTimeOffset now)
 	{
 		IsActive = false;
 		UpdatedAt = now;
 	}
 
-	public void ToggleStatus(bool isActive, DateTimeOffset now)
+	public void Reactivate(
+		string answers,
+		string correctAnswer,
+		string? explanation,
+		string difficulty,
+		DateTimeOffset now)
 	{
-		IsActive = isActive;
+		Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim();
+		CorrectAnswer = correctAnswer.Trim();
+		Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim();
+		Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim();
+		IsActive = true;
 		UpdatedAt = now;
 	}
 
