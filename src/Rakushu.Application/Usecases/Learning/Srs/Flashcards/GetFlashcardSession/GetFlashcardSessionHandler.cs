@@ -2,12 +2,12 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
-using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.GetFlashcardSession;
 
@@ -18,19 +18,22 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 	private readonly IStorageService _storageService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
+	private readonly IUnitOfWork _unitOfWork;
 
 	public GetFlashcardSessionHandler(
 		IFlashcardSessionRepository flashcardSessionRepository,
 		ILearningUnitRepository learningUnitRepository,
 		IStorageService storageService,
 		ICurrentUserContext currentUserContext,
-		ISystemClock systemClock)
+		ISystemClock systemClock,
+		IUnitOfWork unitOfWork)
 	{
 		_flashcardSessionRepository = flashcardSessionRepository;
 		_learningUnitRepository = learningUnitRepository;
 		_storageService = storageService;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
+		_unitOfWork = unitOfWork;
 	}
 
 	public async Task<Result<FlashcardSessionDetailDto>> Handle(
@@ -54,9 +57,28 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 		var now = _systemClock.UtcNow;
 		if (session.IsExpired(now))
 		{
-			session.Cancel(now);
-			_flashcardSessionRepository.Update(session);
+			if (!session.HasAnyReviewedItems)
+			{
+				_flashcardSessionRepository.Delete(session);
+			}
+			else
+			{
+				var unrated = session.ExpireAndPrune(now);
+				if (unrated.Count > 0)
+				{
+					_flashcardSessionRepository.RemoveItems(unrated);
+				}
+				_flashcardSessionRepository.Update(session);
+			}
+			await _unitOfWork.SaveChangesAsync(cancellationToken);
 			return Result.Failure<FlashcardSessionDetailDto>(FlashcardSessionErrors.Expired);
+		}
+
+		if (session.Status == FlashcardSessionStatus.InProgress)
+		{
+			session.RefreshIdleTimeout(now);
+			_flashcardSessionRepository.Update(session);
+			await _unitOfWork.SaveChangesAsync(cancellationToken);
 		}
 
 		var meaningGuids = session.Items
@@ -111,10 +133,13 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 			}
 
 			itemDtos.Add(new FlashcardItemDto(
+				item.Id.Value,
 				savedItem.Id.Value,
 				savedItem.Expression,
 				savedItem.Reading,
 				savedItem.Meaning,
+				item.Rating?.ToString(),
+				item.ReviewedAt,
 				videoContextDtos));
 		}
 

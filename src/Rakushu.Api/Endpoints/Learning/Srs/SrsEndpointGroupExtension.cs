@@ -8,7 +8,7 @@ internal static class SrsEndpointGroupExtension
 	internal static RouteGroupBuilder MapSrsSavedItemEndpoints(this IEndpointRouteBuilder app)
 	{
 		return app.MapGroup("/api/srs/saved-items")
-			.WithTags("Saved Items")
+			.WithTags("Saved Item")
 			.WithGroupName("srs");
 	}
 
@@ -33,15 +33,15 @@ internal static class SrsEndpointGroupExtension
 
 	internal static RouteGroupBuilder MapSrsFlashcardEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/srs")
-			.WithTags("SRS Flashcards")
+		return app.MapGroup("/api/srs/flashcard-sessions")
+			.WithTags("Flashcard")
 			.WithGroupName("srs");
 	}
 
 	internal static RouteGroupBuilder MapSrsQuestionEndpoints(this IEndpointRouteBuilder app)
 	{
 		return app.MapGroup("/api/srs/questions")
-			.WithTags("Questions")
+			.WithTags("Question")
 			.WithGroupName("srs");
 	}
 

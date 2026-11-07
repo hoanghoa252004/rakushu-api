@@ -22,11 +22,23 @@ public static class FlashcardSessionErrors
 
 	public static readonly Error Expired = Error.Validation(
 		"FLASHCARD_SESSION.EXPIRED",
-		"Flashcard session has expired and can no longer be submitted.");
+		"Flashcard session has expired and can no longer be interacted with.");
+
+	public static readonly Error NotCompleted = Error.Validation(
+		"FLASHCARD_SESSION.NOT_COMPLETED",
+		"Flashcard session is not completed yet.");
+
+	public static readonly Error InvalidRating = Error.Validation(
+		"FLASHCARD_SESSION.INVALID_RATING",
+		"Rating must be 'Forgot', 'Hard', or 'Easy'.");
 
 	public static readonly Error IncompleteRatings = Error.Validation(
 		"FLASHCARD_SESSION.INCOMPLETE_RATINGS",
-		"All flashcard items must be rated before submitting.");
+		"All flashcard items must be rated before completing the session.");
+
+	public static readonly Error NoItemsReviewed = Error.Validation(
+		"FLASHCARD_SESSION.NO_ITEMS_REVIEWED",
+		"At least one flashcard item must be reviewed before completing the session.");
 
 	public static readonly Error ItemNotFound = Error.NotFound(
 		"FLASHCARD_SESSION.ITEM_NOT_FOUND",

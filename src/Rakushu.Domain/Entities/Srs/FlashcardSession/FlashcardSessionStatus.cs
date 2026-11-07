@@ -4,5 +4,5 @@ public enum FlashcardSessionStatus
 {
 	InProgress = 0,
 	Completed = 1,
-	Abandoned = 2
+	Expired = 2
 }

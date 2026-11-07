@@ -7,6 +7,8 @@ namespace Rakushu.Domain.Entities.Srs.FlashcardSession;
 
 public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 {
+	public static readonly TimeSpan DefaultIdleTimeout = TimeSpan.FromMinutes(15);
+
 	public UserId UserId { get; private set; } = null!;
 	public FlashcardSessionStatus Status { get; private set; } = FlashcardSessionStatus.InProgress;
 	public DateTimeOffset CreatedAt { get; private set; }
@@ -25,12 +27,12 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 	public static Result<FlashcardSession> Create(
 		UserId userId,
 		DateTimeOffset now,
-		TimeSpan? timeout = null)
+		TimeSpan? idleTimeout = null)
 	{
 		if (userId is null || userId.Value == Guid.Empty)
 			return Result.Failure<FlashcardSession>(FlashcardSessionErrors.InvalidUserId);
 
-		var effectiveTimeout = timeout ?? TimeSpan.FromHours(1);
+		var effectiveTimeout = idleTimeout ?? DefaultIdleTimeout;
 
 		return Result.Success(new FlashcardSession(FlashcardSessionId.Create())
 		{
@@ -46,37 +48,54 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 		_items.Add(item);
 	}
 
+	public bool HasAnyReviewedItems => _items.Any(i => i.Rating != null);
+
+	public IReadOnlyList<FlashcardSessionItem.FlashcardSessionItem> PruneUnratedItems()
+	{
+		var unrated = _items.Where(i => i.Rating == null).ToList();
+		_items.RemoveAll(i => i.Rating == null);
+		return unrated;
+	}
+
+	public IReadOnlyList<FlashcardSessionItem.FlashcardSessionItem> ExpireAndPrune(DateTimeOffset now)
+	{
+		Expire(now);
+		return PruneUnratedItems();
+	}
+
 	public bool IsExpired(DateTimeOffset now) =>
 		Status == FlashcardSessionStatus.InProgress && now > ExpiresAt;
 
-	public Result Submit(DateTimeOffset now)
+	public void Expire(DateTimeOffset now)
+	{
+		Status = FlashcardSessionStatus.Expired;
+	}
+
+	public void RefreshIdleTimeout(DateTimeOffset now, TimeSpan? idleTimeout = null)
+	{
+		if (Status != FlashcardSessionStatus.InProgress)
+			return;
+
+		var duration = idleTimeout ?? DefaultIdleTimeout;
+		ExpiresAt = now.Add(duration);
+	}
+
+	public Result Complete(DateTimeOffset now)
 	{
 		if (Status != FlashcardSessionStatus.InProgress)
 			return Result.Failure(FlashcardSessionErrors.NotInProgress);
 
 		if (now > ExpiresAt)
 		{
-			Status = FlashcardSessionStatus.Abandoned;
+			Status = FlashcardSessionStatus.Expired;
 			return Result.Failure(FlashcardSessionErrors.Expired);
 		}
+
+		if (!HasAnyReviewedItems)
+			return Result.Failure(FlashcardSessionErrors.NoItemsReviewed);
 
 		Status = FlashcardSessionStatus.Completed;
 		CompletedAt = now;
-		return Result.Success();
-	}
-
-	public Result Cancel(DateTimeOffset now)
-	{
-		if (Status != FlashcardSessionStatus.InProgress)
-			return Result.Failure(FlashcardSessionErrors.NotInProgress);
-
-		if (now > ExpiresAt)
-		{
-			Status = FlashcardSessionStatus.Abandoned;
-			return Result.Failure(FlashcardSessionErrors.Expired);
-		}
-
-		Status = FlashcardSessionStatus.Abandoned;
 		return Result.Success();
 	}
 }
