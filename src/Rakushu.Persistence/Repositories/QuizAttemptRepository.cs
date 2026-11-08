@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
+using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 
 namespace Rakushu.Persistence.Repositories;
@@ -20,9 +21,10 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 			.Include(qa => qa.Quiz)
 				.ThenInclude(q => q.Questions)
 					.ThenInclude(qn => qn.BankQuestion)
+						.ThenInclude(bq => bq.QuestionType)
 			.Include(qa => qa.Quiz)
 				.ThenInclude(q => q.Questions)
-					.ThenInclude(qn => qn.QuestionType)
+					.ThenInclude(qn => qn.SavedItem)
 			.SingleOrDefaultAsync(qa => qa.Id == id, cancellationToken);
 	}
 
@@ -34,22 +36,40 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 			.Include(qa => qa.Items)
 			.Include(qa => qa.Quiz)
 				.ThenInclude(q => q.Questions)
-					.ThenInclude(qn => qn.QuestionType)
+					.ThenInclude(qn => qn.BankQuestion)
+						.ThenInclude(bq => bq.QuestionType)
 			.FirstOrDefaultAsync(qa => qa.UserId == userId && qa.Status == QuizAttemptStatus.InProgress, cancellationToken);
 	}
 
-	public async Task<IReadOnlyList<QuizAttempt>> GetUserAttemptsAsync(
+	public void RemoveItems(IEnumerable<QuizAttemptItem> items)
+	{
+		_context.QuizAttemptItems.RemoveRange(items);
+	}
+
+	public async Task<(IReadOnlyList<QuizAttempt> Items, int TotalCount)> GetAttemptsByUserAsync(
 		UserId userId,
-		int page,
+		QuizAttemptStatus? status,
+		int pageNumber,
 		int pageSize,
 		CancellationToken cancellationToken = default)
 	{
-		return await _context.QuizAttempts
-			.Where(qa => qa.UserId == userId)
-			.OrderByDescending(qa => qa.StartedAt)
-			.Skip((page - 1) * pageSize)
+		var query = _context.QuizAttempts
+			.Where(qa => qa.UserId == userId);
+
+		if (status.HasValue)
+		{
+			query = query.Where(qa => qa.Status == status.Value);
+		}
+
+		var totalCount = await query.CountAsync(cancellationToken);
+
+		var items = await query
+			.OrderByDescending(qa => qa.CreatedAt)
+			.Skip((pageNumber - 1) * pageSize)
 			.Take(pageSize)
 			.ToListAsync(cancellationToken);
+
+		return (items, totalCount);
 	}
 
 	public async Task<IReadOnlyDictionary<Guid, QuizItemAnswerHistory>> GetAnswerHistoryBySavedItemAsync(
@@ -118,7 +138,7 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 					item.Id.Value,
 					item.AnsweredAt!.Value,
 					item.IsCorrect!.Value,
-					item.SelectedOptionId,
+					item.SelectedAnswer,
 					item.Question.Answers,
 					item.Question.CorrectAnswer,
 					item.Feedback)

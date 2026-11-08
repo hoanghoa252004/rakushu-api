@@ -42,6 +42,7 @@ public static class ApplicationServiceCollectionExtentions
 		services.AddScoped<IKnowledgeMatcher, GrammarMatcher>();
 
 		services.AddScoped<IQuizAttemptFeedbackService, QuizAttemptFeedbackService>();
+		services.AddScoped<IQuizAttemptSrsService, QuizAttemptSrsService>();
 
 		return services;
 	}

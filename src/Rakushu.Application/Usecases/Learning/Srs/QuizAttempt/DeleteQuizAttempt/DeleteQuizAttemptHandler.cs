@@ -1,34 +1,31 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
-using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
-namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.CancelQuizAttempt;
+namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.DeleteQuizAttempt;
 
-internal sealed class CancelQuizAttemptHandler : IRequestHandler<CancelQuizAttemptCommand, Result>
+internal sealed class DeleteQuizAttemptHandler : IRequestHandler<DeleteQuizAttemptCommand, Result>
 {
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly ICurrentUserContext _currentUserContext;
-	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
-	public CancelQuizAttemptHandler(
+	public DeleteQuizAttemptHandler(
 		IQuizAttemptRepository quizAttemptRepository,
 		ICurrentUserContext currentUserContext,
-		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_quizAttemptRepository = quizAttemptRepository;
 		_currentUserContext = currentUserContext;
-		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
 
 	public async Task<Result> Handle(
-		CancelQuizAttemptCommand request,
+		DeleteQuizAttemptCommand request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
@@ -37,18 +34,20 @@ internal sealed class CancelQuizAttemptHandler : IRequestHandler<CancelQuizAttem
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var attemptId = QuizAttemptId.From(request.AttemptId);
-			var attempt = await _quizAttemptRepository.GetByIdWithItemsAndQuizAsync(attemptId, cancellationToken);
+			var attempt = await _quizAttemptRepository.GetByIdWithItemsAndQuizAsync(
+				QuizAttemptId.From(request.AttemptId),
+				cancellationToken);
 
-			if (attempt is null || attempt.UserId != userId)
+			if (attempt is null)
 				return Result.Failure(QuizAttemptErrors.NotFound);
 
-			if (attempt.Status != QuizAttemptStatus.InProgress)
-				return Result.Failure(QuizAttemptErrors.NotInProgress);
+			if (attempt.UserId != userId)
+				return Result.Failure(QuizAttemptErrors.NotFound);
 
-			var now = _systemClock.UtcNow;
-			attempt.Abandon(now);
+			if (attempt.AnsweredItems > 0)
+				return Result.Failure(QuizAttemptErrors.CannotDeleteAttemptWithAnswers);
 
+			_quizAttemptRepository.Delete(attempt);
 			return Result.Success();
 		}, cancellationToken);
 	}

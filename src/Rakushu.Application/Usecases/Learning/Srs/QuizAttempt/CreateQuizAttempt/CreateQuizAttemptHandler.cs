@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.AiService;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
@@ -13,13 +13,15 @@ using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.Quiz;
 using Rakushu.Domain.Entities.Srs.Quiz.Question;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
+using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.SavedItem;
+using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 
 using BankQuestionEntity = Rakushu.Domain.Entities.Srs.BankQuestion.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.CreateQuizAttempt;
 
-internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttemptCommand, Result<QuizAttemptStartedResponse>>
+internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttemptCommand, Result<Guid>>
 {
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly IBankQuestionRepository _bankQuestionRepository;
@@ -27,6 +29,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 	private readonly IQuizRepository _quizRepository;
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly IQuizContentGenerator _quizContentGenerator;
+	private readonly IQuizAttemptSrsService _quizAttemptSrsService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
@@ -38,6 +41,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		IQuizRepository quizRepository,
 		IQuizAttemptRepository quizAttemptRepository,
 		IQuizContentGenerator quizContentGenerator,
+		IQuizAttemptSrsService quizAttemptSrsService,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
@@ -48,21 +52,22 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		_quizRepository = quizRepository;
 		_quizAttemptRepository = quizAttemptRepository;
 		_quizContentGenerator = quizContentGenerator;
+		_quizAttemptSrsService = quizAttemptSrsService;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<Result<QuizAttemptStartedResponse>> Handle(
+	public async Task<Result<Guid>> Handle(
 		CreateQuizAttemptCommand request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 		if (userId is null)
-			return Result.Failure<QuizAttemptStartedResponse>(UserErrors.NotFound);
+			return Result.Failure<Guid>(UserErrors.NotFound);
 
 		if (request.ItemIds is null || request.ItemIds.Count == 0)
-			return Result.Failure<QuizAttemptStartedResponse>(QuizErrors.EmptySelectedItems);
+			return Result.Failure<Guid>(QuizErrors.EmptySelectedItems);
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
@@ -71,13 +76,25 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			var activeAttempt = await _quizAttemptRepository.GetActiveAttemptForUserAsync(userId, cancellationToken);
 			if (activeAttempt is not null)
 			{
-				if (activeAttempt.IsExpired(now, TimeSpan.FromHours(1)))
+				if (activeAttempt.IsExpired(now))
 				{
-					activeAttempt.Abandon(now);
+					if (!activeAttempt.HasAnyAnsweredItems)
+					{
+						_quizAttemptRepository.Delete(activeAttempt);
+					}
+					else
+					{
+						var unanswered = activeAttempt.ExpireAndPrune(now);
+						if (unanswered.Count > 0)
+						{
+							_quizAttemptRepository.RemoveItems(unanswered);
+						}
+						_quizAttemptRepository.Update(activeAttempt);
+					}
 				}
 				else
 				{
-					return Result.Failure<QuizAttemptStartedResponse>(QuizAttemptErrors.ActiveAttemptInProgress);
+					return Result.Failure<Guid>(QuizAttemptErrors.ActiveAttemptInProgress);
 				}
 			}
 
@@ -85,7 +102,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			var items = await _savedItemRepository.GetByIdsWithScheduleAsync(ids, userId, cancellationToken);
 
 			if (items.Count == 0)
-				return Result.Failure<QuizAttemptStartedResponse>(QuizErrors.NoQuestionsAvailable);
+				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
 
 			var meaningIds = items.Select(i => i.KnowledgeMeaningId).Distinct().ToList();
 			var bankQuestions = (await _bankQuestionRepository.GetByMeaningIdsAsync(meaningIds, cancellationToken)).ToList();
@@ -209,14 +226,13 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			}
 
 			if (bankQuestions.Count == 0)
-				return Result.Failure<QuizAttemptStartedResponse>(QuizErrors.NoQuestionsAvailable);
+				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
 
 			var quizResult = Quiz.Create(userId, now);
 			if (quizResult.IsFailure)
-				return Result.Failure<QuizAttemptStartedResponse>(quizResult.Error);
+				return Result.Failure<Guid>(quizResult.Error);
 
 			var quiz = quizResult.Value;
-			var clientQuestions = new List<QuizQuestionDto>();
 			int position = 1;
 
 			foreach (var item in items)
@@ -245,42 +261,35 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 				var question = questionResult.Value;
 				quiz.AddQuestion(question);
 
-				var questionTypeCode = bankQ.QuestionType?.Code;
-				var isTyping = string.Equals(questionTypeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
-				               string.Equals(questionTypeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
-
-				IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.Answers);
-				clientQuestions.Add(new QuizQuestionDto(
-					question.Id.Value,
-					position,
-					question.QuestionText,
-					null,
-					choices,
-					questionTypeCode));
-
 				position++;
 			}
 
 			if (quiz.TotalQuestions == 0)
-				return Result.Failure<QuizAttemptStartedResponse>(QuizErrors.NoQuestionsAvailable);
+				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
 
-			var attemptResult = Domain.Entities.Srs.QuizAttempt.QuizAttempt.Create(userId, quiz.Id, now, QuizAttemptMode.SrsReview);
+			var attemptMode = string.Equals(request.Mode, "Cramming", StringComparison.OrdinalIgnoreCase)
+				? QuizAttemptMode.PracticeAll
+				: QuizAttemptMode.SrsReview;
+
+			var attemptResult = Domain.Entities.Srs.QuizAttempt.QuizAttempt.Create(userId, quiz.Id, now, attemptMode);
 			if (attemptResult.IsFailure)
-				return Result.Failure<QuizAttemptStartedResponse>(attemptResult.Error);
+				return Result.Failure<Guid>(attemptResult.Error);
 
 			var attempt = attemptResult.Value;
+
+			foreach (var question in quiz.Questions.OrderBy(q => q.Sequence))
+			{
+				var attemptItemResult = QuizAttemptItem.Create(question.Id, question.Sequence);
+				if (attemptItemResult.IsSuccess)
+				{
+					attempt.AddItem(attemptItemResult.Value);
+				}
+			}
 
 			_quizRepository.Add(quiz);
 			_quizAttemptRepository.Add(attempt);
 
-			return Result.Success(new QuizAttemptStartedResponse(
-				attempt.Id.Value,
-				quiz.Id.Value,
-				attempt.Mode.ToString(),
-				quiz.TotalQuestions,
-				attempt.StartedAt,
-				attempt.StartedAt.AddHours(1),
-				clientQuestions));
+			return Result.Success(attempt.Id.Value);
 		}, cancellationToken);
 	}
 }

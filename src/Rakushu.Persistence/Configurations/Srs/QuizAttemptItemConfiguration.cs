@@ -35,23 +35,26 @@ internal sealed class QuizAttemptItemConfiguration : IEntityTypeConfiguration<Qu
 			.HasForeignKey(qai => qai.QuestionId)
 			.OnDelete(DeleteBehavior.Cascade);
 
-		builder.Property(qai => qai.Position)
+		builder.Property(qai => qai.Sequence)
+			.HasColumnName("sequence")
 			.IsRequired();
 
-		builder.Property(qai => qai.SelectedOptionId)
-			.HasMaxLength(50);
+		builder.Property(qai => qai.SelectedAnswer)
+			.HasColumnName("selected_answer")
+			.HasMaxLength(255);
 
-		builder.Property(qai => qai.IsCorrect);
+		builder.Property(qai => qai.IsCorrect)
+			.HasColumnName("is_correct");
 
-		builder.Property(qai => qai.ElapsedMs)
+		builder.Property(qai => qai.TimeSpentMs)
+			.HasColumnName("time_spent_ms")
 			.IsRequired()
 			.HasDefaultValue(0);
 
-		builder.Property(qai => qai.Feedback);
+		builder.Property(qai => qai.Feedback)
+			.HasColumnName("feedback");
 
-		builder.Property(qai => qai.AnsweredAt);
-
-		builder.Property(qai => qai.CreatedAt)
-			.IsRequired();
+		builder.Property(qai => qai.AnsweredAt)
+			.HasColumnName("answered_at");
 	}
 }

@@ -58,6 +58,22 @@ public sealed class SrsScheduleDetail : Entity<SrsScheduleDetailId>
 		});
 	}
 
+	public void UpdateResult(
+		int quality,
+		int intervalDays,
+		double easinessFactor,
+		int repetitions,
+		int lapses,
+		DateTimeOffset reviewedAt)
+	{
+		Quality = quality;
+		IntervalDays = Math.Max(0, intervalDays);
+		EasinessFactor = Math.Max(1.3, easinessFactor);
+		Repetitions = Math.Max(0, repetitions);
+		Lapses = Math.Max(0, lapses);
+		ReviewedAt = reviewedAt;
+	}
+
 	private static Result Validate(SrsScheduleId srsScheduleId, int reviewNumber, int quality)
 	{
 		if (srsScheduleId is null || srsScheduleId.Value == Guid.Empty)

@@ -1,57 +1,52 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Rakushu.Application.Abstractions.Infrastructure.AiService;
-using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 
 public interface IQuizAttemptFeedbackService
 {
-	Task<QuizAttemptResultResponse> ApplyAsync(
-		QuizAttemptResultResponse submissionResult,
-		CancellationToken cancellationToken);
+	Task GenerateFeedbackAsync(
+		QuizAttemptId attemptId,
+		CancellationToken cancellationToken = default);
 }
 
 internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 {
 	private readonly ILogger<QuizAttemptFeedbackService> _logger;
-	private readonly ICurrentUserContext _currentUser;
 	private readonly IQuizContentGenerator _quizContentGenerator;
 	private readonly IQuizAttemptRepository _attemptRepository;
+	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public QuizAttemptFeedbackService(
 		ILogger<QuizAttemptFeedbackService> logger,
-		ICurrentUserContext currentUser,
 		IQuizContentGenerator quizContentGenerator,
 		IQuizAttemptRepository attemptRepository,
+		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_logger = logger;
-		_currentUser = currentUser;
 		_quizContentGenerator = quizContentGenerator;
 		_attemptRepository = attemptRepository;
+		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<QuizAttemptResultResponse> ApplyAsync(
-		QuizAttemptResultResponse submissionResult,
-		CancellationToken cancellationToken)
+	public async Task GenerateFeedbackAsync(
+		QuizAttemptId attemptId,
+		CancellationToken cancellationToken = default)
 	{
-		var attemptId = QuizAttemptId.From(submissionResult.AttemptId);
 		var attempt = await _attemptRepository.GetByIdWithItemsAndQuizAsync(attemptId, cancellationToken);
-		var userId = _currentUser.UserId;
+		if (attempt is null)
+			return;
 
-		if (attempt is null || userId is null)
-		{
-			return submissionResult;
-		}
-
-		var questionMap = attempt.Quiz.Questions.ToDictionary(q => q.Id.Value);
+		var userId = attempt.UserId;
+		var questionMap = attempt.Quiz.Questions.ToDictionary(q => q.Id);
 		var savedItemIds = attempt.Quiz.Questions.Select(q => q.SavedItemId).Distinct().ToList();
 
 		IReadOnlyDictionary<Guid, QuizItemAnswerHistory> answerHistory = new Dictionary<Guid, QuizItemAnswerHistory>();
@@ -92,9 +87,13 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 			_logger.LogWarning(exception, "Could not load feedback history for quiz attempt {AttemptId}", attemptId.Value);
 		}
 
-		var prompts = submissionResult.Answers.Select(answer =>
+		var answeredItems = attempt.Items.Where(i => i.AnsweredAt != null).ToList();
+		if (answeredItems.Count == 0)
+			return;
+
+		var prompts = answeredItems.Select(item =>
 		{
-			questionMap.TryGetValue(answer.QuestionId, out var question);
+			questionMap.TryGetValue(item.QuestionId, out var question);
 			var savedItemId = question?.SavedItemId.Value ?? Guid.Empty;
 
 			var history = answerHistory.TryGetValue(savedItemId, out var h)
@@ -105,26 +104,28 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 				? fh.Select(ToFeedbackHistoryEntry).ToArray()
 				: Array.Empty<QuizFeedbackHistoryEntry>();
 
-			var selectedChoiceText = answer.Choices?.FirstOrDefault(c =>
-				string.Equals(c.Id, answer.SelectedOptionId, StringComparison.OrdinalIgnoreCase))?.Text
-				?? answer.SelectedOptionId;
+			var choices = question is not null ? QuizOptionParser.Parse(question.Answers) : [];
 
-			var correctChoiceText = answer.Choices?.FirstOrDefault(c =>
-				string.Equals(c.Id, answer.CorrectOptionId, StringComparison.OrdinalIgnoreCase))?.Text
-				?? answer.CorrectOptionId;
+			var selectedChoiceText = choices.FirstOrDefault(c =>
+				string.Equals(c.Id, item.SelectedAnswer, StringComparison.OrdinalIgnoreCase))?.Text
+				?? item.SelectedAnswer;
+
+			var correctChoiceText = choices.FirstOrDefault(c =>
+				string.Equals(c.Id, question?.CorrectAnswer, StringComparison.OrdinalIgnoreCase))?.Text
+				?? question?.CorrectAnswer;
 
 			return new QuizFeedbackPrompt(
-				answer.QuestionId,
+				item.QuestionId.Value,
 				savedItemId,
-				answer.IsCorrect,
+				item.IsCorrect ?? false,
 				history.TotalAttempts,
 				history.IncorrectAttempts,
 				previousFeedback,
-				answer.Prompt,
-				answer.Reading,
+				question?.QuestionText ?? string.Empty,
+				null,
 				selectedChoiceText,
 				correctChoiceText,
-				answer.Explanation);
+				question?.BankQuestion?.Explanation);
 		}).ToList();
 
 		IReadOnlyDictionary<Guid, string> adaptiveFeedback = new Dictionary<Guid, string>();
@@ -170,6 +171,9 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 					}
 				}
 
+				freshAttempt.MarkEvaluated(_systemClock.UtcNow);
+				_attemptRepository.Update(freshAttempt);
+
 				return Result.Success();
 			}, cancellationToken);
 		}
@@ -181,15 +185,6 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 		{
 			_logger.LogWarning(exception, "Could not persist feedback for attempt {AttemptId}", attemptId.Value);
 		}
-
-		var updatedAnswers = submissionResult.Answers
-			.Select(ans => ans with
-			{
-				Feedback = resolvedFeedback.TryGetValue(ans.QuestionId, out var fb) ? fb : null
-			})
-			.ToList();
-
-		return submissionResult with { Answers = updatedAnswers };
 	}
 
 	private static QuizFeedbackHistoryEntry ToFeedbackHistoryEntry(QuizItemFeedbackHistory history)

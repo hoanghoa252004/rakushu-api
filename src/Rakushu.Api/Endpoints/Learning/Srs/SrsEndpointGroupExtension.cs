@@ -26,8 +26,8 @@ internal static class SrsEndpointGroupExtension
 
 	internal static RouteGroupBuilder MapSrsQuizEndpoints(this IEndpointRouteBuilder app)
 	{
-		return app.MapGroup("/api/srs")
-			.WithTags("SRS Quizzes")
+		return app.MapGroup("/api/srs/quiz-attempts")
+			.WithTags("Quiz")
 			.WithGroupName("srs");
 	}
 

@@ -20,14 +20,20 @@ public static class QuizAttemptErrors
 		"QUIZ_ATTEMPT.ALREADY_COMPLETED", "The quiz attempt has already been completed.");
 
 	public static readonly Error NotCompleted = Error.Validation(
-		"QUIZ_ATTEMPT.NOT_COMPLETED", "Only completed quiz attempts can be retried.");
+		"QUIZ_ATTEMPT.NOT_COMPLETED", "The quiz attempt is not completed yet.");
 
 	public static readonly Error NoMistakesToRetry = Error.Validation(
 		"QUIZ_ATTEMPT.NO_MISTAKES", "There are no mistake questions in this quiz attempt to retry.");
 
 	public static readonly Error AttemptExpired = Error.Validation(
-		"QUIZ_ATTEMPT.EXPIRED", "The quiz attempt has exceeded the 1-hour time limit and has been abandoned.");
+		"QUIZ_ATTEMPT.EXPIRED", "The quiz attempt has expired.");
 
 	public static readonly Error ActiveAttemptInProgress = Error.Conflict(
-		"QUIZ_ATTEMPT.ACTIVE_ATTEMPT_EXISTS", "You already have an active quiz attempt in progress. Please complete or cancel it before starting a new one.");
+		"QUIZ_ATTEMPT.ACTIVE_ATTEMPT_EXISTS", "You already have an active quiz attempt in progress. Please complete or delete it before starting a new one.");
+
+	public static readonly Error NoItemsAnswered = Error.Validation(
+		"QUIZ_ATTEMPT.NO_ITEMS_ANSWERED", "At least one question must be answered before submitting the quiz attempt.");
+
+	public static readonly Error CannotDeleteAttemptWithAnswers = Error.Validation(
+		"QUIZ_ATTEMPT.CANNOT_DELETE_WITH_ANSWERS", "Cannot delete a quiz attempt that already has answered questions. Please submit it instead.");
 }

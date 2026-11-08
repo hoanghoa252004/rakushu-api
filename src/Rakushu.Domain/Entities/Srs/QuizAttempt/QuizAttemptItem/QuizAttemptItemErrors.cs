@@ -10,6 +10,8 @@ public static class QuizAttemptItemErrors
 	public static readonly Error InvalidQuestionId = Error.Validation(
 		"QUIZ_ATTEMPT_ITEM.INVALID_QUESTION_ID", "Question ID cannot be empty.");
 
-	public static readonly Error InvalidPosition = Error.Validation(
-		"QUIZ_ATTEMPT_ITEM.INVALID_POSITION", "Position must be greater than zero.");
+	public static readonly Error InvalidSequence = Error.Validation(
+		"QUIZ_ATTEMPT_ITEM.INVALID_SEQUENCE", "Sequence must be greater than zero.");
+
+	public static readonly Error InvalidPosition = InvalidSequence;
 }

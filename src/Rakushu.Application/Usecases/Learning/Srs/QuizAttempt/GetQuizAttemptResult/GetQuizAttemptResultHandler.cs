@@ -1,4 +1,3 @@
-﻿using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Usecases.Learning.Srs;
@@ -8,7 +7,7 @@ using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttemptResult;
 
-internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttemptResultQuery, Result<QuizAttemptResultResponse>>
+internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttemptResultQuery, Result<QuizAttemptResultDto>>
 {
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly ICurrentUserContext _currentUserContext;
@@ -21,34 +20,38 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 		_currentUserContext = currentUserContext;
 	}
 
-	public async Task<Result<QuizAttemptResultResponse>> Handle(
+	public async Task<Result<QuizAttemptResultDto>> Handle(
 		GetQuizAttemptResultQuery request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 		if (userId is null)
-			return Result.Failure<QuizAttemptResultResponse>(UserErrors.NotFound);
+			return Result.Failure<QuizAttemptResultDto>(UserErrors.NotFound);
 
 		var attemptId = QuizAttemptId.From(request.AttemptId);
 		var attempt = await _quizAttemptRepository.GetByIdWithItemsAndQuizAsync(attemptId, cancellationToken);
 		if (attempt is null || attempt.UserId != userId)
-			return Result.Failure<QuizAttemptResultResponse>(QuizAttemptErrors.NotFound);
+			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotFound);
 
-		var itemsDict = attempt.Items.ToDictionary(i => i.QuestionId);
-		var answerResults = new List<QuizAnswerResultDto>();
+		if (attempt.Status != QuizAttemptStatus.Completed && attempt.Status != QuizAttemptStatus.Expired)
+			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotCompleted);
 
-		foreach (var question in attempt.Quiz.Questions.OrderBy(q => q.Sequence))
+		var questionsDict = attempt.Quiz.Questions.ToDictionary(q => q.Id);
+		var answerResults = new List<QuizAnswerResultDto>(attempt.Items.Count);
+
+		foreach (var item in attempt.Items.OrderBy(i => i.Sequence))
 		{
-			itemsDict.TryGetValue(question.Id, out var attemptItem);
+			if (!questionsDict.TryGetValue(item.QuestionId, out var question))
+				continue;
 
-			bool isUnanswered = string.IsNullOrWhiteSpace(attemptItem?.SelectedOptionId);
-			bool isCorrect = attemptItem?.IsCorrect ?? false;
-			int elapsedMs = attemptItem?.ElapsedMs ?? 0;
+			bool isSkip = QuizAnswerHelper.IsSkip(item.SelectedAnswer);
+			bool isCorrect = item.IsCorrect ?? false;
+			int timeSpentMs = item.TimeSpentMs;
 
-			int quality = isUnanswered ? 1
+			int quality = isSkip ? 1
 				: !isCorrect ? 2
-				: elapsedMs > 15_000 ? 3
-				: elapsedMs >= 5_000 ? 4
+				: timeSpentMs > 15_000 ? 3
+				: timeSpentMs >= 5_000 ? 4
 				: 5;
 
 			var typeCode = question.QuestionType?.Code;
@@ -57,32 +60,31 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 
 			IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.Answers);
 			answerResults.Add(new QuizAnswerResultDto(
-				question.Id.Value,
-				question.Sequence,
+				item.Id.Value,
+				item.Sequence,
 				question.QuestionText,
-				null,
 				choices,
-				attemptItem?.SelectedOptionId,
+				item.SelectedAnswer,
 				question.CorrectAnswer,
 				isCorrect,
-				elapsedMs,
+				timeSpentMs,
 				quality,
-				attemptItem?.Feedback,
+				item.Feedback,
 				question.BankQuestion?.Explanation,
 				typeCode));
 		}
 
-		return Result.Success(new QuizAttemptResultResponse(
+		return Result.Success(new QuizAttemptResultDto(
 			attempt.Id.Value,
-			attempt.QuizId.Value,
 			attempt.Mode.ToString(),
 			attempt.Status.ToString(),
 			attempt.Score ?? 0,
 			attempt.TotalItems,
 			attempt.AnsweredItems,
 			attempt.CorrectItems,
-			attempt.StartedAt,
+			attempt.CreatedAt,
 			attempt.CompletedAt,
+			attempt.IsEvaluated,
 			answerResults));
 	}
 }

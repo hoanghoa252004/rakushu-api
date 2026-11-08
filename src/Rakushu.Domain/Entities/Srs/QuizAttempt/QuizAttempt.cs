@@ -8,6 +8,8 @@ namespace Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 {
+	public static readonly TimeSpan DefaultDuration = TimeSpan.FromHours(1);
+
 	public UserId UserId { get; private set; } = null!;
 	public QuizId QuizId { get; private set; } = null!;
 	public QuizAttemptStatus Status { get; private set; } = QuizAttemptStatus.InProgress;
@@ -16,7 +18,8 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 	public int AnsweredItems { get; private set; }
 	public int CorrectItems { get; private set; }
 	public decimal? Score { get; private set; }
-	public DateTimeOffset StartedAt { get; private set; }
+	public DateTimeOffset ExpiresAt { get; private set; }
+	public bool IsEvaluated { get; private set; }
 	public DateTimeOffset? CompletedAt { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
@@ -35,11 +38,14 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		UserId userId,
 		QuizId quizId,
 		DateTimeOffset now,
-		QuizAttemptMode mode = QuizAttemptMode.SrsReview)
+		QuizAttemptMode mode = QuizAttemptMode.SrsReview,
+		TimeSpan? duration = null)
 	{
 		var validation = Validate(userId, quizId);
 		if (validation.IsFailure)
 			return Result.Failure<QuizAttempt>(validation.Error);
+
+		var effectiveDuration = duration ?? DefaultDuration;
 
 		return Result.Success(new QuizAttempt(QuizAttemptId.Create())
 		{
@@ -47,7 +53,8 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 			QuizId = quizId,
 			Mode = mode,
 			Status = QuizAttemptStatus.InProgress,
-			StartedAt = now,
+			IsEvaluated = false,
+			ExpiresAt = now.Add(effectiveDuration),
 			CreatedAt = now,
 			UpdatedAt = now
 		});
@@ -64,10 +71,41 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		return Result.Success();
 	}
 
+	public bool HasAnyAnsweredItems => _items.Any(i => i.AnsweredAt != null);
+
+	public IReadOnlyList<QuizAttemptItem.QuizAttemptItem> PruneUnansweredItems()
+	{
+		var unanswered = _items.Where(i => !i.AnsweredAt.HasValue).ToList();
+		_items.RemoveAll(i => !i.AnsweredAt.HasValue);
+		TotalItems = _items.Count;
+		for (int i = 0; i < _items.Count; i++)
+		{
+			_items[i].ReSequence(i + 1);
+		}
+		return unanswered;
+	}
+
+	public IReadOnlyList<QuizAttemptItem.QuizAttemptItem> ExpireAndPrune(DateTimeOffset now)
+	{
+		var unrated = PruneUnansweredItems();
+		Expire(now);
+		return unrated;
+	}
+
 	public Result Complete(DateTimeOffset now)
 	{
 		if (Status == QuizAttemptStatus.Completed)
 			return Result.Failure(QuizAttemptErrors.AlreadyCompleted);
+
+		if (now > ExpiresAt)
+		{
+			Status = QuizAttemptStatus.Expired;
+			UpdatedAt = now;
+			return Result.Failure(QuizAttemptErrors.AttemptExpired);
+		}
+
+		if (!HasAnyAnsweredItems)
+			return Result.Failure(QuizAttemptErrors.NoItemsAnswered);
 
 		Status = QuizAttemptStatus.Completed;
 		CompletedAt = now;
@@ -80,15 +118,32 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		return Result.Success();
 	}
 
-	public void Abandon(DateTimeOffset now)
+	public void Expire(DateTimeOffset now)
 	{
-		Status = QuizAttemptStatus.Abandoned;
+		Status = QuizAttemptStatus.Expired;
 		CompletedAt = now;
+		UpdatedAt = now;
+
+		AnsweredItems = _items.Count(i => i.AnsweredAt.HasValue);
+		CorrectItems = _items.Count(i => i.IsCorrect == true);
+		Score = TotalItems > 0 ? Math.Round((decimal)CorrectItems / TotalItems * 100, 2) : 0;
+	}
+
+	public void MarkEvaluated(DateTimeOffset now)
+	{
+		IsEvaluated = true;
 		UpdatedAt = now;
 	}
 
-	public bool IsExpired(DateTimeOffset now, TimeSpan timeout) =>
-		Status == QuizAttemptStatus.InProgress && (now - StartedAt) > timeout;
+	public void RecalculateProgress(DateTimeOffset now)
+	{
+		AnsweredItems = _items.Count(i => i.AnsweredAt.HasValue);
+		CorrectItems = _items.Count(i => i.IsCorrect == true);
+		UpdatedAt = now;
+	}
+
+	public bool IsExpired(DateTimeOffset now) =>
+		Status == QuizAttemptStatus.InProgress && now > ExpiresAt;
 
 	private static Result Validate(UserId userId, QuizId quizId)
 	{

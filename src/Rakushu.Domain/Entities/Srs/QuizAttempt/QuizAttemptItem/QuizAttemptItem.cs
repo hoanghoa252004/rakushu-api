@@ -8,13 +8,12 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 {
 	public QuizAttemptId QuizAttemptId { get; private set; } = null!;
 	public QuestionId QuestionId { get; private set; } = null!;
-	public int Position { get; private set; }
-	public string? SelectedOptionId { get; private set; }
+	public int Sequence { get; private set; }
+	public string? SelectedAnswer { get; private set; }
 	public bool? IsCorrect { get; private set; }
-	public int ElapsedMs { get; private set; }
+	public int TimeSpentMs { get; private set; }
 	public string? Feedback { get; private set; }
 	public DateTimeOffset? AnsweredAt { get; private set; }
-	public DateTimeOffset CreatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	public QuizAttempt QuizAttempt { get; private set; } = null!;
@@ -25,41 +24,61 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 
 	public static Result<QuizAttemptItem> Create(
 		QuestionId questionId,
-		int position,
-		DateTimeOffset createdAt)
+		int sequence)
 	{
-		var validation = Validate(questionId, position);
+		var validation = Validate(questionId, sequence);
 		if (validation.IsFailure)
 			return Result.Failure<QuizAttemptItem>(validation.Error);
 
 		return Result.Success(new QuizAttemptItem(QuizAttemptItemId.Create())
 		{
 			QuestionId = questionId,
-			Position = position,
-			CreatedAt = createdAt
+			Sequence = sequence
 		});
 	}
 
-	internal void AssignToAttempt(QuizAttemptId attemptId, int position)
+	internal void AssignToAttempt(QuizAttemptId attemptId, int sequence)
 	{
 		QuizAttemptId = attemptId;
-		Position = position;
+		Sequence = sequence;
+	}
+
+	internal void ReSequence(int sequence)
+	{
+		Sequence = sequence;
 	}
 
 	public Result RecordAnswer(
-		string? selectedOptionId,
-		bool isCorrect,
-		int elapsedMs,
+		string? selectedAnswer,
+		bool? isCorrect,
+		int timeSpentMs,
 		string? feedback,
 		DateTimeOffset answeredAt)
 	{
-		SelectedOptionId = string.IsNullOrWhiteSpace(selectedOptionId) ? null : selectedOptionId.Trim();
+		SelectedAnswer = string.IsNullOrWhiteSpace(selectedAnswer) ? null : selectedAnswer.Trim();
 		IsCorrect = isCorrect;
-		ElapsedMs = Math.Max(0, elapsedMs);
+		TimeSpentMs = Math.Max(0, timeSpentMs);
 		Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
 		AnsweredAt = answeredAt;
 
 		return Result.Success();
+	}
+
+	public Result UpdateAnswer(
+		string? selectedAnswer,
+		int timeSpentMs,
+		DateTimeOffset answeredAt)
+	{
+		SelectedAnswer = string.IsNullOrWhiteSpace(selectedAnswer) ? null : selectedAnswer.Trim();
+		TimeSpentMs = Math.Max(0, timeSpentMs);
+		AnsweredAt = answeredAt;
+
+		return Result.Success();
+	}
+
+	public void SetResult(bool isCorrect)
+	{
+		IsCorrect = isCorrect;
 	}
 
 	public void UpdateFeedback(string? feedback)
@@ -67,13 +86,13 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 		Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
 	}
 
-	private static Result Validate(QuestionId questionId, int position)
+	private static Result Validate(QuestionId questionId, int sequence)
 	{
 		if (questionId is null || questionId.Value == Guid.Empty)
 			return Result.Failure(QuizAttemptItemErrors.InvalidQuestionId);
 
-		if (position < 1)
-			return Result.Failure(QuizAttemptItemErrors.InvalidPosition);
+		if (sequence < 1)
+			return Result.Failure(QuizAttemptItemErrors.InvalidSequence);
 
 		return Result.Success();
 	}

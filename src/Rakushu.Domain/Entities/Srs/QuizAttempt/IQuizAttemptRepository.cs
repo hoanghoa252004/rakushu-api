@@ -10,9 +10,12 @@ public interface IQuizAttemptRepository : IBaseRepository<QuizAttempt, QuizAttem
 
 	Task<QuizAttempt?> GetActiveAttemptForUserAsync(UserId userId, CancellationToken cancellationToken = default);
 
-	Task<IReadOnlyList<QuizAttempt>> GetUserAttemptsAsync(
+	void RemoveItems(IEnumerable<QuizAttemptItem.QuizAttemptItem> items);
+
+	Task<(IReadOnlyList<QuizAttempt> Items, int TotalCount)> GetAttemptsByUserAsync(
 		UserId userId,
-		int page,
+		QuizAttemptStatus? status,
+		int pageNumber,
 		int pageSize,
 		CancellationToken cancellationToken = default);
 
