@@ -27,7 +27,10 @@ public sealed record QuizQuestionDto(
 	bool? IsCorrect = null,
 	int? Quality = null,
 	string? Feedback = null,
-	string? Explanation = null);
+	string? Explanation = null,
+	string? MediaType = null,
+	string? MediaUrl = null,
+	QuestionMediaMetadataDto? MediaMetadata = null);
 
 public sealed record QuizAttemptDetailDto(
 	Guid Id,
@@ -55,7 +58,10 @@ public sealed record QuizAnswerResultDto(
 	int Quality,
 	string? Feedback,
 	string? Explanation,
-	string? QuestionType = null);
+	string? QuestionType = null,
+	string? MediaType = null,
+	string? MediaUrl = null,
+	QuestionMediaMetadataDto? MediaMetadata = null);
 
 public sealed record QuizAttemptResultDto(
 	Guid Id,

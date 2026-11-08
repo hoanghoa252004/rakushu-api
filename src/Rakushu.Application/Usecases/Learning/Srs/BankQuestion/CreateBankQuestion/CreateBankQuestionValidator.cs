@@ -1,10 +1,11 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.CreateBankQuestion;
 
 public sealed class CreateBankQuestionValidator : AbstractValidator<CreateBankQuestionCommand>
 {
 	private static readonly string[] ValidDifficulties = ["Easy", "Medium", "Hard"];
+	private static readonly string[] ValidMediaTypes = ["NONE", "VIDEO", "AUDIO", "IMAGE"];
 
 	public CreateBankQuestionValidator()
 	{
@@ -21,21 +22,23 @@ public sealed class CreateBankQuestionValidator : AbstractValidator<CreateBankQu
 			.MaximumLength(1000)
 			.WithMessage("Question cannot be empty or exceed 1000 characters.");
 
-		RuleFor(x => x.Answers)
-			.NotNull()
-			.Must(c => c != null && c.Count >= 2 && c.Count <= 6)
-			.WithMessage("Answers must contain between 2 and 6 options.")
-			.Must(c => c == null || c.Select(a => a.Id.Trim().ToLowerInvariant()).Distinct().Count() == c.Count)
-			.WithMessage("Answer IDs must be unique.")
-			.Must(c => c == null || c.Select(a => a.Text.Trim().ToLowerInvariant()).Distinct().Count() == c.Count)
-			.WithMessage("Answer choices cannot have identical text.");
+		When(x => x.Answers != null && x.Answers.Count > 0, () =>
+		{
+			RuleFor(x => x.Answers!)
+				.Must(c => c.Count >= 2 && c.Count <= 6)
+				.WithMessage("Answers must contain between 2 and 6 options.")
+				.Must(c => c.Select(a => a.Id.Trim().ToLowerInvariant()).Distinct().Count() == c.Count)
+				.WithMessage("Answer IDs must be unique.")
+				.Must(c => c.Select(a => a.Text.Trim().ToLowerInvariant()).Distinct().Count() == c.Count)
+				.WithMessage("Answer choices cannot have identical text.");
 
-		RuleForEach(x => x.Answers)
-			.ChildRules(choice =>
-			{
-				choice.RuleFor(c => c.Id).NotEmpty().WithMessage("Answer ID cannot be empty.");
-				choice.RuleFor(c => c.Text).NotEmpty().WithMessage("Answer text cannot be empty.");
-			});
+			RuleForEach(x => x.Answers!)
+				.ChildRules(choice =>
+				{
+					choice.RuleFor(c => c.Id).NotEmpty().WithMessage("Answer ID cannot be empty.");
+					choice.RuleFor(c => c.Text).NotEmpty().WithMessage("Answer text cannot be empty.");
+				});
+		});
 
 		RuleFor(x => x.CorrectAnswer)
 			.NotEmpty()
@@ -44,5 +47,9 @@ public sealed class CreateBankQuestionValidator : AbstractValidator<CreateBankQu
 		RuleFor(x => x.Difficulty)
 			.Must(d => ValidDifficulties.Contains(d, StringComparer.OrdinalIgnoreCase))
 			.WithMessage("Difficulty must be Easy, Medium, or Hard.");
+
+		RuleFor(x => x.MediaType)
+			.Must(m => string.IsNullOrWhiteSpace(m) || ValidMediaTypes.Contains(m.Trim(), StringComparer.OrdinalIgnoreCase))
+			.WithMessage("MediaType must be NONE, VIDEO, AUDIO, or IMAGE.");
 	}
 }

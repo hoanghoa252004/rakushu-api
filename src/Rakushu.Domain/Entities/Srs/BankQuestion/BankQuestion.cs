@@ -1,4 +1,4 @@
-using Rakushu.Domain.Common;
+﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Srs.QuestionType;
@@ -15,6 +15,9 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 	public string? Explanation { get; private set; }
 	public string Difficulty { get; private set; } = "Medium";
 	public bool IsActive { get; private set; }
+	public string MediaType { get; private set; } = "NONE";
+	public string? MediaUrl { get; private set; }
+	public string? MediaMetadata { get; private set; }
 
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
@@ -35,7 +38,10 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		DateTimeOffset now,
 		string? explanation = null,
 		string difficulty = "Medium",
-		bool isActive = true)
+		bool isActive = true,
+		string mediaType = "NONE",
+		string? mediaUrl = null,
+		string? mediaMetadata = null)
 	{
 		var validation = Validate(knowledgeMeaningId, questionTypeId, question, correctAnswer);
 		if (validation.IsFailure)
@@ -51,6 +57,9 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
 			Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim(),
 			IsActive = isActive,
+			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant(),
+			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim(),
+			MediaMetadata = string.IsNullOrWhiteSpace(mediaMetadata) ? null : mediaMetadata.Trim(),
 			CreatedAt = now,
 			UpdatedAt = now
 		});
@@ -62,13 +71,22 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		string correctAnswer,
 		string? explanation,
 		string difficulty,
-		DateTimeOffset now)
+		DateTimeOffset now,
+		string? mediaType = null,
+		string? mediaUrl = null,
+		string? mediaMetadata = null)
 	{
 		Question = question.Trim();
 		Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim();
 		CorrectAnswer = correctAnswer.Trim();
 		Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim();
 		Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim();
+		if (mediaType is not null)
+			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant();
+		if (mediaUrl is not null)
+			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim();
+		if (mediaMetadata is not null)
+			MediaMetadata = string.IsNullOrWhiteSpace(mediaMetadata) ? null : mediaMetadata.Trim();
 		UpdatedAt = now;
 	}
 
@@ -83,12 +101,21 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		string correctAnswer,
 		string? explanation,
 		string difficulty,
-		DateTimeOffset now)
+		DateTimeOffset now,
+		string? mediaType = null,
+		string? mediaUrl = null,
+		string? mediaMetadata = null)
 	{
 		Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim();
 		CorrectAnswer = correctAnswer.Trim();
 		Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim();
 		Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim();
+		if (mediaType is not null)
+			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant();
+		if (mediaUrl is not null)
+			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim();
+		if (mediaMetadata is not null)
+			MediaMetadata = string.IsNullOrWhiteSpace(mediaMetadata) ? null : mediaMetadata.Trim();
 		IsActive = true;
 		UpdatedAt = now;
 	}

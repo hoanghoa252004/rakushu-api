@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
@@ -27,30 +27,48 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 		UpdateBankQuestionCommand request,
 		CancellationToken cancellationToken)
 	{
-		bool correctAnswerExists = request.Answers.Any(c =>
-			string.Equals(c.Id.Trim(), request.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase));
+		string? answersJson = null;
 
-		if (!correctAnswerExists)
+		if (request.Answers != null && request.Answers.Count > 0)
 		{
-			return Result.Failure(BankQuestionErrors.ChoiceNotFound);
+			bool correctAnswerExists = request.Answers.Any(c =>
+				string.Equals(c.Id.Trim(), request.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase) ||
+				string.Equals(c.Text.Trim(), request.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase));
+
+			if (!correctAnswerExists)
+			{
+				return Result.Failure(BankQuestionErrors.ChoiceNotFound);
+			}
+
+			bool duplicateChoiceIds = request.Answers
+				.GroupBy(c => c.Id.Trim(), StringComparer.OrdinalIgnoreCase)
+				.Any(g => g.Count() > 1);
+
+			if (duplicateChoiceIds)
+			{
+				return Result.Failure(BankQuestionErrors.DuplicateChoiceId);
+			}
+
+			bool duplicateChoiceTexts = request.Answers
+				.GroupBy(c => c.Text.Trim(), StringComparer.OrdinalIgnoreCase)
+				.Any(g => g.Count() > 1);
+
+			if (duplicateChoiceTexts)
+			{
+				return Result.Failure(BankQuestionErrors.DuplicateChoiceText);
+			}
+
+			var answersPayload = request.Answers.Select(c => new
+			{
+				id = c.Id.Trim(),
+				text = c.Text.Trim()
+			});
+
+			answersJson = JsonSerializer.Serialize(answersPayload);
 		}
-
-		bool duplicateChoiceIds = request.Answers
-			.GroupBy(c => c.Id.Trim(), StringComparer.OrdinalIgnoreCase)
-			.Any(g => g.Count() > 1);
-
-		if (duplicateChoiceIds)
+		else if (request.Answers != null && request.Answers.Count == 0)
 		{
-			return Result.Failure(BankQuestionErrors.DuplicateChoiceId);
-		}
-
-		bool duplicateChoiceTexts = request.Answers
-			.GroupBy(c => c.Text.Trim(), StringComparer.OrdinalIgnoreCase)
-			.Any(g => g.Count() > 1);
-
-		if (duplicateChoiceTexts)
-		{
-			return Result.Failure(BankQuestionErrors.DuplicateChoiceText);
+			answersJson = "[]";
 		}
 
 		return await _unitOfWork.ExecuteAsync(async () =>
@@ -74,22 +92,18 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 				return Result.Failure(BankQuestionErrors.DuplicateQuestion);
 			}
 
-			var answersPayload = request.Answers.Select(c => new
-			{
-				id = c.Id.Trim(),
-				text = c.Text.Trim()
-			});
-
-			string answersJson = JsonSerializer.Serialize(answersPayload);
 			var now = _systemClock.UtcNow;
 
 			question.Update(
 				request.Question,
-				answersJson,
+				answersJson ?? question.Answers,
 				request.CorrectAnswer,
 				request.Explanation,
 				request.Difficulty,
-				now);
+				now,
+				request.MediaType,
+				request.MediaUrl,
+				request.MediaMetadata);
 
 			return Result.Success();
 		}, cancellationToken);

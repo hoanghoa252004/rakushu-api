@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.Quiz;
@@ -63,7 +63,20 @@ internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
 
 		builder.Property(qn => qn.CorrectAnswer)
 			.HasColumnName("correct_answer")
-			.HasMaxLength(50)
+			.HasMaxLength(500)
 			.IsRequired();
+
+		builder.Property(qn => qn.MediaType)
+			.HasColumnName("media_type")
+			.HasMaxLength(20)
+			.IsRequired()
+			.HasDefaultValue("NONE");
+
+		builder.Property(qn => qn.MediaUrl)
+			.HasColumnName("media_url");
+
+		builder.Property(qn => qn.MediaMetadata)
+			.HasColumnName("media_metadata")
+			.HasColumnType("jsonb");
 	}
 }

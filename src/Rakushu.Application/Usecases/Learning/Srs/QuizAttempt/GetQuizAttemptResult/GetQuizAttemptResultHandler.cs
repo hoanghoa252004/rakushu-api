@@ -1,5 +1,6 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
@@ -11,13 +12,16 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 {
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly ICurrentUserContext _currentUserContext;
+	private readonly IStorageService _storageService;
 
 	public GetQuizAttemptResultHandler(
 		IQuizAttemptRepository quizAttemptRepository,
-		ICurrentUserContext currentUserContext)
+		ICurrentUserContext currentUserContext,
+		IStorageService storageService)
 	{
 		_quizAttemptRepository = quizAttemptRepository;
 		_currentUserContext = currentUserContext;
+		_storageService = storageService;
 	}
 
 	public async Task<Result<QuizAttemptResultDto>> Handle(
@@ -38,6 +42,7 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 
 		var questionsDict = attempt.Quiz.Questions.ToDictionary(q => q.Id);
 		var answerResults = new List<QuizAnswerResultDto>(attempt.Items.Count);
+		var presignedUrlCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
 		foreach (var item in attempt.Items.OrderBy(i => i.Sequence))
 		{
@@ -56,9 +61,37 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 
 			var typeCode = question.QuestionType?.Code;
 			var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
-			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
+			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase) ||
+			               string.Equals(typeCode, "AUDIO_DICTATION", StringComparison.OrdinalIgnoreCase);
 
 			IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.Answers);
+
+			string? resolvedMediaUrl = question.MediaUrl;
+			if (!string.IsNullOrWhiteSpace(resolvedMediaUrl) &&
+			    !resolvedMediaUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+			    !resolvedMediaUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+			{
+				if (presignedUrlCache.TryGetValue(resolvedMediaUrl, out var cachedUrl))
+				{
+					resolvedMediaUrl = cachedUrl;
+				}
+				else
+				{
+					try
+					{
+						var signed = await _storageService.CreatePresignedReadUrlAsync(resolvedMediaUrl, cancellationToken);
+						presignedUrlCache[resolvedMediaUrl] = signed;
+						resolvedMediaUrl = signed;
+					}
+					catch
+					{
+						// Fallback to raw key
+					}
+				}
+			}
+
+			var parsedMetadata = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
+
 			answerResults.Add(new QuizAnswerResultDto(
 				item.Id.Value,
 				item.Sequence,
@@ -71,7 +104,10 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 				quality,
 				item.Feedback,
 				question.BankQuestion?.Explanation,
-				typeCode));
+				typeCode,
+				question.MediaType,
+				resolvedMediaUrl,
+				parsedMetadata));
 		}
 
 		return Result.Success(new QuizAttemptResultDto(

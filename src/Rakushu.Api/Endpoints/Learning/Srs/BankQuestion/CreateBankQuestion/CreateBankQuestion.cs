@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
@@ -19,6 +20,13 @@ internal sealed class CreateBankQuestion : IEndpoint
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
+				string? mediaMetadata = request.MediaMetadata switch
+				{
+					{ ValueKind: JsonValueKind.String } el => el.GetString(),
+					{ ValueKind: JsonValueKind.Object } el => el.GetRawText(),
+					_ => null
+				};
+
 				var command = new CreateBankQuestionCommand(
 					request.KnowledgeMeaningId,
 					request.QuestionTypeId,
@@ -27,7 +35,10 @@ internal sealed class CreateBankQuestion : IEndpoint
 					request.CorrectAnswer,
 					request.Explanation,
 					request.Difficulty,
-					request.IsActive);
+					request.IsActive,
+					request.MediaType ?? "NONE",
+					request.MediaUrl,
+					mediaMetadata);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchCreated("GetBankQuestionById", id => new { id });
@@ -52,8 +63,11 @@ public sealed record CreateBankQuestionRequest(
 	Guid KnowledgeMeaningId,
 	Guid QuestionTypeId,
 	string Question,
-	IReadOnlyList<QuestionAnswerDto> Answers,
+	IReadOnlyList<QuestionAnswerDto>? Answers,
 	string CorrectAnswer,
 	string? Explanation = null,
 	string Difficulty = "Medium",
-	bool IsActive = true);
+	bool IsActive = true,
+	string? MediaType = "NONE",
+	string? MediaUrl = null,
+	JsonElement? MediaMetadata = null);

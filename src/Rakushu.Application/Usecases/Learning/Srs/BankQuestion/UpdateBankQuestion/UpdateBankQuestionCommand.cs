@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.UpdateBankQuestion;
@@ -6,7 +6,10 @@ namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.UpdateBankQuest
 public sealed record UpdateBankQuestionCommand(
 	Guid Id,
 	string Question,
-	IReadOnlyList<QuestionAnswerDto> Answers,
+	IReadOnlyList<QuestionAnswerDto>? Answers,
 	string CorrectAnswer,
 	string? Explanation = null,
-	string Difficulty = "Medium") : IRequest<Result>;
+	string Difficulty = "Medium",
+	string? MediaType = null,
+	string? MediaUrl = null,
+	string? MediaMetadata = null) : IRequest<Result>;

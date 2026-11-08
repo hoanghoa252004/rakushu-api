@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
@@ -51,10 +51,23 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 
 		builder.Property(bq => bq.CorrectAnswer)
 			.HasColumnName("correct_answer")
-			.HasMaxLength(50)
+			.HasMaxLength(500)
 			.IsRequired();
 
 		builder.Property(bq => bq.Explanation);
+
+		builder.Property(bq => bq.MediaType)
+			.HasColumnName("media_type")
+			.HasMaxLength(20)
+			.IsRequired()
+			.HasDefaultValue("NONE");
+
+		builder.Property(bq => bq.MediaUrl)
+			.HasColumnName("media_url");
+
+		builder.Property(bq => bq.MediaMetadata)
+			.HasColumnName("media_metadata")
+			.HasColumnType("jsonb");
 
 		builder.Property(bq => bq.Difficulty)
 			.HasMaxLength(20)

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
@@ -102,7 +102,8 @@ internal sealed class SubmitQuizAttemptAnswerHandler : IRequestHandler<SubmitQui
 		correctOptionId = correctOptionId.Trim(' ', '\t', '\r', '\n', '\u3000');
 
 		bool isTyping = string.Equals(questionTypeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
-		               string.Equals(questionTypeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
+		               string.Equals(questionTypeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase) ||
+		               string.Equals(questionTypeCode, "AUDIO_DICTATION", StringComparison.OrdinalIgnoreCase);
 
 		if (!isTyping)
 		{

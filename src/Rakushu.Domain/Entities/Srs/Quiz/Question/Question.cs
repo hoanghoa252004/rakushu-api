@@ -1,4 +1,4 @@
-using Rakushu.Domain.Common;
+﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.QuestionType;
@@ -15,6 +15,9 @@ public sealed class Question : Entity<QuestionId>
 	public string QuestionText { get; private set; } = null!;
 	public string Answers { get; private set; } = "[]";
 	public string CorrectAnswer { get; private set; } = null!;
+	public string MediaType { get; private set; } = "NONE";
+	public string? MediaUrl { get; private set; }
+	public string? MediaMetadata { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	public Quiz Quiz { get; private set; } = null!;
@@ -31,7 +34,10 @@ public sealed class Question : Entity<QuestionId>
 		int sequence,
 		string questionText,
 		string answers,
-		string correctAnswer)
+		string correctAnswer,
+		string mediaType = "NONE",
+		string? mediaUrl = null,
+		string? mediaMetadata = null)
 	{
 		var validation = Validate(savedItemId, bankQuestionId, sequence, questionText, correctAnswer);
 		if (validation.IsFailure)
@@ -44,7 +50,10 @@ public sealed class Question : Entity<QuestionId>
 			Sequence = sequence,
 			QuestionText = questionText.Trim(),
 			Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim(),
-			CorrectAnswer = correctAnswer.Trim()
+			CorrectAnswer = correctAnswer.Trim(),
+			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant(),
+			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim(),
+			MediaMetadata = string.IsNullOrWhiteSpace(mediaMetadata) ? null : mediaMetadata.Trim()
 		});
 	}
 

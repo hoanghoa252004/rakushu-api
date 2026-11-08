@@ -18,7 +18,10 @@ public sealed record BankQuestionSummaryDto(
 	string Question,
 	string Difficulty,
 	bool IsActive,
-	DateTimeOffset CreatedAt);
+	DateTimeOffset CreatedAt,
+	string MediaType = "NONE",
+	string? MediaUrl = null,
+	QuestionMediaMetadataDto? MediaMetadata = null);
 
 public sealed record BankQuestionDetailDto(
 	Guid Id,
@@ -34,4 +37,7 @@ public sealed record BankQuestionDetailDto(
 	string Difficulty,
 	bool IsActive,
 	DateTimeOffset CreatedAt,
-	DateTimeOffset UpdatedAt);
+	DateTimeOffset UpdatedAt,
+	string MediaType = "NONE",
+	string? MediaUrl = null,
+	QuestionMediaMetadataDto? MediaMetadata = null);

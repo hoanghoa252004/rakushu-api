@@ -44,7 +44,10 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 			bq.Question,
 			bq.Difficulty,
 			bq.IsActive,
-			bq.CreatedAt)).ToList();
+			bq.CreatedAt,
+			bq.MediaType,
+			bq.MediaUrl,
+			QuestionMediaMetadataParser.Parse(bq.MediaMetadata))).ToList();
 
 		return Result.Success<IReadOnlyList<BankQuestionSummaryDto>>(dtos);
 	}

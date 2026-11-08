@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.AiService;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
@@ -244,8 +244,8 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 				if (matchingQuestions.Count == 0)
 					continue;
 
-				// Pick first or random matching question
-				var bankQ = matchingQuestions[Random.Shared.Next(matchingQuestions.Count)];
+				// Pick question adaptively based on item's SRS repetition level
+				var bankQ = SrsQuestionSelector.PickQuestionForSrsStage(item, matchingQuestions);
 
 				var questionResult = Question.Create(
 					item.Id,
@@ -253,7 +253,10 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 					position,
 					bankQ.Question,
 					bankQ.Answers,
-					bankQ.CorrectAnswer);
+					bankQ.CorrectAnswer,
+					bankQ.MediaType,
+					bankQ.MediaUrl,
+					bankQ.MediaMetadata);
 
 				if (questionResult.IsFailure)
 					continue;

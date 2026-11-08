@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
@@ -20,13 +21,23 @@ internal sealed class UpdateBankQuestion : IEndpoint
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
+				string? mediaMetadata = request.MediaMetadata switch
+				{
+					{ ValueKind: JsonValueKind.String } el => el.GetString(),
+					{ ValueKind: JsonValueKind.Object } el => el.GetRawText(),
+					_ => null
+				};
+
 				var command = new UpdateBankQuestionCommand(
 					id,
 					request.Question,
 					request.Answers,
 					request.CorrectAnswer,
 					request.Explanation,
-					request.Difficulty);
+					request.Difficulty,
+					request.MediaType,
+					request.MediaUrl,
+					mediaMetadata);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchNoContent();
@@ -49,7 +60,10 @@ internal sealed class UpdateBankQuestion : IEndpoint
 
 public sealed record UpdateBankQuestionRequest(
 	string Question,
-	IReadOnlyList<QuestionAnswerDto> Answers,
+	IReadOnlyList<QuestionAnswerDto>? Answers,
 	string CorrectAnswer,
 	string? Explanation = null,
-	string Difficulty = "Medium");
+	string Difficulty = "Medium",
+	string? MediaType = null,
+	string? MediaUrl = null,
+	JsonElement? MediaMetadata = null);
