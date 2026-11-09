@@ -1,8 +1,8 @@
 using Rakushu.Domain.Entities.Srs.SavedItem;
 
-namespace Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionTarget;
+namespace Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard;
 
-public sealed class FlashcardSessionTarget
+public sealed class FlashcardSessionCard
 {
 	public FlashcardSessionId FlashcardSessionId { get; private set; } = null!;
 	public SavedItemId SavedItemId { get; private set; } = null!;
@@ -11,13 +11,13 @@ public sealed class FlashcardSessionTarget
 	public FlashcardSession FlashcardSession { get; private set; } = null!;
 	public SavedItem.SavedItem SavedItem { get; private set; } = null!;
 
-	private FlashcardSessionTarget() { }
+	private FlashcardSessionCard() { }
 
-	public static FlashcardSessionTarget Create(
+	public static FlashcardSessionCard Create(
 		FlashcardSessionId sessionId,
 		SavedItemId savedItemId)
 	{
-		return new FlashcardSessionTarget
+		return new FlashcardSessionCard
 		{
 			FlashcardSessionId = sessionId,
 			SavedItemId = savedItemId

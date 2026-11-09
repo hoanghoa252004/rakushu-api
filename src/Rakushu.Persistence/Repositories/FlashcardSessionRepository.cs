@@ -15,7 +15,7 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.FlashcardSessions
-			.Include(fs => fs.Targets)
+			.Include(fs => fs.Cards)
 				.ThenInclude(t => t.SavedItem)
 					.ThenInclude(si => si.KnowledgeMeaning)
 						.ThenInclude(km => km.KnowledgeUnit)
@@ -31,7 +31,7 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.FlashcardSessions
-			.Include(fs => fs.Targets)
+			.Include(fs => fs.Cards)
 				.ThenInclude(t => t.SavedItem)
 					.ThenInclude(si => si.KnowledgeMeaning)
 						.ThenInclude(km => km.KnowledgeUnit)
@@ -52,7 +52,7 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		var query = _context.FlashcardSessions
-			.Include(fs => fs.Targets)
+			.Include(fs => fs.Cards)
 			.Include(fs => fs.Items)
 			.Where(fs => fs.UserId == userId);
 
@@ -77,7 +77,7 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.FlashcardSessions
-			.Include(fs => fs.Targets)
+			.Include(fs => fs.Cards)
 				.ThenInclude(t => t.SavedItem)
 					.ThenInclude(si => si.KnowledgeMeaning)
 						.ThenInclude(km => km.KnowledgeUnit)

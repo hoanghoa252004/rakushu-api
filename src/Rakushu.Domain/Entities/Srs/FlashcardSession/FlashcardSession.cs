@@ -2,7 +2,7 @@ using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using FlashcardSessionItemEntity = Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem;
-using FlashcardSessionTargetEntity = Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionTarget.FlashcardSessionTarget;
+using FlashcardSessionCardEntity = Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard.FlashcardSessionCard;
 
 namespace Rakushu.Domain.Entities.Srs.FlashcardSession;
 
@@ -16,8 +16,8 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 	public DateTimeOffset ExpiresAt { get; private set; }
 	public DateTimeOffset? CompletedAt { get; private set; }
 
-	private readonly List<FlashcardSessionTargetEntity> _targets = [];
-	public IReadOnlyCollection<FlashcardSessionTargetEntity> Targets => _targets.AsReadOnly();
+	private readonly List<FlashcardSessionCardEntity> _cards = [];
+	public IReadOnlyCollection<FlashcardSessionCardEntity> Cards => _cards.AsReadOnly();
 
 	private readonly List<FlashcardSessionItemEntity> _items = [];
 	public IReadOnlyCollection<FlashcardSessionItemEntity> Items => _items.AsReadOnly();
@@ -47,9 +47,9 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 		});
 	}
 
-	public void AddTarget(FlashcardSessionTargetEntity target)
+	public void AddCard(FlashcardSessionCardEntity card)
 	{
-		_targets.Add(target);
+		_cards.Add(card);
 	}
 
 	public void AddItem(FlashcardSessionItemEntity item)

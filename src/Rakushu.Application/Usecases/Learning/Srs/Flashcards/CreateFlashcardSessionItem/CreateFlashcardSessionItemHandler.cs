@@ -71,9 +71,9 @@ internal sealed class CreateFlashcardSessionItemHandler : IRequestHandler<Create
 
 			var savedItemId = SavedItemId.From(request.SavedItemId);
 
-			// Validate target item exists in this session
-			if (!session.Targets.Any(t => t.SavedItemId == savedItemId))
-				return Result.Failure<Guid>(FlashcardSessionErrors.TargetNotFound);
+			// Validate card exists in this session
+			if (!session.Cards.Any(c => c.SavedItemId == savedItemId))
+				return Result.Failure<Guid>(FlashcardSessionErrors.CardNotFound);
 
 			// Check if already reviewed in this session
 			if (session.Items.Any(i => i.SavedItemId == savedItemId))

@@ -77,23 +77,23 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 			await _unitOfWork.SaveChangesAsync(cancellationToken);
 		}
 
-		var meaningGuids = session.Targets
-			.Where(t => t.SavedItem != null)
-			.Select(t => t.SavedItem.KnowledgeMeaningId.Value)
+		var meaningGuids = session.Cards
+			.Where(c => c.SavedItem != null)
+			.Select(c => c.SavedItem.KnowledgeMeaningId.Value)
 			.Distinct()
 			.ToList();
 
 		var meaningContexts = await _learningUnitRepository.GetMediaContextsByMeaningIdsAsync(meaningGuids, maxVideosPerMeaning: 5, cancellationToken);
 
-		var itemDtos = new List<FlashcardItemDto>(session.Targets.Count);
+		var itemDtos = new List<FlashcardItemDto>(session.Cards.Count);
 
-		foreach (var target in session.Targets)
+		foreach (var card in session.Cards)
 		{
-			var savedItem = target.SavedItem;
+			var savedItem = card.SavedItem;
 			if (savedItem is null)
 				continue;
 
-			var reviewedItem = session.Items.FirstOrDefault(i => i.SavedItemId == target.SavedItemId);
+			var reviewedItem = session.Items.FirstOrDefault(i => i.SavedItemId == card.SavedItemId);
 
 			var videoContextDtos = new List<FlashcardMediaContextDto>();
 			if (meaningContexts.TryGetValue(savedItem.KnowledgeMeaningId.Value, out var mediaList))
@@ -147,7 +147,7 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 			session.CreatedAt,
 			session.ExpiresAt,
 			session.CompletedAt,
-			session.Targets.Count,
+			session.Cards.Count,
 			itemDtos));
 	}
 }

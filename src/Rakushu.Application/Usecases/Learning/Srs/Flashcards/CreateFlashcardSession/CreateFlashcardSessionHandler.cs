@@ -6,7 +6,7 @@ using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
-using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionTarget;
+using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.CreateFlashcardSession;
@@ -94,10 +94,10 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 
 			var session = sessionResult.Value;
 
-			// Add targets (the cards to study in this session)
+			// Add cards (the cards to study in this session)
 			foreach (var savedItem in eligibleItems)
 			{
-				session.AddTarget(FlashcardSessionTarget.Create(session.Id, savedItem.Id));
+				session.AddCard(FlashcardSessionCard.Create(session.Id, savedItem.Id));
 			}
 
 			_flashcardSessionRepository.Add(session);

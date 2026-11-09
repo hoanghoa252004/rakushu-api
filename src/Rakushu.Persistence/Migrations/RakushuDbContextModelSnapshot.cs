@@ -1662,6 +1662,25 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("flashcard_sessions", "srs");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard.FlashcardSessionCard", b =>
+                {
+                    b.Property<Guid>("FlashcardSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("flashcard_session_id");
+
+                    b.Property<Guid>("SavedItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("saved_item_id");
+
+                    b.HasKey("FlashcardSessionId", "SavedItemId")
+                        .HasName("pk_flashcard_session_cards");
+
+                    b.HasIndex("SavedItemId")
+                        .HasDatabaseName("ix_flashcard_session_cards_saved_item_id");
+
+                    b.ToTable("flashcard_session_cards", "srs");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1696,25 +1715,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasDatabaseName("ix_flashcard_session_items_saved_item_id");
 
                     b.ToTable("flashcard_session_items", "srs");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionTarget.FlashcardSessionTarget", b =>
-                {
-                    b.Property<Guid>("FlashcardSessionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("flashcard_session_id");
-
-                    b.Property<Guid>("SavedItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("saved_item_id");
-
-                    b.HasKey("FlashcardSessionId", "SavedItemId")
-                        .HasName("pk_flashcard_session_targets");
-
-                    b.HasIndex("SavedItemId")
-                        .HasDatabaseName("ix_flashcard_session_targets_saved_item_id");
-
-                    b.ToTable("flashcard_session_targets", "srs");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.QuestionType.QuestionType", b =>
@@ -2930,6 +2930,27 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard.FlashcardSessionCard", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSession", "FlashcardSession")
+                        .WithMany("Cards")
+                        .HasForeignKey("FlashcardSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_flashcard_session_cards_flashcard_sessions_flashcard_sessio");
+
+                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", "SavedItem")
+                        .WithMany()
+                        .HasForeignKey("SavedItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_flashcard_session_cards_saved_items_saved_item_id");
+
+                    b.Navigation("FlashcardSession");
+
+                    b.Navigation("SavedItem");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSession", "FlashcardSession")
@@ -2945,27 +2966,6 @@ namespace Rakushu.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_flashcard_session_items_saved_items_saved_item_id");
-
-                    b.Navigation("FlashcardSession");
-
-                    b.Navigation("SavedItem");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionTarget.FlashcardSessionTarget", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSession", "FlashcardSession")
-                        .WithMany("Targets")
-                        .HasForeignKey("FlashcardSessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_flashcard_session_targets_flashcard_sessions_flashcard_sess");
-
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", "SavedItem")
-                        .WithMany()
-                        .HasForeignKey("SavedItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_flashcard_session_targets_saved_items_saved_item_id");
 
                     b.Navigation("FlashcardSession");
 
@@ -3351,9 +3351,9 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSession", b =>
                 {
-                    b.Navigation("Items");
+                    b.Navigation("Cards");
 
-                    b.Navigation("Targets");
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.Quiz.Quiz", b =>

@@ -76,7 +76,7 @@ internal sealed class GetFlashcardSessionResultHandler : IRequestHandler<GetFlas
 			session.Id.Value,
 			session.Status.ToString(),
 			session.CompletedAt,
-			session.Targets.Count,
+			session.Cards.Count,
 			forgotCount,
 			hardCount,
 			easyCount,

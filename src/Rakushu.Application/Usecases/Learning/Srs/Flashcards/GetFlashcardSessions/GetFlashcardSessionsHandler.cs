@@ -60,7 +60,7 @@ internal sealed class GetFlashcardSessionsHandler : IRequestHandler<GetFlashcard
 			return new FlashcardSessionSummaryDto(
 				s.Id.Value,
 				currentStatus.ToString(),
-				s.Targets.Count,
+				s.Cards.Count,
 				s.Items.Count,
 				s.CreatedAt,
 				s.ExpiresAt,

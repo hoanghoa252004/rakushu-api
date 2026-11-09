@@ -52,9 +52,11 @@ public static class FlashcardSessionErrors
 		"FLASHCARD_SESSION.ITEM_NOT_FOUND",
 		"One or more flashcard items do not belong to this session.");
 
-	public static readonly Error TargetNotFound = Error.NotFound(
-		"FLASHCARD_SESSION.TARGET_NOT_FOUND",
+	public static readonly Error CardNotFound = Error.NotFound(
+		"FLASHCARD_SESSION.CARD_NOT_FOUND",
 		"Specified saved item is not part of this flashcard session.");
+
+	public static readonly Error TargetNotFound = CardNotFound;
 
 	public static readonly Error ItemAlreadyReviewed = Error.Conflict(
 		"FLASHCARD_SESSION.ITEM_ALREADY_REVIEWED",
