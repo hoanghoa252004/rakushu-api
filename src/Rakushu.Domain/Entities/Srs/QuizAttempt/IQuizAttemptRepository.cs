@@ -31,6 +31,10 @@ public interface IQuizAttemptRepository : IBaseRepository<QuizAttempt, QuizAttem
 		QuizAttemptId excludeAttemptId,
 		int maxEntriesPerItem = 3,
 		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<QuizAttemptId>> GetPendingEvaluationAttemptIdsAsync(
+		int maxCount,
+		CancellationToken cancellationToken = default);
 }
 
 public sealed record QuizItemAnswerHistory(

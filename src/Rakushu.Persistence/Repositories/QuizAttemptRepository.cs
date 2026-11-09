@@ -154,4 +154,17 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 					.Select(entry => entry.Item)
 					.ToArray());
 	}
+
+	public async Task<IReadOnlyList<QuizAttemptId>> GetPendingEvaluationAttemptIdsAsync(
+		int maxCount,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.QuizAttempts
+			.AsNoTracking()
+			.Where(a => a.Status == QuizAttemptStatus.Completed && !a.IsEvaluated)
+			.OrderBy(a => a.CompletedAt)
+			.Take(maxCount)
+			.Select(a => a.Id)
+			.ToListAsync(cancellationToken);
+	}
 }

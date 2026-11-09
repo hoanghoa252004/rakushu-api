@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
@@ -15,7 +14,6 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IQuizAttemptSrsService _quizAttemptSrsService;
-	private readonly IServiceScopeFactory _scopeFactory;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public SubmitQuizAttemptHandler(
@@ -23,14 +21,12 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IQuizAttemptSrsService quizAttemptSrsService,
-		IServiceScopeFactory scopeFactory,
 		IUnitOfWork unitOfWork)
 	{
 		_quizAttemptRepository = quizAttemptRepository;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_quizAttemptSrsService = quizAttemptSrsService;
-		_scopeFactory = scopeFactory;
 		_unitOfWork = unitOfWork;
 	}
 
@@ -94,19 +90,6 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 
 			_quizAttemptRepository.Update(attempt);
 
-			_ = Task.Run(async () =>
-			{
-				try
-				{
-					using var scope = _scopeFactory.CreateScope();
-					var feedbackService = scope.ServiceProvider.GetRequiredService<IQuizAttemptFeedbackService>();
-					await feedbackService.GenerateFeedbackAsync(attemptId, CancellationToken.None);
-				}
-				catch
-				{
-					// Ignored or logged within feedbackService
-				}
-			});
 
 			return Result.Success();
 		}, cancellationToken);

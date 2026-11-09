@@ -6,7 +6,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
-namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
+namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.EvaluatePendingQuizAttempts;
 
 public interface IQuizAttemptFeedbackService
 {
@@ -42,7 +42,7 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 		CancellationToken cancellationToken = default)
 	{
 		var attempt = await _attemptRepository.GetByIdWithItemsAndQuizAsync(attemptId, cancellationToken);
-		if (attempt is null)
+		if (attempt is null || attempt.IsEvaluated)
 			return;
 
 		var userId = attempt.UserId;
@@ -162,6 +162,9 @@ internal sealed class QuizAttemptFeedbackService : IQuizAttemptFeedbackService
 				var freshAttempt = await _attemptRepository.GetByIdWithItemsAndQuizAsync(attemptId, cancellationToken);
 				if (freshAttempt is null)
 					return Result.Failure(QuizAttemptErrors.NotFound);
+
+				if (freshAttempt.IsEvaluated)
+					return Result.Success();
 
 				foreach (var item in freshAttempt.Items)
 				{
