@@ -65,6 +65,7 @@ public sealed record QuizAnswerResultDto(
 
 public sealed record QuizAttemptResultDto(
 	Guid Id,
+	Guid QuizId,
 	string Mode,
 	string Status,
 	decimal Score,

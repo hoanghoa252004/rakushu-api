@@ -16,7 +16,7 @@ internal sealed class GetQuizAttempts : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
+		app.MapSrsAttemptEndpoints()
 			.MapGet("/", async (
 				ISender sender,
 				[FromQuery] string? status = null,

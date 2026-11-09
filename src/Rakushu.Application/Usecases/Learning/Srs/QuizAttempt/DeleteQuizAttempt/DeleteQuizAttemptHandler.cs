@@ -1,5 +1,6 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
@@ -12,15 +13,18 @@ internal sealed class DeleteQuizAttemptHandler : IRequestHandler<DeleteQuizAttem
 {
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly ICurrentUserContext _currentUserContext;
+	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public DeleteQuizAttemptHandler(
 		IQuizAttemptRepository quizAttemptRepository,
 		ICurrentUserContext currentUserContext,
+		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_quizAttemptRepository = quizAttemptRepository;
 		_currentUserContext = currentUserContext;
+		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
 
@@ -44,10 +48,12 @@ internal sealed class DeleteQuizAttemptHandler : IRequestHandler<DeleteQuizAttem
 			if (attempt.UserId != userId)
 				return Result.Failure(QuizAttemptErrors.NotFound);
 
-			if (attempt.AnsweredItems > 0)
-				return Result.Failure(QuizAttemptErrors.CannotDeleteAttemptWithAnswers);
+			var now = _systemClock.UtcNow;
+			var cancelResult = attempt.Cancel(now);
+			if (cancelResult.IsFailure)
+				return cancelResult;
 
-			_quizAttemptRepository.Delete(attempt);
+			_quizAttemptRepository.Update(attempt);
 			return Result.Success();
 		}, cancellationToken);
 	}

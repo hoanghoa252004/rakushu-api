@@ -15,20 +15,20 @@ internal sealed class GetQuizAttempt : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
-			.MapGet("/{id:guid}", async (
-				[FromRoute] Guid id,
+		app.MapSrsAttemptEndpoints()
+			.MapGet("/{attemptId:guid}", async (
+				[FromRoute] Guid attemptId,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var query = new GetQuizAttemptQuery(id);
+				var query = new GetQuizAttemptQuery(attemptId);
 
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetQuizAttempt")
 			.WithSummary("Learner")
-			.WithDescription("Retrieves the details and questions of a quiz attempt across any status (InProgress, Completed, Expired). Masks answer keys while in-progress.")
+			.WithDescription("Retrieves the details and questions of a quiz attempt across any status (InProgress, Completed, Expired). Masks answer keys and score while in-progress.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<QuizAttemptDetailDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status400BadRequest)

@@ -35,10 +35,6 @@ internal sealed class QuizAttemptItemConfiguration : IEntityTypeConfiguration<Qu
 			.HasForeignKey(qai => qai.QuestionId)
 			.OnDelete(DeleteBehavior.Cascade);
 
-		builder.Property(qai => qai.Sequence)
-			.HasColumnName("sequence")
-			.IsRequired();
-
 		builder.Property(qai => qai.SelectedAnswer)
 			.HasColumnName("selected_answer")
 			.HasMaxLength(255);

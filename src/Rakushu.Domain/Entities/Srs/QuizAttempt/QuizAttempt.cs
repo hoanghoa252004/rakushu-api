@@ -8,12 +8,12 @@ namespace Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 {
-	public static readonly TimeSpan DefaultDuration = TimeSpan.FromHours(1);
+	private static readonly TimeSpan DefaultDuration = TimeSpan.FromHours(1);
 
 	public UserId UserId { get; private set; } = null!;
 	public QuizId QuizId { get; private set; } = null!;
-	public QuizAttemptStatus Status { get; private set; } = QuizAttemptStatus.InProgress;
-	public QuizAttemptMode Mode { get; private set; } = QuizAttemptMode.SrsReview;
+	public QuizAttemptStatus Status { get; private set; }
+	public QuizAttemptMode Mode { get; private set; }
 	public int TotalItems { get; private set; }
 	public int AnsweredItems { get; private set; }
 	public int CorrectItems { get; private set; }
@@ -38,6 +38,7 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		UserId userId,
 		QuizId quizId,
 		DateTimeOffset now,
+		int totalItems,
 		QuizAttemptMode mode = QuizAttemptMode.SrsReview,
 		TimeSpan? duration = null)
 	{
@@ -45,13 +46,19 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		if (validation.IsFailure)
 			return Result.Failure<QuizAttempt>(validation.Error);
 
-		var effectiveDuration = duration ?? DefaultDuration;
+		var effectiveDuration = duration.HasValue && duration.Value > TimeSpan.Zero
+			? duration.Value
+			: DefaultDuration;
 
 		return Result.Success(new QuizAttempt(QuizAttemptId.Create())
 		{
 			UserId = userId,
 			QuizId = quizId,
 			Mode = mode,
+			TotalItems = Math.Max(0, totalItems),
+			AnsweredItems = 0,
+			CorrectItems = 0,
+			Score = null,
 			Status = QuizAttemptStatus.InProgress,
 			IsEvaluated = false,
 			ExpiresAt = now.Add(effectiveDuration),
@@ -60,29 +67,43 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		});
 	}
 
+	public static Result<QuizAttempt> Create(
+		UserId userId,
+		QuizId quizId,
+		DateTimeOffset now,
+		QuizAttemptMode mode,
+		TimeSpan? duration = null) =>
+		Create(userId, quizId, now, 0, mode, duration);
+
+	public void SetTotalItems(int totalItems)
+	{
+		TotalItems = Math.Max(0, totalItems);
+	}
+
 	public Result AddItem(QuizAttemptItem.QuizAttemptItem item)
 	{
-		if (Status != QuizAttemptStatus.InProgress)
-			return Result.Failure(QuizAttemptErrors.NotInProgress);
+		if (item is null)
+			return Result.Failure(QuizAttemptItemErrors.InvalidQuestionId);
 
-		item.AssignToAttempt(Id, _items.Count + 1);
+		if (_items.Any(i => i.QuestionId == item.QuestionId))
+			return Result.Failure(QuizAttemptErrors.QuestionAlreadyAnswered);
+
+		item.AssignToAttempt(Id);
 		_items.Add(item);
-		TotalItems = _items.Count;
+
+		if (item.AnsweredAt.HasValue)
+		{
+			AnsweredItems++;
+			if (item.IsCorrect == true)
+				CorrectItems++;
+		}
+
 		return Result.Success();
 	}
 
-	public bool HasAnyAnsweredItems => _items.Any(i => i.AnsweredAt != null);
-
 	public IReadOnlyList<QuizAttemptItem.QuizAttemptItem> PruneUnansweredItems()
 	{
-		var unanswered = _items.Where(i => !i.AnsweredAt.HasValue).ToList();
-		_items.RemoveAll(i => !i.AnsweredAt.HasValue);
-		TotalItems = _items.Count;
-		for (int i = 0; i < _items.Count; i++)
-		{
-			_items[i].ReSequence(i + 1);
-		}
-		return unanswered;
+		return [];
 	}
 
 	public IReadOnlyList<QuizAttemptItem.QuizAttemptItem> ExpireAndPrune(DateTimeOffset now)
@@ -96,6 +117,9 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 	{
 		if (Status == QuizAttemptStatus.Completed)
 			return Result.Failure(QuizAttemptErrors.AlreadyCompleted);
+
+		if (Status == QuizAttemptStatus.Canceled)
+			return Result.Failure(QuizAttemptErrors.AlreadyCanceled);
 
 		if (now > ExpiresAt)
 		{
@@ -129,6 +153,28 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		Score = TotalItems > 0 ? Math.Round((decimal)CorrectItems / TotalItems * 100, 2) : 0;
 	}
 
+	public Result Cancel(DateTimeOffset now)
+	{
+		if (Status == QuizAttemptStatus.Completed)
+			return Result.Failure(QuizAttemptErrors.AlreadyCompleted);
+
+		if (Status == QuizAttemptStatus.Canceled)
+			return Result.Failure(QuizAttemptErrors.AlreadyCanceled);
+
+		if (Status != QuizAttemptStatus.InProgress)
+			return Result.Failure(QuizAttemptErrors.NotInProgress);
+
+		Status = QuizAttemptStatus.Canceled;
+		CompletedAt = now;
+		UpdatedAt = now;
+
+		AnsweredItems = _items.Count(i => i.AnsweredAt.HasValue);
+		CorrectItems = _items.Count(i => i.IsCorrect == true);
+		Score = null;
+
+		return Result.Success();
+	}
+
 	public void MarkEvaluated(DateTimeOffset now)
 	{
 		IsEvaluated = true;
@@ -155,4 +201,6 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 
 		return Result.Success();
 	}
+
+	public bool HasAnyAnsweredItems => _items.Any(i => i.AnsweredAt.HasValue);
 }

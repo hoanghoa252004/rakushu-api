@@ -14,25 +14,26 @@ internal sealed class SubmitQuizAttempt : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
-			.MapPut("/{id:guid}/submit", async (
-				[FromRoute] Guid id,
+		app.MapSrsAttemptEndpoints()
+			.MapPatch("/{attemptId:guid}/submit", async (
+				[FromRoute] Guid attemptId,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new SubmitQuizAttemptCommand(id);
+				var command = new SubmitQuizAttemptCommand(attemptId);
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				return result.MatchNoContent();
 			})
 			.WithName("SubmitQuizAttempt")
 			.WithSummary("Learner")
-			.WithDescription("Submits an in-progress quiz attempt, marks it as Completed, finalizes the score, and triggers asynchronous AI feedback.")
+			.WithDescription("Submits an in-progress quiz attempt, marks it as Completed, finalizes the score, updates SM-2 SRS schedules, and triggers asynchronous AI evaluation.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
-			.Produces(StatusCodes.Status200OK)
+			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }

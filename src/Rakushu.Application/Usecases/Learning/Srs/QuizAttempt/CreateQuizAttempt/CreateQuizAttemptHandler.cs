@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.AiService;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
@@ -18,6 +18,7 @@ using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 
 using BankQuestionEntity = Rakushu.Domain.Entities.Srs.BankQuestion.BankQuestion;
+using QuizEntity = Rakushu.Domain.Entities.Srs.Quiz.Quiz;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.CreateQuizAttempt;
 
@@ -78,19 +79,12 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			{
 				if (activeAttempt.IsExpired(now))
 				{
-					if (!activeAttempt.HasAnyAnsweredItems)
+					activeAttempt.Expire(now);
+					if (activeAttempt.HasAnyAnsweredItems)
 					{
-						_quizAttemptRepository.Delete(activeAttempt);
+						await _quizAttemptSrsService.ApplySrsUpdatesAsync(activeAttempt, now, cancellationToken);
 					}
-					else
-					{
-						var unanswered = activeAttempt.ExpireAndPrune(now);
-						if (unanswered.Count > 0)
-						{
-							_quizAttemptRepository.RemoveItems(unanswered);
-						}
-						_quizAttemptRepository.Update(activeAttempt);
-					}
+					_quizAttemptRepository.Update(activeAttempt);
 				}
 				else
 				{
@@ -228,7 +222,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			if (bankQuestions.Count == 0)
 				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
 
-			var quizResult = Quiz.Create(userId, now);
+			var quizResult = QuizEntity.Create(userId, now);
 			if (quizResult.IsFailure)
 				return Result.Failure<Guid>(quizResult.Error);
 
@@ -274,20 +268,12 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 				? QuizAttemptMode.PracticeAll
 				: QuizAttemptMode.SrsReview;
 
-			var attemptResult = Domain.Entities.Srs.QuizAttempt.QuizAttempt.Create(userId, quiz.Id, now, attemptMode);
+			var attemptResult = Domain.Entities.Srs.QuizAttempt.QuizAttempt.Create(
+				userId, quiz.Id, now, quiz.TotalQuestions, attemptMode);
 			if (attemptResult.IsFailure)
 				return Result.Failure<Guid>(attemptResult.Error);
 
 			var attempt = attemptResult.Value;
-
-			foreach (var question in quiz.Questions.OrderBy(q => q.Sequence))
-			{
-				var attemptItemResult = QuizAttemptItem.Create(question.Id, question.Sequence);
-				if (attemptItemResult.IsSuccess)
-				{
-					attempt.AddItem(attemptItemResult.Value);
-				}
-			}
 
 			_quizRepository.Add(quiz);
 			_quizAttemptRepository.Add(attempt);

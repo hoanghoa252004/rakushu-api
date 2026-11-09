@@ -15,13 +15,13 @@ internal sealed class GetQuizAttemptResult : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
-			.MapGet("/{id:guid}/result", async (
-				[FromRoute] Guid id,
+		app.MapSrsAttemptEndpoints()
+			.MapGet("/{attemptId:guid}/result", async (
+				[FromRoute] Guid attemptId,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var query = new GetQuizAttemptResultQuery(id);
+				var query = new GetQuizAttemptResultQuery(attemptId);
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})

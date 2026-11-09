@@ -14,26 +14,27 @@ internal sealed class DeleteQuizAttempt : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
-			.MapDelete("/{id:guid}", async (
-				[FromRoute] Guid id,
+		app.MapSrsAttemptEndpoints()
+			.MapDelete("/{attemptId:guid}", async (
+				[FromRoute] Guid attemptId,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new DeleteQuizAttemptCommand(id);
+				var command = new DeleteQuizAttemptCommand(attemptId);
 
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				return result.MatchNoContent();
 			})
 			.WithName("DeleteQuizAttempt")
 			.WithSummary("Learner")
-			.WithDescription("Hard-deletes an unanswered quiz attempt.")
+			.WithDescription("Cancels an in-progress quiz attempt (soft cancel).")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
-			.Produces(StatusCodes.Status200OK)
+			.Produces(StatusCodes.Status204NoContent)
 			.ProducesProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }

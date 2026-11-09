@@ -44,10 +44,15 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 		var answerResults = new List<QuizAnswerResultDto>(attempt.Items.Count);
 		var presignedUrlCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-		foreach (var item in attempt.Items.OrderBy(i => i.Sequence))
+		var orderedItems = attempt.Items
+			.Select(i => new { Item = i, Question = questionsDict.GetValueOrDefault(i.QuestionId) })
+			.Where(x => x.Question is not null)
+			.OrderBy(x => x.Question!.Sequence);
+
+		foreach (var entry in orderedItems)
 		{
-			if (!questionsDict.TryGetValue(item.QuestionId, out var question))
-				continue;
+			var item = entry.Item;
+			var question = entry.Question!;
 
 			bool isSkip = QuizAnswerHelper.IsSkip(item.SelectedAnswer);
 			bool isCorrect = item.IsCorrect ?? false;
@@ -90,37 +95,38 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 				}
 			}
 
-			var parsedMetadata = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
+			var mediaMetadataDto = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
 
 			answerResults.Add(new QuizAnswerResultDto(
-				item.Id.Value,
-				item.Sequence,
-				question.QuestionText,
-				choices,
-				item.SelectedAnswer,
-				question.CorrectAnswer,
-				isCorrect,
-				timeSpentMs,
-				quality,
-				item.Feedback,
-				question.BankQuestion?.Explanation,
-				typeCode,
-				question.MediaType,
-				resolvedMediaUrl,
-				parsedMetadata));
+				ItemId: question.Id.Value,
+				Sequence: question.Sequence,
+				Question: question.QuestionText,
+				Choices: choices,
+				SelectedAnswer: item.SelectedAnswer,
+				CorrectAnswer: question.CorrectAnswer,
+				IsCorrect: isCorrect,
+				TimeSpentMs: timeSpentMs,
+				Quality: quality,
+				Feedback: item.Feedback,
+				Explanation: question.BankQuestion?.Explanation,
+				QuestionType: typeCode,
+				MediaType: question.MediaType,
+				MediaUrl: resolvedMediaUrl,
+				MediaMetadata: mediaMetadataDto));
 		}
 
 		return Result.Success(new QuizAttemptResultDto(
-			attempt.Id.Value,
-			attempt.Mode.ToString(),
-			attempt.Status.ToString(),
-			attempt.Score ?? 0,
-			attempt.TotalItems,
-			attempt.AnsweredItems,
-			attempt.CorrectItems,
-			attempt.CreatedAt,
-			attempt.CompletedAt,
-			attempt.IsEvaluated,
-			answerResults));
+			Id: attempt.Id.Value,
+			QuizId: attempt.QuizId.Value,
+			Mode: attempt.Mode.ToString(),
+			Status: attempt.Status.ToString(),
+			Score: attempt.Score ?? 0,
+			TotalItems: attempt.TotalItems,
+			AnsweredItems: attempt.AnsweredItems,
+			CorrectItems: attempt.CorrectItems,
+			CreatedAt: attempt.CreatedAt,
+			CompletedAt: attempt.CompletedAt,
+			IsEvaluated: attempt.IsEvaluated,
+			Answers: answerResults));
 	}
 }

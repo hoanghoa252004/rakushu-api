@@ -1950,10 +1950,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("selected_answer");
 
-                    b.Property<int>("Sequence")
-                        .HasColumnType("integer")
-                        .HasColumnName("sequence");
-
                     b.Property<int>("TimeSpentMs")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")

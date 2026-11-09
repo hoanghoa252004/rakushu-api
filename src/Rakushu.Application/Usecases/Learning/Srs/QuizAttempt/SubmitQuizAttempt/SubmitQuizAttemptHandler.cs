@@ -49,6 +49,15 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 			if (attempt is null || attempt.UserId != userId)
 				return Result.Failure(QuizAttemptErrors.NotFound);
 
+			if (attempt.Status == QuizAttemptStatus.Completed)
+				return Result.Failure(QuizAttemptErrors.AlreadyCompleted);
+
+			if (attempt.Status == QuizAttemptStatus.Canceled)
+				return Result.Failure(QuizAttemptErrors.AlreadyCanceled);
+
+			if (attempt.Status == QuizAttemptStatus.Expired)
+				return Result.Failure(QuizAttemptErrors.AttemptExpired);
+
 			if (attempt.Status != QuizAttemptStatus.InProgress)
 				return Result.Failure(QuizAttemptErrors.NotInProgress);
 
@@ -56,21 +65,12 @@ internal sealed class SubmitQuizAttemptHandler : IRequestHandler<SubmitQuizAttem
 
 			if (attempt.IsExpired(now))
 			{
-				if (!attempt.HasAnyAnsweredItems)
+				attempt.Expire(now);
+				if (attempt.HasAnyAnsweredItems)
 				{
-					_quizAttemptRepository.Delete(attempt);
-				}
-				else
-				{
-					var unrated = attempt.ExpireAndPrune(now);
-					if (unrated.Count > 0)
-					{
-						_quizAttemptRepository.RemoveItems(unrated);
-					}
-
 					await _quizAttemptSrsService.ApplySrsUpdatesAsync(attempt, now, cancellationToken);
-					_quizAttemptRepository.Update(attempt);
 				}
+				_quizAttemptRepository.Update(attempt);
 
 				return Result.Failure(QuizAttemptErrors.AttemptExpired);
 			}

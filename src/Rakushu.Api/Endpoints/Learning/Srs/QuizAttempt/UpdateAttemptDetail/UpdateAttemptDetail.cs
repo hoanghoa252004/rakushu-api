@@ -5,45 +5,46 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttemptAnswer;
+using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.UpdateAttemptDetail;
 using Rakushu.Domain.Entities.Identity.Role;
 
-namespace Rakushu.Api.Endpoints.Learning.Srs.QuizAttempt.SubmitQuizAttemptAnswer;
+namespace Rakushu.Api.Endpoints.Learning.Srs.QuizAttempt.UpdateAttemptDetail;
 
-internal sealed class SubmitQuizAttemptAnswer : IEndpoint
+internal sealed class UpdateAttemptDetail : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
-			.MapPut("/{attemptId:guid}/items/{itemId:guid}/answer", async (
+		app.MapSrsAttemptEndpoints()
+			.MapPut("/{attemptId:guid}/details/{detailId:guid}", async (
 				[FromRoute] Guid attemptId,
-				[FromRoute] Guid itemId,
-				[FromBody] SubmitQuizAttemptAnswerRequestDto dto,
+				[FromRoute] Guid detailId,
+				[FromBody] UpdateAttemptDetailRequestDto dto,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new SubmitQuizAttemptAnswerCommand(
+				var command = new UpdateAttemptDetailCommand(
 					attemptId,
-					itemId,
+					detailId,
 					dto.SelectedAnswer,
 					dto.TimeSpentMs);
 
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				return result.MatchNoContent();
 			})
-			.WithName("SubmitQuizAttemptAnswer")
+			.WithName("UpdateAttemptDetail")
 			.WithSummary("Learner")
-			.WithDescription("Submits learner answer for a single quiz item and records elapsed time. Final evaluation and SM-2 spaced repetition updates are applied upon submission. Pass 'SKIP' as SelectedAnswer to skip.")
+			.WithDescription("Updates an existing answer detail before final submission.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
-			.Produces(StatusCodes.Status200OK)
+			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
 
-internal sealed record SubmitQuizAttemptAnswerRequestDto(
-	string SelectedAnswer,
+internal sealed record UpdateAttemptDetailRequestDto(
+	string? SelectedAnswer,
 	int TimeSpentMs);

@@ -48,43 +48,30 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 			QuizAttemptId.From(request.AttemptId),
 			cancellationToken);
 
-		if (attempt is null)
-			return Result.Failure<QuizAttemptDetailDto>(QuizAttemptErrors.NotFound);
-
-		if (attempt.UserId != userId)
+		if (attempt is null || attempt.UserId != userId)
 			return Result.Failure<QuizAttemptDetailDto>(QuizAttemptErrors.NotFound);
 
 		var now = _systemClock.UtcNow;
 		if (attempt.IsExpired(now))
 		{
-			if (!attempt.HasAnyAnsweredItems)
+			attempt.Expire(now);
+			if (attempt.HasAnyAnsweredItems)
 			{
-				_quizAttemptRepository.Delete(attempt);
-				await _unitOfWork.SaveChangesAsync(cancellationToken);
-				return Result.Failure<QuizAttemptDetailDto>(QuizAttemptErrors.AttemptExpired);
+				await _quizAttemptSrsService.ApplySrsUpdatesAsync(attempt, now, cancellationToken);
 			}
-
-			var unanswered = attempt.ExpireAndPrune(now);
-			if (unanswered.Count > 0)
-			{
-				_quizAttemptRepository.RemoveItems(unanswered);
-			}
-
-			await _quizAttemptSrsService.ApplySrsUpdatesAsync(attempt, now, cancellationToken);
 			_quizAttemptRepository.Update(attempt);
 			await _unitOfWork.SaveChangesAsync(cancellationToken);
 		}
 
-		bool isFinished = attempt.Status == QuizAttemptStatus.Completed || attempt.Status == QuizAttemptStatus.Expired;
+		bool isFinished = attempt.Status == QuizAttemptStatus.Completed || attempt.Status == QuizAttemptStatus.Expired || attempt.Status == QuizAttemptStatus.Canceled;
 
-		var questionsDict = attempt.Quiz.Questions.ToDictionary(q => q.Id);
-		var questionDtos = new List<QuizQuestionDto>(attempt.Items.Count);
+		var answeredItemsMap = attempt.Items.ToDictionary(i => i.QuestionId);
+		var questionDtos = new List<QuizQuestionDto>(attempt.Quiz.Questions.Count);
 		var presignedUrlCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-		foreach (var item in attempt.Items.OrderBy(i => i.Sequence))
+		foreach (var question in attempt.Quiz.Questions.OrderBy(q => q.Sequence))
 		{
-			if (!questionsDict.TryGetValue(item.QuestionId, out var question))
-				continue;
+			answeredItemsMap.TryGetValue(question.Id, out var item);
 
 			var typeCode = question.QuestionType?.Code;
 			var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
@@ -117,70 +104,53 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 				}
 			}
 
-			var parsedMetadata = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
+			var rawMetadata = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
+			var mediaMetadataDto = isFinished ? rawMetadata : QuestionMediaMetadataParser.SanitizeForActiveQuiz(rawMetadata);
 
-			if (isFinished)
+			bool isSkip = item != null && QuizAnswerHelper.IsSkip(item.SelectedAnswer);
+			bool? isItemCorrect = item?.IsCorrect;
+			int timeSpentMs = item?.TimeSpentMs ?? 0;
+
+			int? quality = null;
+			if (isFinished && item != null && item.AnsweredAt.HasValue)
 			{
-				bool isSkip = QuizAnswerHelper.IsSkip(item.SelectedAnswer);
-				bool isCorrect = item.IsCorrect ?? false;
-				int timeSpentMs = item.TimeSpentMs;
-
-				int quality = isSkip ? 1
-					: !isCorrect ? 2
+				quality = isSkip ? 1
+					: isItemCorrect != true ? 2
 					: timeSpentMs > 15_000 ? 3
 					: timeSpentMs >= 5_000 ? 4
 					: 5;
+			}
 
-				questionDtos.Add(new QuizQuestionDto(
-					item.Id.Value,
-					item.Sequence,
-					question.QuestionText,
-					choices,
-					item.SelectedAnswer,
-					item.TimeSpentMs,
-					typeCode,
-					question.CorrectAnswer,
-					isCorrect,
-					quality,
-					item.Feedback,
-					question.BankQuestion?.Explanation,
-					question.MediaType,
-					resolvedMediaUrl,
-					parsedMetadata));
-			}
-			else
-			{
-				questionDtos.Add(new QuizQuestionDto(
-					item.Id.Value,
-					item.Sequence,
-					question.QuestionText,
-					choices,
-					item.SelectedAnswer,
-					item.TimeSpentMs,
-					typeCode,
-					null,
-					null,
-					null,
-					null,
-					null,
-					question.MediaType,
-					resolvedMediaUrl,
-					QuestionMediaMetadataParser.SanitizeForActiveQuiz(parsedMetadata)));
-			}
+			questionDtos.Add(new QuizQuestionDto(
+				ItemId: question.Id.Value,
+				Sequence: question.Sequence,
+				Question: question.QuestionText,
+				Choices: choices,
+				SelectedAnswer: item?.SelectedAnswer,
+				TimeSpentMs: timeSpentMs,
+				QuestionType: typeCode,
+				CorrectAnswer: isFinished ? question.CorrectAnswer : null,
+				IsCorrect: isFinished ? isItemCorrect : null,
+				Quality: quality,
+				Feedback: isFinished ? item?.Feedback : null,
+				Explanation: isFinished ? question.BankQuestion?.Explanation : null,
+				MediaType: question.MediaType,
+				MediaUrl: resolvedMediaUrl,
+				MediaMetadata: mediaMetadataDto));
 		}
 
 		return Result.Success(new QuizAttemptDetailDto(
-			attempt.Id.Value,
-			attempt.Mode.ToString(),
-			attempt.Status.ToString(),
-			isFinished ? attempt.Score : null,
-			attempt.TotalItems,
-			attempt.AnsweredItems,
-			isFinished ? attempt.CorrectItems : null,
-			attempt.CreatedAt,
-			attempt.ExpiresAt,
-			attempt.CompletedAt,
-			attempt.IsEvaluated,
-			questionDtos));
+			Id: attempt.Id.Value,
+			Mode: attempt.Mode.ToString(),
+			Status: attempt.Status.ToString(),
+			Score: isFinished ? attempt.Score : null,
+			TotalItems: attempt.TotalItems,
+			AnsweredItems: attempt.AnsweredItems,
+			CorrectItems: isFinished ? attempt.CorrectItems : null,
+			CreatedAt: attempt.CreatedAt,
+			ExpiresAt: attempt.ExpiresAt,
+			CompletedAt: attempt.CompletedAt,
+			IsEvaluated: attempt.IsEvaluated,
+			Questions: questionDtos));
 	}
 }

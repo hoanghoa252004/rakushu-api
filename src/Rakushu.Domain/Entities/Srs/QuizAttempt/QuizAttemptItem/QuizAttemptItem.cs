@@ -8,7 +8,6 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 {
 	public QuizAttemptId QuizAttemptId { get; private set; } = null!;
 	public QuestionId QuestionId { get; private set; } = null!;
-	public int Sequence { get; private set; }
 	public string? SelectedAnswer { get; private set; }
 	public bool? IsCorrect { get; private set; }
 	public int TimeSpentMs { get; private set; }
@@ -24,28 +23,30 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 
 	public static Result<QuizAttemptItem> Create(
 		QuestionId questionId,
-		int sequence)
+		string? selectedAnswer = null,
+		bool? isCorrect = null,
+		int timeSpentMs = 0,
+		string? feedback = null,
+		DateTimeOffset? answeredAt = null)
 	{
-		var validation = Validate(questionId, sequence);
+		var validation = Validate(questionId);
 		if (validation.IsFailure)
 			return Result.Failure<QuizAttemptItem>(validation.Error);
 
 		return Result.Success(new QuizAttemptItem(QuizAttemptItemId.Create())
 		{
 			QuestionId = questionId,
-			Sequence = sequence
+			SelectedAnswer = string.IsNullOrWhiteSpace(selectedAnswer) ? null : selectedAnswer.Trim(),
+			IsCorrect = isCorrect,
+			TimeSpentMs = Math.Max(0, timeSpentMs),
+			Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim(),
+			AnsweredAt = answeredAt
 		});
 	}
 
-	internal void AssignToAttempt(QuizAttemptId attemptId, int sequence)
+	internal void AssignToAttempt(QuizAttemptId attemptId)
 	{
 		QuizAttemptId = attemptId;
-		Sequence = sequence;
-	}
-
-	internal void ReSequence(int sequence)
-	{
-		Sequence = sequence;
 	}
 
 	public Result RecordAnswer(
@@ -66,10 +67,12 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 
 	public Result UpdateAnswer(
 		string? selectedAnswer,
+		bool? isCorrect,
 		int timeSpentMs,
 		DateTimeOffset answeredAt)
 	{
 		SelectedAnswer = string.IsNullOrWhiteSpace(selectedAnswer) ? null : selectedAnswer.Trim();
+		IsCorrect = isCorrect;
 		TimeSpentMs = Math.Max(0, timeSpentMs);
 		AnsweredAt = answeredAt;
 
@@ -86,13 +89,10 @@ public sealed class QuizAttemptItem : Entity<QuizAttemptItemId>
 		Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
 	}
 
-	private static Result Validate(QuestionId questionId, int sequence)
+	private static Result Validate(QuestionId questionId)
 	{
 		if (questionId is null || questionId.Value == Guid.Empty)
 			return Result.Failure(QuizAttemptItemErrors.InvalidQuestionId);
-
-		if (sequence < 1)
-			return Result.Failure(QuizAttemptItemErrors.InvalidSequence);
 
 		return Result.Success();
 	}
