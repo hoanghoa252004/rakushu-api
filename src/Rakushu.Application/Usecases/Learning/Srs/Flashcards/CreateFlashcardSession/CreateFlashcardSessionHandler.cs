@@ -6,7 +6,7 @@ using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
-using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
+using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionTarget;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.CreateFlashcardSession;
@@ -57,11 +57,7 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 					}
 					else
 					{
-						var unrated = activeSession.ExpireAndPrune(now);
-						if (unrated.Count > 0)
-						{
-							_flashcardSessionRepository.RemoveItems(unrated);
-						}
+						activeSession.Expire(now);
 						_flashcardSessionRepository.Update(activeSession);
 					}
 				}
@@ -98,16 +94,10 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 
 			var session = sessionResult.Value;
 
+			// Add targets (the cards to study in this session)
 			foreach (var savedItem in eligibleItems)
 			{
-				var sessionItemResult = FlashcardSessionItem.Create(
-					session.Id,
-					savedItem.Id);
-
-				if (sessionItemResult.IsFailure)
-					return Result.Failure<Guid>(sessionItemResult.Error);
-
-				session.AddItem(sessionItemResult.Value);
+				session.AddTarget(FlashcardSessionTarget.Create(session.Id, savedItem.Id));
 			}
 
 			_flashcardSessionRepository.Add(session);

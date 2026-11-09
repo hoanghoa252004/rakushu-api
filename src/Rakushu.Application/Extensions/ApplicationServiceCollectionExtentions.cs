@@ -1,3 +1,4 @@
+using Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
 using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,7 @@ public static class ApplicationServiceCollectionExtentions
 
 		services.AddScoped<IQuizAttemptFeedbackService, QuizAttemptFeedbackService>();
 		services.AddScoped<IQuizAttemptSrsService, QuizAttemptSrsService>();
+		services.AddScoped<IFlashcardSrsService, FlashcardSrsService>();
 
 		return services;
 	}

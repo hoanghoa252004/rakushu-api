@@ -55,17 +55,17 @@ internal sealed class GetFlashcardSessionResultHandler : IRequestHandler<GetFlas
 				continue;
 
 			var detail = savedItem.Schedule?.Details.FirstOrDefault(d => d.FlashcardSessionItemId == item.Id);
-			int quality = detail?.Quality ?? (int)(item.Rating ?? FlashcardRating.Easy);
+			int quality = detail?.Quality ?? (int)item.Rating;
 			int intervalDays = detail?.IntervalDays ?? 1;
 			int repetitions = detail?.Repetitions ?? 1;
-			DateTimeOffset nextDueAt = savedItem.Schedule?.DueAt ?? (item.ReviewedAt ?? session.CompletedAt ?? DateTimeOffset.UtcNow).AddDays(intervalDays);
+			DateTimeOffset nextDueAt = savedItem.Schedule?.DueAt ?? (item.ReviewedAt).AddDays(intervalDays);
 
 			results.Add(new FlashcardItemResultDto(
 				savedItem.Id.Value,
 				savedItem.Expression,
 				savedItem.Reading,
 				savedItem.Meaning,
-				item.Rating?.ToString() ?? "Easy",
+				item.Rating.ToString(),
 				quality,
 				intervalDays,
 				repetitions,
@@ -76,7 +76,7 @@ internal sealed class GetFlashcardSessionResultHandler : IRequestHandler<GetFlas
 			session.Id.Value,
 			session.Status.ToString(),
 			session.CompletedAt,
-			session.Items.Count,
+			session.Targets.Count,
 			forgotCount,
 			hardCount,
 			easyCount,

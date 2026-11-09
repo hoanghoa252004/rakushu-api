@@ -1,7 +1,8 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
+using FlashcardSessionItemEntity = Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem;
+using FlashcardSessionTargetEntity = Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionTarget.FlashcardSessionTarget;
 
 namespace Rakushu.Domain.Entities.Srs.FlashcardSession;
 
@@ -15,8 +16,11 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 	public DateTimeOffset ExpiresAt { get; private set; }
 	public DateTimeOffset? CompletedAt { get; private set; }
 
-	private readonly List<FlashcardSessionItem.FlashcardSessionItem> _items = [];
-	public IReadOnlyCollection<FlashcardSessionItem.FlashcardSessionItem> Items => _items.AsReadOnly();
+	private readonly List<FlashcardSessionTargetEntity> _targets = [];
+	public IReadOnlyCollection<FlashcardSessionTargetEntity> Targets => _targets.AsReadOnly();
+
+	private readonly List<FlashcardSessionItemEntity> _items = [];
+	public IReadOnlyCollection<FlashcardSessionItemEntity> Items => _items.AsReadOnly();
 
 	// Navigation Property
 	public User User { get; private set; } = null!;
@@ -43,25 +47,17 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 		});
 	}
 
-	public void AddItem(FlashcardSessionItem.FlashcardSessionItem item)
+	public void AddTarget(FlashcardSessionTargetEntity target)
+	{
+		_targets.Add(target);
+	}
+
+	public void AddItem(FlashcardSessionItemEntity item)
 	{
 		_items.Add(item);
 	}
 
-	public bool HasAnyReviewedItems => _items.Any(i => i.Rating != null);
-
-	public IReadOnlyList<FlashcardSessionItem.FlashcardSessionItem> PruneUnratedItems()
-	{
-		var unrated = _items.Where(i => i.Rating == null).ToList();
-		_items.RemoveAll(i => i.Rating == null);
-		return unrated;
-	}
-
-	public IReadOnlyList<FlashcardSessionItem.FlashcardSessionItem> ExpireAndPrune(DateTimeOffset now)
-	{
-		Expire(now);
-		return PruneUnratedItems();
-	}
+	public bool HasAnyReviewedItems => _items.Count > 0;
 
 	public bool IsExpired(DateTimeOffset now) =>
 		Status == FlashcardSessionStatus.InProgress && now > ExpiresAt;
@@ -82,6 +78,12 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 
 	public Result Complete(DateTimeOffset now)
 	{
+		if (Status == FlashcardSessionStatus.Completed)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCompleted);
+
+		if (Status == FlashcardSessionStatus.Canceled)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCanceled);
+
 		if (Status != FlashcardSessionStatus.InProgress)
 			return Result.Failure(FlashcardSessionErrors.NotInProgress);
 
@@ -95,6 +97,22 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 			return Result.Failure(FlashcardSessionErrors.NoItemsReviewed);
 
 		Status = FlashcardSessionStatus.Completed;
+		CompletedAt = now;
+		return Result.Success();
+	}
+
+	public Result Cancel(DateTimeOffset now)
+	{
+		if (Status == FlashcardSessionStatus.Completed)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCompleted);
+
+		if (Status == FlashcardSessionStatus.Canceled)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCanceled);
+
+		if (Status != FlashcardSessionStatus.InProgress)
+			return Result.Failure(FlashcardSessionErrors.NotInProgress);
+
+		Status = FlashcardSessionStatus.Canceled;
 		CompletedAt = now;
 		return Result.Success();
 	}

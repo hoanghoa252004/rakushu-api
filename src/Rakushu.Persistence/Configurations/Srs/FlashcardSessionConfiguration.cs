@@ -41,6 +41,11 @@ internal sealed class FlashcardSessionConfiguration : IEntityTypeConfiguration<F
 
 		builder.Property(fs => fs.CompletedAt);
 
+		builder.HasMany(fs => fs.Targets)
+			.WithOne(fst => fst.FlashcardSession)
+			.HasForeignKey(fst => fst.FlashcardSessionId)
+			.OnDelete(DeleteBehavior.Cascade);
+
 		builder.HasMany(fs => fs.Items)
 			.WithOne(fsi => fsi.FlashcardSession)
 			.HasForeignKey(fsi => fsi.FlashcardSessionId)

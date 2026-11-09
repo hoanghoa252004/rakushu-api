@@ -15,6 +15,10 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.FlashcardSessions
+			.Include(fs => fs.Targets)
+				.ThenInclude(t => t.SavedItem)
+					.ThenInclude(si => si.KnowledgeMeaning)
+						.ThenInclude(km => km.KnowledgeUnit)
 			.Include(fs => fs.Items)
 				.ThenInclude(i => i.SavedItem)
 					.ThenInclude(si => si.KnowledgeMeaning)
@@ -27,6 +31,10 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.FlashcardSessions
+			.Include(fs => fs.Targets)
+				.ThenInclude(t => t.SavedItem)
+					.ThenInclude(si => si.KnowledgeMeaning)
+						.ThenInclude(km => km.KnowledgeUnit)
 			.Include(fs => fs.Items)
 				.ThenInclude(i => i.SavedItem)
 					.ThenInclude(si => si.KnowledgeMeaning)
@@ -44,6 +52,7 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		var query = _context.FlashcardSessions
+			.Include(fs => fs.Targets)
 			.Include(fs => fs.Items)
 			.Where(fs => fs.UserId == userId);
 
@@ -68,6 +77,10 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.FlashcardSessions
+			.Include(fs => fs.Targets)
+				.ThenInclude(t => t.SavedItem)
+					.ThenInclude(si => si.KnowledgeMeaning)
+						.ThenInclude(km => km.KnowledgeUnit)
 			.Include(fs => fs.Items)
 				.ThenInclude(i => i.SavedItem)
 					.ThenInclude(si => si.KnowledgeMeaning)
@@ -77,10 +90,5 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 					.ThenInclude(si => si.Schedule)
 						.ThenInclude(s => s!.Details)
 			.SingleOrDefaultAsync(fs => fs.Id == id, cancellationToken);
-	}
-
-	public void RemoveItems(IEnumerable<Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem> items)
-	{
-		_context.FlashcardSessionItems.RemoveRange(items);
 	}
 }

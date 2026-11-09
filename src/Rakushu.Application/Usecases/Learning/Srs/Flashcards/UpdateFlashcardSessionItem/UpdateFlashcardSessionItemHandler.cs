@@ -1,43 +1,36 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
-using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
 using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
-using Rakushu.Domain.Entities.Srs.SavedItem;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 
-namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardItemRating;
+namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.UpdateFlashcardSessionItem;
 
-internal sealed class SubmitFlashcardItemRatingHandler : IRequestHandler<SubmitFlashcardItemRatingCommand, Result>
+internal sealed class UpdateFlashcardSessionItemHandler : IRequestHandler<UpdateFlashcardSessionItemCommand, Result>
 {
 	private readonly IFlashcardSessionRepository _flashcardSessionRepository;
-	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
-	public SubmitFlashcardItemRatingHandler(
+	public UpdateFlashcardSessionItemHandler(
 		IFlashcardSessionRepository flashcardSessionRepository,
-		ISavedItemRepository savedItemRepository,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_flashcardSessionRepository = flashcardSessionRepository;
-		_savedItemRepository = savedItemRepository;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
 
 	public async Task<Result> Handle(
-		SubmitFlashcardItemRatingCommand request,
+		UpdateFlashcardSessionItemCommand request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
@@ -69,11 +62,7 @@ internal sealed class SubmitFlashcardItemRatingHandler : IRequestHandler<SubmitF
 				}
 				else
 				{
-					var unrated = session.ExpireAndPrune(now);
-					if (unrated.Count > 0)
-					{
-						_flashcardSessionRepository.RemoveItems(unrated);
-					}
+					session.Expire(now);
 					_flashcardSessionRepository.Update(session);
 				}
 				return Result.Failure(FlashcardSessionErrors.Expired);
@@ -84,69 +73,9 @@ internal sealed class SubmitFlashcardItemRatingHandler : IRequestHandler<SubmitF
 				return Result.Failure(FlashcardSessionErrors.ItemNotFound);
 
 			var rating = ParseRating(request.Rating);
-			var quality = (int)rating;
 
-			sessionItem.RecordRating(rating, now);
+			sessionItem.UpdateRating(rating, now);
 			session.RefreshIdleTimeout(now);
-
-			var savedItem = await _savedItemRepository.GetByIdWithScheduleAsync(
-				sessionItem.SavedItemId,
-				cancellationToken);
-
-			if (savedItem is null)
-				return Result.Failure(SavedItemErrors.NotFound);
-
-			var schedule = savedItem.Schedule;
-			if (schedule is null)
-			{
-				var createSchedResult = SrsSchedule.Create(savedItem.Id, now);
-				if (createSchedResult.IsFailure)
-					return Result.Failure(createSchedResult.Error);
-
-				schedule = createSchedResult.Value;
-				savedItem.AttachSchedule(schedule);
-			}
-
-			var existingDetail = schedule.Details.FirstOrDefault(d => d.FlashcardSessionItemId == sessionItem.Id);
-			if (existingDetail is null)
-			{
-				var lastDetail = schedule.Details
-					.OrderByDescending(d => d.ReviewNumber)
-					.FirstOrDefault();
-
-				int lastRepetitions = lastDetail?.Repetitions ?? 0;
-				int lastInterval = lastDetail?.IntervalDays ?? 0;
-				double lastFactor = lastDetail?.EasinessFactor ?? 2.5;
-				int lastLapses = lastDetail?.Lapses ?? 0;
-				int reviewNumber = (lastDetail?.ReviewNumber ?? 0) + 1;
-
-				var sm2 = Sm2Calculator.Calculate(
-					lastRepetitions,
-					lastInterval,
-					lastFactor,
-					lastLapses,
-					quality,
-					now);
-
-				schedule.UpdateSchedule(sm2.DueAt, now);
-
-				var detailResult = SrsScheduleDetail.Create(
-					schedule.Id,
-					reviewNumber,
-					quality,
-					sm2.IntervalDays,
-					sm2.EasinessFactor,
-					sm2.Repetitions,
-					sm2.Lapses,
-					now,
-					quizAttemptItemId: null,
-					flashcardSessionItemId: sessionItem.Id);
-
-				if (detailResult.IsFailure)
-					return Result.Failure(detailResult.Error);
-
-				schedule.AddDetail(detailResult.Value);
-			}
 
 			_flashcardSessionRepository.Update(session);
 

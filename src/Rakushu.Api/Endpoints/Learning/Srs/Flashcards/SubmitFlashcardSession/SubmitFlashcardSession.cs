@@ -5,38 +5,36 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Learning.Srs.Flashcards;
-using Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardItemRating;
+using Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
 using Rakushu.Domain.Entities.Identity.Role;
 
-namespace Rakushu.Api.Endpoints.Learning.Srs.Flashcards.SubmitFlashcardItemRating;
+namespace Rakushu.Api.Endpoints.Learning.Srs.Flashcards.SubmitFlashcardSession;
 
-internal sealed class SubmitFlashcardItemRating : IEndpoint
+internal sealed class SubmitFlashcardSession : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapSrsFlashcardEndpoints()
-			.MapPut("/{sessionId:guid}/items/{itemId:guid}/rating", async (
+			.MapPatch("/{sessionId:guid}/submit", async (
 				[FromRoute] Guid sessionId,
-				[FromRoute] Guid itemId,
-				[FromBody] SubmitFlashcardItemRatingInput input,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new SubmitFlashcardItemRatingCommand(sessionId, itemId, input.Rating);
+				var command = new SubmitFlashcardSessionCommand(sessionId);
 
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				return result.MatchNoContent();
 			})
-			.WithName("SubmitFlashcardItemRating")
+			.WithName("SubmitFlashcardSession")
 			.WithSummary("Learner")
-			.WithDescription("Submits rating ('Forgot', 'Hard', 'Easy') for an individual flashcard item, calculates SM-2 spaced repetition intervals, and records review history.")
+			.WithDescription("Submits and finishes an in-progress flashcard session, transitioning its status to Completed.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
-			.Produces(StatusCodes.Status200OK)
+			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }

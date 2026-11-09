@@ -12,7 +12,7 @@ public sealed record FlashcardMediaContextDto(
 	int? EndTokenIndex);
 
 public sealed record FlashcardItemDto(
-	Guid ItemId,
+	Guid? ItemId,
 	Guid SavedItemId,
 	string Expression,
 	string? Reading,
@@ -38,9 +38,6 @@ public sealed record FlashcardSessionSummaryDto(
 	DateTimeOffset CreatedAt,
 	DateTimeOffset ExpiresAt,
 	DateTimeOffset? CompletedAt);
-
-public sealed record SubmitFlashcardItemRatingInput(
-	string Rating);
 
 public sealed record FlashcardItemResultDto(
 	Guid SavedItemId,

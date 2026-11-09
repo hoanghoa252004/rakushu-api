@@ -63,11 +63,7 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 			}
 			else
 			{
-				var unrated = session.ExpireAndPrune(now);
-				if (unrated.Count > 0)
-				{
-					_flashcardSessionRepository.RemoveItems(unrated);
-				}
+				session.Expire(now);
 				_flashcardSessionRepository.Update(session);
 			}
 			await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -81,21 +77,23 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 			await _unitOfWork.SaveChangesAsync(cancellationToken);
 		}
 
-		var meaningGuids = session.Items
-			.Where(i => i.SavedItem != null)
-			.Select(i => i.SavedItem.KnowledgeMeaningId.Value)
+		var meaningGuids = session.Targets
+			.Where(t => t.SavedItem != null)
+			.Select(t => t.SavedItem.KnowledgeMeaningId.Value)
 			.Distinct()
 			.ToList();
 
 		var meaningContexts = await _learningUnitRepository.GetMediaContextsByMeaningIdsAsync(meaningGuids, maxVideosPerMeaning: 5, cancellationToken);
 
-		var itemDtos = new List<FlashcardItemDto>(session.Items.Count);
+		var itemDtos = new List<FlashcardItemDto>(session.Targets.Count);
 
-		foreach (var item in session.Items)
+		foreach (var target in session.Targets)
 		{
-			var savedItem = item.SavedItem;
+			var savedItem = target.SavedItem;
 			if (savedItem is null)
 				continue;
+
+			var reviewedItem = session.Items.FirstOrDefault(i => i.SavedItemId == target.SavedItemId);
 
 			var videoContextDtos = new List<FlashcardMediaContextDto>();
 			if (meaningContexts.TryGetValue(savedItem.KnowledgeMeaningId.Value, out var mediaList))
@@ -133,13 +131,13 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 			}
 
 			itemDtos.Add(new FlashcardItemDto(
-				item.Id.Value,
+				reviewedItem?.Id.Value,
 				savedItem.Id.Value,
 				savedItem.Expression,
 				savedItem.Reading,
 				savedItem.Meaning,
-				item.Rating?.ToString(),
-				item.ReviewedAt,
+				reviewedItem?.Rating.ToString(),
+				reviewedItem?.ReviewedAt,
 				videoContextDtos));
 		}
 
@@ -149,7 +147,7 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 			session.CreatedAt,
 			session.ExpiresAt,
 			session.CompletedAt,
-			session.Items.Count,
+			session.Targets.Count,
 			itemDtos));
 	}
 }

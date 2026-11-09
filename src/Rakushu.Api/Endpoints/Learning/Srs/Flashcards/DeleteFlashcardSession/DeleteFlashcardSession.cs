@@ -23,16 +23,18 @@ internal sealed class DeleteFlashcardSession : IEndpoint
 				var command = new DeleteFlashcardSessionCommand(sessionId);
 
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				return result.MatchNoContent();
 			})
 			.WithName("DeleteFlashcardSession")
 			.WithSummary("Learner")
-			.WithDescription("Deletes a flashcard session and its items completely from the database.")
+			.WithDescription("Cancels an in-progress flashcard session (soft cancel).")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
-			.Produces(StatusCodes.Status200OK)
+			.Produces(StatusCodes.Status204NoContent)
+			.ProducesProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }

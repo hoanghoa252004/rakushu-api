@@ -7,29 +7,32 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
 
-namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.CompleteFlashcardSession;
+namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
 
-internal sealed class CompleteFlashcardSessionHandler : IRequestHandler<CompleteFlashcardSessionCommand, Result>
+internal sealed class SubmitFlashcardSessionHandler : IRequestHandler<SubmitFlashcardSessionCommand, Result>
 {
 	private readonly IFlashcardSessionRepository _flashcardSessionRepository;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
+	private readonly IFlashcardSrsService _flashcardSrsService;
 	private readonly IUnitOfWork _unitOfWork;
 
-	public CompleteFlashcardSessionHandler(
+	public SubmitFlashcardSessionHandler(
 		IFlashcardSessionRepository flashcardSessionRepository,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
+		IFlashcardSrsService flashcardSrsService,
 		IUnitOfWork unitOfWork)
 	{
 		_flashcardSessionRepository = flashcardSessionRepository;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
+		_flashcardSrsService = flashcardSrsService;
 		_unitOfWork = unitOfWork;
 	}
 
 	public async Task<Result> Handle(
-		CompleteFlashcardSessionCommand request,
+		SubmitFlashcardSessionCommand request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
@@ -58,30 +61,19 @@ internal sealed class CompleteFlashcardSessionHandler : IRequestHandler<Complete
 				}
 				else
 				{
-					var unrated = session.ExpireAndPrune(now);
-					if (unrated.Count > 0)
-					{
-						_flashcardSessionRepository.RemoveItems(unrated);
-					}
+					session.Expire(now);
+					await _flashcardSrsService.ApplySrsUpdatesAsync(session, now, cancellationToken);
 					_flashcardSessionRepository.Update(session);
 				}
 				return Result.Failure(FlashcardSessionErrors.Expired);
 			}
 
-			if (!session.HasAnyReviewedItems)
-			{
-				return Result.Failure(FlashcardSessionErrors.NoItemsReviewed);
-			}
-
-			var unratedItems = session.PruneUnratedItems();
 			var result = session.Complete(now);
 			if (result.IsFailure)
 				return result;
 
-			if (unratedItems.Count > 0)
-			{
-				_flashcardSessionRepository.RemoveItems(unratedItems);
-			}
+			// Apply SM-2 updates to all reviewed items upon completion
+			await _flashcardSrsService.ApplySrsUpdatesAsync(session, now, cancellationToken);
 
 			_flashcardSessionRepository.Update(session);
 			return Result.Success();

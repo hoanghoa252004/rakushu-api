@@ -28,6 +28,14 @@ public static class FlashcardSessionErrors
 		"FLASHCARD_SESSION.NOT_COMPLETED",
 		"Flashcard session is not completed yet.");
 
+	public static readonly Error AlreadyCompleted = Error.Conflict(
+		"FLASHCARD_SESSION.ALREADY_COMPLETED",
+		"Flashcard session is already completed.");
+
+	public static readonly Error AlreadyCanceled = Error.Conflict(
+		"FLASHCARD_SESSION.ALREADY_CANCELED",
+		"Flashcard session is already canceled.");
+
 	public static readonly Error InvalidRating = Error.Validation(
 		"FLASHCARD_SESSION.INVALID_RATING",
 		"Rating must be 'Forgot', 'Hard', or 'Easy'.");
@@ -43,6 +51,14 @@ public static class FlashcardSessionErrors
 	public static readonly Error ItemNotFound = Error.NotFound(
 		"FLASHCARD_SESSION.ITEM_NOT_FOUND",
 		"One or more flashcard items do not belong to this session.");
+
+	public static readonly Error TargetNotFound = Error.NotFound(
+		"FLASHCARD_SESSION.TARGET_NOT_FOUND",
+		"Specified saved item is not part of this flashcard session.");
+
+	public static readonly Error ItemAlreadyReviewed = Error.Conflict(
+		"FLASHCARD_SESSION.ITEM_ALREADY_REVIEWED",
+		"This flashcard item has already been reviewed in this session. Use PUT to update rating.");
 
 	public static readonly Error ActiveSessionInProgress = Error.Conflict(
 		"FLASHCARD_SESSION.ACTIVE_SESSION_EXISTS",
