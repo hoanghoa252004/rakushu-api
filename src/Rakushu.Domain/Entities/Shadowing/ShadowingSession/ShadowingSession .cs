@@ -96,6 +96,17 @@ public sealed class ShadowingSession : Entity<ShadowingSessionId>
 		return Domain.Common.Results.Result.Success();
 	}
 
+	public static readonly TimeSpan ExpirationGracePeriod = TimeSpan.FromHours(1);
+
+	public Domain.Common.Results.Result Expire()
+	{
+		if (Status != ShadowingSessionStatus.Scheduled)
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.NotScheduled);
+
+		Status = ShadowingSessionStatus.Expired;
+		return Domain.Common.Results.Result.Success();
+	}
+
 	public Domain.Common.Results.Result Start(DateTimeOffset now)
 	{
 		if (Status != ShadowingSessionStatus.Scheduled)

@@ -50,11 +50,39 @@ internal sealed class CreateShadowingSessionEndpoint : IEndpoint
 			.WithName("CreateShadowingSession")
 			.Produces<Guid>(StatusCodes.Status200OK)
 			.WithSummary("Learner")
-			.WithDescription("Creates a Scheduled session from a Ready material of the learner's own video or a curated video. The host is added as a member automatically.")
+			.WithDescription("Creates a Scheduled session from a Ready material created by the current learner. The host is added as a member automatically.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
+			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status500InternalServerError);
+	}
+}
+
+internal sealed class GetShadowingSessionMaterialEndpoint : IEndpoint
+{
+	public void MapEndpoint(IEndpointRouteBuilder app)
+	{
+		app.MapGroup("/api/shadowing-sessions")
+			.WithTags("ShadowingSession").WithGroupName("shadowing")
+			.MapGet("/{sessionId:guid}/material", async (
+				[FromRoute] Guid sessionId,
+				ISender sender,
+				[FromQuery] int linePageNumber = 1,
+				[FromQuery] int linePageSize = 20,
+				CancellationToken cancellationToken = default) =>
+			{
+				var result = await sender.Send(new Rakushu.Application.Usecases.Shadowing.ShadowingSessions.GetShadowingSessionMaterial.GetShadowingSessionMaterialQuery(
+					sessionId, linePageNumber, linePageSize), cancellationToken);
+				return result.MatchOk();
+			})
+			.WithName("GetShadowingSessionMaterial")
+			.WithSummary("Learner")
+			.WithDescription("Gets the material of a session with paged role lines. Only members of the session can access it.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
+			.Produces<Rakushu.Application.Usecases.Shadowing.ShadowingMaterials.ShadowingMaterialDto>(StatusCodes.Status200OK)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
@@ -291,7 +319,7 @@ internal sealed class CreateShadowingSessionInvitationsEndpoint : IEndpoint
 			.WithName("CreateShadowingSessionInvitations")
 			.Produces<IReadOnlyList<Guid>>(StatusCodes.Status200OK)
 			.WithSummary("Learner (host)")
-			.WithDescription("Invites learners. ExpiredAt is 10 minutes before the session's scheduledStartAt.")
+			.WithDescription("Invites learners. ExpiredAt is 1 hour after the session's scheduledStartAt. Fails if the learner already has a pending invitation for the session.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

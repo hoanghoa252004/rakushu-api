@@ -31,7 +31,7 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<TranslateTranscriptWorker>();
 		services.AddHostedService<VideoReviewingWorker>();
 		services.AddHostedService<ShadowingMaterialProcessingWorker>();
-		services.AddHostedService<ShadowingSessionInvitationExpirationWorker>();
+		services.AddHostedService<ShadowingSessionExpirationWorker>();
 		services.AddHostedService<ShadowingSessionCompletionWorker>();
 
 		// SUBSCRIPTION

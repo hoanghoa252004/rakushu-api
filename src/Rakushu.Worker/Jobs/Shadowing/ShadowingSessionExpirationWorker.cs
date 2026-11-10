@@ -3,16 +3,16 @@ using Rakushu.Application.Usecases.Shadowing.ShadowingSessionInvitations;
 
 namespace Rakushu.Worker.Jobs.Shadowing;
 
-public sealed class ShadowingSessionInvitationExpirationWorker(
+public sealed class ShadowingSessionExpirationWorker(
 	IServiceScopeFactory scopeFactory,
-	ILogger<ShadowingSessionInvitationExpirationWorker> logger) : BackgroundService
+	ILogger<ShadowingSessionExpirationWorker> logger) : BackgroundService
 {
 	private const int BatchSize = 100;
 	private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
-		logger.LogInformation("Shadowing session invitation expiration worker started.");
+		logger.LogInformation("Shadowing session expiration worker started.");
 
 		while (!stoppingToken.IsCancellationRequested)
 		{
@@ -21,12 +21,12 @@ public sealed class ShadowingSessionInvitationExpirationWorker(
 				await using var scope = scopeFactory.CreateAsyncScope();
 				var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-				var result = await mediator.Send(new ExpireShadowingSessionInvitationsCommand(BatchSize), stoppingToken);
+				var result = await mediator.Send(new ExpireShadowingSessionsCommand(BatchSize), stoppingToken);
 
 				if (result.IsFailure)
-					logger.LogError("Invitation expiration failed: {Error}", result.Error);
+					logger.LogError("Session expiration failed: {Error}", result.Error);
 				else if (result.Value > 0)
-					logger.LogInformation("Expired {Count} session invitation(s).", result.Value);
+					logger.LogInformation("Expired {Count} shadowing session(s) and their pending invitations.", result.Value);
 			}
 			catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
 			{
@@ -34,7 +34,7 @@ public sealed class ShadowingSessionInvitationExpirationWorker(
 			}
 			catch (Exception ex)
 			{
-				logger.LogError(ex, "Unexpected error while expiring session invitations.");
+				logger.LogError(ex, "Unexpected error while expiring shadowing sessions.");
 			}
 
 			try
@@ -47,6 +47,6 @@ public sealed class ShadowingSessionInvitationExpirationWorker(
 			}
 		}
 
-		logger.LogInformation("Shadowing session invitation expiration worker stopped.");
+		logger.LogInformation("Shadowing session expiration worker stopped.");
 	}
 }

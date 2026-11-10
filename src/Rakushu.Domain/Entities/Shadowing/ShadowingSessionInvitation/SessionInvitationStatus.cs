@@ -11,6 +11,5 @@ public enum SessionInvitationStatus
 	Pending = 1,
 	Accepted = 2,
 	Rejected = 3,
-	Expired = 4,
-	Revoked = 5
+	Expired = 4
 }

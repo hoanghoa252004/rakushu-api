@@ -46,7 +46,7 @@ internal sealed class CancelShadowingSessionHandler(
 			var now = DateTimeOffset.UtcNow;
 			var pending = await invitationRepository.GetPendingBySessionAsync(session.Id, cancellationToken);
 			foreach (var invitation in pending)
-				invitation.Revoke(now);
+				invitation.MarkExpired(now);
 
 			return Result.Success();
 		}, cancellationToken);

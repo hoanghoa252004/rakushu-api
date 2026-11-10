@@ -26,6 +26,9 @@ public interface IShadowingSessionRepository : IBaseRepository<ShadowingSession,
 		CancellationToken cancellationToken = default);
 
 	// Tracked InProgress sessions whose attempts are all Submitted/Cancelled with at least one Submitted... see implementation.
+	Task<IReadOnlyList<ShadowingSession>> GetExpiredScheduledAsync(
+		DateTimeOffset now, int batchSize, CancellationToken cancellationToken = default);
+
 	Task<IReadOnlyList<ShadowingSession>> GetInProgressWithAttemptsAsync(
 		int batchSize,
 		CancellationToken cancellationToken = default);

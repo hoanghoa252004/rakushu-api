@@ -79,13 +79,6 @@ public sealed class ShadowingSessionInvitation : Entity<ShadowingSessionInvitati
 		return Domain.Common.Results.Result.Success();
 	}
 
-	public void Revoke(DateTimeOffset now)
-	{
-		if (Status != SessionInvitationStatus.Pending) return;
-		Status = SessionInvitationStatus.Revoked;
-		ResponsedAt = now;
-	}
-
 	public void UpdateExpiry(DateTimeOffset expiredAt, DateTimeOffset now)
 	{
 		if (Status != SessionInvitationStatus.Pending) return;

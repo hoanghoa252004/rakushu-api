@@ -51,7 +51,7 @@ internal sealed class CreateShadowingSessionInvitationsHandler(
 				return Result.Failure<IReadOnlyList<Guid>>(ShadowingSessionErrors.NotScheduled);
 
 			var now = DateTimeOffset.UtcNow;
-			var expiredAt = session.ScheduledStartAt.AddMinutes(-10);
+			var expiredAt = session.ScheduledStartAt.Add(ShadowingSession.ExpirationGracePeriod);
 			if (expiredAt <= now)
 				return Result.Failure<IReadOnlyList<Guid>>(ShadowingSessionInvitationErrors.InvalidExpiry);
 
@@ -103,7 +103,6 @@ internal sealed class RespondShadowingSessionInvitationHandler(
 {
 	public async Task<Result> Handle(RespondShadowingSessionInvitationCommand request, CancellationToken cancellationToken)
 	{
-		var full = false;
 		var result = await unitOfWork.ExecuteAsync(async () =>
 		{
 			var status = EnumParser.Parse<SessionInvitationStatus>(request.Status, "status");
@@ -133,10 +132,7 @@ internal sealed class RespondShadowingSessionInvitationHandler(
 
 				var roles = await roleRepository.GetByMaterialIdAsync(session.ShadowingMaterialId, cancellationToken);
 				if (await memberRepository.CountBySessionAsync(session.Id, cancellationToken) >= roles.Count)
-				{
-					full = true;
 					return Result.Failure(ShadowingSessionErrors.SessionFull);
-				}
 
 				var duration = await sessionRepository.GetDurationAsync(session.Id, cancellationToken);
 				if (duration is null)
@@ -159,17 +155,6 @@ internal sealed class RespondShadowingSessionInvitationHandler(
 
 			return Result.Success();
 		}, cancellationToken);
-
-		if (full && result.IsFailure)
-		{
-			await unitOfWork.ExecuteAsync(async () =>
-			{
-				var invitation = await invitationRepository.GetByIdAsync(
-					ShadowingSessionInvitationId.From(request.InvitationId), cancellationToken);
-				invitation?.Revoke(DateTimeOffset.UtcNow);
-				return Result.Success();
-			}, cancellationToken);
-		}
 
 		return result;
 	}
@@ -304,23 +289,32 @@ internal sealed class GetMyShadowingSessionInvitationsHandler(
 	}
 }
 
-// ---- EXPIRE (WORKER) ----
-public sealed record ExpireShadowingSessionInvitationsCommand(int BatchSize) : IRequest<Result<int>>;
+// ---- EXPIRE SESSIONS + THEIR INVITATIONS (WORKER) ----
+public sealed record ExpireShadowingSessionsCommand(int BatchSize) : IRequest<Result<int>>;
 
-internal sealed class ExpireShadowingSessionInvitationsHandler(
+internal sealed class ExpireShadowingSessionsHandler(
+	IShadowingSessionRepository sessionRepository,
 	IShadowingSessionInvitationRepository invitationRepository,
 	IUnitOfWork unitOfWork)
-	: IRequestHandler<ExpireShadowingSessionInvitationsCommand, Result<int>>
+	: IRequestHandler<ExpireShadowingSessionsCommand, Result<int>>
 {
-	public async Task<Result<int>> Handle(ExpireShadowingSessionInvitationsCommand request, CancellationToken cancellationToken)
+	public async Task<Result<int>> Handle(ExpireShadowingSessionsCommand request, CancellationToken cancellationToken)
 	{
 		return await unitOfWork.ExecuteAsync(async () =>
 		{
 			var now = DateTimeOffset.UtcNow;
-			var expired = await invitationRepository.GetExpiredPendingAsync(now, request.BatchSize, cancellationToken);
-			foreach (var invitation in expired)
-				invitation.MarkExpired(now);
-			return Result.Success(expired.Count);
+			var sessions = await sessionRepository.GetExpiredScheduledAsync(now, request.BatchSize, cancellationToken);
+			var count = 0;
+			foreach (var session in sessions)
+			{
+				if (session.Expire().IsFailure)
+					continue;
+				count++;
+				var pending = await invitationRepository.GetPendingBySessionAsync(session.Id, cancellationToken);
+				foreach (var invitation in pending)
+					invitation.MarkExpired(now);
+			}
+			return Result.Success(count);
 		}, cancellationToken);
 	}
 }

@@ -92,9 +92,7 @@ public sealed class ShadowingMaterialRepository
 		var query = _context.ShadowingMaterials.AsNoTracking().AsQueryable();
 
 		if (visibleToUserId is not null)
-			query = query.Where(m => m.CreatedById == visibleToUserId
-				|| _context.ShadowingSessionMembers.Any(sm =>
-					sm.MemberId == visibleToUserId && sm.ShadowingSession.ShadowingMaterialId == m.Id));
+			query = query.Where(m => m.CreatedById == visibleToUserId);
 		if (videoId is not null)
 			query = query.Where(m => m.VideoId == videoId);
 		if (status is not null)
@@ -116,9 +114,7 @@ public sealed class ShadowingMaterialRepository
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.ShadowingMaterials.AnyAsync(m => m.Id == materialId
-			&& (m.CreatedById == userId
-				|| _context.ShadowingSessionMembers.Any(sm =>
-					sm.MemberId == userId && sm.ShadowingSession.ShadowingMaterialId == m.Id)),
+			&& m.CreatedById == userId,
 			cancellationToken);
 	}
 

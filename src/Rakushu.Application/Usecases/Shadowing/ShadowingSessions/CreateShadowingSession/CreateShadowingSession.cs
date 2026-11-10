@@ -57,8 +57,7 @@ internal sealed class CreateShadowingSessionHandler(
 			if (video is null)
 				return Result.Failure<Guid>(VideoErrors.NotFound);
 
-			// Own video, or a curated video (no learner owner).
-			if (video.LearnerId is not null && video.LearnerId != userId)
+			if (material.CreatedById != userId)
 				return Result.Failure<Guid>(ShadowingSessionErrors.MaterialNotAllowed);
 
 			if (await repository.HasActiveHostedSessionAsync(userId, cancellationToken))

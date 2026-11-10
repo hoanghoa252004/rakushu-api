@@ -58,7 +58,9 @@ public sealed record ShadowingSessionDto(
 	DateTimeOffset? EndedAt,
 	SessionUserDto? Host,
 	SessionMaterialDto Material,
-	IReadOnlyList<SessionMemberDto> Members)
+	IReadOnlyList<SessionMemberDto> Members,
+	int MaxMemberNumbers,
+	int CurrentMemberNumbers)
 {
 	// Requires ShadowingMaterial(+Video) and Members(+Member) to be loaded.
 	public static ShadowingSessionDto FromEntity(
@@ -102,7 +104,9 @@ public sealed record ShadowingSessionDto(
 				s.ShadowingMaterial.Status,
 				s.ShadowingMaterial.Version,
 				new SessionVideoDto(video.Id.Value, video.Title, video.Slug, video.Description, video.Duration)),
-			members);
+			members,
+			s.ShadowingMaterial.Roles.Count,
+			members.Count);
 	}
 }
 

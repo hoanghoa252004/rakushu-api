@@ -18,13 +18,25 @@ public sealed class ShadowingSessionRepository
 			.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 	}
 
+	public async Task<IReadOnlyList<ShadowingSession>> GetExpiredScheduledAsync(
+		DateTimeOffset now, int batchSize, CancellationToken cancellationToken = default)
+	{
+		var threshold = now - ShadowingSession.ExpirationGracePeriod;
+		return await _context.ShadowingSessions
+			.Where(s => s.Status == ShadowingSessionStatus.Scheduled && s.ScheduledStartAt <= threshold)
+			.OrderBy(s => s.ScheduledStartAt)
+			.Take(batchSize)
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<bool> HasActiveHostedSessionAsync(
 		UserId hostId, CancellationToken cancellationToken = default)
 	{
 		return await _context.ShadowingSessions.AnyAsync(
 			s => s.HostId == hostId
 				&& s.Status != ShadowingSessionStatus.Completed
-				&& s.Status != ShadowingSessionStatus.Cancelled,
+				&& s.Status != ShadowingSessionStatus.Cancelled
+				&& s.Status != ShadowingSessionStatus.Expired,
 			cancellationToken);
 	}
 
@@ -83,6 +95,7 @@ public sealed class ShadowingSessionRepository
 	{
 		return await _context.ShadowingSessions.AsNoTracking()
 			.Include(s => s.ShadowingMaterial).ThenInclude(m => m.Video)
+			.Include(s => s.ShadowingMaterial).ThenInclude(m => m.Roles)
 			.Include(s => s.Members).ThenInclude(m => m.Member)
 			.Include(s => s.Members).ThenInclude(m => m.ShadowingRole).ThenInclude(r => r!.Speaker)
 			.AsSplitQuery()
@@ -122,9 +135,10 @@ public sealed class ShadowingSessionRepository
 		var total = await query.CountAsync(cancellationToken);
 		var items = await query
 			.Include(s => s.ShadowingMaterial).ThenInclude(m => m.Video)
+			.Include(s => s.ShadowingMaterial).ThenInclude(m => m.Roles)
 			.Include(s => s.Members).ThenInclude(m => m.Member)
 			.Include(s => s.Members).ThenInclude(m => m.ShadowingRole).ThenInclude(r => r!.Speaker)
-			.OrderByDescending(s => s.ScheduledStartAt)
+			.OrderByDescending(s => s.Members.Min(m => m.JoinedAt))
 			.Skip((pageNumber - 1) * pageSize)
 			.Take(pageSize)
 			.AsSplitQuery()
