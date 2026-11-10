@@ -32,6 +32,8 @@ public interface IShadowingAttemptRepository : IBaseRepository<ShadowingAttempt,
 		ShadowingRoleLineId roleLineId,
 		CancellationToken cancellationToken = default);
 
+	Task<int> CountSkippedDetailsAsync(ShadowingAttemptId attemptId, CancellationToken cancellationToken = default);
+
 	Task<int> CountDetailsAsync(
 		ShadowingAttemptId attemptId,
 		CancellationToken cancellationToken = default);

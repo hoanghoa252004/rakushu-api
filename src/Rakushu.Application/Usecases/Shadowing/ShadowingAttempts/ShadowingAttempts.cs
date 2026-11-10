@@ -110,6 +110,7 @@ internal sealed class CancelShadowingAttemptValidator : AbstractValidator<Cancel
 
 internal sealed class CancelShadowingAttemptHandler(
 	IShadowingAttemptRepository attemptRepository,
+	IShadowingRoleLineRepository roleLineRepository,
 	ICurrentUserContext currentUser,
 	IUnitOfWork unitOfWork)
 	: IRequestHandler<CancelShadowingAttemptCommand, Result>
@@ -121,10 +122,23 @@ internal sealed class CancelShadowingAttemptHandler(
 			var attempt = await attemptRepository.GetWithContextAsync(ShadowingAttemptId.From(request.AttemptId), cancellationToken);
 			if (attempt is null)
 				return Result.Failure(ShadowingAttemptErrors.NotFound);
-			if (currentUser.UserId is null || attempt.ShadowingSessionMember.MemberId != currentUser.UserId)
+			if (currentUser.UserId is null)
+				return Result.Failure(ShadowingAttemptErrors.NotOwner);
+			var isOwner = attempt.ShadowingSessionMember.MemberId == currentUser.UserId;
+			var isHost = attempt.ShadowingSession.HostId == currentUser.UserId;
+			if (!isOwner && !isHost)
 				return Result.Failure(ShadowingAttemptErrors.NotOwner);
 			if (attempt.ShadowingSession.Status != ShadowingSessionStatus.InProgress)
 				return Result.Failure(ShadowingAttemptErrors.SessionNotInProgress);
+
+			if (!isOwner)
+			{
+				var (_, totalLines) = await roleLineRepository.GetPagedAsync(
+					attempt.ShadowingSession.ShadowingMaterialId, null, attempt.ShadowingSessionMember.ShadowingRoleId, 1, 1, cancellationToken);
+				var skipped = await attemptRepository.CountSkippedDetailsAsync(attempt.Id, cancellationToken);
+				if (totalLines == 0 || skipped * 2 < totalLines)
+					return Result.Failure(ShadowingAttemptErrors.NotEnoughSkipped);
+			}
 
 			return attempt.Cancel(DateTimeOffset.UtcNow);
 		}, cancellationToken);
@@ -224,12 +238,15 @@ internal static class AttemptDetailGuard
 		IShadowingAttemptRepository attemptRepository,
 		ICurrentUserContext currentUser,
 		Guid attemptId,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		bool allowHostSkip = false)
 	{
 		var attempt = await attemptRepository.GetWithContextAsync(ShadowingAttemptId.From(attemptId), cancellationToken);
 		if (attempt is null)
 			return Result.Failure<ShadowingAttempt>(ShadowingAttemptErrors.NotFound);
-		if (currentUser.UserId is null || attempt.ShadowingSessionMember.MemberId != currentUser.UserId)
+		var isOwner = currentUser.UserId is not null && attempt.ShadowingSessionMember.MemberId == currentUser.UserId;
+		var isHost = currentUser.UserId is not null && attempt.ShadowingSession.HostId == currentUser.UserId;
+		if (!isOwner && !(allowHostSkip && isHost))
 			return Result.Failure<ShadowingAttempt>(ShadowingAttemptErrors.NotOwner);
 		if (attempt.ShadowingSession.Status != ShadowingSessionStatus.InProgress)
 			return Result.Failure<ShadowingAttempt>(ShadowingAttemptErrors.SessionNotInProgress);
@@ -268,7 +285,7 @@ internal sealed class CreateAttemptDetailHandler(
 		return await unitOfWork.ExecuteAsync(async () =>
 		{
 			var loaded = await AttemptDetailGuard.LoadWritableAsync(
-				attemptRepository, currentUser, request.AttemptId, cancellationToken);
+				attemptRepository, currentUser, request.AttemptId, cancellationToken, allowHostSkip: request.IsSkipped == true);
 			if (loaded.IsFailure)
 				return Result.Failure<Guid>(loaded.Error);
 			var attempt = loaded.Value;

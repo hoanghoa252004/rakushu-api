@@ -44,6 +44,10 @@ public static class ShadowingAttemptErrors
 		"SHADOWING_ATTEMPT.INVALID_AUDIO",
 		"Audio key is required (max 500 characters) and duration must be positive.");
 
+	public static readonly Error NotEnoughSkipped = Error.Conflict(
+		"SHADOWING_ATTEMPT.NOT_ENOUGH_SKIPPED",
+		"The host can cancel a member's attempt only when skipped lines reach at least half of the member's lines.");
+
 	public static readonly Error HasNoDetails = Error.Conflict(
 		"SHADOWING_ATTEMPT.INCOMPLETE",
 		"All your role lines must be completed before submitting.");

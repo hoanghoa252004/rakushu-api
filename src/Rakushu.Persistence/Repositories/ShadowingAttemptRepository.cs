@@ -55,6 +55,13 @@ public sealed class ShadowingAttemptRepository
 			cancellationToken);
 	}
 
+	public async Task<int> CountSkippedDetailsAsync(
+		ShadowingAttemptId attemptId, CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingAttemptDetails.CountAsync(
+			d => d.ShadowingAttemptId == attemptId && d.IsSkipped, cancellationToken);
+	}
+
 	public async Task<int> CountDetailsAsync(
 		ShadowingAttemptId attemptId, CancellationToken cancellationToken = default)
 	{

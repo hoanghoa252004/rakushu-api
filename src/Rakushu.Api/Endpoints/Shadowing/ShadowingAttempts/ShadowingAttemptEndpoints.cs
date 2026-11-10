@@ -78,7 +78,7 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			})
 			.WithName("CancelShadowingAttempt")
 			.WithSummary("Learner (member)")
-			.WithDescription("Cancels the learner's own attempt. Attempt and session must be InProgress.")
+			.WithDescription("Cancels an attempt. The owner can cancel their own attempt; the session host can cancel a member's attempt only when skipped details reach at least half of that member's role lines. Attempt and session must be InProgress.")
 			.RequireAuthorization(p => p.RequireRole(RoleCodes.Learner));
 
 		attempts.MapPost("/{attemptId:guid}/details", async (
@@ -95,7 +95,7 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			.WithName("CreateShadowingAttemptDetail")
 			.Produces<Guid>(StatusCodes.Status200OK)
 			.WithSummary("Learner (member)")
-			.WithDescription("Creates the detail of a role line, or skips it when isSkipped = true. The previous role line of the material must already be done. When the learner has a detail for every line of their role, the attempt becomes Completed automatically. Details cannot be updated or deleted.")
+			.WithDescription("Creates the detail of a role line, or skips it when isSkipped = true. The previous role line of the material must already be done. When the learner has a detail for every line of their role, the attempt becomes Completed automatically. Details cannot be updated or deleted. The session host may also create an isSkipped = true detail for a member's line (e.g. the member is stalling or disconnected).")
 			.RequireAuthorization(p => p.RequireRole(RoleCodes.Learner));
 
 		Action<Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder> readPolicy = p =>
