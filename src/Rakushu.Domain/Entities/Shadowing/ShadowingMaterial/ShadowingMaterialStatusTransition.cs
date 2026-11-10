@@ -13,20 +13,14 @@ public static class ShadowingMaterialStatusTransition
 		{
 			ShadowingMaterialStatus.Processing, new HashSet<ShadowingMaterialStatus>
 			{
-
-				ShadowingMaterialStatus.Reviewing
-			}
-		},
-		{
-			ShadowingMaterialStatus.Reviewing, new HashSet<ShadowingMaterialStatus>
-			{
 				ShadowingMaterialStatus.Ready
 			}
 		},
 		{
 			ShadowingMaterialStatus.Ready , new HashSet<ShadowingMaterialStatus>
 			{
-				ShadowingMaterialStatus.Archived
+				ShadowingMaterialStatus.Archived,
+				ShadowingMaterialStatus.Processing
 			}
 		},
 		{

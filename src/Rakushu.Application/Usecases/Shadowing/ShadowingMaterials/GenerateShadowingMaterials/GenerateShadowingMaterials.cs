@@ -50,23 +50,41 @@ internal sealed class GenerateShadowingMaterialsHandler(
 
 	private async Task<Result> ProcessAsync(ShadowingMaterial material, CancellationToken ct)
 	{
-		var segments = await materialRepository.GetTranscriptSegmentsAsync(material.VideoId, ct);
+		var start = await materialRepository.GetVideoSegmentAsync(material.VideoId, material.StartTranscriptSegmentId, ct);
+		var end = await materialRepository.GetVideoSegmentAsync(material.VideoId, material.EndTranscriptSegmentId, ct);
+		if (start is null || end is null)
+			return Result.Failure(ShadowingMaterialErrors.SegmentNotFound);
+
+		var existingRoles = await roleRepository.GetByMaterialIdAsync(material.Id, ct);
+		if (existingRoles.Count == 0)
+			return Result.Failure(ShadowingMaterialErrors.NoTranscriptSpeakers);
+		var roles = existingRoles.ToDictionary(r => r.SpeakerId, r => r);
+
+		var segments = await materialRepository.GetSegmentsBetweenAsync(material.VideoId, start.Sequence, end.Sequence, ct);
 
 		var groups = new List<Group>();
+		Group? current = null;
 		foreach (var s in segments)
 		{
 			var speakerId = s.TranscriptSpeaker?.SpeakerId;
-			if (speakerId is null)
-				continue;
-
-			var last = groups.Count > 0 ? groups[^1] : null;
-			if (last is not null && last.SpeakerId == speakerId)
+			if (speakerId is null || !roles.ContainsKey(speakerId))
 			{
-				last.SegmentIds.Add(s.Id);
-				groups[^1] = last with { Text = last.Text + s.Text, End = s.EndTime };
+				current = null;
+				continue;
+			}
+
+			if (current is not null && current.SpeakerId == speakerId)
+			{
+				current.SegmentIds.Add(s.Id);
+				var merged = current with { Text = current.Text + s.Text, End = s.EndTime };
+				groups[^1] = merged;
+				current = merged;
 			}
 			else
-				groups.Add(new Group(speakerId, s.Text, s.StartTime, s.EndTime, [s.Id]));
+			{
+				current = new Group(speakerId, s.Text, s.StartTime, s.EndTime, [s.Id]);
+				groups.Add(current);
+			}
 		}
 
 		if (groups.Count == 0)
@@ -86,25 +104,11 @@ internal sealed class GenerateShadowingMaterialsHandler(
 
 		return await unitOfWork.ExecuteAsync(async () =>
 		{
-			var roles = new Dictionary<SpeakerId, ShadowingRole>();
-			foreach (var g in groups)
-			{
-				if (roles.ContainsKey(g.SpeakerId))
-					continue;
-
-				var roleResult = ShadowingRole.Create(material.Id, g.SpeakerId, roles.Count + 1);
-				if (roleResult.IsFailure)
-					return Result.Failure(roleResult.Error);
-
-				roleRepository.Add(roleResult.Value);
-				roles[g.SpeakerId] = roleResult.Value;
-			}
-
 			for (var i = 0; i < groups.Count; i++)
 			{
 				var g = groups[i];
 				var lineResult = ShadowingRoleLine.Create(
-					material.Id, roles[g.SpeakerId].Id, i + 1, g.Text, g.Start, g.End, audioKeys[i]);
+					roles[g.SpeakerId].Id, i + 1, g.Text, g.Start, g.End, audioKeys[i]);
 				if (lineResult.IsFailure)
 					return Result.Failure(lineResult.Error);
 
@@ -112,7 +116,7 @@ internal sealed class GenerateShadowingMaterialsHandler(
 				roleLineRepository.Add(lineResult.Value);
 			}
 
-			var statusResult = material.ChangeStatus(ShadowingMaterialStatus.Reviewing);
+			var statusResult = material.ChangeStatus(ShadowingMaterialStatus.Ready);
 			if (statusResult.IsFailure)
 				return Result.Failure(statusResult.Error);
 

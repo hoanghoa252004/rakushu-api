@@ -1,5 +1,6 @@
 using FluentValidation;
 using MediatR;
+using Rakushu.Application.Common.Parsing;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
@@ -16,8 +17,7 @@ public sealed record GetShadowingMaterialsQuery(
 	int PageNumber,
 	int PageSize,
 	Guid? VideoId,
-	MaterialType? Type,
-	ShadowingMaterialStatus? Status,
+	string? Status,
 	int LinePageNumber = 1,
 	int LinePageSize = 20)
 	: IRequest<Result<PaginatedList<ShadowingMaterialDto>>>;
@@ -38,23 +38,28 @@ internal sealed class GetShadowingMaterialsHandler(
 	IShadowingRoleRepository roleRepository,
 	IShadowingRoleLineRepository roleLineRepository,
 	IStorageService storageService,
+	IVideoRepository videoRepository,
 	ICurrentUserContext currentUser)
 	: IRequestHandler<GetShadowingMaterialsQuery, Result<PaginatedList<ShadowingMaterialDto>>>
 {
 	public async Task<Result<PaginatedList<ShadowingMaterialDto>>> Handle(
 		GetShadowingMaterialsQuery request, CancellationToken cancellationToken)
 	{
-		// Non-curators only see Ready materials.
-		var status = currentUser.Role == RoleCodes.LinguisticCurator
-			? request.Status
-			: ShadowingMaterialStatus.Ready;
+		var parsedStatus = EnumParser.ParseOptional<ShadowingMaterialStatus>(request.Status, "status");
+		if (parsedStatus.IsFailure)
+			return Result.Failure<PaginatedList<ShadowingMaterialDto>>(parsedStatus.Error);
+
+		// Curators see all; learners only see materials they created or that belong to sessions they joined.
+		var isCurator = currentUser.Role == RoleCodes.LinguisticCurator;
+		if (!isCurator && currentUser.UserId is null)
+			return Result.Failure<PaginatedList<ShadowingMaterialDto>>(ShadowingMaterialErrors.NotAvailable);
 
 		var (items, total) = await repository.GetPagedAsync(
 			request.PageNumber,
 			request.PageSize,
 			request.VideoId.HasValue ? VideoId.From(request.VideoId.Value) : null,
-			request.Type,
-			status,
+			parsedStatus.Value,
+			isCurator ? null : currentUser.UserId,
 			cancellationToken);
 
 		var dtos = new List<ShadowingMaterialDto>();

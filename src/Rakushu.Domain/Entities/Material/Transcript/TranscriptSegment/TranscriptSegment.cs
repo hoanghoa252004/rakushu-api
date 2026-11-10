@@ -39,6 +39,14 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	// Subtitle
 	public Subtitle.Subtitle Subtitle { get; private set; } = null!;
 
+	// ShadowingMaterials starting at this segment
+	private readonly List<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> _startingShadowingMaterials = new();
+	public IReadOnlyCollection<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> StartingShadowingMaterials => _startingShadowingMaterials.AsReadOnly();
+
+	// ShadowingMaterials ending at this segment
+	private readonly List<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> _endingShadowingMaterials = new();
+	public IReadOnlyCollection<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> EndingShadowingMaterials => _endingShadowingMaterials.AsReadOnly();
+
 	// CONSTRUCTORS & FACTORY METHODS
 	private TranscriptSegment() { }
 

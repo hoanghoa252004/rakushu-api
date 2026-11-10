@@ -5,7 +5,6 @@ namespace Rakushu.Application.Usecases.Shadowing.ShadowingRoleLines;
 
 public sealed record ShadowingRoleLineDto(
 	Guid Id,
-	Guid ShadowingMaterialId,
 	Guid ShadowingRoleId,
 	int SortOrder,
 	string Text,
@@ -24,7 +23,6 @@ public sealed record ShadowingRoleLineDto(
 			url = await storageService.CreatePresignedReadUrlAsync(l.AudioKey, cancellationToken);
 		return new ShadowingRoleLineDto(
 			l.Id.Value,
-			l.ShadowingMaterialId.Value,
 			l.ShadowingRoleId.Value,
 			l.SortOrder,
 			l.Text,

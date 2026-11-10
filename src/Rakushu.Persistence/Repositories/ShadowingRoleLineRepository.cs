@@ -41,7 +41,7 @@ public sealed class ShadowingRoleLineRepository
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.Set<ShadowingRoleLineTranscriptSegment>().AnyAsync(
-			x => x.ShadowingMaterialId == materialId
+			x => x.ShadowingRoleLine.ShadowingRole.ShadowingMaterialId == materialId
 				&& segmentIds.Contains(x.TranscriptSegmentId)
 				&& (excludeLineId == null || x.ShadowingRoleLineId != excludeLineId),
 			cancellationToken);
@@ -53,7 +53,7 @@ public sealed class ShadowingRoleLineRepository
 	{
 		var lines = await _context.ShadowingRoleLines
 			.Include(l => l.TranscriptSegments).ThenInclude(x => x.TranscriptSegment)
-			.Where(l => l.ShadowingMaterialId == materialId)
+			.Where(l => l.ShadowingRole.ShadowingMaterialId == materialId)
 			.ToListAsync(cancellationToken);
 
 		var order = 1;
@@ -72,7 +72,7 @@ public sealed class ShadowingRoleLineRepository
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.ShadowingRoleLines.AnyAsync(
-			l => l.ShadowingMaterialId == materialId
+			l => l.ShadowingRole.ShadowingMaterialId == materialId
 				&& l.SortOrder == sortOrder
 				&& (excludeId == null || l.Id != excludeId),
 			cancellationToken);
@@ -83,11 +83,22 @@ public sealed class ShadowingRoleLineRepository
 		CancellationToken cancellationToken = default)
 	{
 		var max = await _context.ShadowingRoleLines
-			.Where(l => l.ShadowingMaterialId == materialId)
+			.Where(l => l.ShadowingRole.ShadowingMaterialId == materialId)
 			.Select(l => (int?)l.SortOrder)
 			.MaxAsync(cancellationToken);
 
 		return (max ?? 0) + 1;
+	}
+
+	public async Task<ShadowingRoleLine?> GetPreviousAsync(
+		ShadowingMaterialId materialId,
+		int sortOrder,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingRoleLines.AsNoTracking()
+			.Where(l => l.ShadowingRole.ShadowingMaterialId == materialId && l.SortOrder < sortOrder)
+			.OrderByDescending(l => l.SortOrder)
+			.FirstOrDefaultAsync(cancellationToken);
 	}
 
 	public async Task<(IReadOnlyList<ShadowingRoleLine> Items, int TotalCount)> GetPagedAsync(
@@ -100,7 +111,7 @@ public sealed class ShadowingRoleLineRepository
 	{
 		var query = _context.ShadowingRoleLines
 			.AsNoTracking()
-			.Where(l => l.ShadowingMaterialId == materialId);
+			.Where(l => l.ShadowingRole.ShadowingMaterialId == materialId);
 
 		if (speakerId is not null)
 			query = query.Where(l => l.ShadowingRole.SpeakerId == speakerId);

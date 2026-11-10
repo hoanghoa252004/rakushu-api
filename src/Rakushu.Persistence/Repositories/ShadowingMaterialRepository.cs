@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 
@@ -10,10 +12,63 @@ public sealed class ShadowingMaterialRepository
 {
 	public ShadowingMaterialRepository(RakushuDbContext context) : base(context) { }
 
-	public async Task<bool> ExistsByVideoAndTypeAsync(VideoId videoId, MaterialType type, CancellationToken cancellationToken = default)
+	public async Task<bool> HasProcessingByLearnerAsync(UserId learnerId, CancellationToken cancellationToken = default)
 	{
 		return await _context.ShadowingMaterials
-			.AnyAsync(m => m.VideoId == videoId && m.Type == type, cancellationToken);
+			.AnyAsync(m => m.Video.LearnerId == learnerId && m.Status == ShadowingMaterialStatus.Processing, cancellationToken);
+	}
+
+	public async Task<bool> RangeExistsAsync(
+		TranscriptSegmentId startSegmentId,
+		TranscriptSegmentId endSegmentId,
+		ShadowingMaterialId? excludeId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingMaterials.AnyAsync(
+			m => m.StartTranscriptSegmentId == startSegmentId
+				&& m.EndTranscriptSegmentId == endSegmentId
+				&& (excludeId == null || m.Id != excludeId),
+			cancellationToken);
+	}
+
+	public async Task<bool> HasSessionsAsync(ShadowingMaterialId materialId, CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingSessions.AnyAsync(s => s.ShadowingMaterialId == materialId, cancellationToken);
+	}
+
+	public async Task<TranscriptSegment?> GetVideoSegmentAsync(
+		VideoId videoId,
+		TranscriptSegmentId segmentId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.TranscriptSegments
+			.AsNoTracking()
+			.FirstOrDefaultAsync(s => s.Id == segmentId && s.Transcript.VideoId == videoId, cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<TranscriptSegment>> GetSegmentsBetweenAsync(
+		VideoId videoId,
+		int startSequence,
+		int endSequence,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.TranscriptSegments
+			.AsNoTracking()
+			.Include(s => s.TranscriptSpeaker)
+			.Where(s => s.Transcript.VideoId == videoId && s.Sequence >= startSequence && s.Sequence <= endSequence)
+			.OrderBy(s => s.Sequence)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<TranscriptSpeaker>> GetVideoTranscriptSpeakersAsync(
+		VideoId videoId,
+		IReadOnlyCollection<TranscriptSpeakerId> ids,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.TranscriptSpeakers
+			.AsNoTracking()
+			.Where(ts => ids.Contains(ts.Id) && ts.Transcript.VideoId == videoId)
+			.ToListAsync(cancellationToken);
 	}
 
 	public async Task<int> GetNextVersionAsync(VideoId videoId, CancellationToken cancellationToken = default)
@@ -30,16 +85,18 @@ public sealed class ShadowingMaterialRepository
 		int pageNumber,
 		int pageSize,
 		VideoId? videoId,
-		MaterialType? type,
 		ShadowingMaterialStatus? status,
+		UserId? visibleToUserId,
 		CancellationToken cancellationToken = default)
 	{
 		var query = _context.ShadowingMaterials.AsNoTracking().AsQueryable();
 
+		if (visibleToUserId is not null)
+			query = query.Where(m => m.CreatedById == visibleToUserId
+				|| _context.ShadowingSessionMembers.Any(sm =>
+					sm.MemberId == visibleToUserId && sm.ShadowingSession.ShadowingMaterialId == m.Id));
 		if (videoId is not null)
 			query = query.Where(m => m.VideoId == videoId);
-		if (type is not null)
-			query = query.Where(m => m.Type == type);
 		if (status is not null)
 			query = query.Where(m => m.Status == status);
 
@@ -51,6 +108,18 @@ public sealed class ShadowingMaterialRepository
 			.ToListAsync(cancellationToken);
 
 		return (items, total);
+	}
+
+	public async Task<bool> IsVisibleToUserAsync(
+		ShadowingMaterialId materialId,
+		UserId userId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingMaterials.AnyAsync(m => m.Id == materialId
+			&& (m.CreatedById == userId
+				|| _context.ShadowingSessionMembers.Any(sm =>
+					sm.MemberId == userId && sm.ShadowingSession.ShadowingMaterialId == m.Id)),
+			cancellationToken);
 	}
 
 	public async Task<IReadOnlyList<ShadowingMaterial>> GetProcessingAsync(

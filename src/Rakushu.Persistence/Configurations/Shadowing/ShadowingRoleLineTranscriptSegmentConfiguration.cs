@@ -33,16 +33,5 @@ internal sealed class ShadowingRoleLineTranscriptSegmentConfiguration : IEntityT
 			.WithMany()
 			.HasForeignKey(x => x.TranscriptSegmentId)
 			.OnDelete(DeleteBehavior.Restrict);
-
-		// ShadowingMaterialId
-		builder.Property(x => x.ShadowingMaterialId)
-			.HasConversion(
-				id => id.Value,
-				value => ShadowingMaterialId.From(value))
-			.IsRequired();
-
-		// A transcript segment can appear only once per material (version)
-		builder.HasIndex(x => new { x.ShadowingMaterialId, x.TranscriptSegmentId })
-			.IsUnique();
 	}
 }

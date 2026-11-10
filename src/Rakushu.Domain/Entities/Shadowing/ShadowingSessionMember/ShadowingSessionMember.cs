@@ -39,4 +39,30 @@ public sealed class ShadowingSessionMember : Entity<ShadowingSessionMemberId>
 		_attempts.AsReadOnly();
 
 	private ShadowingSessionMember() { }
+
+	private ShadowingSessionMember(
+		ShadowingSessionId sessionId,
+		UserId memberId,
+		SessionMemberJoinType joinType,
+		ShadowingSessionInvitationId? invitationId,
+		DateTimeOffset joinedAt) : base(ShadowingSessionMemberId.Create())
+	{
+		ShadowingSessionId = sessionId;
+		MemberId = memberId;
+		JoinType = joinType;
+		ShadowingSessionInvitationId = invitationId;
+		JoinedAt = joinedAt;
+	}
+
+	public static ShadowingSessionMember CreateHost(ShadowingSessionId sessionId, UserId hostId, DateTimeOffset now)
+		=> new(sessionId, hostId, SessionMemberJoinType.Host, null, now);
+
+	public static ShadowingSessionMember CreateFromInvitation(
+		ShadowingSessionId sessionId, UserId memberId, ShadowingSessionInvitationId invitationId, DateTimeOffset now)
+		=> new(sessionId, memberId, SessionMemberJoinType.Invitation, invitationId, now);
+
+	public static ShadowingSessionMember CreatePublicJoin(ShadowingSessionId sessionId, UserId memberId, DateTimeOffset now)
+		=> new(sessionId, memberId, SessionMemberJoinType.PublicJoin, null, now);
+
+	public void ChooseRole(ShadowingRoleId roleId) => ShadowingRoleId = roleId;
 }

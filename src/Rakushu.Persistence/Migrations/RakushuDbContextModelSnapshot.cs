@@ -1456,6 +1456,12 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("duration_ms");
 
+                    b.Property<bool>("IsSkipped")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_skipped");
+
                     b.Property<Guid>("ShadowingAttemptId")
                         .HasColumnType("uuid")
                         .HasColumnName("shadowing_attempt_id");
@@ -1491,17 +1497,29 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<Guid?>("EndTranscriptSegmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("end_transcript_segment_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("StartTranscriptSegmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("start_transcript_segment_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("type");
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
@@ -1513,6 +1531,16 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_shadowing_materials");
+
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_shadowing_materials_created_by_id");
+
+                    b.HasIndex("EndTranscriptSegmentId")
+                        .HasDatabaseName("ix_shadowing_materials_end_transcript_segment_id");
+
+                    b.HasIndex("StartTranscriptSegmentId", "EndTranscriptSegmentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shadowing_materials_start_transcript_segment_id_end_transcr");
 
                     b.HasIndex("VideoId", "Version")
                         .IsUnique()
@@ -1572,10 +1600,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("interval")
                         .HasColumnName("end_time");
 
-                    b.Property<Guid>("ShadowingMaterialId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("shadowing_material_id");
-
                     b.Property<Guid>("ShadowingRoleId")
                         .HasColumnType("uuid")
                         .HasColumnName("shadowing_role_id");
@@ -1596,14 +1620,29 @@ namespace Rakushu.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_shadowing_role_lines");
 
-                    b.HasIndex("ShadowingRoleId")
-                        .HasDatabaseName("ix_shadowing_role_lines_shadowing_role_id");
-
-                    b.HasIndex("ShadowingMaterialId", "SortOrder")
-                        .IsUnique()
-                        .HasDatabaseName("ix_shadowing_role_lines_shadowing_material_id_sort_order");
+                    b.HasIndex("ShadowingRoleId", "SortOrder")
+                        .HasDatabaseName("ix_shadowing_role_lines_shadowing_role_id_sort_order");
 
                     b.ToTable("shadowing_role_lines", "shadowing");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLineTranscriptSegment", b =>
+                {
+                    b.Property<Guid>("ShadowingRoleLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shadowing_role_line_id");
+
+                    b.Property<Guid>("TranscriptSegmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("transcript_segment_id");
+
+                    b.HasKey("ShadowingRoleLineId", "TranscriptSegmentId")
+                        .HasName("pk_shadowing_role_line_transcript_segment");
+
+                    b.HasIndex("TranscriptSegmentId")
+                        .HasDatabaseName("ix_shadowing_role_line_transcript_segment_transcript_segment_id");
+
+                    b.ToTable("shadowing_role_line_transcript_segment", "shadowing");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", b =>
@@ -1733,7 +1772,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("member_id");
 
-                    b.Property<Guid>("ShadowingRoleId")
+                    b.Property<Guid?>("ShadowingRoleId")
                         .HasColumnType("uuid")
                         .HasColumnName("shadowing_role_id");
 
@@ -2641,7 +2680,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasConstraintName("fk_shadowing_attempt_details_shadowing_attempts_shadowing_atte");
 
                     b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLine", "ShadowingRoleLine")
-                        .WithMany()
+                        .WithMany("AttemptDetails")
                         .HasForeignKey("ShadowingRoleLineId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
@@ -2654,12 +2693,37 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", b =>
                 {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_materials_users_created_by_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "EndTranscriptSegment")
+                        .WithMany("EndingShadowingMaterials")
+                        .HasForeignKey("EndTranscriptSegmentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_shadowing_materials_transcript_segments_end_transcript_segm");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "StartTranscriptSegment")
+                        .WithMany("StartingShadowingMaterials")
+                        .HasForeignKey("StartTranscriptSegmentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_shadowing_materials_transcript_segments_start_transcript_se");
+
                     b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
                         .WithMany("ShadowingMaterials")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_shadowing_materials_videos_video_id");
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("EndTranscriptSegment");
+
+                    b.Navigation("StartTranscriptSegment");
 
                     b.Navigation("Video");
                 });
@@ -2687,13 +2751,6 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLine", b =>
                 {
-                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", "ShadowingMaterial")
-                        .WithMany("RoleLines")
-                        .HasForeignKey("ShadowingMaterialId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_shadowing_role_lines_shadowing_materials_shadowing_material");
-
                     b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingRole.ShadowingRole", "ShadowingRole")
                         .WithMany("RoleLines")
                         .HasForeignKey("ShadowingRoleId")
@@ -2701,9 +2758,28 @@ namespace Rakushu.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_shadowing_role_lines_shadowing_roles_shadowing_role_id");
 
-                    b.Navigation("ShadowingMaterial");
-
                     b.Navigation("ShadowingRole");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLineTranscriptSegment", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLine", "ShadowingRoleLine")
+                        .WithMany("TranscriptSegments")
+                        .HasForeignKey("ShadowingRoleLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_role_line_transcript_segment_shadowing_role_lines");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
+                        .WithMany()
+                        .HasForeignKey("TranscriptSegmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shadowing_role_line_transcript_segment_transcript_segments_");
+
+                    b.Navigation("ShadowingRoleLine");
+
+                    b.Navigation("TranscriptSegment");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", b =>
@@ -2762,7 +2838,6 @@ namespace Rakushu.Persistence.Migrations
                         .WithMany("Members")
                         .HasForeignKey("ShadowingRoleId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("fk_shadowing_session_members_shadowing_roles_shadowing_role_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", "ShadowingSession")
@@ -2988,7 +3063,11 @@ namespace Rakushu.Persistence.Migrations
                 {
                     b.Navigation("Bunsetsus");
 
+                    b.Navigation("EndingShadowingMaterials");
+
                     b.Navigation("LearningUnits");
+
+                    b.Navigation("StartingShadowingMaterials");
 
                     b.Navigation("Subtitle")
                         .IsRequired();
@@ -3030,8 +3109,6 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial", b =>
                 {
-                    b.Navigation("RoleLines");
-
                     b.Navigation("Roles");
 
                     b.Navigation("Sessions");
@@ -3042,6 +3119,13 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("RoleLines");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine.ShadowingRoleLine", b =>
+                {
+                    b.Navigation("AttemptDetails");
+
+                    b.Navigation("TranscriptSegments");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingSession.ShadowingSession", b =>

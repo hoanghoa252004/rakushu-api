@@ -21,6 +21,9 @@ using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSession;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSessionInvitation;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
@@ -78,6 +81,10 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IShadowingMaterialRepository, ShadowingMaterialRepository>();
 		services.AddScoped<IShadowingRoleRepository, ShadowingRoleRepository>();
 		services.AddScoped<IShadowingRoleLineRepository, ShadowingRoleLineRepository>();
+		services.AddScoped<IShadowingSessionRepository, ShadowingSessionRepository>();
+		services.AddScoped<IShadowingSessionMemberRepository, ShadowingSessionMemberRepository>();
+		services.AddScoped<IShadowingSessionInvitationRepository, ShadowingSessionInvitationRepository>();
+		services.AddScoped<Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.IShadowingAttemptRepository, ShadowingAttemptRepository>();
 
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;

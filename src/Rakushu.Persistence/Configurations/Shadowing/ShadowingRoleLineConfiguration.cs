@@ -20,17 +20,6 @@ internal sealed class ShadowingRoleLineConfiguration : IEntityTypeConfiguration<
 				id => id.Value,
 				value => ShadowingRoleLineId.From(value));
 
-		// ShadowingMaterialId
-		builder.Property(l => l.ShadowingMaterialId)
-			.HasConversion(
-				id => id.Value,
-				value => ShadowingMaterialId.From(value))
-			.IsRequired();
-		builder.HasOne(l => l.ShadowingMaterial)
-			.WithMany(m => m.RoleLines)
-			.HasForeignKey(l => l.ShadowingMaterialId)
-			.OnDelete(DeleteBehavior.Cascade);
-
 		// ShadowingRoleId
 		builder.Property(l => l.ShadowingRoleId)
 			.HasConversion(
@@ -45,7 +34,7 @@ internal sealed class ShadowingRoleLineConfiguration : IEntityTypeConfiguration<
 		// SortOrder
 		builder.Property(l => l.SortOrder)
 			.IsRequired();
-		builder.HasIndex(l => new { l.ShadowingMaterialId, l.SortOrder });
+		builder.HasIndex(l => new { l.ShadowingRoleId, l.SortOrder });
 
 		// TranscriptSegments
 		builder.HasMany(l => l.TranscriptSegments)

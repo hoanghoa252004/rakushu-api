@@ -6,6 +6,7 @@ using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
+using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 
 namespace Rakushu.Application.Usecases.Shadowing.ShadowingMaterials.GetShadowingMaterialById;
@@ -30,6 +31,7 @@ internal sealed class GetShadowingMaterialByIdHandler(
 	IShadowingRoleRepository roleRepository,
 	IShadowingRoleLineRepository roleLineRepository,
 	IStorageService storageService,
+	IVideoRepository videoRepository,
 	ICurrentUserContext currentUser)
 	: IRequestHandler<GetShadowingMaterialByIdQuery, Result<ShadowingMaterialDto>>
 {
@@ -40,8 +42,12 @@ internal sealed class GetShadowingMaterialByIdHandler(
 		if (material is null)
 			return Result.Failure<ShadowingMaterialDto>(ShadowingMaterialErrors.NotFound);
 
-		if (currentUser.Role != RoleCodes.LinguisticCurator && material.Status != ShadowingMaterialStatus.Ready)
-			return Result.Failure<ShadowingMaterialDto>(ShadowingMaterialErrors.NotAvailable);
+		if (currentUser.Role != RoleCodes.LinguisticCurator)
+		{
+			if (currentUser.UserId is null
+				|| !await repository.IsVisibleToUserAsync(material.Id, currentUser.UserId, cancellationToken))
+				return Result.Failure<ShadowingMaterialDto>(ShadowingMaterialErrors.NotAvailable);
+		}
 
 		return Result.Success(await ShadowingMaterialDto.FromEntityWithDetailsAsync(
 			material, roleRepository, roleLineRepository, storageService,

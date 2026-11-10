@@ -22,18 +22,20 @@ internal static class ServiceCollectionExtensions
 	internal static IServiceCollection AddRakushuWorkerServices(this IServiceCollection services)
 	{
 		// PAYMENT
-		//services.AddHostedService<PaymentExpirationWorker>();
-		//services.AddHostedService<TransactionExpiryWorker>();
-		//services.AddHostedService<ImportTranscriptWorker>();
-		//services.AddHostedService<NlpProcessWorker>();
-		//services.AddHostedService<KnowledgeNlpProcessWorker>();
-		//services.AddHostedService<KnowledgeMatchingWorker>();
-		//services.AddHostedService<TranslateTranscriptWorker>();
-		//services.AddHostedService<VideoReviewingWorker>();
+		services.AddHostedService<PaymentExpirationWorker>();
+		services.AddHostedService<TransactionExpiryWorker>();
+		services.AddHostedService<ImportTranscriptWorker>();
+		services.AddHostedService<NlpProcessWorker>();
+		services.AddHostedService<KnowledgeNlpProcessWorker>();
+		services.AddHostedService<KnowledgeMatchingWorker>();
+		services.AddHostedService<TranslateTranscriptWorker>();
+		services.AddHostedService<VideoReviewingWorker>();
 		services.AddHostedService<ShadowingMaterialProcessingWorker>();
+		services.AddHostedService<ShadowingSessionInvitationExpirationWorker>();
+		services.AddHostedService<ShadowingSessionCompletionWorker>();
 
 		// SUBSCRIPTION
-		//services.AddHostedService<SubscriptionTrackingWorker>();
+		services.AddHostedService<SubscriptionTrackingWorker>();
 
 		return services;
 	}

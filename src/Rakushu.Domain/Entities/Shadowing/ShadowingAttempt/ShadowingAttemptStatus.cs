@@ -9,7 +9,7 @@ namespace Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 public enum ShadowingAttemptStatus
 {
 	InProgress = 1,
-	Submitted = 2,
+	Completed = 2,
 	Assessed = 3,
 	Cancelled = 4
 }

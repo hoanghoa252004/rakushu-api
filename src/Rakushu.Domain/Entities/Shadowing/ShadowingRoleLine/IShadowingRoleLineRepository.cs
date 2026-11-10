@@ -39,6 +39,11 @@ public interface IShadowingRoleLineRepository : IBaseRepository<ShadowingRoleLin
 		ShadowingMaterialId materialId,
 		CancellationToken cancellationToken = default);
 
+	Task<ShadowingRoleLine?> GetPreviousAsync(
+		ShadowingMaterialId materialId,
+		int sortOrder,
+		CancellationToken cancellationToken = default);
+
 	Task<(IReadOnlyList<ShadowingRoleLine> Items, int TotalCount)> GetPagedAsync(
 		ShadowingMaterialId materialId,
 		SpeakerId? speakerId,

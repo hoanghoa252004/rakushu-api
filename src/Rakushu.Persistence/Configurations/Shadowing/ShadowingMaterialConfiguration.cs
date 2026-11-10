@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 
@@ -19,11 +21,30 @@ internal sealed class ShadowingMaterialConfiguration : IEntityTypeConfiguration<
 				id => id.Value,
 				value => ShadowingMaterialId.From(value));
 
-		// Type (enum)
-		builder.Property(s => s.Type)
-			.HasMaxLength(30)
-			.HasConversion<string>()
+		// Name
+		builder.Property(m => m.Name)
+			.HasMaxLength(200)
 			.IsRequired();
+
+		// Start / End transcript segment
+		builder.Property(m => m.StartTranscriptSegmentId)
+			.HasConversion(
+				id => id.Value,
+				value => TranscriptSegmentId.From(value));
+		builder.HasOne(m => m.StartTranscriptSegment)
+			.WithMany(s => s.StartingShadowingMaterials)
+			.HasForeignKey(m => m.StartTranscriptSegmentId)
+			.OnDelete(DeleteBehavior.SetNull);
+		builder.Property(m => m.EndTranscriptSegmentId)
+			.HasConversion(
+				id => id.Value,
+				value => TranscriptSegmentId.From(value));
+		builder.HasOne(m => m.EndTranscriptSegment)
+			.WithMany(s => s.EndingShadowingMaterials)
+			.HasForeignKey(m => m.EndTranscriptSegmentId)
+			.OnDelete(DeleteBehavior.SetNull);
+		builder.HasIndex(m => new { m.StartTranscriptSegmentId, m.EndTranscriptSegmentId })
+			.IsUnique();
 
 		// Status (enum)
 		builder.Property(s => s.Status)
@@ -47,6 +68,17 @@ internal sealed class ShadowingMaterialConfiguration : IEntityTypeConfiguration<
 			.IsRequired();
 		builder.HasIndex(m => new { m.VideoId, m.Version })
 			.IsUnique();
+
+		// CreatedById
+		builder.Property(m => m.CreatedById)
+			.HasConversion(
+				id => id.Value,
+				value => UserId.From(value))
+			.IsRequired();
+		builder.HasOne(m => m.CreatedBy)
+			.WithMany()
+			.HasForeignKey(m => m.CreatedById)
+			.OnDelete(DeleteBehavior.Restrict);
 
 		// CreatedAt
 		builder.Property(m => m.CreatedAt)

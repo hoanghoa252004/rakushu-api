@@ -1,6 +1,7 @@
 ﻿using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
 using System;
@@ -13,7 +14,6 @@ namespace Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
 
 public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 {
-	public ShadowingMaterialId ShadowingMaterialId { get; private set; } = null!;
 	public ShadowingRoleId ShadowingRoleId { get; private set; } = null!;
 	public int SortOrder { get; private set; }
 	public string Text { get; private set; } = null!;
@@ -26,9 +26,6 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 
 
 	// NAVIGATION PROPERTIES
-	// ShadowingMaterial
-	public ShadowingMaterial.ShadowingMaterial ShadowingMaterial { get; private set; } = null!;
-
 	// ShadowingRole
 	public ShadowingRole.ShadowingRole ShadowingRole { get; private set; } = null!;
 
@@ -36,6 +33,12 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 	private readonly List<ShadowingRoleLineTranscriptSegment> _transcriptSegments = new();
 
 	public IReadOnlyCollection<ShadowingRoleLineTranscriptSegment> TranscriptSegments => _transcriptSegments.AsReadOnly();
+
+
+	// ShadowingAttemptDetails
+	private readonly List<ShadowingAttemptDetail> _attemptDetails = new();
+
+	public IReadOnlyCollection<ShadowingAttemptDetail> AttemptDetails => _attemptDetails.AsReadOnly();
 
 	public void SetSortOrder(int sortOrder) => SortOrder = sortOrder;
 
@@ -47,14 +50,13 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 
 		var existing = _transcriptSegments.Select(x => x.TranscriptSegmentId.Value).ToHashSet();
 		foreach (var id in target.Where(id => !existing.Contains(id)))
-			_transcriptSegments.Add(new ShadowingRoleLineTranscriptSegment(Id, TranscriptSegmentId.From(id), ShadowingMaterialId));
+			_transcriptSegments.Add(new ShadowingRoleLineTranscriptSegment(Id, TranscriptSegmentId.From(id)));
 	}
 
 	private ShadowingRoleLine() { }
 
 	private ShadowingRoleLine(
 		ShadowingRoleLineId id,
-		ShadowingMaterialId shadowingMaterialId,
 		ShadowingRoleId shadowingRoleId,
 		int sortOrder,
 		string text,
@@ -62,7 +64,6 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 		TimeSpan endTime,
 		string audioKey) : base(id)
 	{
-		ShadowingMaterialId = shadowingMaterialId;
 		ShadowingRoleId = shadowingRoleId;
 		SortOrder = sortOrder;
 		Text = text;
@@ -72,7 +73,6 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 	}
 
 	public static Result<ShadowingRoleLine> Create(
-		ShadowingMaterialId shadowingMaterialId,
 		ShadowingRoleId shadowingRoleId,
 		int sortOrder,
 		string text,
@@ -86,7 +86,6 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 
 		return Result.Success(new ShadowingRoleLine(
 			ShadowingRoleLineId.Create(),
-			shadowingMaterialId,
 			shadowingRoleId,
 			sortOrder,
 			text.Trim(),

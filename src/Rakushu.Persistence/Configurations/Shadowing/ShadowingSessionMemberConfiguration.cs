@@ -37,8 +37,7 @@ internal sealed class ShadowingSessionMemberConfiguration : IEntityTypeConfigura
 		builder.Property(m => m.ShadowingRoleId)
 			.HasConversion(
 				id => id.Value,
-				value => ShadowingRoleId.From(value))
-			.IsRequired();
+				value => ShadowingRoleId.From(value));
 		builder.HasOne(m => m.ShadowingRole)
 			.WithMany(s => s.Members)
 			.HasForeignKey(m => m.ShadowingRoleId)

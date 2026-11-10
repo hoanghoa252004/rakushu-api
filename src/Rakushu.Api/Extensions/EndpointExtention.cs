@@ -45,10 +45,12 @@ public static class EndpointExtention
 					.WithOrigins(
 						"http://localhost:3000",
 						"http://localhost:8000",
+						"http://localhost:8080",
 						"https://fptu-rakushu.com"
 					)
 					.AllowAnyHeader()
-					.AllowAnyMethod();
+					.AllowAnyMethod()
+					.AllowCredentials();
 			});
 		});
 

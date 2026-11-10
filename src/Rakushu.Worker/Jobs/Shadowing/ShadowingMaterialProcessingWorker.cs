@@ -26,7 +26,7 @@ public sealed class ShadowingMaterialProcessingWorker(
 				if (result.IsFailure)
 					logger.LogError("Shadowing material processing failed: {Error}", result.Error);
 				else if (result.Value > 0)
-					logger.LogInformation("Moved {Count} shadowing material(s) to Reviewing.", result.Value);
+					logger.LogInformation("Moved {Count} shadowing material(s) to Ready.", result.Value);
 			}
 			catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
 			{

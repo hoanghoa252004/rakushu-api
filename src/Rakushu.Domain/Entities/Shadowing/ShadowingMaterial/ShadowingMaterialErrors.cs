@@ -8,6 +8,34 @@ public static class ShadowingMaterialErrors
 		"SHADOWING_MATERIAL.NOT_FOUND",
 		"The shadowing material was not found.");
 
+	public static readonly Error InvalidName = Error.Validation(
+		"SHADOWING_MATERIAL.INVALID_NAME",
+		"Name is required and must not exceed 200 characters.");
+
+	public static readonly Error SegmentNotFound = Error.NotFound(
+		"SHADOWING_MATERIAL.SEGMENT_NOT_FOUND",
+		"Start or end transcript segment was not found in the video.");
+
+	public static readonly Error InvalidSegmentRange = Error.Validation(
+		"SHADOWING_MATERIAL.INVALID_SEGMENT_RANGE",
+		"Start segment must not come after end segment.");
+
+	public static readonly Error TranscriptSpeakerInvalid = Error.Validation(
+		"SHADOWING_MATERIAL.TRANSCRIPT_SPEAKER_INVALID",
+		"Transcript speakers must exist in the video, be mapped to an active speaker, and appear within the selected segment range.");
+
+	public static readonly Error ProcessingMaterialExists = Error.Conflict(
+		"SHADOWING_MATERIAL.PROCESSING_EXISTS",
+		"You already have a material being processed.");
+
+	public static readonly Error RangeAlreadyExists = Error.Conflict(
+		"SHADOWING_MATERIAL.RANGE_EXISTS",
+		"A material with the same start and end segment already exists.");
+
+	public static readonly Error HasSessions = Error.Conflict(
+		"SHADOWING_MATERIAL.HAS_SESSIONS",
+		"The material already has sessions.");
+
 	public static readonly Error InvalidType = Error.Validation(
 		"SHADOWING_MATERIAL.INVALID_TYPE",
 		"Invalid shadowing material type.");
@@ -26,7 +54,7 @@ public static class ShadowingMaterialErrors
 
 	public static readonly Error LearnerNotAllowed = Error.Forbidden(
 		"SHADOWING_MATERIAL.LEARNER_NOT_ALLOWED",
-		"A learner can only create a material for their own video.");
+		"A learner can only create a material for a Curated video or a video they uploaded, and can only modify their own materials.");
 
 	public static readonly Error LearnerMaterialAlreadyExists = Error.Conflict(
 		"SHADOWING_MATERIAL.LEARNER_MATERIAL_ALREADY_EXISTS",
@@ -46,7 +74,7 @@ public static class ShadowingMaterialErrors
 
 	public static readonly Error NotEditable = Error.Conflict(
 		"SHADOWING_MATERIAL.NOT_EDITABLE",
-		"Roles and role lines can only be modified while the material status is Reviewing.");
+		"An archived shadowing material cannot be modified.");
 
 	public static readonly Error NotAvailable = Error.NotFound(
 		"SHADOWING_MATERIAL.NOT_AVAILABLE",

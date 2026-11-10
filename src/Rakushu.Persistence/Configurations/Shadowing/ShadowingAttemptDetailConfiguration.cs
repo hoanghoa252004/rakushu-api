@@ -38,7 +38,7 @@ internal sealed class ShadowingAttemptDetailConfiguration : IEntityTypeConfigura
 				value => ShadowingRoleLineId.From(value))
 			.IsRequired();
 		builder.HasOne(d => d.ShadowingRoleLine)
-			.WithMany()
+			.WithMany(x => x.AttemptDetails)
 			.HasForeignKey(d => d.ShadowingRoleLineId)
 			.OnDelete(DeleteBehavior.Restrict);
 
@@ -52,6 +52,11 @@ internal sealed class ShadowingAttemptDetailConfiguration : IEntityTypeConfigura
 
 		// DurationMs
 		builder.Property(d => d.DurationMs);
+
+		// IsSkipped
+		builder.Property(d => d.IsSkipped)
+			.IsRequired()
+			.HasDefaultValue(false);
 
 		// SubmittedAt
 		builder.Property(d => d.SubmittedAt);

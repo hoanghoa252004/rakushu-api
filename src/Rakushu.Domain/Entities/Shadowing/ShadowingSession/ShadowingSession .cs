@@ -33,4 +33,101 @@ public sealed class ShadowingSession : Entity<ShadowingSessionId>
 	public IReadOnlyCollection<ShadowingAttempt.ShadowingAttempt> Attempts => _attempts.AsReadOnly();
 
 	private ShadowingSession() { }
+
+	private ShadowingSession(
+		ShadowingSessionId id,
+		ShadowingMaterialId materialId,
+		UserId hostId,
+		string title,
+		ShadowingSessionVisibility visibility,
+		DateTimeOffset scheduledStartAt) : base(id)
+	{
+		ShadowingMaterialId = materialId;
+		HostId = hostId;
+		Title = title;
+		Visibility = visibility;
+		Status = ShadowingSessionStatus.Scheduled;
+		ScheduledStartAt = scheduledStartAt;
+	}
+
+	public static Domain.Common.Results.Result<ShadowingSession> Create(
+		ShadowingMaterialId materialId,
+		UserId hostId,
+		string title,
+		ShadowingSessionVisibility visibility,
+		DateTimeOffset scheduledStartAt,
+		DateTimeOffset now)
+	{
+		var validation = Validate(title, visibility, scheduledStartAt, now);
+		if (validation.IsFailure)
+			return Domain.Common.Results.Result.Failure<ShadowingSession>(validation.Error);
+
+		var session = new ShadowingSession(
+			ShadowingSessionId.Create(), materialId, hostId, title.Trim(), visibility, scheduledStartAt);
+		session._members.Add(ShadowingSessionMember.ShadowingSessionMember.CreateHost(session.Id, hostId, now));
+		return Domain.Common.Results.Result.Success(session);
+	}
+
+	public Domain.Common.Results.Result Update(
+		string title,
+		ShadowingSessionVisibility visibility,
+		DateTimeOffset scheduledStartAt,
+		DateTimeOffset now)
+	{
+		if (Status != ShadowingSessionStatus.Scheduled)
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.NotScheduled);
+
+		var validation = Validate(title, visibility, scheduledStartAt, now);
+		if (validation.IsFailure)
+			return validation;
+
+		Title = title.Trim();
+		Visibility = visibility;
+		ScheduledStartAt = scheduledStartAt;
+		return Domain.Common.Results.Result.Success();
+	}
+
+	public Domain.Common.Results.Result Cancel()
+	{
+		if (Status != ShadowingSessionStatus.Scheduled)
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.NotScheduled);
+
+		Status = ShadowingSessionStatus.Cancelled;
+		return Domain.Common.Results.Result.Success();
+	}
+
+	public Domain.Common.Results.Result Start(DateTimeOffset now)
+	{
+		if (Status != ShadowingSessionStatus.Scheduled)
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.NotScheduled);
+
+		Status = ShadowingSessionStatus.InProgress;
+		StartedAt = now;
+		return Domain.Common.Results.Result.Success();
+	}
+
+	public Domain.Common.Results.Result Finish(DateTimeOffset now, bool completed)
+	{
+		if (Status != ShadowingSessionStatus.InProgress)
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.NotInProgress);
+
+		Status = completed ? ShadowingSessionStatus.Completed : ShadowingSessionStatus.Cancelled;
+		EndedAt = now;
+		return Domain.Common.Results.Result.Success();
+	}
+
+	private static Domain.Common.Results.Result Validate(
+		string title,
+		ShadowingSessionVisibility visibility,
+		DateTimeOffset scheduledStartAt,
+		DateTimeOffset now)
+	{
+		if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200)
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.InvalidTitle);
+		if (!Enum.IsDefined(visibility))
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.InvalidVisibility);
+		if (scheduledStartAt < now.AddMinutes(10))
+			return Domain.Common.Results.Result.Failure(ShadowingSessionErrors.StartTimeTooSoon);
+		return Domain.Common.Results.Result.Success();
+	}
 }

@@ -10,7 +10,9 @@ namespace Rakushu.Application.Usecases.Shadowing.ShadowingMaterials;
 
 public sealed record ShadowingMaterialDto(
 	Guid Id,
-	string Type,
+	string Name,
+	Guid StartTranscriptSegmentId,
+	Guid EndTranscriptSegmentId,
 	string Status,
 	Guid VideoId,
 	int Version,
@@ -18,7 +20,7 @@ public sealed record ShadowingMaterialDto(
 	IReadOnlyList<ShadowingRoleDto>? Roles = null,
 	PaginatedList<ShadowingRoleLineDto>? RoleLines = null)
 {
-	// Roles (with Speaker) and paged role lines are included only for Reviewing / Ready materials.
+	// Roles (with Speaker) and paged role lines are included only for Ready materials.
 	public static async Task<ShadowingMaterialDto> FromEntityWithDetailsAsync(
 		ShadowingMaterial m,
 		IShadowingRoleRepository roleRepository,
@@ -29,7 +31,7 @@ public sealed record ShadowingMaterialDto(
 		CancellationToken cancellationToken)
 	{
 		var dto = FromEntity(m);
-		if (m.Status != ShadowingMaterialStatus.Reviewing && m.Status != ShadowingMaterialStatus.Ready)
+		if (m.Status != ShadowingMaterialStatus.Ready)
 			return dto;
 
 		var roles = await roleRepository.GetByMaterialIdAsync(m.Id, cancellationToken);
@@ -52,7 +54,9 @@ public sealed record ShadowingMaterialDto(
 
 	public static ShadowingMaterialDto FromEntity(ShadowingMaterial m) => new(
 		m.Id.Value,
-		m.Type.ToString(),
+		m.Name,
+		m.StartTranscriptSegmentId.Value,
+		m.EndTranscriptSegmentId.Value,
 		m.Status.ToString(),
 		m.VideoId.Value,
 		m.Version,

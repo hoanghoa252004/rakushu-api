@@ -33,4 +33,40 @@ public sealed class ShadowingAttempt : Entity<ShadowingAttemptId>
 	public IReadOnlyCollection<ShadowingAssessment.ShadowingAssessment> Assessments => _assessments.AsReadOnly();
 
 	private ShadowingAttempt() { }
+
+	private ShadowingAttempt(
+		ShadowingSessionId sessionId,
+		ShadowingSessionMemberId memberId,
+		DateTimeOffset now) : base(ShadowingAttemptId.Create())
+	{
+		ShadowingSessionId = sessionId;
+		ShadowingSessionMemberId = memberId;
+		Status = ShadowingAttemptStatus.InProgress;
+		StartedAt = now;
+	}
+
+	public static ShadowingAttempt Start(
+		ShadowingSessionId sessionId,
+		ShadowingSessionMemberId memberId,
+		DateTimeOffset now) => new(sessionId, memberId, now);
+
+	public Domain.Common.Results.Result Cancel(DateTimeOffset now)
+	{
+		if (Status != ShadowingAttemptStatus.InProgress)
+			return Domain.Common.Results.Result.Failure(ShadowingAttemptErrors.NotInProgress);
+
+		Status = ShadowingAttemptStatus.Cancelled;
+		CompletedAt = now;
+		return Domain.Common.Results.Result.Success();
+	}
+
+	public Domain.Common.Results.Result Complete(DateTimeOffset now)
+	{
+		if (Status != ShadowingAttemptStatus.InProgress)
+			return Domain.Common.Results.Result.Failure(ShadowingAttemptErrors.NotInProgress);
+
+		Status = ShadowingAttemptStatus.Completed;
+		CompletedAt = now;
+		return Domain.Common.Results.Result.Success();
+	}
 }
