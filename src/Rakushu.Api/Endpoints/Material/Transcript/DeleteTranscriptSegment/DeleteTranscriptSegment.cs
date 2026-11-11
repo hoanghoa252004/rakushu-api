@@ -11,7 +11,7 @@ internal sealed class DeleteTranscriptSegment : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapTranscriptEndpoints()
+		app.MapTranscriptSegmentEndpoints()
 			.MapDelete("/segments/{segmentId:guid}", async (
 				[FromRoute] Guid videoId,
 				[FromRoute] Guid segmentId,

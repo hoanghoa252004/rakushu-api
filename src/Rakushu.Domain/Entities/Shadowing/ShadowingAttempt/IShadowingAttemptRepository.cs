@@ -52,6 +52,13 @@ public interface IShadowingAttemptRepository : IBaseRepository<ShadowingAttempt,
 
 	void AddDetail(ShadowingAttemptDetail.ShadowingAttemptDetail detail);
 
+	// Tracked Completed attempts whose session is Completed, with Details and their RoleLine loaded.
+	Task<IReadOnlyList<ShadowingAttempt>> GetPendingAssessmentAsync(
+		int batchSize,
+		CancellationToken cancellationToken = default);
+
+	void AddAssessment(ShadowingAssessment.ShadowingAssessment assessment);
+
 	// Attempts of every member of the session (ShadowingSessionMember loaded).
 	Task<IReadOnlyList<ShadowingAttempt>> GetBySessionAsync(
 		ShadowingSessionId sessionId,

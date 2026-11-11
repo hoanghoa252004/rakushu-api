@@ -44,6 +44,17 @@ public sealed class TranscriptSpeaker : Entity<TranscriptSpeakerId>
 		Label = label;
 	}
 
+	public void Update(string label, SpeakerId? speakerId)
+	{
+		Label = label;
+		SpeakerId = speakerId;
+	}
+
+	public void SetSpeakerId(SpeakerId? speakerId)
+	{
+		SpeakerId = speakerId;
+	}
+
 	public static Result<TranscriptSpeaker> Create(
 		TranscriptId transcriptId,
 		SpeakerId? speakerId,

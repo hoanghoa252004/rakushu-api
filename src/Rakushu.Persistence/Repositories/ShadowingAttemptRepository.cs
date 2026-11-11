@@ -100,6 +100,23 @@ public sealed class ShadowingAttemptRepository
 		_context.ShadowingAttemptDetails.Add(detail);
 	}
 
+	public async Task<IReadOnlyList<ShadowingAttempt>> GetPendingAssessmentAsync(
+		int batchSize, CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingAttempts
+			.Include(a => a.Details).ThenInclude(d => d.ShadowingRoleLine)
+			.Where(a => a.Status == ShadowingAttemptStatus.Completed
+				&& a.ShadowingSession.Status == ShadowingSessionStatus.Completed)
+			.OrderBy(a => a.CompletedAt)
+			.Take(batchSize)
+			.ToListAsync(cancellationToken);
+	}
+
+	public void AddAssessment(Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment assessment)
+	{
+		_context.ShadowingAssessments.Add(assessment);
+	}
+
 	public async Task<IReadOnlyList<ShadowingAttempt>> GetBySessionAsync(
 		ShadowingSessionId sessionId, CancellationToken cancellationToken = default)
 	{

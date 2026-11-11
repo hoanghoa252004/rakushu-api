@@ -40,34 +40,15 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 			if (transcript is null)
 				return Result.Failure<Guid>(TranscriptErrors.NotFound);
 
-			TranscriptSpeaker? transcriptSpeaker;
+			TranscriptSpeaker? transcriptSpeaker = null;
 			if (request.SpeakerId is not null)
 			{
-				// Validate the speaker exists in the Speaker table
 				var speakerId = SpeakerId.From(request.SpeakerId.Value);
 				var speaker = await _speakerRepository.GetByIdAsync(speakerId, cancellationToken);
 				if (speaker is null)
 					return Result.Failure<Guid>(SpeakerErrors.NotFound);
 
-				// Get or create the transcript speaker for this speaker
 				transcriptSpeaker = transcript.TranscriptSpeakers.FirstOrDefault(x => x.SpeakerId == speakerId);
-				if (transcriptSpeaker is null)
-				{
-					var addSpeakerResult = transcript.AddSpeaker(speaker.Code, speakerId);
-					if (addSpeakerResult.IsFailure)
-						return Result.Failure<Guid>(addSpeakerResult.Error);
-
-					transcriptSpeaker = addSpeakerResult.Value;
-				}
-			}
-			else
-			{
-				// No speaker provided: use an unassigned transcript speaker
-				var addSpeakerResult = transcript.AddSpeaker("UNKNOWN");
-				if (addSpeakerResult.IsFailure)
-					return Result.Failure<Guid>(addSpeakerResult.Error);
-
-				transcriptSpeaker = addSpeakerResult.Value;
 			}
 
 			// Determine the actual sequence for the new segment
@@ -76,7 +57,7 @@ internal sealed class CreateTranscriptSegmentHandler : IRequestHandler<CreateTra
 
 			// Sequence validation and shifting are handled by the domain
 			var segmentResult = transcript.InsertSegment(
-				transcriptSpeaker.Id,
+				transcriptSpeaker?.Id,
 				request.Text,
 				request.StartTime,
 				request.EndTime,

@@ -58,14 +58,14 @@ internal sealed class GetDetailTranscriptHandler : IRequestHandler<GetDetailTran
 				StartTime: x.StartTime,
 				EndTime: x.EndTime,
 				Text: x.Text,
-				TranscriptSpeaker: new TranscriptSpeakerDetailDto(
+				TranscriptSpeaker: x.TranscriptSpeaker is not null ? new TranscriptSpeakerDetailDto(
 					SpeakerLabel: x.TranscriptSpeaker.Label,
 					Id: x.TranscriptSpeaker.Speaker?.Id.Value,
 					Name: x.TranscriptSpeaker.Speaker?.Name,
 					JapaneseName: x.TranscriptSpeaker.Speaker?.JapaneseName,
 					ThemeColor: x.TranscriptSpeaker.Speaker?.ThemeColor,
 					AvatarKey: x.TranscriptSpeaker.Speaker?.AvatarKey is not null ? await _storageService.CreatePresignedReadUrlAsync(x.TranscriptSpeaker.Speaker.AvatarKey, cancellationToken) : null,
-					Description: x.TranscriptSpeaker.Speaker?.Description),
+					Description: x.TranscriptSpeaker.Speaker?.Description) : null,
 				Subtitle: x.Subtitle is not null ? new SubtitleDetailDto(
 					Id: x.Subtitle.Id.Value,
 					Sequence: x.Subtitle.Sequence,

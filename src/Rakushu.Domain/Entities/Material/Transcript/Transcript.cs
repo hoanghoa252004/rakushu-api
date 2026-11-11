@@ -86,7 +86,7 @@ public sealed partial class Transcript : Entity<TranscriptId>
 	}
 
 	public Result<TranscriptSegment.TranscriptSegment> AddSegment(
-	TranscriptSpeakerId transcriptSpeakerId,
+	TranscriptSpeakerId? transcriptSpeakerId,
 	string text,
 	TimeSpan startTime,
 	TimeSpan endTime,
@@ -112,7 +112,7 @@ public sealed partial class Transcript : Entity<TranscriptId>
 	}
 
 	public Result<TranscriptSegment.TranscriptSegment> InsertSegment(
-		TranscriptSpeakerId transcriptSpeakerId,
+		TranscriptSpeakerId? transcriptSpeakerId,
 		string text,
 		TimeSpan startTime,
 		TimeSpan endTime,
@@ -216,6 +216,22 @@ public sealed partial class Transcript : Entity<TranscriptId>
 		_transcriptSpeakers.Add(result.Value);
 
 		return result;
+	}
+
+	public Result RemoveSpeaker(TranscriptSpeaker.TranscriptSpeakerId transcriptSpeakerId)
+	{
+		var speaker = _transcriptSpeakers.FirstOrDefault(x => x.Id == transcriptSpeakerId);
+		if (speaker is null)
+			return Result.Failure(TranscriptSpeaker.TranscriptSpeakerErrors.NotFound);
+
+		foreach (var segment in _transcriptSegments.Where(s => s.TranscriptSpeakerId == transcriptSpeakerId))
+		{
+			segment.SetSpeaker(null);
+		}
+
+		_transcriptSpeakers.Remove(speaker);
+		UpdatedAt = DateTimeOffset.UtcNow;
+		return Result.Success();
 	}
 
 	public Result<TranscriptSpeaker.TranscriptSpeaker> AddSpeaker(

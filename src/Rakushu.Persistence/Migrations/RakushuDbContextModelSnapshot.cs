@@ -1130,7 +1130,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_id");
 
-                    b.Property<Guid>("TranscriptSpeakerId")
+                    b.Property<Guid?>("TranscriptSpeakerId")
                         .HasColumnType("uuid")
                         .HasColumnName("transcript_speaker_id");
 
@@ -1356,6 +1356,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AccuracyAssessmentResponse")
+                        .HasColumnType("text")
+                        .HasColumnName("accuracy_assessment_response");
+
                     b.Property<decimal?>("AccuracyScore")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
@@ -1365,10 +1369,9 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("feedback");
 
-                    b.Property<decimal?>("IntensitySimilarityScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)")
-                        .HasColumnName("intensity_similarity_score");
+                    b.Property<string>("PitchSimilarityAssessmentResponse")
+                        .HasColumnType("text")
+                        .HasColumnName("pitch_similarity_assessment_response");
 
                     b.Property<decimal?>("PitchSimilarityScore")
                         .HasPrecision(5, 2)
@@ -1382,11 +1385,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<Guid>("ShadowingAttemptDetailId")
                         .HasColumnType("uuid")
                         .HasColumnName("shadowing_attempt_detail_id");
-
-                    b.Property<decimal?>("TimingScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)")
-                        .HasColumnName("timing_score");
 
                     b.HasKey("Id")
                         .HasName("pk_shadowing_assessment_details");
@@ -2547,8 +2545,7 @@ namespace Rakushu.Persistence.Migrations
                     b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker.TranscriptSpeaker", "TranscriptSpeaker")
                         .WithMany("TranscriptSegments")
                         .HasForeignKey("TranscriptSpeakerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
+                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_transcript_segments_transcript_speakers_transcript_speaker_");
 
                     b.Navigation("Transcript");

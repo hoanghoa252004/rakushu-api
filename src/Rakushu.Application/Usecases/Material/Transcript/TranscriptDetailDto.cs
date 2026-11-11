@@ -21,7 +21,7 @@ public sealed record TranscriptSegmentDetailDto(
 	TimeSpan StartTime,
 	TimeSpan EndTime,
 	string Text,
-	TranscriptSpeakerDetailDto TranscriptSpeaker,
+	TranscriptSpeakerDetailDto? TranscriptSpeaker,
 	SubtitleDetailDto? Subtitle,
 	IReadOnlyCollection<LearningUnitDetailDto> LearningUnits,
 	IReadOnlyCollection<TranscriptItemDto> TranscriptItems,

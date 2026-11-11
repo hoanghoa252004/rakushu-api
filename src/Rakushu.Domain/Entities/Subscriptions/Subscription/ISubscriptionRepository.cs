@@ -9,4 +9,11 @@ namespace Rakushu.Domain.Entities.Subscriptions.Subscription;
 
 public interface ISubscriptionRepository : IBaseRepository<Subscription, SubscriptionId>
 {
+	Task<(IReadOnlyList<Subscription> Items, int TotalCount)> GetPagedByUserAsync(
+		Identity.User.UserId userId,
+		Plan.PlanId? planId,
+		SubscriptionStatus? status,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default);
 }

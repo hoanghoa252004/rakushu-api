@@ -49,12 +49,10 @@ internal sealed class ShadowingAssessmentDetailConfiguration : IEntityTypeConfig
 		// Scores
 		builder.Property(d => d.AccuracyScore)
 			.HasPrecision(5, 2);
-		builder.Property(d => d.TimingScore)
-			.HasPrecision(5, 2);
 		builder.Property(d => d.PitchSimilarityScore)
 			.HasPrecision(5, 2);
-		builder.Property(d => d.IntensitySimilarityScore)
-			.HasPrecision(5, 2);
+		builder.Property(d => d.AccuracyAssessmentResponse);
+		builder.Property(d => d.PitchSimilarityAssessmentResponse);
 
 		// Feedback
 		builder.Property(d => d.Feedback);

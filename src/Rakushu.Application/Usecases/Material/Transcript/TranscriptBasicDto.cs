@@ -12,7 +12,7 @@ public sealed record TranscriptSegmentBasicDto(
 	int Sequence,
 	TimeSpan StartTime,
 	TimeSpan EndTime,
-	SpeakerBasicDto Speaker,
+	SpeakerBasicDto? Speaker,
 	string Text,
 	SubtitleBasicDto Subtitle,
 	IReadOnlyCollection<LearningUnitBasicDto> LearningUnits);

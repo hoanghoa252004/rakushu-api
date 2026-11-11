@@ -15,14 +15,14 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	public TimeSpan StartTime { get; private set; }
 	public TimeSpan EndTime { get; private set; }
 	public TranscriptId TranscriptId { get; private set; } = null!;
-	public TranscriptSpeakerId TranscriptSpeakerId { get; private set; } = null!;
+	public TranscriptSpeakerId? TranscriptSpeakerId { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// Transcript
 	public Transcript Transcript { get; private set; } = null!;
 
 	// TranscriptSpeaker
-	public TranscriptSpeaker.TranscriptSpeaker TranscriptSpeaker { get; private set; } = null!;
+	public TranscriptSpeaker.TranscriptSpeaker? TranscriptSpeaker { get; private set; }
 
 	// TranscriptItems
 	private readonly List<TranscriptItem.TranscriptItem> _transcriptItems = new();
@@ -53,7 +53,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	private TranscriptSegment(
 		TranscriptSegmentId id,
 		TranscriptId transcriptId,
-		TranscriptSpeakerId transcriptSpeakerId,
+		TranscriptSpeakerId? transcriptSpeakerId,
 		string text,
 		TimeSpan startTime,
 		TimeSpan endTime,
@@ -70,7 +70,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 
 	public static Result<TranscriptSegment> Create(
 		TranscriptId transcriptId,
-		TranscriptSpeakerId transcriptSpeakerId,
+		TranscriptSpeakerId? transcriptSpeakerId,
 		string text,
 		TimeSpan startTime,
 		TimeSpan endTime,
@@ -100,7 +100,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		return Result.Success();
 	}
 
-	public void SetSpeaker(TranscriptSpeakerId transcriptSpeakerId)
+	public void SetSpeaker(TranscriptSpeakerId? transcriptSpeakerId)
 	{
 		TranscriptSpeakerId = transcriptSpeakerId;
 	}

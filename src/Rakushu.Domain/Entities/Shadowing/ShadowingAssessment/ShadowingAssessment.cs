@@ -28,4 +28,35 @@ public sealed class ShadowingAssessment : Entity<ShadowingAssessmentId>
 	public IReadOnlyCollection<ShadowingAssessmentDetail.ShadowingAssessmentDetail> Details => _details.AsReadOnly();
 
 	private ShadowingAssessment() { }
+
+	private ShadowingAssessment(ShadowingAttemptId attemptId, DateTimeOffset now)
+		: base(ShadowingAssessmentId.Create())
+	{
+		ShadowingAttemptId = attemptId;
+		Type = ShadowingAssessmentType.Automated;
+		CreatedAt = now;
+	}
+
+	public static ShadowingAssessment CreateAutomated(ShadowingAttemptId attemptId, DateTimeOffset now)
+		=> new(attemptId, now);
+
+	public void AddDetail(
+		ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetailId attemptDetailId,
+		decimal accuracyScore,
+		string? accuracyResponse,
+		decimal pitchScore,
+		string? pitchResponse)
+	{
+		_details.Add(new ShadowingAssessmentDetail.ShadowingAssessmentDetail(
+			Id, attemptDetailId, accuracyScore, accuracyResponse, pitchScore, pitchResponse));
+	}
+
+	// Overall score = average of the (accuracy + pitch) / 2 of every detail.
+	public void CalculateOverallScore()
+	{
+		var scores = _details
+			.Select(d => ((d.AccuracyScore ?? 0m) + (d.PitchSimilarityScore ?? 0m)) / 2m)
+			.ToList();
+		OverallScore = scores.Count == 0 ? null : Math.Round(scores.Average(), 2);
+	}
 }

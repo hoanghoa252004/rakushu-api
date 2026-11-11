@@ -14,12 +14,12 @@ public sealed class ShadowingAssessmentDetail : Entity<ShadowingAssessmentDetail
 	public ShadowingAttemptDetailId ShadowingAttemptDetailId { get; private set; } = null!;
 	// 0 - 100
 	public decimal? AccuracyScore { get; private set; }
-	// 0 - 100
-	public decimal? TimingScore { get; private set; }
+	// Raw response from the accuracy assessment service.
+	public string? AccuracyAssessmentResponse { get; private set; }
 	// 0 - 100
 	public decimal? PitchSimilarityScore { get; private set; }
-	// 0 - 100
-	public decimal? IntensitySimilarityScore { get; private set; }
+	// Raw response from the pitch assessment service.
+	public string? PitchSimilarityAssessmentResponse { get; private set; }
 	public string? Feedback { get; private set; }
 
 	// NAVIGATION PROPERTIES
@@ -30,4 +30,20 @@ public sealed class ShadowingAssessmentDetail : Entity<ShadowingAssessmentDetail
 
 	// CONSTRUCTORS
 	private ShadowingAssessmentDetail() { }
+
+	internal ShadowingAssessmentDetail(
+		ShadowingAssessmentId assessmentId,
+		ShadowingAttemptDetailId attemptDetailId,
+		decimal? accuracyScore,
+		string? accuracyResponse,
+		decimal? pitchScore,
+		string? pitchResponse) : base(ShadowingAssessmentDetailId.Create())
+	{
+		ShadowingAssessmentId = assessmentId;
+		ShadowingAttemptDetailId = attemptDetailId;
+		AccuracyScore = accuracyScore;
+		AccuracyAssessmentResponse = accuracyResponse;
+		PitchSimilarityScore = pitchScore;
+		PitchSimilarityAssessmentResponse = pitchResponse;
+	}
 }

@@ -17,6 +17,12 @@ public interface ITranslateService
 	Task<TranslationJobStatusDto?> FindBatchTranslationJobByNameAsync(
 		string jobName,
 		CancellationToken cancellationToken);
+
+	Task<string> TranslateTextAsync(
+		string text,
+		string sourceLanguageCode,
+		string targetLanguageCode,
+		CancellationToken cancellationToken);
 }
 
 

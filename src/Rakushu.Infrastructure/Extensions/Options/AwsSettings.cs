@@ -29,4 +29,11 @@ public sealed class AwsSettings
 	// NLP settings
 	public string NlpBaseUrl { get; set; } = string.Empty;
 
+	// Pitch assessment settings
+	public string PitchAssessmentServiceBaseUrl { get; set; } = string.Empty;
+
+	// Azure Speech settings
+	public string AzureSpeechKey { get; set; } = string.Empty;
+	public string AzureSpeechRegion { get; set; } = string.Empty;
+
 }

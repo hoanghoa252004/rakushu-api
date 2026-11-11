@@ -49,7 +49,6 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 				return Result.Failure(TranscriptSegmentErrors.NotFound);
 
 			// Validate speaker (optional)
-			TranscriptSpeaker? transcriptSpeaker = null;
 			if (request.SpeakerId is not null)
 			{
 				var speakerId = SpeakerId.From(request.SpeakerId.Value);
@@ -57,14 +56,19 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 				if (speaker is null)
 					return Result.Failure(SpeakerErrors.NotFound);
 
-				transcriptSpeaker = transcript.TranscriptSpeakers.FirstOrDefault(x => x.SpeakerId == speakerId);
-				if (transcriptSpeaker is null)
-				{
-					var addSpeakerResult = transcript.AddSpeaker(speaker.Code, speakerId);
-					if (addSpeakerResult.IsFailure)
-						return Result.Failure(addSpeakerResult.Error);
+				var segmentSpeaker = segment.TranscriptSpeakerId is null
+					? null
+					: transcript.TranscriptSpeakers.FirstOrDefault(x => x.Id == segment.TranscriptSpeakerId);
 
-					transcriptSpeaker = addSpeakerResult.Value;
+				if (segmentSpeaker is null)
+					return Result.Failure(TranscriptSpeakerErrors.NotFound);
+
+				if (segmentSpeaker.SpeakerId != speakerId)
+				{
+					if (transcript.TranscriptSpeakers.Any(x => x.Id != segmentSpeaker.Id && x.SpeakerId == speakerId))
+						return Result.Failure(TranscriptSpeakerErrors.SpeakerAlreadyAssigned);
+
+					segmentSpeaker.SetSpeakerId(speakerId);
 				}
 			}
 
@@ -87,9 +91,6 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 
 			if (updateResult.IsFailure)
 				return Result.Failure(updateResult.Error);
-
-			if (transcriptSpeaker is not null)
-				segment.SetSpeaker(transcriptSpeaker.Id);
 
 			// Subtitle (optional)
 			if (request.Subtitle is not null)
