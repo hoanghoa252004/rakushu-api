@@ -4,6 +4,8 @@ using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSession;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -12,6 +14,58 @@ public sealed class ShadowingMaterialRepository
 {
 	public ShadowingMaterialRepository(RakushuDbContext context) : base(context) { }
 
+	public async Task<bool> HasDuplicateConfigurationAsync(
+	TranscriptSegmentId startSegmentId,
+	TranscriptSegmentId endSegmentId,
+	IReadOnlyCollection<SpeakerId> speakerIds,
+	ShadowingMaterialId? excludeMaterialId,
+	CancellationToken cancellationToken)
+	{
+		var requestedSpeakerIds = speakerIds
+			.Select(x => x.Value)
+			.Distinct()
+			.ToHashSet();
+
+		var candidates = await _context.ShadowingMaterials
+			.Where(x =>
+				x.StartTranscriptSegmentId == startSegmentId &&
+				x.EndTranscriptSegmentId == endSegmentId &&
+				(excludeMaterialId == null || x.Id != excludeMaterialId))
+			.Select(x => new
+			{
+				x.Id,
+				SpeakerIds = _context.ShadowingRoles
+					.Where(r => r.ShadowingMaterialId == x.Id)
+					.Select(r => r.SpeakerId)
+					.ToList()
+			})
+			.ToListAsync(cancellationToken);
+
+		return candidates.Any(candidate =>
+		{
+			var existingSpeakerIds = candidate.SpeakerIds
+				.Select(x => x.Value)
+				.ToHashSet();
+
+			return existingSpeakerIds.SetEquals(requestedSpeakerIds);
+		});
+	}
+
+	public async Task<bool> HasSessionsInRestrictedStatusesAsync(
+	ShadowingMaterialId materialId,
+	CancellationToken cancellationToken)
+	{
+		return await _context.ShadowingSessions
+			.AnyAsync(
+				x => x.ShadowingMaterialId == materialId
+					 && (
+						 x.Status == ShadowingSessionStatus.InProgress
+						 || x.Status == ShadowingSessionStatus.Completed
+						 || x.Status == ShadowingSessionStatus.Cancelled
+						 || x.Status == ShadowingSessionStatus.Expired
+					 ),
+				cancellationToken);
+	}
 	public async Task<bool> HasProcessingByLearnerAsync(UserId learnerId, CancellationToken cancellationToken = default)
 	{
 		return await _context.ShadowingMaterials

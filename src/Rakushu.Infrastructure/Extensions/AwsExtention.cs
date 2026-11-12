@@ -129,7 +129,7 @@ internal static class AwsExtention
 		// Translate
 		services.AddScoped<ITranslateService, AwsTranslateService>();
 		// MediaConvert
-		services.AddScoped<IAudioClipService, AwsMediaConvertAudioClipService>();
+		services.AddScoped<IMediaConvertService, AwsMediaConvertService>();
 		// NLP Service
 		services.AddHttpClient<INlpService, SelftHostingNlpService>((serviceProvider, client) =>
 		{

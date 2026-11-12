@@ -17,7 +17,7 @@ internal sealed class GenerateShadowingMaterialsHandler(
 	IShadowingMaterialRepository materialRepository,
 	IShadowingRoleRepository roleRepository,
 	IShadowingRoleLineRepository roleLineRepository,
-	IAudioClipService audioClipService,
+	IMediaConvertService audioClipService,
 	IUnitOfWork unitOfWork,
 	ILogger<GenerateShadowingMaterialsHandler> logger)
 	: IRequestHandler<GenerateShadowingMaterialsCommand, Result<int>>

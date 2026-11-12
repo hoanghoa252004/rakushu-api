@@ -9,7 +9,8 @@ namespace Rakushu.Application.Usecases.Shadowing.ShadowingMaterials;
 
 internal static class ShadowingMaterialRangeValidator
 {
-	// Validates the segment range and selected transcript speakers; returns the distinct speakers (ordered by first appearance).
+	// Validates the segment range and selected transcript speakers;
+	// returns the distinct speakers ordered by first appearance.
 	public static async Task<Result<IReadOnlyList<SpeakerId>>> ValidateAsync(
 		IShadowingMaterialRepository repository,
 		VideoId videoId,
@@ -19,30 +20,64 @@ internal static class ShadowingMaterialRangeValidator
 		ShadowingMaterialId? excludeMaterialId,
 		CancellationToken ct)
 	{
-		var start = await repository.GetVideoSegmentAsync(videoId, TranscriptSegmentId.From(startSegmentId), ct);
-		var end = await repository.GetVideoSegmentAsync(videoId, TranscriptSegmentId.From(endSegmentId), ct);
+		var start = await repository.GetVideoSegmentAsync(
+			videoId,
+			TranscriptSegmentId.From(startSegmentId),
+			ct);
+
+		var end = await repository.GetVideoSegmentAsync(
+			videoId,
+			TranscriptSegmentId.From(endSegmentId),
+			ct);
+
 		if (start is null || end is null)
-			return Result.Failure<IReadOnlyList<SpeakerId>>(ShadowingMaterialErrors.SegmentNotFound);
+			return Result.Failure<IReadOnlyList<SpeakerId>>(
+				ShadowingMaterialErrors.SegmentNotFound);
 
 		if (start.Sequence > end.Sequence)
-			return Result.Failure<IReadOnlyList<SpeakerId>>(ShadowingMaterialErrors.InvalidSegmentRange);
+			return Result.Failure<IReadOnlyList<SpeakerId>>(
+				ShadowingMaterialErrors.InvalidSegmentRange);
 
-		if (await repository.RangeExistsAsync(start.Id, end.Id, excludeMaterialId, ct))
-			return Result.Failure<IReadOnlyList<SpeakerId>>(ShadowingMaterialErrors.RangeAlreadyExists);
+		var requested = speakerIds
+			.Distinct()
+			.Select(SpeakerId.From)
+			.ToHashSet();
 
-		var requested = speakerIds.Distinct().ToHashSet();
-		var segments = await repository.GetSegmentsBetweenAsync(videoId, start.Sequence, end.Sequence, ct);
+		var segments = await repository.GetSegmentsBetweenAsync(
+			videoId,
+			start.Sequence,
+			end.Sequence,
+			ct);
 
 		var ordered = new List<SpeakerId>();
+
 		foreach (var seg in segments)
 		{
 			var sid = seg.TranscriptSpeaker?.SpeakerId;
-			if (sid is not null && requested.Contains(sid.Value) && !ordered.Contains(sid))
+
+			if (sid is not null &&
+				requested.Contains(sid) &&
+				!ordered.Contains(sid))
+			{
 				ordered.Add(sid);
+			}
 		}
 
 		if (ordered.Count != requested.Count)
-			return Result.Failure<IReadOnlyList<SpeakerId>>(ShadowingMaterialErrors.TranscriptSpeakerInvalid);
+			return Result.Failure<IReadOnlyList<SpeakerId>>(
+				ShadowingMaterialErrors.TranscriptSpeakerInvalid);
+
+		// Check duplicate range + exact speaker combination.
+		if (await repository.HasDuplicateConfigurationAsync(
+				start.Id,
+				end.Id,
+				ordered,
+				excludeMaterialId,
+				ct))
+		{
+			return Result.Failure<IReadOnlyList<SpeakerId>>(
+				ShadowingMaterialErrors.RangeAlreadyExists);
+		}
 
 		return Result.Success<IReadOnlyList<SpeakerId>>(ordered);
 	}

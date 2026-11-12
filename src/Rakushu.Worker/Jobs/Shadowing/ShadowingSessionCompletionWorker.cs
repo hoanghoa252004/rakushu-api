@@ -8,7 +8,7 @@ public sealed class ShadowingSessionCompletionWorker(
 	ILogger<ShadowingSessionCompletionWorker> logger) : BackgroundService
 {
 	private const int BatchSize = 100;
-	private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
+	private static readonly TimeSpan Interval = TimeSpan.FromSeconds(5);
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{

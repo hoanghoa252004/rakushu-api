@@ -1,6 +1,6 @@
 namespace Rakushu.Application.Abstractions.Infrastructure.Assessment;
 
-public sealed record SpeechAssessmentResult(decimal Score, string RawResponse);
+public sealed record SpeechAssessmentResult(decimal? Score, string RawResponse);
 
 public interface ISpeechAssessmentService
 {
@@ -12,6 +12,7 @@ public interface ISpeechAssessmentService
 
 	// Local pitch service /compare (0 - 100).
 	Task<SpeechAssessmentResult> AssessPitchSimilarityAsync(
+		string sentence,
 		string referenceAudioUrl,
 		string userAudioUrl,
 		CancellationToken cancellationToken);

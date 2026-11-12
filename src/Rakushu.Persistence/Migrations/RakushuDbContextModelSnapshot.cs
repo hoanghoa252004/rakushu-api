@@ -1702,9 +1702,8 @@ namespace Rakushu.Persistence.Migrations
                     b.HasIndex("EndTranscriptSegmentId")
                         .HasDatabaseName("ix_shadowing_materials_end_transcript_segment_id");
 
-                    b.HasIndex("StartTranscriptSegmentId", "EndTranscriptSegmentId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_shadowing_materials_start_transcript_segment_id_end_transcr");
+                    b.HasIndex("StartTranscriptSegmentId")
+                        .HasDatabaseName("ix_shadowing_materials_start_transcript_segment_id");
 
                     b.HasIndex("VideoId", "Version")
                         .IsUnique()

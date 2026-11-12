@@ -3,11 +3,19 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSpeaker;
 using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Shadowing.Speaker;
 
 namespace Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 
 public interface IShadowingMaterialRepository : IBaseRepository<ShadowingMaterial, ShadowingMaterialId>
 {
+	Task<bool> HasDuplicateConfigurationAsync(
+	TranscriptSegmentId startSegmentId,
+	TranscriptSegmentId endSegmentId,
+	IReadOnlyCollection<SpeakerId> speakerIds,
+	ShadowingMaterialId? excludeMaterialId,
+	CancellationToken cancellationToken);
+
 	Task<int> GetNextVersionAsync(VideoId videoId, CancellationToken cancellationToken = default);
 
 	Task<bool> HasProcessingByLearnerAsync(UserId learnerId, CancellationToken cancellationToken = default);
@@ -60,4 +68,8 @@ public interface IShadowingMaterialRepository : IBaseRepository<ShadowingMateria
 	Task<IReadOnlyList<TranscriptSegment>> GetTranscriptSegmentsAsync(
 		VideoId videoId,
 		CancellationToken cancellationToken = default);
+
+	Task<bool> HasSessionsInRestrictedStatusesAsync(
+		ShadowingMaterialId materialId,
+		CancellationToken cancellationToken);
 }

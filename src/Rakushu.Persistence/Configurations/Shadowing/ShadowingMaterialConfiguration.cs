@@ -43,8 +43,8 @@ internal sealed class ShadowingMaterialConfiguration : IEntityTypeConfiguration<
 			.WithMany(s => s.EndingShadowingMaterials)
 			.HasForeignKey(m => m.EndTranscriptSegmentId)
 			.OnDelete(DeleteBehavior.SetNull);
-		builder.HasIndex(m => new { m.StartTranscriptSegmentId, m.EndTranscriptSegmentId })
-			.IsUnique();
+		//builder.HasIndex(m => new { m.StartTranscriptSegmentId, m.EndTranscriptSegmentId })
+		//	.IsUnique();
 
 		// Status (enum)
 		builder.Property(s => s.Status)

@@ -106,6 +106,63 @@ internal sealed class JoinShadowingSessionHandler(
 	}
 }
 
+// ---- LEAVE SESSION ----
+public sealed record LeaveShadowingSessionCommand(Guid SessionId) : IRequest<Result>;
+
+internal sealed class LeaveShadowingSessionValidator
+	: AbstractValidator<LeaveShadowingSessionCommand>
+{
+	public LeaveShadowingSessionValidator()
+	{
+		RuleFor(x => x.SessionId)
+			.NotEmpty();
+	}
+}
+
+internal sealed class LeaveShadowingSessionHandler(
+	IShadowingSessionRepository sessionRepository,
+	IShadowingSessionMemberRepository memberRepository,
+	ICurrentUserContext currentUser,
+	IUnitOfWork unitOfWork)
+	: IRequestHandler<LeaveShadowingSessionCommand, Result>
+{
+	public async Task<Result> Handle(
+		LeaveShadowingSessionCommand request,
+		CancellationToken cancellationToken)
+	{
+		return await unitOfWork.ExecuteAsync(async () =>
+		{
+			var session = await sessionRepository.GetByIdAsync(
+				ShadowingSessionId.From(request.SessionId),
+				cancellationToken);
+
+			if (session is null)
+				return Result.Failure(ShadowingSessionErrors.NotFound);
+
+			if (session.Status != ShadowingSessionStatus.Scheduled)
+				return Result.Failure(ShadowingSessionErrors.NotScheduled);
+
+			if (currentUser.UserId is null)
+				return Result.Failure(ShadowingSessionErrors.NotHost);
+
+			// Host cannot leave their own session.
+			if (session.HostId == currentUser.UserId)
+				return Result.Failure(ShadowingSessionMemberErrors.CannotRemoveHost);
+
+			// Find the current user's member record in this session.
+			var member = session.Members.FirstOrDefault(
+				m => m.MemberId == currentUser.UserId);
+
+			if (member is null)
+				return Result.Failure(ShadowingSessionMemberErrors.NotFound);
+
+			memberRepository.Delete(member);
+
+			return Result.Success();
+		}, cancellationToken);
+	}
+}
+
 // ---- REMOVE MEMBER (HOST) ----
 public sealed record RemoveShadowingSessionMemberCommand(Guid SessionId, Guid MemberRecordId) : IRequest<Result>;
 
