@@ -15,14 +15,14 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	public TimeSpan StartTime { get; private set; }
 	public TimeSpan EndTime { get; private set; }
 	public TranscriptId TranscriptId { get; private set; } = null!;
-	public TranscriptSpeakerId TranscriptSpeakerId { get; private set; } = null!;
+	public TranscriptSpeakerId? TranscriptSpeakerId { get; private set; }
 
 	// NAVIGATION PROPERTIES
 	// Transcript
 	public Transcript Transcript { get; private set; } = null!;
 
 	// TranscriptSpeaker
-	public TranscriptSpeaker.TranscriptSpeaker TranscriptSpeaker { get; private set; } = null!;
+	public TranscriptSpeaker.TranscriptSpeaker? TranscriptSpeaker { get; private set; }
 
 	// TranscriptItems
 	private readonly List<TranscriptItem.TranscriptItem> _transcriptItems = new();
@@ -39,13 +39,21 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 	// Subtitle
 	public Subtitle.Subtitle Subtitle { get; private set; } = null!;
 
+	// ShadowingMaterials starting at this segment
+	private readonly List<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> _startingShadowingMaterials = new();
+	public IReadOnlyCollection<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> StartingShadowingMaterials => _startingShadowingMaterials.AsReadOnly();
+
+	// ShadowingMaterials ending at this segment
+	private readonly List<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> _endingShadowingMaterials = new();
+	public IReadOnlyCollection<Rakushu.Domain.Entities.Shadowing.ShadowingMaterial.ShadowingMaterial> EndingShadowingMaterials => _endingShadowingMaterials.AsReadOnly();
+
 	// CONSTRUCTORS & FACTORY METHODS
 	private TranscriptSegment() { }
 
 	private TranscriptSegment(
 		TranscriptSegmentId id,
 		TranscriptId transcriptId,
-		TranscriptSpeakerId transcriptSpeakerId,
+		TranscriptSpeakerId? transcriptSpeakerId,
 		string text,
 		TimeSpan startTime,
 		TimeSpan endTime,
@@ -62,7 +70,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 
 	public static Result<TranscriptSegment> Create(
 		TranscriptId transcriptId,
-		TranscriptSpeakerId transcriptSpeakerId,
+		TranscriptSpeakerId? transcriptSpeakerId,
 		string text,
 		TimeSpan startTime,
 		TimeSpan endTime,
@@ -92,7 +100,7 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 		return Result.Success();
 	}
 
-	public void SetSpeaker(TranscriptSpeakerId transcriptSpeakerId)
+	public void SetSpeaker(TranscriptSpeakerId? transcriptSpeakerId)
 	{
 		TranscriptSpeakerId = transcriptSpeakerId;
 	}

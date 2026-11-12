@@ -34,17 +34,17 @@ public sealed class ProcessKnowledgeMatchingHandler: IRequestHandler<ProcessKnow
 				TranscriptSegmentId.From(request.TranscriptSegmentId),
 				cancellationToken);
 
-		Console.WriteLine("========== TRANSCRIPT TOKENS ==========");
+		//Console.WriteLine("========== TRANSCRIPT TOKENS ==========");
 
-		foreach (var token in tokens)
-		{
-			Console.WriteLine(
-				$"Sequence={token.Sequence}, " +
-				$"Surface={token.Surface}, " +
-				$"Lemma={token.Lemma}, " +
-				$"StartIndex={token.StartIndex}, " +
-				$"EndIndex={token.EndIndex}");
-		}
+		//foreach (var token in tokens)
+		//{
+		//	Console.WriteLine(
+		//		$"Sequence={token.Sequence}, " +
+		//		$"Surface={token.Surface}, " +
+		//		$"Lemma={token.Lemma}, " +
+		//		$"StartIndex={token.StartIndex}, " +
+		//		$"EndIndex={token.EndIndex}");
+		//}
 
 		var candidates = _matchingService.Match(
 				collections.SelectMany(c => c.KnowledgeUnits).ToList(),

@@ -12,4 +12,18 @@ internal static class TranscriptSegmentEndpointGroupExtension
 			.WithTags("Transcript")
 			.WithGroupName("material");
 	}
+
+	internal static RouteGroupBuilder MapTranscriptSegmentEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/videos/{videoId:guid}/transcript")
+			.WithTags("TranscriptSegment")
+			.WithGroupName("material");
+	}
+
+	internal static RouteGroupBuilder MapTranscriptSpeakerEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/videos/{videoId:guid}/transcript")
+			.WithTags("TranscriptSpeaker")
+			.WithGroupName("material");
+	}
 }

@@ -37,7 +37,7 @@ internal sealed class GetProfileHandler : IRequestHandler<GetProfileQuery, Resul
 			return Result.Failure<UserDetailDto>(UserErrors.NotFound);
 		}
 
-		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+		var user = await _userRepository.GetProfileByIdAsync(userId, cancellationToken);
 
 		if (user == null)
 		{

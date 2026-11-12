@@ -29,4 +29,8 @@
     <ProjectReference Include="..\Rakushu.Infrastructure\Rakushu.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Endpoints\Shadowing\ShadowingRoles\" />
+  </ItemGroup>
+
 </Project>

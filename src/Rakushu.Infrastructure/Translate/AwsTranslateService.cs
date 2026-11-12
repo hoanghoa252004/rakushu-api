@@ -109,6 +109,26 @@ internal sealed class AwsTranslateService : ITranslateService
 		return MapJob(response.TextTranslationJobProperties);
 	}
 
+	public async Task<string> TranslateTextAsync(
+	string text,
+	string sourceLanguageCode,
+	string targetLanguageCode,
+	CancellationToken cancellationToken)
+	{
+		var request = new Amazon.Translate.Model.TranslateTextRequest
+		{
+			Text = text,
+			SourceLanguageCode = sourceLanguageCode,
+			TargetLanguageCode = targetLanguageCode
+		};
+
+		var response = await _translate.TranslateTextAsync(
+			request,
+			cancellationToken);
+
+		return response.TranslatedText;
+	}
+
 	private static TranslationJobStatusDto MapJob(
 		TextTranslationJobProperties job)
 	{

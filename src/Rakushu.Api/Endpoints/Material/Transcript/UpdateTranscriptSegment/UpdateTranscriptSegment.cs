@@ -12,7 +12,7 @@ internal sealed class UpdateTranscriptSegment : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapTranscriptEndpoints()
+		app.MapTranscriptSegmentEndpoints()
 			.MapPut("/segments/{segmentId:guid}", async (
 				[FromRoute] Guid videoId,
 				[FromRoute] Guid segmentId,
