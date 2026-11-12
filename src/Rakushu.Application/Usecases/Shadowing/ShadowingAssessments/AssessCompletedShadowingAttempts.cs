@@ -40,11 +40,31 @@ internal sealed class AssessCompletedShadowingAttemptsHandler(
 						var referenceUrl = await storageService.CreatePresignedReadUrlAsync(detail.ShadowingRoleLine.AudioKey, cancellationToken);
 
 						var accuracy = await speechAssessmentService.AssessAccuracyAsync(
-							detail.ShadowingRoleLine.Text, userUrl, cancellationToken);
-						var pitch = await speechAssessmentService.AssessPitchSimilarityAsync(
-							referenceUrl, userUrl, cancellationToken);
+							detail.ShadowingRoleLine.Text,
+							userUrl,
+							cancellationToken);
 
-						assessment.AddDetail(detail.Id, accuracy.Score, accuracy.RawResponse, pitch.Score, pitch.RawResponse);
+						decimal? pitchScore = null;
+						string? pitchRawResponse = null;
+
+						if (accuracy.Score >= 50m)
+						{
+							var pitch = await speechAssessmentService.AssessPitchSimilarityAsync(
+								detail.ShadowingRoleLine.Text,
+								referenceUrl,
+								userUrl,
+								cancellationToken);
+
+							pitchScore = pitch.Score;
+							pitchRawResponse = pitch.RawResponse;
+						}
+
+						assessment.AddDetail(
+							detail.Id,
+							accuracy.Score!.Value,
+							accuracy.RawResponse,
+							pitchScore,
+							pitchRawResponse);
 					}
 
 					assessment.CalculateOverallScore();

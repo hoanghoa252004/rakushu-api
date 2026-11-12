@@ -1,6 +1,6 @@
 namespace Rakushu.Application.Abstractions.Infrastructure.AudioClips;
 
-public interface IAudioClipService
+public interface IMediaConvertService
 {
 	/// <summary>
 	/// Extracts the [start, end] audio range of the source media into a new clip and returns its storage key.
@@ -11,4 +11,9 @@ public interface IAudioClipService
 		TimeSpan start,
 		TimeSpan end,
 		CancellationToken cancellationToken);
+
+	Task<string> NormalizeForSpeechAssessmentAsync(
+	string sourceKey,
+	string outputKeyWithoutExtension,
+	CancellationToken cancellationToken);
 }

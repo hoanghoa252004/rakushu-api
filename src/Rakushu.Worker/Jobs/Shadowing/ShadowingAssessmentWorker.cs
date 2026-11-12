@@ -8,7 +8,7 @@ public sealed class ShadowingAssessmentWorker(
 	IConfiguration configuration,
 	ILogger<ShadowingAssessmentWorker> logger) : BackgroundService
 {
-	private static readonly TimeSpan Interval = TimeSpan.FromSeconds(30);
+	private static readonly TimeSpan Interval = TimeSpan.FromSeconds(5);
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{

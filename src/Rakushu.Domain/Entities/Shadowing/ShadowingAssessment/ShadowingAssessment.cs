@@ -44,7 +44,7 @@ public sealed class ShadowingAssessment : Entity<ShadowingAssessmentId>
 		ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetailId attemptDetailId,
 		decimal accuracyScore,
 		string? accuracyResponse,
-		decimal pitchScore,
+		decimal? pitchScore,
 		string? pitchResponse)
 	{
 		_details.Add(new ShadowingAssessmentDetail.ShadowingAssessmentDetail(
