@@ -14,4 +14,8 @@ public static class TranscriptErrors
 	public static readonly Error CannotDeleteReadyVideo = Error.Conflict(
 		"TRANSCRIPT.CANNOT_DELETE_READY_VIDEO",
 		"Cannot delete transcript from a video in Ready status. Only update is allowed for Ready videos.");
+	
+	public static readonly Error CannotModifyReviewedTranscript = Error.Conflict(
+		"TRANSCRIPT.CANNOT_MODIFY_REVIEWED_TRANSCRIPT",
+		"Cannot modify a transcript in this moment due to inprogress of learning unit matching & translation.");
 }

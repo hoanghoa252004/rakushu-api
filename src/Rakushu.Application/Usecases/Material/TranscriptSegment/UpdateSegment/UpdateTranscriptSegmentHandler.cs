@@ -10,7 +10,8 @@ using Rakushu.Domain.Entities.Shadowing.Speaker;
 
 namespace Rakushu.Application.Usecases.Material.TranscriptSegment.UpdateSegment;
 
-internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTranscriptSegmentCommand, Result>
+internal sealed class UpdateTranscriptSegmentHandler
+	: IRequestHandler<UpdateTranscriptSegmentCommand, Result>
 {
 	private readonly IVideoRepository _videoRepository;
 	private readonly ISpeakerRepository _speakerRepository;
@@ -35,53 +36,90 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 	{
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
-			var video = await _videoRepository.GetByIdAsync(VideoId.From(request.VideoId), cancellationToken);
+			// 1. Get video
+			var video = await _videoRepository.GetByIdAsync(
+				VideoId.From(request.VideoId),
+				cancellationToken);
+
 			if (video is null)
 				return Result.Failure(VideoErrors.NotFound);
 
+			// 2. Get transcript
 			var transcript = video.Transcript;
+
 			if (transcript is null)
 				return Result.Failure(TranscriptErrors.NotFound);
 
+			// 3. Validate transcript modification
+			if (video.Status == VideoStatus.Processing
+				&& transcript.IsReviewed)
+			{
+				return Result.Failure(
+					TranscriptErrors.CannotModifyReviewedTranscript);
+			}
+
+			// 4. Get segment
 			var segmentId = TranscriptSegmentId.From(request.SegmentId);
-			var segment = transcript.TranscriptSegments.FirstOrDefault(s => s.Id == segmentId);
+
+			var segment = transcript.TranscriptSegments
+				.FirstOrDefault(s => s.Id == segmentId);
+
 			if (segment is null)
 				return Result.Failure(TranscriptSegmentErrors.NotFound);
 
-			// Validate speaker (optional)
+			// 5. Validate speaker (optional)
 			if (request.SpeakerId is not null)
 			{
 				var speakerId = SpeakerId.From(request.SpeakerId.Value);
-				var speaker = await _speakerRepository.GetByIdAsync(speakerId, cancellationToken);
+
+				var speaker = await _speakerRepository.GetByIdAsync(
+					speakerId,
+					cancellationToken);
+
 				if (speaker is null)
 					return Result.Failure(SpeakerErrors.NotFound);
 
 				var segmentSpeaker = segment.TranscriptSpeakerId is null
 					? null
-					: transcript.TranscriptSpeakers.FirstOrDefault(x => x.Id == segment.TranscriptSpeakerId);
+					: transcript.TranscriptSpeakers.FirstOrDefault(
+						x => x.Id == segment.TranscriptSpeakerId);
 
 				if (segmentSpeaker is null)
 					return Result.Failure(TranscriptSpeakerErrors.NotFound);
 
 				if (segmentSpeaker.SpeakerId != speakerId)
 				{
-					if (transcript.TranscriptSpeakers.Any(x => x.Id != segmentSpeaker.Id && x.SpeakerId == speakerId))
-						return Result.Failure(TranscriptSpeakerErrors.SpeakerAlreadyAssigned);
+					if (transcript.TranscriptSpeakers.Any(
+						x => x.Id != segmentSpeaker.Id
+							 && x.SpeakerId == speakerId))
+					{
+						return Result.Failure(
+							TranscriptSpeakerErrors.SpeakerAlreadyAssigned);
+					}
 
 					segmentSpeaker.SetSpeakerId(speakerId);
 				}
 			}
 
-			// Sequence
-			if (request.Sequence.HasValue && request.Sequence.Value != segment.Sequence)
+			// 6. Check whether text has changed
+			var textChanged = !string.Equals(
+				segment.Text,
+				request.Text,
+				StringComparison.Ordinal);
+
+			// 7. Update sequence
+			if (request.Sequence.HasValue
+				&& request.Sequence.Value != segment.Sequence)
 			{
-				var seqResult = transcript.UpdateSegmentSequence(segmentId, request.Sequence.Value);
+				var seqResult = transcript.UpdateSegmentSequence(
+					segmentId,
+					request.Sequence.Value);
+
 				if (seqResult.IsFailure)
 					return Result.Failure(seqResult.Error);
 			}
 
-			var textChanged = !string.Equals(segment.Text, request.Text, StringComparison.Ordinal);
-
+			// 8. Update segment
 			var updateResult = segment.Update(
 				request.Text,
 				request.StartTime,
@@ -92,16 +130,20 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 			if (updateResult.IsFailure)
 				return Result.Failure(updateResult.Error);
 
-			// Subtitle (optional)
+			// 9. Update subtitle (optional)
 			if (request.Subtitle is not null)
 			{
-				var subtitleResult = segment.UpsertSubtitle(request.Subtitle.LanguageCode, request.Subtitle.Text);
+				var subtitleResult = segment.UpsertSubtitle(
+					request.Subtitle.LanguageCode,
+					request.Subtitle.Text);
+
 				if (subtitleResult.IsFailure)
 					return Result.Failure(subtitleResult.Error);
 			}
 
-			// Items: full replacement
+			// 10. Replace transcript items
 			segment.ClearItems();
+
 			foreach (var item in request.Items.OrderBy(x => x.Sequence))
 			{
 				var itemResult = segment.AddItem(
@@ -116,11 +158,16 @@ internal sealed class UpdateTranscriptSegmentHandler : IRequestHandler<UpdateTra
 					return Result.Failure(itemResult.Error);
 			}
 
-			// Text changed: re-run NLP, replacing old bunsetsus and tokens
+			// 11. Re-run NLP only when text has changed
 			if (textChanged)
-				await _segmentNlpService.ReplaceAsync(segment, cancellationToken);
+			{
+				await _segmentNlpService.ReplaceAsync(
+					segment,
+					cancellationToken);
+			}
 
 			return Result.Success();
+
 		}, cancellationToken);
 	}
 }
