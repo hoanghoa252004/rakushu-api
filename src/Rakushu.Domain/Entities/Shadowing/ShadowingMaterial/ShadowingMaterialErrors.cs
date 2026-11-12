@@ -4,6 +4,11 @@ namespace Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 
 public static class ShadowingMaterialErrors
 {
+	public static readonly Error Duplicate =
+	Error.Conflict(
+		"ShadowingMaterial.Duplicate",
+		"A shadowing material with the same transcript range and speakers already exists.");
+
 	public static readonly Error NotFound = Error.NotFound(
 		"SHADOWING_MATERIAL.NOT_FOUND",
 		"The shadowing material was not found.");
