@@ -270,6 +270,36 @@ internal sealed class RemoveShadowingSessionMemberEndpoint : IEndpoint
 	}
 }
 
+internal sealed class LeaveShadowingSessionEndpoint : IEndpoint
+{
+	public void MapEndpoint(IEndpointRouteBuilder app)
+	{
+		app.MapGroup("/api/shadowing-sessions/{sessionId:guid}/members")
+			.WithTags("ShadowingSessionMember")
+			.WithGroupName("shadowing")
+			.MapDelete("/me", async (
+				[FromRoute] Guid sessionId,
+				ISender sender,
+				CancellationToken cancellationToken = default) =>
+			{
+				var result = await sender.Send(
+					new LeaveShadowingSessionCommand(sessionId),
+					cancellationToken);
+
+				return result.MatchOk();
+			})
+			.WithName("LeaveShadowingSession")
+			.WithSummary("Learner (member)")
+			.WithDescription("Allows a member to leave a Scheduled session. The host cannot leave their own session.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
+			.Produces(StatusCodes.Status200OK)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
+			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
+			.ProducesProblem(StatusCodes.Status500InternalServerError);
+	}
+}
+
 internal sealed class ChooseShadowingSessionRoleEndpoint : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
