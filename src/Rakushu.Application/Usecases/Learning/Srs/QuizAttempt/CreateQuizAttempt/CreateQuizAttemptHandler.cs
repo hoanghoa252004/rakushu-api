@@ -207,7 +207,6 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 						correctChoiceId,
 						now,
 						explanationText,
-						difficulty: "Medium",
 						isActive: true);
 
 					if (newBankQResult.IsSuccess)

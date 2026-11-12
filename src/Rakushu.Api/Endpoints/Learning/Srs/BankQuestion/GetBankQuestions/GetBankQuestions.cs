@@ -17,7 +17,6 @@ internal sealed class GetBankQuestions : IEndpoint
 			.MapGet("", async (
 				[FromQuery] Guid? meaningId,
 				[FromQuery] Guid? questionTypeId,
-				[FromQuery] string? difficulty,
 				[FromQuery] bool? isActive,
 				[FromQuery] int? page,
 				[FromQuery] int? pageSize,
@@ -27,7 +26,6 @@ internal sealed class GetBankQuestions : IEndpoint
 				var query = new GetBankQuestionsQuery(
 					meaningId,
 					questionTypeId,
-					difficulty,
 					isActive,
 					page <= 0 ? 1 : page ?? 1,
 					pageSize <= 0 ? 20 : pageSize ?? 20);
@@ -38,7 +36,7 @@ internal sealed class GetBankQuestions : IEndpoint
 			// 2. Description
 			.WithName("GetBankQuestions")
 			.WithSummary("Curator")
-			.WithDescription("Retrieves a paginated list of bank questions with optional filters by knowledge meaning, question type, difficulty, and active status.")
+			.WithDescription("Retrieves a paginated list of bank questions with optional filters by knowledge meaning, question type, and active status.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
 			// 4. Response

@@ -69,11 +69,6 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 			.HasColumnName("media_metadata")
 			.HasColumnType("jsonb");
 
-		builder.Property(bq => bq.Difficulty)
-			.HasMaxLength(20)
-			.IsRequired()
-			.HasDefaultValue("Medium");
-
 		builder.Property(bq => bq.IsActive)
 			.IsRequired()
 			.HasDefaultValue(true);

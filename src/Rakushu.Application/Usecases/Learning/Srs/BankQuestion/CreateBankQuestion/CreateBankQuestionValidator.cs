@@ -4,8 +4,7 @@ namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.CreateBankQuest
 
 public sealed class CreateBankQuestionValidator : AbstractValidator<CreateBankQuestionCommand>
 {
-	private static readonly string[] ValidDifficulties = ["Easy", "Medium", "Hard"];
-	private static readonly string[] ValidMediaTypes = ["NONE", "VIDEO", "AUDIO", "IMAGE"];
+	private static readonly string[] ValidMediaTypes = ["NONE", "VIDEO", "AUDIO"];
 
 	public CreateBankQuestionValidator()
 	{
@@ -43,10 +42,6 @@ public sealed class CreateBankQuestionValidator : AbstractValidator<CreateBankQu
 		RuleFor(x => x.CorrectAnswer)
 			.NotEmpty()
 			.WithMessage("Correct answer cannot be empty.");
-
-		RuleFor(x => x.Difficulty)
-			.Must(d => ValidDifficulties.Contains(d, StringComparer.OrdinalIgnoreCase))
-			.WithMessage("Difficulty must be Easy, Medium, or Hard.");
 
 		RuleFor(x => x.MediaType)
 			.Must(m => string.IsNullOrWhiteSpace(m) || ValidMediaTypes.Contains(m.Trim(), StringComparer.OrdinalIgnoreCase))

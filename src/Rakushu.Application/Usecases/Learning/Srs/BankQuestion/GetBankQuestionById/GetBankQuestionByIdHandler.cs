@@ -59,7 +59,6 @@ internal sealed class GetBankQuestionByIdHandler : IRequestHandler<GetBankQuesti
 			parsedAnswers,
 			bq.CorrectAnswer,
 			bq.Explanation,
-			bq.Difficulty,
 			bq.IsActive,
 			bq.CreatedAt,
 			bq.UpdatedAt,

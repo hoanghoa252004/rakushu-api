@@ -31,9 +31,6 @@ public static class BankQuestionErrors
 	public static readonly Error DuplicateChoiceText = Error.Validation(
 		"BANK_QUESTION.DUPLICATE_CHOICE_TEXT", "Answer choices cannot have identical text.");
 
-	public static readonly Error InvalidDifficulty = Error.Validation(
-		"BANK_QUESTION.INVALID_DIFFICULTY", "Difficulty must be Easy, Medium, or Hard.");
-
 	public static readonly Error MeaningNotFound = Error.NotFound(
 		"BANK_QUESTION.MEANING_NOT_FOUND", "The specified knowledge meaning does not exist.");
 

@@ -13,7 +13,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 	public string Answers { get; private set; } = "[]";
 	public string CorrectAnswer { get; private set; } = null!;
 	public string? Explanation { get; private set; }
-	public string Difficulty { get; private set; } = "Medium";
 	public bool IsActive { get; private set; }
 	public string MediaType { get; private set; } = "NONE";
 	public string? MediaUrl { get; private set; }
@@ -37,7 +36,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		string correctAnswer,
 		DateTimeOffset now,
 		string? explanation = null,
-		string difficulty = "Medium",
 		bool isActive = true,
 		string mediaType = "NONE",
 		string? mediaUrl = null,
@@ -55,7 +53,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 			Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim(),
 			CorrectAnswer = correctAnswer.Trim(),
 			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
-			Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim(),
 			IsActive = isActive,
 			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant(),
 			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim(),
@@ -70,7 +67,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		string answers,
 		string correctAnswer,
 		string? explanation,
-		string difficulty,
 		DateTimeOffset now,
 		string? mediaType = null,
 		string? mediaUrl = null,
@@ -80,7 +76,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim();
 		CorrectAnswer = correctAnswer.Trim();
 		Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim();
-		Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim();
 		if (mediaType is not null)
 			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant();
 		if (mediaUrl is not null)
@@ -100,7 +95,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		string answers,
 		string correctAnswer,
 		string? explanation,
-		string difficulty,
 		DateTimeOffset now,
 		string? mediaType = null,
 		string? mediaUrl = null,
@@ -109,7 +103,6 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 		Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim();
 		CorrectAnswer = correctAnswer.Trim();
 		Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim();
-		Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "Medium" : difficulty.Trim();
 		if (mediaType is not null)
 			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant();
 		if (mediaUrl is not null)

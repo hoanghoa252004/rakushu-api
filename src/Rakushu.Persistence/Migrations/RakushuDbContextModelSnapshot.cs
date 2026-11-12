@@ -1562,14 +1562,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Difficulty")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("Medium")
-                        .HasColumnName("difficulty");
-
                     b.Property<string>("Explanation")
                         .HasColumnType("text")
                         .HasColumnName("explanation");

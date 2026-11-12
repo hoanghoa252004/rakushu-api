@@ -10,7 +10,6 @@ public sealed record CreateBankQuestionCommand(
 	IReadOnlyList<QuestionAnswerDto>? Answers,
 	string CorrectAnswer,
 	string? Explanation = null,
-	string Difficulty = "Medium",
 	bool IsActive = true,
 	string MediaType = "NONE",
 	string? MediaUrl = null,

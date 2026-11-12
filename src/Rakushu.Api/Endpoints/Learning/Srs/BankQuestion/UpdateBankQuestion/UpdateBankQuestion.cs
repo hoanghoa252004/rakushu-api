@@ -34,7 +34,6 @@ internal sealed class UpdateBankQuestion : IEndpoint
 					request.Answers,
 					request.CorrectAnswer,
 					request.Explanation,
-					request.Difficulty,
 					request.MediaType,
 					request.MediaUrl,
 					mediaMetadata);
@@ -63,7 +62,6 @@ public sealed record UpdateBankQuestionRequest(
 	IReadOnlyList<QuestionAnswerDto>? Answers,
 	string CorrectAnswer,
 	string? Explanation = null,
-	string Difficulty = "Medium",
 	string? MediaType = null,
 	string? MediaUrl = null,
 	JsonElement? MediaMetadata = null);

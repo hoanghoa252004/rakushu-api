@@ -57,7 +57,6 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 	public async Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetQuestionsAsync(
 		KnowledgeMeaningId? meaningId = null,
 		Guid? questionTypeId = null,
-		string? difficulty = null,
 		bool? isActive = null,
 		int page = 1,
 		int pageSize = 20,
@@ -80,10 +79,6 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 			query = query.Where(bq => bq.QuestionTypeId == targetTypeId);
 		}
 
-		if (!string.IsNullOrWhiteSpace(difficulty))
-		{
-			query = query.Where(bq => bq.Difficulty.ToLower() == difficulty.ToLower());
-		}
 
 		if (isActive.HasValue)
 		{

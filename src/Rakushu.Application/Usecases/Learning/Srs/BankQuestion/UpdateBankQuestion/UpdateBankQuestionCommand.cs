@@ -9,7 +9,6 @@ public sealed record UpdateBankQuestionCommand(
 	IReadOnlyList<QuestionAnswerDto>? Answers,
 	string CorrectAnswer,
 	string? Explanation = null,
-	string Difficulty = "Medium",
 	string? MediaType = null,
 	string? MediaUrl = null,
 	string? MediaMetadata = null) : IRequest<Result>;

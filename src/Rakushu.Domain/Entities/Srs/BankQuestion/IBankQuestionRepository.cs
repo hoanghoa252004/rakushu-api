@@ -24,7 +24,6 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 	Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetQuestionsAsync(
 		KnowledgeMeaningId? meaningId = null,
 		Guid? questionTypeId = null,
-		string? difficulty = null,
 		bool? isActive = null,
 		int page = 1,
 		int pageSize = 20,

@@ -99,7 +99,6 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 				answersJson ?? question.Answers,
 				request.CorrectAnswer,
 				request.Explanation,
-				request.Difficulty,
 				now,
 				request.MediaType,
 				request.MediaUrl,
