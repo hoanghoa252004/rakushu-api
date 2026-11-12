@@ -4,6 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Usecases.Embedding;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Entities.Curation.IssueCategory;
+using Rakushu.Domain.Entities.Curation.Report;
+using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
@@ -14,6 +17,7 @@ using Rakushu.Domain.Entities.Knowledge.KnowledgeCollection;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using Rakushu.Domain.Entities.Knowledge.ProficiencyLevel;
+using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript;
@@ -25,6 +29,11 @@ using Rakushu.Domain.Entities.Shadowing.ShadowingSession;
 using Rakushu.Domain.Entities.Shadowing.ShadowingSessionInvitation;
 using Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
+using Rakushu.Domain.Entities.Srs.BankQuestion;
+using Rakushu.Domain.Entities.Srs.FlashcardSession;
+using Rakushu.Domain.Entities.Srs.Quiz;
+using Rakushu.Domain.Entities.Srs.QuizAttempt;
+using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Subscriptions.Feature;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
 using Rakushu.Domain.Entities.Subscriptions.Plan;
@@ -74,7 +83,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IKnowledgeCollectionRepository, KnowledgeCollectionRepository>();
 		services.AddScoped<ITokenRepository, TokenRepository>();
 		services.AddScoped<IKnowledgeUnitRepository, KnowledgeUnitRepository>();
-		services.AddScoped<Rakushu.Domain.Entities.Material.LearningUnit.ILearningUnitRepository, LearningUnitRepository>();
+		services.AddScoped<ILearningUnitRepository, LearningUnitRepository>();
 		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
 		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
 		services.AddScoped<ISpeakerRepository, SpeakerRepository>();
@@ -86,10 +95,20 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IShadowingSessionInvitationRepository, ShadowingSessionInvitationRepository>();
 		services.AddScoped<Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.IShadowingAttemptRepository, ShadowingAttemptRepository>();
 
+		// SRS Repositories
+		services.AddScoped<ISavedItemRepository, SavedItemRepository>();
+		services.AddScoped<IBankQuestionRepository, BankQuestionRepository>();
+		services.AddScoped<IQuizRepository, QuizRepository>();
+		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
+		services.AddScoped<IFlashcardSessionRepository, FlashcardSessionRepository>();
+
+		// Curation Repositories
+		services.AddScoped<IIssueCategoryRepository, IssueCategoryRepository>();
+		services.AddScoped<IReportRepository, ReportRepository>();
+		services.AddScoped<IIssueDetailRepository, IssueDetailRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
 		return services;
 	}
 }
-

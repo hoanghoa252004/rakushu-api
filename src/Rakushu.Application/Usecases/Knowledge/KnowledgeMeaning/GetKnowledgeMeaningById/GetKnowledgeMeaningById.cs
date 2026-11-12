@@ -2,8 +2,8 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
-using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 
 namespace Rakushu.Application.Usecases.Knowledge.KnowledgeMeaning.GetKnowledgeMeaningById;
 
@@ -17,7 +17,10 @@ public sealed record KnowledgeMeaningDto(
 	int SortOrder,
 	string Meaning,
 	string JapaneseMeaning,
-	string? Description
+	string? Description,
+	string? Expression = null,
+	string? Reading = null,
+	string? KnowledgeType = null
 	);
 
 internal sealed class GetKnowledgeMeaningByIdHandler : IRequestHandler<GetKnowledgeMeaningByIdQuery, Result<KnowledgeMeaningDto>>
@@ -43,10 +46,11 @@ internal sealed class GetKnowledgeMeaningByIdHandler : IRequestHandler<GetKnowle
 		if (meaning is null)
 			return Result.Failure<KnowledgeMeaningDto>(KnowledgeMeaningErrors.NotFound);
 
+		var unit = await _unitRepository.GetByIdAsync(meaning.KnowledgeUnitId, cancellationToken);
+
 		// Learners can only see meanings of active knowledge units
 		if (_currentUserContext.Role != RoleCodes.LinguisticCurator)
 		{
-			var unit = await _unitRepository.GetByIdAsync(meaning.KnowledgeUnitId, cancellationToken);
 			if (unit is null || !unit.IsActive)
 				return Result.Failure<KnowledgeMeaningDto>(KnowledgeMeaningErrors.NotFound);
 		}
@@ -57,6 +61,9 @@ internal sealed class GetKnowledgeMeaningByIdHandler : IRequestHandler<GetKnowle
 			meaning.SortOrder,
 			meaning.Meaning,
 			meaning.JapaneseMeaning,
-			meaning.Description));
+			meaning.Description,
+			unit?.Expression,
+			unit?.Reading,
+			unit?.KnowledgeType.ToString()));
 	}
 }
