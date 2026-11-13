@@ -39,23 +39,20 @@ internal sealed class SavedItemConfiguration : IEntityTypeConfiguration<SavedIte
 		builder.HasOne(si => si.KnowledgeMeaning)
 			.WithMany()
 			.HasForeignKey(si => si.KnowledgeMeaningId)
-			.OnDelete(DeleteBehavior.Cascade);
+			.OnDelete(DeleteBehavior.Restrict);
 
-		builder.Property(si => si.Expression)
-			.HasMaxLength(100)
-			.IsRequired();
+		builder.Ignore(si => si.Expression);
+		builder.Ignore(si => si.Reading);
+		builder.Ignore(si => si.Meaning);
+		builder.Ignore(si => si.IsRevoked);
 
-		builder.Property(si => si.Reading)
-			.HasMaxLength(100);
-
-		builder.Property(si => si.Meaning)
-			.HasMaxLength(500)
+		builder.Property(si => si.IsActive)
+			.HasColumnName("is_active")
+			.HasDefaultValue(true)
 			.IsRequired();
 
 		builder.Property(si => si.SavedAt)
-			.IsRequired();
-
-		builder.Property(si => si.CreatedAt)
+			.HasColumnName("saved_at")
 			.IsRequired();
 
 		builder.HasIndex(si => new { si.UserId, si.KnowledgeMeaningId })

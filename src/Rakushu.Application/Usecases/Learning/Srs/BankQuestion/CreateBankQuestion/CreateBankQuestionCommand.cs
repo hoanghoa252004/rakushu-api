@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.CreateBankQuestion;
@@ -6,9 +6,11 @@ namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.CreateBankQuest
 public sealed record CreateBankQuestionCommand(
 	Guid KnowledgeMeaningId,
 	Guid QuestionTypeId,
-	string Prompt,
-	IReadOnlyList<BankQuestionChoiceDto> Choices,
-	string CorrectChoiceId,
+	string Question,
+	IReadOnlyList<QuestionAnswerDto>? Answers,
+	string CorrectAnswer,
 	string? Explanation = null,
-	string Difficulty = "Medium",
-	bool IsActive = true) : IRequest<Result<Guid>>;
+	bool IsActive = true,
+	string MediaType = "NONE",
+	string? MediaUrl = null,
+	string? MediaMetadata = null) : IRequest<Result<Guid>>;

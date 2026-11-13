@@ -1,9 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Learning.Srs.Flashcards;
 using Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Srs.Flashcards.SubmitFlashcardSession;
 
@@ -12,28 +15,26 @@ internal sealed class SubmitFlashcardSession : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapSrsFlashcardEndpoints()
-			.MapPost("/flashcard-sessions/{id:guid}/submit", async (
-				[FromRoute] Guid id,
-				[FromBody] SubmitFlashcardSessionRequestDto dto,
+			.MapPatch("/{sessionId:guid}/submit", async (
+				[FromRoute] Guid sessionId,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new SubmitFlashcardSessionCommand(id, dto.Ratings);
+				var command = new SubmitFlashcardSessionCommand(sessionId);
 
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				return result.MatchNoContent();
 			})
 			.WithName("SubmitFlashcardSession")
-			.WithSummary("Submit flashcard self-evaluation ratings and update SM-2 schedule")
-			.WithDescription("Submits ratings ('Forgot', 'Hard', 'Easy') for all flashcard items, calculates SM-2 spaced repetition intervals, and records review history.")
-			.RequireAuthorization()
-			.Produces<FlashcardSessionResultDto>(StatusCodes.Status200OK)
+			.WithSummary("Learner")
+			.WithDescription("Submits and finishes an in-progress flashcard session, transitioning its status to Completed.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
+			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
-
-internal sealed record SubmitFlashcardSessionRequestDto(
-	IReadOnlyList<FlashcardItemRatingInput> Ratings);

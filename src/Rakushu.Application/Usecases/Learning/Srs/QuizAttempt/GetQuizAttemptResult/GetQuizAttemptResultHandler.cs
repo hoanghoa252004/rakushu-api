@@ -1,6 +1,6 @@
-using System.Text.Json;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
@@ -8,81 +8,125 @@ using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttemptResult;
 
-internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttemptResultQuery, Result<QuizAttemptResultResponse>>
+internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttemptResultQuery, Result<QuizAttemptResultDto>>
 {
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly ICurrentUserContext _currentUserContext;
+	private readonly IStorageService _storageService;
 
 	public GetQuizAttemptResultHandler(
 		IQuizAttemptRepository quizAttemptRepository,
-		ICurrentUserContext currentUserContext)
+		ICurrentUserContext currentUserContext,
+		IStorageService storageService)
 	{
 		_quizAttemptRepository = quizAttemptRepository;
 		_currentUserContext = currentUserContext;
+		_storageService = storageService;
 	}
 
-	public async Task<Result<QuizAttemptResultResponse>> Handle(
+	public async Task<Result<QuizAttemptResultDto>> Handle(
 		GetQuizAttemptResultQuery request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 		if (userId is null)
-			return Result.Failure<QuizAttemptResultResponse>(UserErrors.NotFound);
+			return Result.Failure<QuizAttemptResultDto>(UserErrors.NotFound);
 
 		var attemptId = QuizAttemptId.From(request.AttemptId);
 		var attempt = await _quizAttemptRepository.GetByIdWithItemsAndQuizAsync(attemptId, cancellationToken);
 		if (attempt is null || attempt.UserId != userId)
-			return Result.Failure<QuizAttemptResultResponse>(QuizAttemptErrors.NotFound);
+			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotFound);
 
-		var itemsDict = attempt.Items.ToDictionary(i => i.QuestionId);
-		var answerResults = new List<QuizAnswerResultDto>();
+		if (attempt.Status != QuizAttemptStatus.Completed && attempt.Status != QuizAttemptStatus.Expired)
+			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotCompleted);
 
-		foreach (var question in attempt.Quiz.Questions.OrderBy(q => q.Position))
+		var questionsDict = attempt.Quiz.Questions.ToDictionary(q => q.Id);
+		var answerResults = new List<QuizAnswerResultDto>(attempt.Items.Count);
+		var presignedUrlCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+		var orderedItems = attempt.Items
+			.Select(i => new { Item = i, Question = questionsDict.GetValueOrDefault(i.QuestionId) })
+			.Where(x => x.Question is not null)
+			.OrderBy(x => x.Question!.Sequence);
+
+		foreach (var entry in orderedItems)
 		{
-			itemsDict.TryGetValue(question.Id, out var attemptItem);
+			var item = entry.Item;
+			var question = entry.Question!;
 
-			bool isUnanswered = string.IsNullOrWhiteSpace(attemptItem?.SelectedOptionId);
-			bool isCorrect = attemptItem?.IsCorrect ?? false;
-			int elapsedMs = attemptItem?.ElapsedMs ?? 0;
+			bool isSkip = QuizAnswerHelper.IsSkip(item.SelectedAnswer);
+			bool isCorrect = item.IsCorrect ?? false;
+			int timeSpentMs = item.TimeSpentMs;
 
-			int quality = isUnanswered ? 1
+			int quality = isSkip ? 1
 				: !isCorrect ? 2
-				: elapsedMs > 15_000 ? 3
-				: elapsedMs >= 5_000 ? 4
+				: timeSpentMs > 15_000 ? 3
+				: timeSpentMs >= 5_000 ? 4
 				: 5;
 
 			var typeCode = question.QuestionType?.Code;
 			var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
-			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase);
+			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase) ||
+			               string.Equals(typeCode, "AUDIO_DICTATION", StringComparison.OrdinalIgnoreCase);
 
-			IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.ChoicesJson);
+			IReadOnlyList<QuizOptionDto> choices = isTyping ? [] : QuizOptionParser.Parse(question.Answers);
+
+			string? resolvedMediaUrl = question.MediaUrl;
+			if (!string.IsNullOrWhiteSpace(resolvedMediaUrl) &&
+			    !resolvedMediaUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+			    !resolvedMediaUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+			{
+				if (presignedUrlCache.TryGetValue(resolvedMediaUrl, out var cachedUrl))
+				{
+					resolvedMediaUrl = cachedUrl;
+				}
+				else
+				{
+					try
+					{
+						var signed = await _storageService.CreatePresignedReadUrlAsync(resolvedMediaUrl, cancellationToken);
+						presignedUrlCache[resolvedMediaUrl] = signed;
+						resolvedMediaUrl = signed;
+					}
+					catch
+					{
+						// Fallback to raw key
+					}
+				}
+			}
+
+			var mediaMetadataDto = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
+
 			answerResults.Add(new QuizAnswerResultDto(
-				question.Id.Value,
-				question.Position,
-				question.Prompt,
-				question.Reading,
-				choices,
-				attemptItem?.SelectedOptionId,
-				question.CorrectOptionId,
-				isCorrect,
-				elapsedMs,
-				quality,
-				attemptItem?.Feedback,
-				question.BankQuestion?.Explanation,
-				typeCode));
+				ItemId: question.Id.Value,
+				Sequence: question.Sequence,
+				Question: question.QuestionText,
+				Choices: choices,
+				SelectedAnswer: item.SelectedAnswer,
+				CorrectAnswer: question.CorrectAnswer,
+				IsCorrect: isCorrect,
+				TimeSpentMs: timeSpentMs,
+				Quality: quality,
+				Feedback: item.Feedback,
+				Explanation: question.BankQuestion?.Explanation,
+				QuestionType: typeCode,
+				MediaType: question.MediaType,
+				MediaUrl: resolvedMediaUrl,
+				MediaMetadata: mediaMetadataDto));
 		}
 
-		return Result.Success(new QuizAttemptResultResponse(
-			attempt.Id.Value,
-			attempt.QuizId.Value,
-			attempt.Mode.ToString(),
-			attempt.Status.ToString(),
-			attempt.Score ?? 0,
-			attempt.TotalItems,
-			attempt.AnsweredItems,
-			attempt.CorrectItems,
-			attempt.StartedAt,
-			attempt.CompletedAt,
-			answerResults));
+		return Result.Success(new QuizAttemptResultDto(
+			Id: attempt.Id.Value,
+			QuizId: attempt.QuizId.Value,
+			Mode: attempt.Mode.ToString(),
+			Status: attempt.Status.ToString(),
+			Score: attempt.Score ?? 0,
+			TotalItems: attempt.TotalItems,
+			AnsweredItems: attempt.AnsweredItems,
+			CorrectItems: attempt.CorrectItems,
+			CreatedAt: attempt.CreatedAt,
+			CompletedAt: attempt.CompletedAt,
+			IsEvaluated: attempt.IsEvaluated,
+			Answers: answerResults));
 	}
 }

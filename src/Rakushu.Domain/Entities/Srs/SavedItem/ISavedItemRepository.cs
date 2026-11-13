@@ -1,7 +1,6 @@
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Domain.Entities.Srs.SavedItem;
 
@@ -13,16 +12,16 @@ public interface ISavedItemRepository : IBaseRepository<SavedItem, SavedItemId>
 
 	Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
 		UserId userId,
-		SrsStatus? statusFilter,
-		bool dueOnly,
+		bool? isActive,
+		bool? dueOnly,
 		int page,
 		int pageSize,
 		CancellationToken cancellationToken = default);
 
 	Task<int> CountUserItemsAsync(
 		UserId userId,
-		SrsStatus? statusFilter,
-		bool dueOnly,
+		bool? isActive,
+		bool? dueOnly,
 		CancellationToken cancellationToken = default);
 
 	Task<IReadOnlyList<SavedItem>> GetDueItemsAsync(
@@ -39,5 +38,9 @@ public interface ISavedItemRepository : IBaseRepository<SavedItem, SavedItemId>
 	Task<SrsDashboardMetrics> GetDashboardMetricsAsync(
 		UserId userId,
 		DateTimeOffset now,
+		CancellationToken cancellationToken = default);
+
+	Task<bool> HasAnyWithMeaningIdAsync(
+		KnowledgeMeaningId meaningId,
 		CancellationToken cancellationToken = default);
 }

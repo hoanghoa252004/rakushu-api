@@ -4,4 +4,4 @@ using Rakushu.Domain.Common.Results;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttemptResult;
 
-public sealed record GetQuizAttemptResultQuery(Guid AttemptId) : IRequest<Result<QuizAttemptResultResponse>>;
+public sealed record GetQuizAttemptResultQuery(Guid AttemptId) : IRequest<Result<QuizAttemptResultDto>>;

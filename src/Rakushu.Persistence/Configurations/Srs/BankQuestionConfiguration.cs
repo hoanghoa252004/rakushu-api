@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
@@ -10,7 +10,7 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 {
 	public void Configure(EntityTypeBuilder<BankQuestion> builder)
 	{
-		builder.ToTable("bank_questions", "srs");
+		builder.ToTable("questions", "srs");
 
 		builder.HasKey(bq => bq.Id);
 		builder.Property(bq => bq.Id)
@@ -40,23 +40,34 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 			.HasForeignKey(bq => bq.QuestionTypeId)
 			.OnDelete(DeleteBehavior.Restrict);
 
-		builder.Property(bq => bq.Prompt)
+		builder.Property(bq => bq.Question)
+			.HasColumnName("question")
 			.IsRequired();
 
-		builder.Property(bq => bq.ChoicesJson)
+		builder.Property(bq => bq.Answers)
+			.HasColumnName("answers")
 			.HasColumnType("jsonb")
 			.IsRequired();
 
-		builder.Property(bq => bq.CorrectChoiceId)
-			.HasMaxLength(50)
+		builder.Property(bq => bq.CorrectAnswer)
+			.HasColumnName("correct_answer")
+			.HasMaxLength(500)
 			.IsRequired();
 
 		builder.Property(bq => bq.Explanation);
 
-		builder.Property(bq => bq.Difficulty)
+		builder.Property(bq => bq.MediaType)
+			.HasColumnName("media_type")
 			.HasMaxLength(20)
 			.IsRequired()
-			.HasDefaultValue("Medium");
+			.HasDefaultValue("NONE");
+
+		builder.Property(bq => bq.MediaUrl)
+			.HasColumnName("media_url");
+
+		builder.Property(bq => bq.MediaMetadata)
+			.HasColumnName("media_metadata")
+			.HasColumnType("jsonb");
 
 		builder.Property(bq => bq.IsActive)
 			.IsRequired()

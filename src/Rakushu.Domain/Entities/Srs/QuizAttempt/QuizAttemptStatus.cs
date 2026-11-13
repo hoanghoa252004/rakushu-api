@@ -2,8 +2,8 @@ namespace Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 public enum QuizAttemptStatus
 {
-	Created = 0,
-	InProgress = 1,
-	Completed = 2,
-	Abandoned = 3
+	InProgress = 0,
+	Completed = 1,
+	Expired = 2,
+	Canceled = 3
 }

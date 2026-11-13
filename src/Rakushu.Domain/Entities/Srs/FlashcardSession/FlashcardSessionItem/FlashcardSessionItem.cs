@@ -10,8 +10,8 @@ public sealed class FlashcardSessionItem : Entity<FlashcardSessionItemId>
 	public SavedItemId SavedItemId { get; private set; } = null!;
 
 	// Rating result
-	public FlashcardRating? Rating { get; private set; }
-	public DateTimeOffset? ReviewedAt { get; private set; }
+	public FlashcardRating Rating { get; private set; }
+	public DateTimeOffset ReviewedAt { get; private set; }
 
 	// Navigation Properties
 	public FlashcardSession FlashcardSession { get; private set; } = null!;
@@ -22,16 +22,20 @@ public sealed class FlashcardSessionItem : Entity<FlashcardSessionItemId>
 
 	public static Result<FlashcardSessionItem> Create(
 		FlashcardSessionId sessionId,
-		SavedItemId savedItemId)
+		SavedItemId savedItemId,
+		FlashcardRating rating,
+		DateTimeOffset reviewedAt)
 	{
 		return Result.Success(new FlashcardSessionItem(FlashcardSessionItemId.Create())
 		{
 			FlashcardSessionId = sessionId,
-			SavedItemId = savedItemId
+			SavedItemId = savedItemId,
+			Rating = rating,
+			ReviewedAt = reviewedAt
 		});
 	}
 
-	public void RecordRating(FlashcardRating rating, DateTimeOffset reviewedAt)
+	public void UpdateRating(FlashcardRating rating, DateTimeOffset reviewedAt)
 	{
 		Rating = rating;
 		ReviewedAt = reviewedAt;

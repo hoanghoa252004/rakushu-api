@@ -1,9 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
-using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 
@@ -11,37 +14,26 @@ internal sealed class SubmitQuizAttempt : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
-			.MapPost("/quiz-attempts/{id:guid}/submit", async (
-				Guid id,
-				[FromBody] SubmitQuizAttemptRequestDto dto,
+		app.MapSrsAttemptEndpoints()
+			.MapPatch("/{attemptId:guid}/submit", async (
+				[FromRoute] Guid attemptId,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var answers = (dto.Answers ?? [])
-					.Select(a => new QuizAnswerSubmission(a.QuestionId, a.SelectedOptionId, a.ElapsedMs))
-					.ToList();
-
-				var command = new SubmitQuizAttemptCommand(id, answers);
+				var command = new SubmitQuizAttemptCommand(attemptId);
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchOk();
+				return result.MatchNoContent();
 			})
-			.WithName("SubmitSrsQuizAttempt")
-			.WithSummary("Submit answers for a quiz attempt and calculate SM-2 progress")
-			.WithDescription("Submits learner answers, scores questions, applies SuperMemo-2 quality tiers (1: unanswered, 2: incorrect, 3-5: speed tiers), updates schedules and logs audit details.")
-			.RequireAuthorization()
-			.Produces<QuizAttemptResultResponse>(StatusCodes.Status200OK)
+			.WithName("SubmitQuizAttempt")
+			.WithSummary("Learner")
+			.WithDescription("Submits an in-progress quiz attempt, marks it as Completed, finalizes the score, updates SM-2 SRS schedules, and triggers asynchronous AI evaluation.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
+			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }
-
-internal sealed record SubmitAnswerRequestDto(
-	Guid QuestionId,
-	string? SelectedOptionId = null,
-	int? ElapsedMs = null);
-
-internal sealed record SubmitQuizAttemptRequestDto(
-	IReadOnlyList<SubmitAnswerRequestDto>? Answers = null);

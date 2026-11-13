@@ -28,8 +28,7 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 		var (items, totalCount) = await _bankQuestionRepository.GetQuestionsAsync(
 			meaningId,
 			request.QuestionTypeId,
-			request.Difficulty,
-			request.IsActive,
+			request.IsActive ?? true,
 			page,
 			pageSize,
 			cancellationToken);
@@ -41,10 +40,12 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 			bq.KnowledgeMeaning?.Meaning,
 			bq.QuestionTypeId.Value,
 			bq.QuestionType?.Code,
-			bq.Prompt,
-			bq.Difficulty,
+			bq.Question,
 			bq.IsActive,
-			bq.CreatedAt)).ToList();
+			bq.CreatedAt,
+			bq.MediaType,
+			bq.MediaUrl,
+			QuestionMediaMetadataParser.Parse(bq.MediaMetadata))).ToList();
 
 		return Result.Success<IReadOnlyList<BankQuestionSummaryDto>>(dtos);
 	}

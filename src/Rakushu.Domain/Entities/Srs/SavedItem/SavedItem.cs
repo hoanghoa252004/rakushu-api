@@ -11,13 +11,16 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 	public UserId UserId { get; private set; } = null!;
 	public KnowledgeMeaningId KnowledgeMeaningId { get; private set; } = null!;
 
-	// Vocabulary Snapshot
-	public string Expression { get; private set; } = null!;
-	public string? Reading { get; private set; }
-	public string Meaning { get; private set; } = null!;
+	// Live vocabulary data dynamically accessed from Knowledge module
+	public string Expression => KnowledgeMeaning?.KnowledgeUnit?.Expression ?? KnowledgeMeaning?.Meaning ?? string.Empty;
+	public string? Reading => KnowledgeMeaning?.KnowledgeUnit?.Reading;
+	public string Meaning => KnowledgeMeaning?.Meaning ?? string.Empty;
 
+	public bool IsActive { get; private set; } = true;
 	public DateTimeOffset SavedAt { get; private set; }
-	public DateTimeOffset CreatedAt { get; private set; }
+
+	// Automatically derived: true if the underlying meaning has been revoked/deactivated by curators
+	public bool IsRevoked => KnowledgeMeaning is not null && !KnowledgeMeaning.IsActive;
 
 	// NAVIGATION PROPERTIES
 	public User User { get; private set; } = null!;
@@ -30,12 +33,10 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 	public static Result<SavedItem> Create(
 		UserId userId,
 		KnowledgeMeaningId knowledgeMeaningId,
-		string expression,
-		string? reading,
-		string meaning,
-		DateTimeOffset now)
+		DateTimeOffset now,
+		bool isActive = true)
 	{
-		var validation = Validate(userId, knowledgeMeaningId, expression, meaning);
+		var validation = Validate(userId, knowledgeMeaningId);
 		if (validation.IsFailure)
 			return Result.Failure<SavedItem>(validation.Error);
 
@@ -43,11 +44,8 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 		{
 			UserId = userId,
 			KnowledgeMeaningId = knowledgeMeaningId,
-			Expression = expression.Trim(),
-			Reading = reading?.Trim(),
-			Meaning = meaning.Trim(),
-			SavedAt = now,
-			CreatedAt = now
+			IsActive = isActive,
+			SavedAt = now
 		});
 	}
 
@@ -56,37 +54,30 @@ public sealed class SavedItem : AggregateRoot<SavedItemId>
 		Schedule = schedule;
 	}
 
-	public Result UpdateSnapshot(string expression, string? reading, string meaning)
+	public void ToggleActive(bool isActive)
 	{
-		if (string.IsNullOrWhiteSpace(expression))
-			return Result.Failure(SavedItemErrors.EmptyExpression);
+		IsActive = isActive;
+	}
 
-		if (string.IsNullOrWhiteSpace(meaning))
-			return Result.Failure(SavedItemErrors.EmptyMeaning);
+	public void Activate()
+	{
+		IsActive = true;
+	}
 
-		Expression = expression.Trim();
-		Reading = reading?.Trim();
-		Meaning = meaning.Trim();
-		return Result.Success();
+	public void Deactivate()
+	{
+		IsActive = false;
 	}
 
 	private static Result Validate(
 		UserId userId,
-		KnowledgeMeaningId knowledgeMeaningId,
-		string expression,
-		string meaning)
+		KnowledgeMeaningId knowledgeMeaningId)
 	{
 		if (userId is null || userId.Value == Guid.Empty)
 			return Result.Failure(SavedItemErrors.InvalidUserId);
 
 		if (knowledgeMeaningId is null || knowledgeMeaningId.Value == Guid.Empty)
 			return Result.Failure(SavedItemErrors.InvalidMeaningId);
-
-		if (string.IsNullOrWhiteSpace(expression))
-			return Result.Failure(SavedItemErrors.EmptyExpression);
-
-		if (string.IsNullOrWhiteSpace(meaning))
-			return Result.Failure(SavedItemErrors.EmptyMeaning);
 
 		return Result.Success();
 	}

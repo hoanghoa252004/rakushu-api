@@ -694,6 +694,12 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
                     b.Property<string>("JapaneseMeaning")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2029,28 +2035,20 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("ChoicesJson")
+                    b.Property<string>("Answers")
                         .IsRequired()
                         .HasColumnType("jsonb")
-                        .HasColumnName("choices_json");
+                        .HasColumnName("answers");
 
-                    b.Property<string>("CorrectChoiceId")
+                    b.Property<string>("CorrectAnswer")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("correct_choice_id");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("correct_answer");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<string>("Difficulty")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("Medium")
-                        .HasColumnName("difficulty");
 
                     b.Property<string>("Explanation")
                         .HasColumnType("text")
@@ -2066,10 +2064,26 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("knowledge_meaning_id");
 
-                    b.Property<string>("Prompt")
+                    b.Property<string>("MediaMetadata")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("media_metadata");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("NONE")
+                        .HasColumnName("media_type");
+
+                    b.Property<string>("MediaUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("media_url");
+
+                    b.Property<string>("Question")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("prompt");
+                        .HasColumnName("question");
 
                     b.Property<Guid>("QuestionTypeId")
                         .HasColumnType("uuid")
@@ -2080,15 +2094,15 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("pk_bank_questions");
+                        .HasName("pk_questions");
 
                     b.HasIndex("KnowledgeMeaningId")
-                        .HasDatabaseName("ix_bank_questions_knowledge_meaning_id");
+                        .HasDatabaseName("ix_questions_knowledge_meaning_id");
 
                     b.HasIndex("QuestionTypeId")
-                        .HasDatabaseName("ix_bank_questions_question_type_id");
+                        .HasDatabaseName("ix_questions_question_type_id");
 
-                    b.ToTable("bank_questions", "srs");
+                    b.ToTable("questions", "srs");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSession", b =>
@@ -2128,6 +2142,25 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("flashcard_sessions", "srs");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard.FlashcardSessionCard", b =>
+                {
+                    b.Property<Guid>("FlashcardSessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("flashcard_session_id");
+
+                    b.Property<Guid>("SavedItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("saved_item_id");
+
+                    b.HasKey("FlashcardSessionId", "SavedItemId")
+                        .HasName("pk_flashcard_session_cards");
+
+                    b.HasIndex("SavedItemId")
+                        .HasDatabaseName("ix_flashcard_session_cards_saved_item_id");
+
+                    b.ToTable("flashcard_session_cards", "srs");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2139,11 +2172,12 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("flashcard_session_id");
 
                     b.Property<string>("Rating")
+                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("rating");
 
-                    b.Property<DateTimeOffset?>("ReviewedAt")
+                    b.Property<DateTimeOffset>("ReviewedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("reviewed_at");
 
@@ -2216,67 +2250,67 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("BankQuestionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("bank_question_id");
-
-                    b.Property<string>("ChoicesJson")
+                    b.Property<string>("Answers")
                         .IsRequired()
                         .HasColumnType("jsonb")
-                        .HasColumnName("choices_json");
+                        .HasColumnName("answers");
 
-                    b.Property<string>("CorrectOptionId")
+                    b.Property<Guid>("BankQuestionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("question_id");
+
+                    b.Property<string>("CorrectAnswer")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("correct_option_id");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("correct_answer");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<string>("MediaMetadata")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("media_metadata");
 
-                    b.Property<int>("Position")
-                        .HasColumnType("integer")
-                        .HasColumnName("position");
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("NONE")
+                        .HasColumnName("media_type");
 
-                    b.Property<string>("Prompt")
+                    b.Property<string>("MediaUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("media_url");
+
+                    b.Property<string>("QuestionText")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("prompt");
-
-                    b.Property<Guid>("QuestionTypeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("question_type_id");
+                        .HasColumnName("question");
 
                     b.Property<Guid>("QuizId")
                         .HasColumnType("uuid")
                         .HasColumnName("quiz_id");
 
-                    b.Property<string>("Reading")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("reading");
-
                     b.Property<Guid>("SavedItemId")
                         .HasColumnType("uuid")
                         .HasColumnName("saved_item_id");
 
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
                     b.HasKey("Id")
-                        .HasName("pk_questions");
+                        .HasName("pk_quiz_items");
 
                     b.HasIndex("BankQuestionId")
-                        .HasDatabaseName("ix_questions_bank_question_id");
-
-                    b.HasIndex("QuestionTypeId")
-                        .HasDatabaseName("ix_questions_question_type_id");
+                        .HasDatabaseName("ix_quiz_items_bank_question_id");
 
                     b.HasIndex("QuizId")
-                        .HasDatabaseName("ix_questions_quiz_id");
+                        .HasDatabaseName("ix_quiz_items_quiz_id");
 
                     b.HasIndex("SavedItemId")
-                        .HasDatabaseName("ix_questions_saved_item_id");
+                        .HasDatabaseName("ix_quiz_items_saved_item_id");
 
-                    b.ToTable("questions", "srs");
+                    b.ToTable("quiz_items", "srs");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.Quiz.Quiz", b =>
@@ -2330,6 +2364,16 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsEvaluated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_evaluated");
+
                     b.Property<string>("Mode")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -2344,10 +2388,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
                         .HasColumnName("score");
-
-                    b.Property<DateTimeOffset>("StartedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("started_at");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -2389,16 +2429,6 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("answered_at");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("ElapsedMs")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("elapsed_ms");
-
                     b.Property<string>("Feedback")
                         .HasColumnType("text")
                         .HasColumnName("feedback");
@@ -2406,10 +2436,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<bool?>("IsCorrect")
                         .HasColumnType("boolean")
                         .HasColumnName("is_correct");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer")
-                        .HasColumnName("position");
 
                     b.Property<Guid>("QuestionId")
                         .HasColumnType("uuid")
@@ -2419,10 +2445,16 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("quiz_attempt_id");
 
-                    b.Property<string>("SelectedOptionId")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("selected_option_id");
+                    b.Property<string>("SelectedAnswer")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("selected_answer");
+
+                    b.Property<int>("TimeSpentMs")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("time_spent_ms");
 
                     b.HasKey("Id")
                         .HasName("pk_quiz_attempt_items");
@@ -2442,30 +2474,15 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Expression")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("expression");
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
 
                     b.Property<Guid>("KnowledgeMeaningId")
                         .HasColumnType("uuid")
                         .HasColumnName("knowledge_meaning_id");
-
-                    b.Property<string>("Meaning")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("meaning");
-
-                    b.Property<string>("Reading")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("reading");
 
                     b.Property<DateTimeOffset>("SavedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2488,7 +2505,42 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("saved_items", "srs");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail.SrsItemDetail", b =>
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_at");
+
+                    b.Property<Guid>("SavedItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("saved_item_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_srs_schedules");
+
+                    b.HasIndex("DueAt")
+                        .HasDatabaseName("ix_srs_schedules_due_at");
+
+                    b.HasIndex("SavedItemId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_srs_schedules_saved_item_id");
+
+                    b.ToTable("srs_schedules", "srs");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail.SrsScheduleDetail", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -2535,63 +2587,18 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnName("srs_schedule_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_srs_item_details");
+                        .HasName("pk_srs_schedule_details");
 
                     b.HasIndex("FlashcardSessionItemId")
-                        .HasDatabaseName("ix_srs_item_details_flashcard_session_item_id");
+                        .HasDatabaseName("ix_srs_schedule_details_flashcard_session_item_id");
 
                     b.HasIndex("QuizAttemptItemId")
-                        .HasDatabaseName("ix_srs_item_details_quiz_attempt_item_id");
+                        .HasDatabaseName("ix_srs_schedule_details_quiz_attempt_item_id");
 
                     b.HasIndex("SrsScheduleId")
-                        .HasDatabaseName("ix_srs_item_details_srs_schedule_id");
+                        .HasDatabaseName("ix_srs_schedule_details_srs_schedule_id");
 
-                    b.ToTable("srs_item_details", "srs");
-                });
-
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTimeOffset>("DueAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("due_at");
-
-                    b.Property<DateTimeOffset?>("LastReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_reviewed_at");
-
-                    b.Property<Guid>("SavedItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("saved_item_id");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_srs_schedules");
-
-                    b.HasIndex("SavedItemId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_srs_schedules_saved_item_id");
-
-                    b.HasIndex("Status", "DueAt")
-                        .HasDatabaseName("ix_srs_schedules_status_due_at");
-
-                    b.ToTable("srs_schedules", "srs");
+                    b.ToTable("srs_schedule_details", "srs");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
@@ -3376,14 +3383,14 @@ namespace Rakushu.Persistence.Migrations
                         .HasForeignKey("KnowledgeMeaningId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_bank_questions_knowledge_meanings_knowledge_meaning_id");
+                        .HasConstraintName("fk_questions_knowledge_meanings_knowledge_meaning_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Srs.QuestionType.QuestionType", "QuestionType")
                         .WithMany()
                         .HasForeignKey("QuestionTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_bank_questions_question_types_question_type_id");
+                        .HasConstraintName("fk_questions_question_types_question_type_id");
 
                     b.Navigation("KnowledgeMeaning");
 
@@ -3400,6 +3407,27 @@ namespace Rakushu.Persistence.Migrations
                         .HasConstraintName("fk_flashcard_sessions_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard.FlashcardSessionCard", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSession", "FlashcardSession")
+                        .WithMany("Cards")
+                        .HasForeignKey("FlashcardSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_flashcard_session_cards_flashcard_sessions_flashcard_sessio");
+
+                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", "SavedItem")
+                        .WithMany()
+                        .HasForeignKey("SavedItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_flashcard_session_cards_saved_items_saved_item_id");
+
+                    b.Navigation("FlashcardSession");
+
+                    b.Navigation("SavedItem");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem", b =>
@@ -3428,33 +3456,25 @@ namespace Rakushu.Persistence.Migrations
                     b.HasOne("Rakushu.Domain.Entities.Srs.BankQuestion.BankQuestion", "BankQuestion")
                         .WithMany()
                         .HasForeignKey("BankQuestionId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_questions_bank_questions_bank_question_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Srs.QuestionType.QuestionType", "QuestionType")
-                        .WithMany()
-                        .HasForeignKey("QuestionTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_questions_question_types_question_type_id");
+                        .HasConstraintName("fk_quiz_items_questions_bank_question_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Srs.Quiz.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_questions_quizzes_quiz_id");
+                        .HasConstraintName("fk_quiz_items_quizzes_quiz_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", "SavedItem")
                         .WithMany()
                         .HasForeignKey("SavedItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_questions_saved_items_saved_item_id");
+                        .HasConstraintName("fk_quiz_items_saved_items_saved_item_id");
 
                     b.Navigation("BankQuestion");
-
-                    b.Navigation("QuestionType");
 
                     b.Navigation("Quiz");
 
@@ -3501,7 +3521,7 @@ namespace Rakushu.Persistence.Migrations
                         .HasForeignKey("QuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_quiz_attempt_items_questions_question_id");
+                        .HasConstraintName("fk_quiz_attempt_items_quiz_items_question_id");
 
                     b.HasOne("Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttempt", "QuizAttempt")
                         .WithMany("Items")
@@ -3520,7 +3540,7 @@ namespace Rakushu.Persistence.Migrations
                     b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", "KnowledgeMeaning")
                         .WithMany()
                         .HasForeignKey("KnowledgeMeaningId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_saved_items_knowledge_meanings_knowledge_meaning_id");
 
@@ -3536,34 +3556,6 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsItemDetail.SrsItemDetail", b =>
-                {
-                    b.HasOne("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem", "FlashcardSessionItem")
-                        .WithMany()
-                        .HasForeignKey("FlashcardSessionItemId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_srs_item_details_flashcard_session_items_flashcard_session_");
-
-                    b.HasOne("Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem.QuizAttemptItem", "QuizAttemptItem")
-                        .WithMany()
-                        .HasForeignKey("QuizAttemptItemId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_srs_item_details_quiz_attempt_items_quiz_attempt_item_id");
-
-                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", "SrsSchedule")
-                        .WithMany("Details")
-                        .HasForeignKey("SrsScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_srs_item_details_srs_schedules_srs_schedule_id");
-
-                    b.Navigation("FlashcardSessionItem");
-
-                    b.Navigation("QuizAttemptItem");
-
-                    b.Navigation("SrsSchedule");
-                });
-
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", "SavedItem")
@@ -3574,6 +3566,34 @@ namespace Rakushu.Persistence.Migrations
                         .HasConstraintName("fk_srs_schedules_saved_items_saved_item_id");
 
                     b.Navigation("SavedItem");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail.SrsScheduleDetail", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem", "FlashcardSessionItem")
+                        .WithMany()
+                        .HasForeignKey("FlashcardSessionItemId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_srs_schedule_details_flashcard_session_items_flashcard_sess");
+
+                    b.HasOne("Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem.QuizAttemptItem", "QuizAttemptItem")
+                        .WithMany()
+                        .HasForeignKey("QuizAttemptItemId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_srs_schedule_details_quiz_attempt_items_quiz_attempt_item_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", "SrsSchedule")
+                        .WithMany("Details")
+                        .HasForeignKey("SrsScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_srs_schedule_details_srs_schedules_srs_schedule_id");
+
+                    b.Navigation("FlashcardSessionItem");
+
+                    b.Navigation("QuizAttemptItem");
+
+                    b.Navigation("SrsSchedule");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Subscriptions.Entitlement.Entitlement", b =>
@@ -3866,6 +3886,8 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSession", b =>
                 {
+                    b.Navigation("Cards");
+
                     b.Navigation("Items");
                 });
 

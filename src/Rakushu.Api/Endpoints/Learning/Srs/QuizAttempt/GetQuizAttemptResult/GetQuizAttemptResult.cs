@@ -1,8 +1,13 @@
 using MediatR;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttemptResult;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Srs.QuizAttempt.GetQuizAttemptResult;
 
@@ -10,9 +15,9 @@ internal sealed class GetQuizAttemptResult : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsQuizEndpoints()
-			.MapGet("/quiz-attempts/{attemptId:guid}/result", async (
-				Guid attemptId,
+		app.MapSrsAttemptEndpoints()
+			.MapGet("/{attemptId:guid}/result", async (
+				[FromRoute] Guid attemptId,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
@@ -20,12 +25,14 @@ internal sealed class GetQuizAttemptResult : IEndpoint
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
-			.WithName("GetSrsQuizAttemptResult")
-			.WithSummary("Retrieve detailed results and explanations for a completed quiz attempt")
-			.WithDescription("Retrieves the score, answered options, correct answers, and curated explanations from bank questions.")
-			.RequireAuthorization()
-			.Produces<QuizAttemptResultResponse>(StatusCodes.Status200OK)
+			.WithName("GetQuizAttemptResult")
+			.WithSummary("Learner")
+			.WithDescription("Retrieves the summary result, score, correct answers, explanations, and feedback of a completed quiz attempt.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
+			.Produces<QuizAttemptResultDto>(StatusCodes.Status200OK)
+			.ProducesProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}

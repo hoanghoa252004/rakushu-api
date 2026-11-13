@@ -1,5 +1,3 @@
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
-
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.SubmitQuizAttempt;
 
 public sealed record Sm2CalculationResult(
@@ -7,7 +5,6 @@ public sealed record Sm2CalculationResult(
 	int Lapses,
 	int IntervalDays,
 	double EasinessFactor,
-	SrsStatus NewStatus,
 	DateTimeOffset DueAt);
 
 public static class Sm2Calculator
@@ -38,7 +35,6 @@ public static class Sm2Calculator
 				lapses,
 				interval,
 				newFactor,
-				SrsStatus.Learning,
 				dueAt);
 		}
 
@@ -66,15 +62,11 @@ public static class Sm2Calculator
 
 		DateTimeOffset calculatedDueAt = now.AddDays(newInterval);
 
-		// Per diagram: Learner masters word when repetitions >= 3
-		SrsStatus newStatus = newRepetitions >= 3 ? SrsStatus.Review : SrsStatus.Learning;
-
 		return new Sm2CalculationResult(
 			newRepetitions,
 			newLapses,
 			newInterval,
 			calculatedFactor,
-			newStatus,
 			calculatedDueAt);
 	}
 }

@@ -1,7 +1,8 @@
-﻿using Rakushu.Worker.Jobs.Embedding;
+using Rakushu.Worker.Jobs.Embedding;
 using Rakushu.Worker.Jobs.Knowledge.KnowledgeMatching;
 using Rakushu.Worker.Jobs.Knowledge.KnowledgeNlp;
 using Rakushu.Worker.Jobs.Payment;
+using Rakushu.Worker.Jobs.Srs;
 using Rakushu.Worker.Jobs.Shadowing;
 using Rakushu.Worker.Jobs.Subscription;
 using Rakushu.Worker.Jobs.Video.Nlp;
@@ -37,6 +38,9 @@ internal static class ServiceCollectionExtensions
 
 		// SUBSCRIPTION
 		services.AddHostedService<SubscriptionTrackingWorker>();
+
+		// SRS LEARNING
+		services.AddHostedService<QuizEvaluationWorker>();
 
 		return services;
 	}

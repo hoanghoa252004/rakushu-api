@@ -1,25 +1,20 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
-using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
-using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
+using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard;
 using Rakushu.Domain.Entities.Srs.SavedItem;
-using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.CreateFlashcardSession;
 
-internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlashcardSessionCommand, Result<FlashcardSessionDetailDto>>
+internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlashcardSessionCommand, Result<Guid>>
 {
 	private readonly IFlashcardSessionRepository _flashcardSessionRepository;
 	private readonly ISavedItemRepository _savedItemRepository;
-	private readonly ILearningUnitRepository _learningUnitRepository;
-	private readonly IStorageService _storageService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
@@ -27,28 +22,24 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 	public CreateFlashcardSessionHandler(
 		IFlashcardSessionRepository flashcardSessionRepository,
 		ISavedItemRepository savedItemRepository,
-		ILearningUnitRepository learningUnitRepository,
-		IStorageService storageService,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_flashcardSessionRepository = flashcardSessionRepository;
 		_savedItemRepository = savedItemRepository;
-		_learningUnitRepository = learningUnitRepository;
-		_storageService = storageService;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<Result<FlashcardSessionDetailDto>> Handle(
+	public async Task<Result<Guid>> Handle(
 		CreateFlashcardSessionCommand request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 		if (userId is null)
-			return Result.Failure<FlashcardSessionDetailDto>(UserErrors.NotFound);
+			return Result.Failure<Guid>(UserErrors.NotFound);
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
@@ -60,12 +51,19 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 			{
 				if (activeSession.IsExpired(now))
 				{
-					activeSession.Cancel(now);
-					_flashcardSessionRepository.Update(activeSession);
+					if (!activeSession.HasAnyReviewedItems)
+					{
+						_flashcardSessionRepository.Delete(activeSession);
+					}
+					else
+					{
+						activeSession.Expire(now);
+						_flashcardSessionRepository.Update(activeSession);
+					}
 				}
 				else
 				{
-					return Result.Failure<FlashcardSessionDetailDto>(FlashcardSessionErrors.ActiveSessionInProgress);
+					return Result.Failure<Guid>(FlashcardSessionErrors.ActiveSessionInProgress);
 				}
 			}
 
@@ -73,98 +71,38 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 			var distinctItemIds = request.ItemIds.Distinct().Select(SavedItemId.From).ToList();
 			if (distinctItemIds.Count == 0)
 			{
-				return Result.Failure<FlashcardSessionDetailDto>(FlashcardSessionErrors.EmptyItems);
+				return Result.Failure<Guid>(FlashcardSessionErrors.EmptyItems);
 			}
 
 			// Retrieve saved items with schedules
 			var savedItems = await _savedItemRepository.GetByIdsWithScheduleAsync(distinctItemIds, userId, cancellationToken);
 
-			// Filter eligible items (not suspended)
+			// Filter eligible items (active)
 			var eligibleItems = savedItems
-				.Where(item => item.Schedule == null || item.Schedule.Status != SrsStatus.Suspended)
+				.Where(item => item.IsActive)
 				.ToList();
 
 			if (eligibleItems.Count == 0)
 			{
-				return Result.Failure<FlashcardSessionDetailDto>(FlashcardSessionErrors.EmptyItems);
+				return Result.Failure<Guid>(FlashcardSessionErrors.EmptyItems);
 			}
 
-			// 1. Fetch multimedia contexts dynamically by meaning IDs
-			var meaningGuids = eligibleItems.Select(x => x.KnowledgeMeaningId.Value).Distinct().ToList();
-			var meaningContexts = await _learningUnitRepository.GetMediaContextsByMeaningIdsAsync(meaningGuids, maxVideosPerMeaning: 5, cancellationToken);
-
-			// 2. Create Flashcard Session Aggregate
+			// Create Flashcard Session Aggregate
 			var sessionResult = FlashcardSession.Create(userId, now);
 			if (sessionResult.IsFailure)
-				return Result.Failure<FlashcardSessionDetailDto>(sessionResult.Error);
+				return Result.Failure<Guid>(sessionResult.Error);
 
 			var session = sessionResult.Value;
-			var itemDtos = new List<FlashcardItemDto>(eligibleItems.Count);
 
+			// Add cards (the cards to study in this session)
 			foreach (var savedItem in eligibleItems)
 			{
-				var sessionItemResult = FlashcardSessionItem.Create(
-					session.Id,
-					savedItem.Id);
-
-				if (sessionItemResult.IsFailure)
-					return Result.Failure<FlashcardSessionDetailDto>(sessionItemResult.Error);
-
-				session.AddItem(sessionItemResult.Value);
-
-				var videoContextDtos = new List<FlashcardMediaContextDto>();
-				if (meaningContexts.TryGetValue(savedItem.KnowledgeMeaningId.Value, out var mediaList))
-				{
-					foreach (var media in mediaList)
-					{
-						string? videoUrl = null;
-						if (!string.IsNullOrWhiteSpace(media.StorageKey))
-						{
-							try
-							{
-								videoUrl = await _storageService.CreatePresignedReadUrlAsync(media.StorageKey, cancellationToken);
-							}
-							catch
-							{
-								videoUrl = media.SourceUrl;
-							}
-						}
-						else if (!string.IsNullOrWhiteSpace(media.SourceUrl))
-						{
-							videoUrl = media.SourceUrl;
-						}
-
-						videoContextDtos.Add(new FlashcardMediaContextDto(
-							media.LearningUnitId ?? Guid.Empty,
-							media.VideoTitle,
-							videoUrl,
-							media.StartTime,
-							media.EndTime,
-							media.OriginalSentence,
-							media.TranslatedSentence,
-							media.StartTokenIndex,
-							media.EndTokenIndex));
-					}
-				}
-
-				itemDtos.Add(new FlashcardItemDto(
-					savedItem.Id.Value,
-					savedItem.Expression,
-					savedItem.Reading,
-					savedItem.Meaning,
-					videoContextDtos));
+				session.AddCard(FlashcardSessionCard.Create(session.Id, savedItem.Id));
 			}
 
 			_flashcardSessionRepository.Add(session);
 
-			return Result.Success(new FlashcardSessionDetailDto(
-				session.Id.Value,
-				session.Status.ToString(),
-				session.CreatedAt,
-				session.ExpiresAt,
-				session.CompletedAt,
-				session.Items.Count,
-				itemDtos));
-		});
+			return Result.Success(session.Id.Value);
+		}, cancellationToken);
 	}
 }

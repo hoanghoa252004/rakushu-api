@@ -37,8 +37,10 @@ internal sealed class FlashcardSessionItemConfiguration : IEntityTypeConfigurati
 
 		builder.Property(fsi => fsi.Rating)
 			.HasMaxLength(20)
-			.HasConversion<string>();
+			.HasConversion<string>()
+			.IsRequired();
 
-		builder.Property(fsi => fsi.ReviewedAt);
+		builder.Property(fsi => fsi.ReviewedAt)
+			.IsRequired();
 	}
 }
