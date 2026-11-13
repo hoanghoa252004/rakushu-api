@@ -17,6 +17,7 @@ public sealed record QuizOptionDto(string Id, string Text);
 
 public sealed record QuizQuestionDto(
 	Guid ItemId,
+	Guid SavedItemId,
 	int Sequence,
 	string Question,
 	IReadOnlyList<QuizOptionDto> Choices,
@@ -48,6 +49,7 @@ public sealed record QuizAttemptDetailDto(
 
 public sealed record QuizAnswerResultDto(
 	Guid ItemId,
+	Guid SavedItemId,
 	int Sequence,
 	string Question,
 	IReadOnlyList<QuizOptionDto> Choices,

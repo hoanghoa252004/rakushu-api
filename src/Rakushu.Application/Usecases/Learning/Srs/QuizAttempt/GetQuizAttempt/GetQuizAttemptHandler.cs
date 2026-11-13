@@ -123,6 +123,7 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 
 			questionDtos.Add(new QuizQuestionDto(
 				ItemId: question.Id.Value,
+				SavedItemId: question.SavedItemId.Value,
 				Sequence: question.Sequence,
 				Question: question.QuestionText,
 				Choices: choices,

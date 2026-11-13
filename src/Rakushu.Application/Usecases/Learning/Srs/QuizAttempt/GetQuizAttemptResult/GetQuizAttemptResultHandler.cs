@@ -99,6 +99,7 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 
 			answerResults.Add(new QuizAnswerResultDto(
 				ItemId: question.Id.Value,
+				SavedItemId: question.SavedItemId.Value,
 				Sequence: question.Sequence,
 				Question: question.QuestionText,
 				Choices: choices,
