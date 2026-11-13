@@ -22,6 +22,12 @@ using Rakushu.Domain.Entities.Material.Series;
 using Rakushu.Domain.Entities.Material.Token;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
+using Rakushu.Domain.Entities.Shadowing.ShadowingRole;
+using Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSession;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSessionInvitation;
+using Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
@@ -81,6 +87,13 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IContentKnowledgeCollectionRepository, ContentKnowledgeCollectionRepository>();
 		services.AddScoped<ITranscriptRepository, TranscriptRepository>();
 		services.AddScoped<ISpeakerRepository, SpeakerRepository>();
+		services.AddScoped<IShadowingMaterialRepository, ShadowingMaterialRepository>();
+		services.AddScoped<IShadowingRoleRepository, ShadowingRoleRepository>();
+		services.AddScoped<IShadowingRoleLineRepository, ShadowingRoleLineRepository>();
+		services.AddScoped<IShadowingSessionRepository, ShadowingSessionRepository>();
+		services.AddScoped<IShadowingSessionMemberRepository, ShadowingSessionMemberRepository>();
+		services.AddScoped<IShadowingSessionInvitationRepository, ShadowingSessionInvitationRepository>();
+		services.AddScoped<Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.IShadowingAttemptRepository, ShadowingAttemptRepository>();
 
 		// SRS Repositories
 		services.AddScoped<ISavedItemRepository, SavedItemRepository>();

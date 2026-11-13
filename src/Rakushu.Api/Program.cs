@@ -2,13 +2,11 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Extensions;
 using Rakushu.Api.Middleware;
-using Rakushu.Application.Abstractions.Infrastructure.ASR;
-using Rakushu.Application.Abstractions.Infrastructure.Rag;
+using Rakushu.Api.Realtime;
+using Rakushu.Application.Abstractions.Infrastructure.Realtime;
 using Rakushu.Application.Extensions;
-using Rakushu.Application.Usecases.Embedding;
 using Rakushu.Application.Usecases.Knowledge.KnowledgeMatching;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMatchingCandidate;
-using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Extentions;
 using Rakushu.Infrastructure.Extensions;
 using Rakushu.Persistence.Extensions;
@@ -21,6 +19,24 @@ builder.Services.AddRakushuPersistence(builder.Configuration);
 builder.Services.AddRakushuInfrastructureForApi(builder.Configuration, builder.Environment);
 builder.Services.AddRakushuApplication();
 builder.Services.AddRakushuApi();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IShadowingRealtimeNotifier, SignalRShadowingRealtimeNotifier>();
+builder.Services.PostConfigure<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>(
+	Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme,
+	options =>
+	{
+		options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+		{
+			OnMessageReceived = context =>
+			{
+				var token = context.Request.Query["access_token"];
+				if (!string.IsNullOrEmpty(token)
+					&& context.HttpContext.Request.Path.StartsWithSegments(ShadowingSessionHub.Route))
+					context.Token = token;
+				return Task.CompletedTask;
+			}
+		};
+	});
 
 /// CONFIG MIDDLEWARES:
 builder.Services.AddProblemDetails();
@@ -46,6 +62,7 @@ app.UseAuthorization();
 
 /// MAP ENDPOINTS:
 app.MapEndpoints();
+app.MapHub<ShadowingSessionHub>(ShadowingSessionHub.Route);
 app.MapGet("/", () => "Welcome to Rakushu Api").ExcludeFromDescription();
 
 #region Test

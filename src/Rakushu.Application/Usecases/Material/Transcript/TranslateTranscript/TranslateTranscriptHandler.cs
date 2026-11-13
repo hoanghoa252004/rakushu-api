@@ -13,6 +13,9 @@ public sealed class TranslateTranscriptHandler
 	private const string SourceLanguageCode = "ja";
 	private const string TargetLanguageCode = "vi";
 
+	// Tổng số ký tự tối đa để sử dụng Realtime Translation.
+	private const int RealtimeCharacterThreshold = 10000;
+
 	private readonly IVideoRepository _videoRepository;
 	private readonly IStorageService _storageService;
 	private readonly IUnitOfWork _unitOfWork;
@@ -55,67 +58,143 @@ public sealed class TranslateTranscriptHandler
 					.OrderBy(segment => segment.Sequence)
 					.ToList();
 
-				// Tên job ổn định theo TranscriptId để tìm lại job
-				// mà không cần lưu JobId vào database.
-				var jobName = $"rakushu-transcript-{transcript.Id}";
+				// Chuẩn bị nội dung dịch.
+				var segmentTexts = segments
+					.Select(segment => segment.Text)
+					.ToList();
 
-				var existingJob =
-					await _translateService.FindBatchTranslationJobByNameAsync(
-						jobName,
-						cancellationToken);
+				var totalCharacters = CountCharacters(segmentTexts);
 
-				if (existingJob is null)
+				// Xác định phương thức dịch TRƯỚC khi tìm Job.
+				if (totalCharacters <= RealtimeCharacterThreshold)
 				{
-					await CreateTranslationJobAsync(
-						transcript.Id.ToString(),
-						segments.Select(segment => segment.Text).ToList(),
-						jobName,
+					await TranslateRealtimeAsync(
+						segments,
+						segmentTexts,
 						cancellationToken);
 
-					// Job vừa được tạo chưa có kết quả để lưu.
 					continue;
 				}
 
-				var job = await _translateService.GetBatchTranslationJobAsync(
-					existingJob.JobId,
+				// Chỉ những transcript vượt ngưỡng mới sử dụng Batch Job.
+				await TranslateBatchAsync(
+					transcript.Id.ToString(),
+					segments,
+					segmentTexts,
 					cancellationToken);
-
-				switch (job.Status)
-				{
-					case "SUBMITTED":
-					case "IN_PROGRESS":
-					case "STOP_REQUESTED":
-						// Job chưa hoàn thành, chờ lần chạy handler tiếp theo.
-						continue;
-
-					case "COMPLETED":
-						await ProcessCompletedTranslationAsync(
-							transcript.Id.ToString(),
-							segments,
-							job,
-							cancellationToken);
-
-						continue;
-
-					case "FAILED":
-					case "STOPPED":
-						// Chưa tự retry để tránh tạo job lặp ngoài ý muốn.
-						continue;
-
-					default:
-						continue;
-				}
 			}
 
 			return Result.Success();
+
 		}, cancellationToken);
 	}
 
+	#region Translation Strategy
+
+	private static int CountCharacters(
+		IReadOnlyList<string> segmentTexts)
+	{
+		return segmentTexts.Sum(text => text.Length);
+	}
+
+	#endregion
+
+	#region Realtime Translation
+
+	private async Task TranslateRealtimeAsync(
+		IReadOnlyList<Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment> segments,
+		IReadOnlyList<string> segmentTexts,
+		CancellationToken cancellationToken)
+	{
+		// Ghép các segment thành một nội dung duy nhất.
+		// Giữ nguyên newline để phân biệt từng segment.
+		var content = string.Join("\n", segmentTexts);
+
+		// Gọi AWS Translate Realtime API.
+		var translatedContent = await _translateService.TranslateTextAsync(
+			content,
+			SourceLanguageCode,
+			TargetLanguageCode,
+			cancellationToken);
+
+		// Parse kết quả thành từng dòng.
+		var translatedLines = ParseTranslatedLines(translatedContent);
+
+		// Tạo subtitle theo thứ tự segment.
+		await ProcessTranslatedLinesAsync(
+			segments,
+			translatedLines,
+			cancellationToken);
+	}
+
+	#endregion
+
+	#region Batch Translation
+
+	private async Task TranslateBatchAsync(
+		string transcriptId,
+		IReadOnlyList<Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment> segments,
+		IReadOnlyList<string> segmentTexts,
+		CancellationToken cancellationToken)
+	{
+		var jobName = $"rakushu-transcript-{transcriptId}";
+
+		// Chỉ tìm Job khi transcript thuộc Batch Translation.
+		var existingJob =
+			await _translateService.FindBatchTranslationJobByNameAsync(
+				jobName,
+				cancellationToken);
+
+		if (existingJob is null)
+		{
+			await CreateTranslationJobAsync(
+				transcriptId,
+				segmentTexts,
+				jobName,
+				cancellationToken);
+
+			return;
+		}
+
+		var job = await _translateService.GetBatchTranslationJobAsync(
+			existingJob.JobId,
+			cancellationToken);
+
+		switch (job.Status)
+		{
+			case "SUBMITTED":
+			case "IN_PROGRESS":
+			case "STOP_REQUESTED":
+
+				// Job chưa hoàn thành.
+				return;
+
+			case "COMPLETED":
+
+				await ProcessCompletedTranslationAsync(
+					transcriptId,
+					segments,
+					job,
+					cancellationToken);
+
+				return;
+
+			case "FAILED":
+			case "STOPPED":
+
+				// Chưa tự retry để tránh tạo Job lặp.
+				return;
+
+			default:
+				return;
+		}
+	}
+
 	private async Task CreateTranslationJobAsync(
-	string transcriptId,
-	IReadOnlyList<string> segmentTexts,
-	string jobName,
-	CancellationToken cancellationToken)
+		string transcriptId,
+		IReadOnlyList<string> segmentTexts,
+		string jobName,
+		CancellationToken cancellationToken)
 	{
 		if (segmentTexts.Count == 0)
 		{
@@ -123,7 +202,6 @@ public sealed class TranslateTranscriptHandler
 				$"Không có segment để dịch cho transcript {transcriptId}.");
 		}
 
-		// Mỗi segment nằm trên một dòng.
 		var content = string.Join("\n", segmentTexts);
 
 		var inputPrefix = $"translation/input/{transcriptId}/";
@@ -131,13 +209,11 @@ public sealed class TranslateTranscriptHandler
 
 		var outputPrefix = $"translation/output/{transcriptId}/";
 
-		// Upload file đầu vào lên S3.
 		await _storageService.UploadTextFileAsync(
 			inputKey,
 			content,
 			cancellationToken);
 
-		// Quan trọng: Input URI phải trỏ đến folder, không phải file.
 		var inputS3Uri = _storageService.GetS3MediaUri(inputPrefix);
 		var outputS3Uri = _storageService.GetS3MediaUri(outputPrefix);
 
@@ -156,7 +232,6 @@ public sealed class TranslateTranscriptHandler
 		TranslationJobStatusDto job,
 		CancellationToken cancellationToken)
 	{
-		// Output S3 URI là prefix, cần tìm file kết quả thực tế.
 		var outputKey = await _storageService.FindTranslatedTextFileKeyAsync(
 			$"translation/output/{transcriptId}/",
 			cancellationToken);
@@ -171,13 +246,29 @@ public sealed class TranslateTranscriptHandler
 			outputKey,
 			cancellationToken);
 
+		var translatedLines = ParseTranslatedLines(translatedContent);
+
+		await ProcessTranslatedLinesAsync(
+			segments,
+			translatedLines,
+			cancellationToken);
+	}
+
+	#endregion
+
+	#region Shared Subtitle Processing
+
+	private static List<string> ParseTranslatedLines(
+		string translatedContent)
+	{
 		var translatedLines = translatedContent
 			.Replace("\r\n", "\n")
 			.Split('\n')
 			.Select(line => line.TrimEnd('\r'))
 			.ToList();
 
-		// Chỉ bỏ newline cuối file, không bỏ dòng trống ở giữa.
+		// Chỉ bỏ newline cuối file.
+		// Không loại bỏ dòng trống ở giữa.
 		if (translatedLines.Count > 0 &&
 			translatedLines[^1].Length == 0 &&
 			translatedContent.EndsWith('\n'))
@@ -185,11 +276,18 @@ public sealed class TranslateTranscriptHandler
 			translatedLines.RemoveAt(translatedLines.Count - 1);
 		}
 
+		return translatedLines;
+	}
+
+	private async Task ProcessTranslatedLinesAsync(
+		IReadOnlyList<Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment> segments,
+		IReadOnlyList<string> translatedLines,
+		CancellationToken cancellationToken)
+	{
 		if (translatedLines.Count != segments.Count)
 		{
 			throw new InvalidOperationException(
 				$"Số dòng dịch không khớp số segment. " +
-				$"TranscriptId={transcriptId}, " +
 				$"Segments={segments.Count}, " +
 				$"TranslatedLines={translatedLines.Count}.");
 		}
@@ -204,12 +302,10 @@ public sealed class TranslateTranscriptHandler
 			if (string.IsNullOrWhiteSpace(translatedText))
 			{
 				throw new InvalidOperationException(
-					$"Bản dịch rỗng tại segment sequence {segment.Sequence}, " +
-					$"transcript {transcriptId}.");
+					$"Bản dịch rỗng tại segment sequence {segment.Sequence}.");
 			}
 
-			// Không tạo lại subtitle nếu segment đã có subtitle tiếng Việt.
-			// Subtitle là navigation property đơn trên TranscriptSegment.
+			// Không tạo lại subtitle nếu đã có subtitle tiếng Việt.
 			if (segment.Subtitle is not null &&
 				segment.Subtitle.LanguageCode.Equals(LanguageCode.VN))
 			{
@@ -223,9 +319,10 @@ public sealed class TranslateTranscriptHandler
 			if (subtitleResult.IsFailure)
 			{
 				throw new InvalidOperationException(
-					$"Không thể tạo subtitle cho segment sequence {segment.Sequence}, " +
-					$"transcript {transcriptId}.");
+					$"Không thể tạo subtitle cho segment sequence {segment.Sequence}.");
 			}
 		}
 	}
+
+	#endregion
 }

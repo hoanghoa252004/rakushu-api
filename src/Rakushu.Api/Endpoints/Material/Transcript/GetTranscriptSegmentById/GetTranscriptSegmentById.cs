@@ -12,7 +12,7 @@ internal sealed class GetTranscriptSegmentById : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapTranscriptEndpoints()
+		app.MapTranscriptSegmentEndpoints()
 			.MapGet("/segments/{segmentId:guid}", async (
 			[FromRoute] Guid videoId,
 			[FromRoute] Guid segmentId,

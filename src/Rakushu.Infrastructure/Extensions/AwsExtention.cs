@@ -1,4 +1,7 @@
-﻿using Amazon.BedrockRuntime;
+using Amazon.BedrockRuntime;
+using Amazon.MediaConvert;
+using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
+using Rakushu.Infrastructure.AudioClips;
 using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.SimpleEmail;
@@ -61,6 +64,10 @@ internal static class AwsExtention
 			services.AddSingleton<IAmazonTranslate>(_ =>
 				new AmazonTranslateClient(
 					Amazon.RegionEndpoint.APSoutheast1));
+
+			services.AddSingleton<IAmazonMediaConvert>(_ =>
+				new AmazonMediaConvertClient(
+					Amazon.RegionEndpoint.APSoutheast1));
 		}
 		else
 		{
@@ -100,6 +107,12 @@ internal static class AwsExtention
 				new AmazonTranslateClient(
 					awsCredentials,
 					Amazon.RegionEndpoint.APSoutheast1));
+
+			// AWS MediaConvert
+			services.AddSingleton<IAmazonMediaConvert>(_ =>
+				new AmazonMediaConvertClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1));
 		}
 
 		services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
@@ -113,6 +126,10 @@ internal static class AwsExtention
 		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();
 		// Bedrock
 		services.AddScoped<IEmbeddingService, AwsBedrockEmbeddingService>();
+		// Translate
+		services.AddScoped<ITranslateService, AwsTranslateService>();
+		// MediaConvert
+		services.AddScoped<IMediaConvertService, AwsMediaConvertService>();
 		// NLP Service
 		services.AddHttpClient<INlpService, SelftHostingNlpService>((serviceProvider, client) =>
 		{
@@ -128,8 +145,6 @@ internal static class AwsExtention
 
 			client.Timeout = TimeSpan.FromMinutes(2);
 		});
-		// Translate
-		services.AddScoped<ITranslateService, AwsTranslateService>();
 		return services;
 	}
 }

@@ -22,7 +22,18 @@ public sealed class AwsSettings
 
 	// Translate settings
 	public string TranslateDataAccessRoleArn { get; set; } = string.Empty;
+	// MediaConvert settings
+	public string MediaConvertEndpoint { get; set; } = string.Empty;
+	public string MediaConvertRoleArn { get; set; } = string.Empty;
+
 	// NLP settings
 	public string NlpBaseUrl { get; set; } = string.Empty;
+
+	// Pitch assessment settings
+	public string PitchAssessmentServiceBaseUrl { get; set; } = string.Empty;
+
+	// Azure Speech settings
+	public string AzureSpeechKey { get; set; } = string.Empty;
+	public string AzureSpeechRegion { get; set; } = string.Empty;
 
 }

@@ -3,6 +3,7 @@ using Rakushu.Worker.Jobs.Knowledge.KnowledgeMatching;
 using Rakushu.Worker.Jobs.Knowledge.KnowledgeNlp;
 using Rakushu.Worker.Jobs.Payment;
 using Rakushu.Worker.Jobs.Srs;
+using Rakushu.Worker.Jobs.Shadowing;
 using Rakushu.Worker.Jobs.Subscription;
 using Rakushu.Worker.Jobs.Video.Nlp;
 using Rakushu.Worker.Jobs.Video.Review;
@@ -30,6 +31,10 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<KnowledgeMatchingWorker>();
 		services.AddHostedService<TranslateTranscriptWorker>();
 		services.AddHostedService<VideoReviewingWorker>();
+		services.AddHostedService<ShadowingMaterialProcessingWorker>();
+		services.AddHostedService<ShadowingSessionExpirationWorker>();
+		services.AddHostedService<ShadowingSessionCompletionWorker>();
+		services.AddHostedService<ShadowingAssessmentWorker>();
 
 		// SUBSCRIPTION
 		services.AddHostedService<SubscriptionTrackingWorker>();

@@ -9,6 +9,7 @@ using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptionById
 using Rakushu.Application.Usecases.Subscription.Subscription.GetSubscriptions;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Subscriptions.Plan;
 using Rakushu.Domain.Entities.Subscriptions.Subscription;
 
 namespace Rakushu.Application.Usecases.Subscription.Subscription.GetMySubscriptions;
@@ -16,14 +17,14 @@ namespace Rakushu.Application.Usecases.Subscription.Subscription.GetMySubscripti
 internal sealed class GetMySubscriptionsHandler : IRequestHandler<GetMySubscriptionsQuery, Result<PaginatedList<SubscriptionDetailDto>>>
 {
 	private readonly ICurrentUserContext _currentUserContext;
-	private readonly IUserRepository _userRepository;
+	private readonly ISubscriptionRepository _subscriptionRepository;
 
 	public GetMySubscriptionsHandler(
 		ICurrentUserContext currentUserContext,
-		IUserRepository userRepository)
+		ISubscriptionRepository subscriptionRepository)
 	{
 		_currentUserContext = currentUserContext;
-		_userRepository = userRepository;
+		_subscriptionRepository = subscriptionRepository;
 	}
 
 	public async Task<Result<PaginatedList<SubscriptionDetailDto>>> Handle(GetMySubscriptionsQuery request, CancellationToken cancellationToken)
@@ -35,41 +36,24 @@ internal sealed class GetMySubscriptionsHandler : IRequestHandler<GetMySubscript
 			return Result.Failure<PaginatedList<SubscriptionDetailDto>>(SubscriptionErrors.InvalidUserId);
 		}
 
-		// Validate user exists
-		var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-
-		if (user == null)
-		{
-			return Result.Failure<PaginatedList<SubscriptionDetailDto>>(UserErrors.NotFound);
-		}
-
-		// Validate status if provided
-		if (!string.IsNullOrWhiteSpace(request.Status) && !Enum.TryParse<SubscriptionStatus>(request.Status, true, out _))
-		{
-			return Result.Failure<PaginatedList<SubscriptionDetailDto>>(SubscriptionErrors.InvalidStatus);
-		}
-
-		var list = user.Subscriptions.AsEnumerable();
-
-		// Filter
-		if (request.PlanId.HasValue)
-		{
-			list = list.Where(p => p.PlanId.Value == request.PlanId);
-		}
-
+		SubscriptionStatus? status = null;
 		if (!string.IsNullOrWhiteSpace(request.Status))
 		{
-			list = list.Where(p => p.Status.ToString().ToLower() == request.Status.ToLower());
+			if (!Enum.TryParse<SubscriptionStatus>(request.Status, true, out var parsedStatus))
+				return Result.Failure<PaginatedList<SubscriptionDetailDto>>(SubscriptionErrors.InvalidStatus);
+
+			status = parsedStatus;
 		}
 
-		// Calculate total count before paging
-		var totalCount = list.Count();
+		var (page, totalCount) = await _subscriptionRepository.GetPagedByUserAsync(
+			userId,
+			request.PlanId.HasValue ? PlanId.From(request.PlanId.Value) : null,
+			status,
+			request.PageNumber,
+			request.PageSize,
+			cancellationToken);
 
-		// Apply paging
-		var items = list
-			.OrderByDescending(c => c.StartAt)
-			.Skip((request.PageNumber - 1) * request.PageSize)
-			.Take(request.PageSize)
+		var items = page
 			.Select(subscription => new SubscriptionDetailDto
 			(
 				subscription.Id.Value,
@@ -130,9 +114,9 @@ internal sealed class GetMySubscriptionsHandler : IRequestHandler<GetMySubscript
 				)).ToList(),
 				new UserBasicDto
 				(
-					user.Id.Value,
-					user.FullName,
-					user.Email
+					subscription.User.Id.Value,
+					subscription.User.FullName,
+					subscription.User.Email
 				),
 				subscription.Payment is not null ? new PaymentBasicDto(
 					subscription.Payment.Id.Value,

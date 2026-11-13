@@ -69,6 +69,10 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddHttpClient<IAiServiceClient, AiServiceClient>();
 		services.AddHttpClient<IQuizContentGenerator, OllamaQuizContentGenerator>();
 
+		// SPEECH ASSESSMENT
+		services.AddHttpClient<Rakushu.Application.Abstractions.Infrastructure.Assessment.ISpeechAssessmentService, Rakushu.Infrastructure.Assessment.SpeechAssessmentService>(
+			client => client.Timeout = TimeSpan.FromMinutes(2));
+
 		return services;
 	}
 }

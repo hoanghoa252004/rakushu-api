@@ -3,7 +3,7 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
 using Rakushu.Domain.Entities.Material.Series;
-using Rakushu.Domain.Entities.Material.Video.MediaAsset;
+using Rakushu.Domain.Entities.Shadowing.ShadowingMaterial;
 
 namespace Rakushu.Domain.Entities.Material.Video;
 
@@ -24,6 +24,11 @@ public sealed partial class Video : AggregateRoot<VideoId>
 	public DateTimeOffset UpdatedAt { get; private set; }
 
 	// NAVIGATION PROPERTIES
+
+	// Shadowing Materials
+	private readonly List<ShadowingMaterial> _shadowingMaterials = new();
+	public IReadOnlyCollection<ShadowingMaterial> ShadowingMaterials => _shadowingMaterials.AsReadOnly();
+
 	// ContentCategory
 	public Knowledge.ContentCategory.ContentCategory ContentCategory { get; private set; } = null!;
 

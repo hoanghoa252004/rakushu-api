@@ -19,6 +19,20 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
 	}
 
+	public async Task<User?> GetProfileByIdAsync(UserId id, CancellationToken cancellationToken = default)
+	{
+		return await _context.Users
+			.AsNoTracking()
+			.Include(u => u.Role)
+			.Include(u => u.Profile)
+				.ThenInclude(p => p!.Level)
+			.Include(u => u.Profile)
+				.ThenInclude(p => p!.Interests)
+					.ThenInclude(i => i.ContentCategory)
+			.AsSplitQuery()
+			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
+	}
+
 	public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
 	{
 		return await _context.Users
@@ -48,6 +62,7 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.Include(u => u.Profile)
 				.ThenInclude(p => p.Level)
 
+			.AsSplitQuery()
 			.SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
 	}
 
