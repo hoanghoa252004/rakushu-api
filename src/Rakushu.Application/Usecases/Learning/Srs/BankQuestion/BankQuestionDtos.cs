@@ -1,3 +1,5 @@
+using Rakushu.Domain.Entities.Srs.BankQuestion;
+
 namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion;
 
 public sealed record QuestionAnswerDto(
@@ -17,6 +19,7 @@ public sealed record BankQuestionSummaryDto(
 	string? QuestionTypeCode,
 	string Question,
 	bool IsActive,
+	QuestionStatus Status,
 	DateTimeOffset CreatedAt,
 	string MediaType = "NONE",
 	string? MediaUrl = null,
@@ -34,6 +37,8 @@ public sealed record BankQuestionDetailDto(
 	string CorrectAnswer,
 	string? Explanation,
 	bool IsActive,
+	QuestionStatus Status,
+	DateTimeOffset? ReviewedAt,
 	DateTimeOffset CreatedAt,
 	DateTimeOffset UpdatedAt,
 	string MediaType = "NONE",

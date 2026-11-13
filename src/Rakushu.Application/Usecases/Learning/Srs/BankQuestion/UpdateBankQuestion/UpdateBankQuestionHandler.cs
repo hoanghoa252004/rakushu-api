@@ -94,16 +94,32 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 
 			var now = _systemClock.UtcNow;
 
-			question.Update(
-				request.Question,
-				answersJson ?? question.Answers,
-				request.CorrectAnswer,
-				request.Explanation,
-				now,
-				request.MediaType,
-				request.MediaUrl,
-				request.MediaMetadata);
+			if (question.Status == QuestionStatus.Draft)
+			{
+				question.UpdateAndPublish(
+					request.Question,
+					answersJson ?? question.Answers,
+					request.CorrectAnswer,
+					request.Explanation,
+					now,
+					request.MediaType,
+					request.MediaUrl,
+					request.MediaMetadata);
+			}
+			else
+			{
+				question.Update(
+					request.Question,
+					answersJson ?? question.Answers,
+					request.CorrectAnswer,
+					request.Explanation,
+					now,
+					request.MediaType,
+					request.MediaUrl,
+					request.MediaMetadata);
+			}
 
+			_bankQuestionRepository.Update(question);
 			return Result.Success();
 		}, cancellationToken);
 	}

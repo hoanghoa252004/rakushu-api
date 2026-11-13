@@ -41,6 +41,7 @@ internal static class ServiceCollectionExtensions
 
 		// SRS LEARNING
 		services.AddHostedService<QuizEvaluationWorker>();
+		services.AddHostedService<DraftQuestionGenerationWorker>();
 
 		return services;
 	}

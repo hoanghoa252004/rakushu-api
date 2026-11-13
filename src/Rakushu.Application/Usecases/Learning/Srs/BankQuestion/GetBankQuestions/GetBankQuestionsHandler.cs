@@ -28,7 +28,8 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 		var (items, totalCount) = await _bankQuestionRepository.GetQuestionsAsync(
 			meaningId,
 			request.QuestionTypeId,
-			request.IsActive ?? true,
+			request.IsActive,
+			request.Status,
 			page,
 			pageSize,
 			cancellationToken);
@@ -42,6 +43,7 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 			bq.QuestionType?.Code,
 			bq.Question,
 			bq.IsActive,
+			bq.Status,
 			bq.CreatedAt,
 			bq.MediaType,
 			bq.MediaUrl,

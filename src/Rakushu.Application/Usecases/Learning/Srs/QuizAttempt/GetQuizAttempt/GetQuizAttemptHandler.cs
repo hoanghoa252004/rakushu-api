@@ -129,7 +129,7 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 				Choices: choices,
 				SelectedAnswer: item?.SelectedAnswer,
 				TimeSpentMs: timeSpentMs,
-				QuestionType: typeCode,
+				QuestionType: typeCode ?? "PENDING_CURATION",
 				CorrectAnswer: isFinished ? question.CorrectAnswer : null,
 				IsCorrect: isFinished ? isItemCorrect : null,
 				Quality: quality,

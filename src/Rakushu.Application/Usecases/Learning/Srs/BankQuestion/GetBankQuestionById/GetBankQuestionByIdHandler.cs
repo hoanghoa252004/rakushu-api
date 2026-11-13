@@ -60,6 +60,8 @@ internal sealed class GetBankQuestionByIdHandler : IRequestHandler<GetBankQuesti
 			bq.CorrectAnswer,
 			bq.Explanation,
 			bq.IsActive,
+			bq.Status,
+			bq.ReviewedAt,
 			bq.CreatedAt,
 			bq.UpdatedAt,
 			bq.MediaType,

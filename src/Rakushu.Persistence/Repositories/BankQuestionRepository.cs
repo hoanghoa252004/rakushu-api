@@ -39,7 +39,7 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		return await _context.BankQuestions
 			.Include(bq => bq.QuestionType)
 			.Include(bq => bq.KnowledgeMeaning)
-			.Where(bq => idList.Contains(bq.KnowledgeMeaningId) && bq.IsActive)
+			.Where(bq => idList.Contains(bq.KnowledgeMeaningId) && bq.IsActive && bq.Status == QuestionStatus.Published)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -50,7 +50,7 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		return await _context.BankQuestions
 			.Include(bq => bq.QuestionType)
 			.Include(bq => bq.KnowledgeMeaning)
-			.Where(bq => bq.KnowledgeMeaningId == meaningId && bq.IsActive)
+			.Where(bq => bq.KnowledgeMeaningId == meaningId && bq.IsActive && bq.Status == QuestionStatus.Published)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -58,6 +58,7 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		KnowledgeMeaningId? meaningId = null,
 		Guid? questionTypeId = null,
 		bool? isActive = null,
+		QuestionStatus? status = null,
 		int page = 1,
 		int pageSize = 20,
 		CancellationToken cancellationToken = default)
@@ -79,6 +80,10 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 			query = query.Where(bq => bq.QuestionTypeId == targetTypeId);
 		}
 
+		if (status.HasValue)
+		{
+			query = query.Where(bq => bq.Status == status.Value);
+		}
 
 		if (isActive.HasValue)
 		{
@@ -182,5 +187,57 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 				bq.QuestionTypeId == typedQuestionTypeId &&
 				bq.Question == trimmedText,
 				cancellationToken);
+	}
+
+	public async Task<bool> HasDraftOrPublishedQuestionAsync(
+		KnowledgeMeaningId meaningId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.BankQuestions
+			.AnyAsync(bq => bq.KnowledgeMeaningId == meaningId &&
+				(bq.Status == QuestionStatus.Draft || (bq.Status == QuestionStatus.Published && bq.IsActive)),
+				cancellationToken);
+	}
+
+	public async Task<QuestionTypeId?> GetQuestionTypeIdByCodeAsync(
+		string code,
+		CancellationToken cancellationToken = default)
+	{
+		var normalizedCode = code.Trim().ToUpperInvariant();
+		var type = await _context.QuestionTypes
+			.FirstOrDefaultAsync(qt => qt.Code == normalizedCode && qt.IsActive, cancellationToken);
+
+		return type?.Id;
+	}
+
+	public async Task<QuestionTypeId> GetDefaultQuestionTypeIdAsync(
+		CancellationToken cancellationToken = default)
+	{
+		var type = await _context.QuestionTypes
+			.FirstOrDefaultAsync(qt => qt.IsActive, cancellationToken);
+
+		return type?.Id ?? QuestionTypeId.Create();
+	}
+
+	public async Task<IReadOnlyList<KnowledgeMeaning>> GetMeaningsNeedingDraftQuestionsAsync(
+		int limit,
+		CancellationToken cancellationToken = default)
+	{
+		var meaningIdsWithQuestions = _context.BankQuestions
+			.Select(bq => bq.KnowledgeMeaningId);
+
+		return await _context.SavedItems
+			.Where(si => si.IsActive && !meaningIdsWithQuestions.Contains(si.KnowledgeMeaningId))
+			.Select(si => si.KnowledgeMeaningId)
+			.Distinct()
+			.Join(
+				_context.KnowledgeMeanings
+					.Include(km => km.KnowledgeUnit)
+					.Where(km => km.IsActive),
+				id => id,
+				km => km.Id,
+				(id, km) => km)
+			.Take(limit)
+			.ToListAsync(cancellationToken);
 	}
 }

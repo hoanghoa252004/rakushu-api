@@ -110,7 +110,7 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 				Quality: quality,
 				Feedback: item.Feedback,
 				Explanation: question.BankQuestion?.Explanation,
-				QuestionType: typeCode,
+				QuestionType: typeCode ?? "PENDING_CURATION",
 				MediaType: question.MediaType,
 				MediaUrl: resolvedMediaUrl,
 				MediaMetadata: mediaMetadataDto));

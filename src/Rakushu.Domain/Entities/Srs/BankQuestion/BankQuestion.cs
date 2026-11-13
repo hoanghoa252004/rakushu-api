@@ -14,6 +14,8 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 	public string CorrectAnswer { get; private set; } = null!;
 	public string? Explanation { get; private set; }
 	public bool IsActive { get; private set; }
+	public QuestionStatus Status { get; private set; } = QuestionStatus.Published;
+	public DateTimeOffset? ReviewedAt { get; private set; }
 	public string MediaType { get; private set; } = "NONE";
 	public string? MediaUrl { get; private set; }
 	public string? MediaMetadata { get; private set; }
@@ -54,12 +56,71 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 			CorrectAnswer = correctAnswer.Trim(),
 			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
 			IsActive = isActive,
+			Status = QuestionStatus.Published,
+			ReviewedAt = now,
 			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant(),
 			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim(),
 			MediaMetadata = string.IsNullOrWhiteSpace(mediaMetadata) ? null : mediaMetadata.Trim(),
 			CreatedAt = now,
 			UpdatedAt = now
 		});
+	}
+
+	public static Result<BankQuestion> CreateDraftFromAi(
+		KnowledgeMeaningId knowledgeMeaningId,
+		QuestionTypeId questionTypeId,
+		string question,
+		string answers,
+		string correctAnswer,
+		DateTimeOffset now,
+		string? explanation = null,
+		string mediaType = "NONE",
+		string? mediaUrl = null,
+		string? mediaMetadata = null)
+	{
+		var validation = Validate(knowledgeMeaningId, questionTypeId, question, correctAnswer);
+		if (validation.IsFailure)
+			return Result.Failure<BankQuestion>(validation.Error);
+
+		return Result.Success(new BankQuestion(BankQuestionId.Create())
+		{
+			KnowledgeMeaningId = knowledgeMeaningId,
+			QuestionTypeId = questionTypeId,
+			Question = question.Trim(),
+			Answers = string.IsNullOrWhiteSpace(answers) ? "[]" : answers.Trim(),
+			CorrectAnswer = correctAnswer.Trim(),
+			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
+			IsActive = false,
+			Status = QuestionStatus.Draft,
+			ReviewedAt = null,
+			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant(),
+			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim(),
+			MediaMetadata = string.IsNullOrWhiteSpace(mediaMetadata) ? null : mediaMetadata.Trim(),
+			CreatedAt = now,
+			UpdatedAt = now
+		});
+	}
+
+	public void Publish(DateTimeOffset now)
+	{
+		Status = QuestionStatus.Published;
+		IsActive = true;
+		ReviewedAt = now;
+		UpdatedAt = now;
+	}
+
+	public void UpdateAndPublish(
+		string question,
+		string answers,
+		string correctAnswer,
+		string? explanation,
+		DateTimeOffset now,
+		string? mediaType = null,
+		string? mediaUrl = null,
+		string? mediaMetadata = null)
+	{
+		Update(question, answers, correctAnswer, explanation, now, mediaType, mediaUrl, mediaMetadata);
+		Publish(now);
 	}
 
 	public void Update(

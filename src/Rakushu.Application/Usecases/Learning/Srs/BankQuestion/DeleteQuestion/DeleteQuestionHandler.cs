@@ -30,7 +30,13 @@ internal sealed class DeleteQuestionHandler : IRequestHandler<DeleteQuestionComm
 		{
 			var questionId = BankQuestionId.From(request.Id);
 			var question = await _bankQuestionRepository.GetByIdAsync(questionId, cancellationToken);
-			if (question is null || !question.IsActive)
+			if (question is null)
+			{
+				return Result.Failure(BankQuestionErrors.NotFound);
+			}
+
+			// Nếu đã là Published và đã bị hủy kích hoạt (!IsActive) => coi như đã bị xóa rồi
+			if (question.Status == QuestionStatus.Published && !question.IsActive)
 			{
 				return Result.Failure(BankQuestionErrors.NotFound);
 			}
