@@ -24,7 +24,11 @@ internal sealed class CreateQuiz : IEndpoint
 				var command = new CreateQuizAttemptCommand(dto.ItemIds, dto.Mode, dto.DiscardActive);
 
 				var result = await sender.Send(command, cancellationToken);
-				return result.MatchCreated("GetQuizAttempt", attemptId => new { attemptId });
+				return result.MatchCreated("GetQuizAttempt", r => new
+				{
+					attemptId = r.AttemptId,
+					skippedItems = r.SkippedItems
+				});
 			})
 			.WithName("CreateQuiz")
 			.WithSummary("Learner")

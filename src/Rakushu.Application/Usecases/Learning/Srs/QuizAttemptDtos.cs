@@ -1,5 +1,11 @@
 namespace Rakushu.Application.Usecases.Learning.Srs;
 
+public sealed record SkippedItemDto(string Expression, string? Reading);
+
+public sealed record CreateQuizAttemptResultDto(
+	Guid AttemptId,
+	IReadOnlyList<SkippedItemDto> SkippedItems);
+
 public static class QuizAnswerHelper
 {
 	public const string Skip = "SKIP";

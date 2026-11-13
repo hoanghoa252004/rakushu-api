@@ -67,4 +67,8 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 	Task<IReadOnlyList<KnowledgeMeaning>> GetMeaningsNeedingDraftQuestionsAsync(
 		int limit,
 		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlySet<Guid>> GetMeaningIdsWithPublishedQuestionsAsync(
+		IEnumerable<KnowledgeMeaningId> meaningIds,
+		CancellationToken cancellationToken = default);
 }

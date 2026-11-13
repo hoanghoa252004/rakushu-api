@@ -22,7 +22,7 @@ using QuizEntity = Rakushu.Domain.Entities.Srs.Quiz.Quiz;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.CreateQuizAttempt;
 
-internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttemptCommand, Result<Guid>>
+internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttemptCommand, Result<CreateQuizAttemptResultDto>>
 {
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly IBankQuestionRepository _bankQuestionRepository;
@@ -59,16 +59,16 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<Result<Guid>> Handle(
+	public async Task<Result<CreateQuizAttemptResultDto>> Handle(
 		CreateQuizAttemptCommand request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 		if (userId is null)
-			return Result.Failure<Guid>(UserErrors.NotFound);
+			return Result.Failure<CreateQuizAttemptResultDto>(UserErrors.NotFound);
 
 		if (request.ItemIds is null || request.ItemIds.Count == 0)
-			return Result.Failure<Guid>(QuizErrors.EmptySelectedItems);
+			return Result.Failure<CreateQuizAttemptResultDto>(QuizErrors.EmptySelectedItems);
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
@@ -90,13 +90,13 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 				{
 					var cancelResult = activeAttempt.Cancel(now);
 					if (cancelResult.IsFailure)
-						return Result.Failure<Guid>(cancelResult.Error);
+						return Result.Failure<CreateQuizAttemptResultDto>(cancelResult.Error);
 
 					_quizAttemptRepository.Update(activeAttempt);
 				}
 				else
 				{
-					return Result.Failure<Guid>(QuizAttemptErrors.ActiveAttemptInProgressWithId(activeAttempt.Id.Value));
+					return Result.Failure<CreateQuizAttemptResultDto>(QuizAttemptErrors.ActiveAttemptInProgressWithId(activeAttempt.Id.Value));
 				}
 			}
 
@@ -104,17 +104,18 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			var items = await _savedItemRepository.GetByIdsWithScheduleAsync(ids, userId, cancellationToken);
 
 			if (items.Count == 0)
-				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
+				return Result.Failure<CreateQuizAttemptResultDto>(QuizErrors.NoQuestionsAvailable);
 
 			var meaningIds = items.Select(i => i.KnowledgeMeaningId).Distinct().ToList();
 			var bankQuestions = (await _bankQuestionRepository.GetByMeaningIdsAsync(meaningIds, cancellationToken)).ToList();
 
 			var quizResult = QuizEntity.Create(userId, now);
 			if (quizResult.IsFailure)
-				return Result.Failure<Guid>(quizResult.Error);
+				return Result.Failure<CreateQuizAttemptResultDto>(quizResult.Error);
 
 			var quiz = quizResult.Value;
 			int position = 1;
+			var skippedItems = new List<SkippedItemDto>();
 
 			foreach (var item in items)
 			{
@@ -123,7 +124,10 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 					.ToList();
 
 				if (matchingQuestions.Count == 0)
+				{
+					skippedItems.Add(new SkippedItemDto(item.Expression, item.Reading));
 					continue;
+				}
 
 				// Pick question adaptively based on item's SRS repetition level
 				var bankQ = SrsQuestionSelector.PickQuestionForSrsStage(item, matchingQuestions);
@@ -147,7 +151,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			}
 
 			if (quiz.TotalQuestions == 0)
-				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
+				return Result.Failure<CreateQuizAttemptResultDto>(QuizErrors.NoQuestionsAvailable);
 
 			var attemptMode = string.Equals(request.Mode, "Cramming", StringComparison.OrdinalIgnoreCase)
 				? QuizAttemptMode.PracticeAll
@@ -156,14 +160,14 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			var attemptResult = Domain.Entities.Srs.QuizAttempt.QuizAttempt.Create(
 				userId, quiz.Id, now, quiz.TotalQuestions, attemptMode);
 			if (attemptResult.IsFailure)
-				return Result.Failure<Guid>(attemptResult.Error);
+				return Result.Failure<CreateQuizAttemptResultDto>(attemptResult.Error);
 
 			var attempt = attemptResult.Value;
 
 			_quizRepository.Add(quiz);
 			_quizAttemptRepository.Add(attempt);
 
-			return Result.Success(attempt.Id.Value);
+			return Result.Success(new CreateQuizAttemptResultDto(attempt.Id.Value, skippedItems));
 		}, cancellationToken);
 	}
 }
