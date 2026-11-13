@@ -7,6 +7,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttempt;
@@ -113,10 +114,10 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 			int? quality = null;
 			if (isFinished && item != null && item.AnsweredAt.HasValue)
 			{
-				quality = isItemCorrect != true ? 1
-					: timeSpentMs > 15_000 ? 3
-					: timeSpentMs >= 5_000 ? 4
-					: 5;
+				quality = SrsQuestionBenchmark.CalculateQuality(
+					isItemCorrect == true,
+					timeSpentMs,
+					question.QuestionType?.ExpectedDurationSeconds);
 			}
 
 			questionDtos.Add(new QuizQuestionDto(

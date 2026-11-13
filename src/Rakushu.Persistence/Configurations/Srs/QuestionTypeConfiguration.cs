@@ -30,6 +30,11 @@ internal sealed class QuestionTypeConfiguration : IEntityTypeConfiguration<Quest
 		builder.Property(qt => qt.Description)
 			.HasMaxLength(500);
 
+		builder.Property(qt => qt.ExpectedDurationSeconds)
+			.HasColumnName("expected_duration_seconds")
+			.HasDefaultValue(15)
+			.IsRequired();
+
 		builder.Property(qt => qt.IsActive)
 			.IsRequired()
 			.HasDefaultValue(true);

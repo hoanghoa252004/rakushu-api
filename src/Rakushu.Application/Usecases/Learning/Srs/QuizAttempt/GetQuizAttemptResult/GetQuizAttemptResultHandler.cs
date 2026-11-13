@@ -4,6 +4,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttemptResult;
@@ -54,15 +55,15 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 			var item = entry.Item;
 			var question = entry.Question!;
 
+			var typeCode = question.QuestionType?.Code;
+
 			bool isCorrect = item.IsCorrect ?? false;
 			int timeSpentMs = item.TimeSpentMs;
 
-			int quality = !isCorrect ? 1
-				: timeSpentMs > 15_000 ? 3
-				: timeSpentMs >= 5_000 ? 4
-				: 5;
-
-			var typeCode = question.QuestionType?.Code;
+			int quality = SrsQuestionBenchmark.CalculateQuality(
+				isCorrect,
+				timeSpentMs,
+				question.QuestionType?.ExpectedDurationSeconds);
 			var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
 			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase) ||
 			               string.Equals(typeCode, "AUDIO_DICTATION", StringComparison.OrdinalIgnoreCase);

@@ -1,3 +1,4 @@
+using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
@@ -64,10 +65,10 @@ internal sealed class QuizAttemptSrsService : IQuizAttemptSrsService
 			bool isCorrect = item.IsCorrect ?? false;
 			int timeSpentMs = item.TimeSpentMs;
 
-			int quality = !isCorrect ? 1
-				: timeSpentMs > 15_000 ? 3
-				: timeSpentMs >= 5_000 ? 4
-				: 5;
+			int quality = SrsQuestionBenchmark.CalculateQuality(
+				isCorrect,
+				timeSpentMs,
+				question.QuestionType?.ExpectedDurationSeconds);
 
 			var schedule = savedItem.Schedule;
 			if (schedule is null)
