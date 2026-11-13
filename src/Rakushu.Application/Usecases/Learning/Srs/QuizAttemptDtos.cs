@@ -23,6 +23,7 @@ public sealed record QuizQuestionDto(
 	IReadOnlyList<QuizOptionDto> Choices,
 	string? SelectedAnswer,
 	int TimeSpentMs,
+	Guid? DetailId = null,
 	string? QuestionType = null,
 	string? CorrectAnswer = null,
 	bool? IsCorrect = null,

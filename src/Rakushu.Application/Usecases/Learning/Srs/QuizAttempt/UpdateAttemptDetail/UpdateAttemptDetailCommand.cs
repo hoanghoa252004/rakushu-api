@@ -6,5 +6,5 @@ namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.UpdateAttemptDet
 public sealed record UpdateAttemptDetailCommand(
 	Guid AttemptId,
 	Guid DetailId,
-	string? SelectedAnswer,
+	string SelectedAnswer,
 	int TimeSpentMs) : IRequest<Result>;

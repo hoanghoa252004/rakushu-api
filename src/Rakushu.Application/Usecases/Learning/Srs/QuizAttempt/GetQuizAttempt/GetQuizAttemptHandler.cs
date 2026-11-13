@@ -107,15 +107,13 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 			var rawMetadata = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
 			var mediaMetadataDto = isFinished ? rawMetadata : QuestionMediaMetadataParser.SanitizeForActiveQuiz(rawMetadata);
 
-			bool isSkip = item != null && QuizAnswerHelper.IsSkip(item.SelectedAnswer);
 			bool? isItemCorrect = item?.IsCorrect;
 			int timeSpentMs = item?.TimeSpentMs ?? 0;
 
 			int? quality = null;
 			if (isFinished && item != null && item.AnsweredAt.HasValue)
 			{
-				quality = isSkip ? 1
-					: isItemCorrect != true ? 2
+				quality = isItemCorrect != true ? 1
 					: timeSpentMs > 15_000 ? 3
 					: timeSpentMs >= 5_000 ? 4
 					: 5;
@@ -129,6 +127,7 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 				Choices: choices,
 				SelectedAnswer: item?.SelectedAnswer,
 				TimeSpentMs: timeSpentMs,
+				DetailId: item?.Id.Value,
 				QuestionType: typeCode ?? "PENDING_CURATION",
 				CorrectAnswer: isFinished ? question.CorrectAnswer : null,
 				IsCorrect: isFinished ? isItemCorrect : null,

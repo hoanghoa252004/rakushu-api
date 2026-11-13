@@ -6,5 +6,5 @@ namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.CreateAttemptDet
 public sealed record CreateAttemptDetailCommand(
 	Guid AttemptId,
 	Guid QuizItemId,
-	string? SelectedAnswer,
+	string SelectedAnswer,
 	int TimeSpentMs) : IRequest<Result<Guid>>;

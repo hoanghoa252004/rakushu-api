@@ -54,12 +54,10 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 			var item = entry.Item;
 			var question = entry.Question!;
 
-			bool isSkip = QuizAnswerHelper.IsSkip(item.SelectedAnswer);
 			bool isCorrect = item.IsCorrect ?? false;
 			int timeSpentMs = item.TimeSpentMs;
 
-			int quality = isSkip ? 1
-				: !isCorrect ? 2
+			int quality = !isCorrect ? 1
 				: timeSpentMs > 15_000 ? 3
 				: timeSpentMs >= 5_000 ? 4
 				: 5;

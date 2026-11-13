@@ -101,6 +101,18 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 		return Result.Success();
 	}
 
+	public Result RemoveItem(QuizAttemptItemId itemId, DateTimeOffset now)
+	{
+		var item = _items.FirstOrDefault(i => i.Id == itemId);
+		if (item is null)
+			return Result.Failure(QuizAttemptItemErrors.NotFound);
+
+		_items.Remove(item);
+		RecalculateProgress(now);
+
+		return Result.Success();
+	}
+
 	public IReadOnlyList<QuizAttemptItem.QuizAttemptItem> PruneUnansweredItems()
 	{
 		return [];

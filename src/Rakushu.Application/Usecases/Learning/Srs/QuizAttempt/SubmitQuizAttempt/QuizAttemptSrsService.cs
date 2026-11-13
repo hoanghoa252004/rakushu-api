@@ -61,12 +61,10 @@ internal sealed class QuizAttemptSrsService : IQuizAttemptSrsService
 			if (!savedItemDict.TryGetValue(question.SavedItemId, out var savedItem))
 				continue;
 
-			bool isSkip = QuizAnswerHelper.IsSkip(item.SelectedAnswer);
 			bool isCorrect = item.IsCorrect ?? false;
 			int timeSpentMs = item.TimeSpentMs;
 
-			int quality = isSkip ? 1
-				: !isCorrect ? 2
+			int quality = !isCorrect ? 1
 				: timeSpentMs > 15_000 ? 3
 				: timeSpentMs >= 5_000 ? 4
 				: 5;
