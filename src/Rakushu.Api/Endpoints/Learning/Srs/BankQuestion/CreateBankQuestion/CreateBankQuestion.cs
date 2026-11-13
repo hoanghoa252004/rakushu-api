@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
@@ -12,29 +13,42 @@ internal sealed class CreateBankQuestion : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsBankQuestionEndpoints()
+		app.MapSrsQuestionEndpoints()
+			// 1. Endpoint
 			.MapPost("", async (
 				[FromBody] CreateBankQuestionRequest request,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
+				string? mediaMetadata = request.MediaMetadata switch
+				{
+					{ ValueKind: JsonValueKind.String } el => el.GetString(),
+					{ ValueKind: JsonValueKind.Object } el => el.GetRawText(),
+					_ => null
+				};
+
 				var command = new CreateBankQuestionCommand(
 					request.KnowledgeMeaningId,
 					request.QuestionTypeId,
-					request.Prompt,
-					request.Choices,
-					request.CorrectChoiceId,
+					request.Question,
+					request.Answers,
+					request.CorrectAnswer,
 					request.Explanation,
-					request.Difficulty,
-					request.IsActive);
+					request.IsActive,
+					request.MediaType ?? "NONE",
+					request.MediaUrl,
+					mediaMetadata);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchCreated("GetBankQuestionById", id => new { id });
 			})
+			// 2. Description
 			.WithName("CreateBankQuestion")
-			.WithSummary("Create a new bank question")
-			.WithDescription("Allows linguistic curators and admins to add a new question to the SRS Question Bank.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
+			.WithSummary("Curator")
+			.WithDescription("Creates a new question in the question bank for a specific knowledge meaning.")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			// 4. Response
 			.Produces<Guid>(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
@@ -47,9 +61,11 @@ internal sealed class CreateBankQuestion : IEndpoint
 public sealed record CreateBankQuestionRequest(
 	Guid KnowledgeMeaningId,
 	Guid QuestionTypeId,
-	string Prompt,
-	IReadOnlyList<BankQuestionChoiceDto> Choices,
-	string CorrectChoiceId,
+	string Question,
+	IReadOnlyList<QuestionAnswerDto>? Answers,
+	string CorrectAnswer,
 	string? Explanation = null,
-	string Difficulty = "Medium",
-	bool IsActive = true);
+	bool IsActive = true,
+	string? MediaType = "NONE",
+	string? MediaUrl = null,
+	JsonElement? MediaMetadata = null);

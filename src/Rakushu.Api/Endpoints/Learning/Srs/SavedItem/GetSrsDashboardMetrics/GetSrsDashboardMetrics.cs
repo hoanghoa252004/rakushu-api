@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Usecases.Learning.Srs.SavedItem.GetSrsDashboardMetrics;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Learning.Srs.SavedItem.GetSrsDashboardMetrics;
 
@@ -12,8 +13,8 @@ internal sealed class GetSrsDashboardMetrics : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsItemEndpoints()
-			.MapGet("/dashboard/metrics", async (
+		app.MapSrsScheduleEndpoints()
+			.MapGet("/metrics", async (
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
@@ -21,12 +22,13 @@ internal sealed class GetSrsDashboardMetrics : IEndpoint
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
-			.WithName("GetSrsDashboardMetrics")
-			.WithSummary("Get SRS dashboard metrics for learner review analysis")
+			.WithName("GetSrsScheduleMetrics")
+			.WithSummary("Learner")
 			.WithDescription("Retrieves aggregate learning statistics including due counts, true retention rate (30-day logs), leech count, and mastery rate.")
-			.RequireAuthorization()
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<SrsDashboardMetricsDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }

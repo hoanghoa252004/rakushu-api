@@ -34,7 +34,7 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 
 		var timeoutSeconds = int.TryParse(configuration["QuizLlm:TimeoutSeconds"], out var configuredTimeout)
 			? Math.Clamp(configuredTimeout, 5, 86400)
-			: 60;
+			: 3600;
 		_httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 	}
 
@@ -106,7 +106,7 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 				var p = prompts[i];
 				var idx = i + 1;
 				itemsBuilder.AppendLine($"Mục {idx} (meaningId: \"{p.MeaningId}\"):");
-				itemsBuilder.AppendLine($"- Từ/ngữ pháp: {p.Expression}");
+				itemsBuilder.AppendLine($"- Từ/ngữ pháp mục tiêu: {p.Expression}");
 				if (!string.IsNullOrWhiteSpace(p.Reading))
 					itemsBuilder.AppendLine($"- Cách đọc: {p.Reading}");
 				itemsBuilder.AppendLine($"- Nghĩa tiếng Việt: {p.Meaning}");
@@ -121,8 +121,8 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 				jsonTemplateBuilder.Append($$"""
 					    {
 					      "meaningId": "{{p.MeaningId}}",
-					      "prompt": "Từ/ngữ pháp 「{{p.Expression}}」 trong ngữ cảnh trên có ý nghĩa là gì?",
-					      "explanation": "「{{p.Expression}}」{{(string.IsNullOrWhiteSpace(p.Reading) ? "" : $"({p.Reading})")}} có nghĩa là: {{p.Meaning}}."
+					      "prompt": "<Bối cảnh giao tiếp tự nhiên>: \"<Trích dẫn câu thoại thực tế>\" Từ/ngữ pháp 「{{p.Expression}}」 trong câu trên mang ý nghĩa gì?",
+					      "explanation": "<Lời giải thích ngắn gọn bằng tiếng Việt về ý nghĩa, cách đọc và sắc thái của từ trong câu thoại>"
 					    }
 					""");
 				if (i < prompts.Count - 1)
@@ -130,15 +130,25 @@ public sealed class OllamaQuizContentGenerator : IQuizContentGenerator
 				jsonTemplateBuilder.AppendLine();
 			}
 
-			const string systemPrompt = "Bạn là chuyên gia sư phạm tiếng Nhật của Rakushu. Bạn luôn trả về JSON hợp lệ theo đúng cấu trúc yêu cầu, không kèm bất kỳ giải thích ngoài JSON.";
+			const string systemPrompt =
+				"Bạn là chuyên gia sư phạm tiếng Nhật của Rakushu, chuyên biên soạn câu hỏi trắc nghiệm tình huống thực tế (context-based situational quiz). " +
+				"Bạn TUYỆT ĐỐI KHÔNG BAO GIỜ đặt câu hỏi cụt lủn chỉ có 'Từ này có ý nghĩa là gì?'. " +
+				"Bạn luôn lồng ghép bối cảnh giao tiếp tự nhiên (tư vấn kỹ thuật, họp công việc, trao đổi email, đời thường...) và trích dẫn câu thoại thực tế. " +
+				"Câu hỏi phải kết thúc bằng: Từ/ngữ pháp 「từ_vựng」 trong câu trên mang ý nghĩa gì? " +
+				"Bạn luôn trả về JSON hợp lệ theo đúng cấu trúc yêu cầu, không kèm bất kỳ giải thích nào ngoài JSON.";
 
 			var prompt = $$"""
-				Dưới đây là danh sách từ vựng/ngữ pháp tiếng Nhật cần tạo câu hỏi trắc nghiệm và lời giải thích:
+				Dưới đây là danh sách từ vựng/ngữ pháp tiếng Nhật cần tạo câu hỏi trắc nghiệm tình huống và lời giải thích:
 				{{itemsBuilder}}
 
-				YÊU CẦU:
-				1. Với mỗi từ vựng, hãy dựa vào "Câu ngữ cảnh" thực tế trong bài học để viết một câu hỏi trắc nghiệm ngắn gọn, tự nhiên bằng tiếng Việt (trường "prompt") để kiểm tra ý nghĩa của từ vựng đó trong ngữ cảnh.
-				2. Viết một lời giải thích ngắn gọn, rõ ràng (trường "explanation") về ý nghĩa, cách đọc và cách dùng của từ vựng đó trong câu ngữ cảnh.
+				YÊU CẦU BIÊN SOẠN SƯ PHẠM:
+				1. Với mỗi từ vựng, hãy đóng vai người biên soạn đề thi tình huống:
+				   - Dựa vào "Câu ngữ cảnh" thực tế trong bài học để xác định bối cảnh giao tiếp tự nhiên (ví dụ: tư vấn kỹ thuật cho khách hàng, họp nhóm dự án, trao đổi email với đồng nghiệp, hội thoại đời thường...).
+				   - Viết câu hỏi tình huống sinh động bằng tiếng Việt (trường "prompt"):
+				     + Mở đầu bằng bối cảnh giao tiếp tự nhiên và trích dẫn câu thoại gốc (đặt trong dấu nháy kép "...").
+				     + Kết thúc câu hỏi BẮT BUỘC bằng định dạng chuẩn: Từ/ngữ pháp 「từ_vựng」 trong câu trên mang ý nghĩa gì?
+				     + Định dạng mẫu: [Bối cảnh giao tiếp tự nhiên]: "[Câu thoại trích dẫn]" Từ/ngữ pháp 「[Từ/ngữ pháp mục tiêu]」 trong câu trên mang ý nghĩa gì?
+				2. Viết lời giải thích ngắn gọn, rõ ràng (trường "explanation") về ý nghĩa tiếng Việt, cách đọc Hiragana và sắc thái thực tế của từ vựng trong câu thoại.
 				3. BẮT BUỘC trả về đủ tất cả {{prompts.Count}} mục ứng với meaningId tương ứng.
 
 				Chỉ trả về JSON hợp lệ có cấu trúc chính xác như sau:

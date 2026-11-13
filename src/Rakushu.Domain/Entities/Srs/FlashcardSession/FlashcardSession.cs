@@ -1,20 +1,26 @@
 using Rakushu.Domain.Common;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
+using FlashcardSessionItemEntity = Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem.FlashcardSessionItem;
+using FlashcardSessionCardEntity = Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionCard.FlashcardSessionCard;
 
 namespace Rakushu.Domain.Entities.Srs.FlashcardSession;
 
 public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 {
+	public static readonly TimeSpan DefaultIdleTimeout = TimeSpan.FromMinutes(15);
+
 	public UserId UserId { get; private set; } = null!;
 	public FlashcardSessionStatus Status { get; private set; } = FlashcardSessionStatus.InProgress;
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset ExpiresAt { get; private set; }
 	public DateTimeOffset? CompletedAt { get; private set; }
 
-	private readonly List<FlashcardSessionItem.FlashcardSessionItem> _items = [];
-	public IReadOnlyCollection<FlashcardSessionItem.FlashcardSessionItem> Items => _items.AsReadOnly();
+	private readonly List<FlashcardSessionCardEntity> _cards = [];
+	public IReadOnlyCollection<FlashcardSessionCardEntity> Cards => _cards.AsReadOnly();
+
+	private readonly List<FlashcardSessionItemEntity> _items = [];
+	public IReadOnlyCollection<FlashcardSessionItemEntity> Items => _items.AsReadOnly();
 
 	// Navigation Property
 	public User User { get; private set; } = null!;
@@ -25,12 +31,12 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 	public static Result<FlashcardSession> Create(
 		UserId userId,
 		DateTimeOffset now,
-		TimeSpan? timeout = null)
+		TimeSpan? idleTimeout = null)
 	{
 		if (userId is null || userId.Value == Guid.Empty)
 			return Result.Failure<FlashcardSession>(FlashcardSessionErrors.InvalidUserId);
 
-		var effectiveTimeout = timeout ?? TimeSpan.FromHours(1);
+		var effectiveTimeout = idleTimeout ?? DefaultIdleTimeout;
 
 		return Result.Success(new FlashcardSession(FlashcardSessionId.Create())
 		{
@@ -41,24 +47,54 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 		});
 	}
 
-	public void AddItem(FlashcardSessionItem.FlashcardSessionItem item)
+	public void AddCard(FlashcardSessionCardEntity card)
+	{
+		_cards.Add(card);
+	}
+
+	public void AddItem(FlashcardSessionItemEntity item)
 	{
 		_items.Add(item);
 	}
 
+	public bool HasAnyReviewedItems => _items.Count > 0;
+
 	public bool IsExpired(DateTimeOffset now) =>
 		Status == FlashcardSessionStatus.InProgress && now > ExpiresAt;
 
-	public Result Submit(DateTimeOffset now)
+	public void Expire(DateTimeOffset now)
 	{
+		Status = FlashcardSessionStatus.Expired;
+	}
+
+	public void RefreshIdleTimeout(DateTimeOffset now, TimeSpan? idleTimeout = null)
+	{
+		if (Status != FlashcardSessionStatus.InProgress)
+			return;
+
+		var duration = idleTimeout ?? DefaultIdleTimeout;
+		ExpiresAt = now.Add(duration);
+	}
+
+	public Result Complete(DateTimeOffset now)
+	{
+		if (Status == FlashcardSessionStatus.Completed)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCompleted);
+
+		if (Status == FlashcardSessionStatus.Canceled)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCanceled);
+
 		if (Status != FlashcardSessionStatus.InProgress)
 			return Result.Failure(FlashcardSessionErrors.NotInProgress);
 
 		if (now > ExpiresAt)
 		{
-			Status = FlashcardSessionStatus.Abandoned;
+			Status = FlashcardSessionStatus.Expired;
 			return Result.Failure(FlashcardSessionErrors.Expired);
 		}
+
+		if (!HasAnyReviewedItems)
+			return Result.Failure(FlashcardSessionErrors.NoItemsReviewed);
 
 		Status = FlashcardSessionStatus.Completed;
 		CompletedAt = now;
@@ -67,16 +103,17 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 
 	public Result Cancel(DateTimeOffset now)
 	{
+		if (Status == FlashcardSessionStatus.Completed)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCompleted);
+
+		if (Status == FlashcardSessionStatus.Canceled)
+			return Result.Failure(FlashcardSessionErrors.AlreadyCanceled);
+
 		if (Status != FlashcardSessionStatus.InProgress)
 			return Result.Failure(FlashcardSessionErrors.NotInProgress);
 
-		if (now > ExpiresAt)
-		{
-			Status = FlashcardSessionStatus.Abandoned;
-			return Result.Failure(FlashcardSessionErrors.Expired);
-		}
-
-		Status = FlashcardSessionStatus.Abandoned;
+		Status = FlashcardSessionStatus.Canceled;
+		CompletedAt = now;
 		return Result.Success();
 	}
 }

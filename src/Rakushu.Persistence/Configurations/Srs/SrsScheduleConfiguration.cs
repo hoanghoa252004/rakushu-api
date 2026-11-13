@@ -26,23 +26,19 @@ internal sealed class SrsScheduleConfiguration : IEntityTypeConfiguration<SrsSch
 		builder.HasIndex(s => s.SavedItemId)
 			.IsUnique();
 
-		builder.Property(s => s.Status)
-			.HasMaxLength(20)
-			.HasConversion<string>()
-			.IsRequired();
-
 		builder.Property(s => s.DueAt)
+			.HasColumnName("due_at")
 			.IsRequired();
 
-		builder.Property(s => s.LastReviewedAt);
+		builder.HasIndex(s => s.DueAt);
 
 		builder.Property(s => s.CreatedAt)
+			.HasColumnName("created_at")
 			.IsRequired();
 
 		builder.Property(s => s.UpdatedAt)
+			.HasColumnName("updated_at")
 			.IsRequired();
-
-		builder.HasIndex(s => new { s.Status, s.DueAt });
 
 		builder.HasMany(s => s.Details)
 			.WithOne(d => d.SrsSchedule)

@@ -52,26 +52,39 @@ internal sealed class QuizAttemptConfiguration : IEntityTypeConfiguration<QuizAt
 			.IsRequired();
 
 		builder.Property(qa => qa.TotalItems)
+			.HasColumnName("total_items")
 			.IsRequired();
 
 		builder.Property(qa => qa.AnsweredItems)
+			.HasColumnName("answered_items")
 			.IsRequired();
 
 		builder.Property(qa => qa.CorrectItems)
+			.HasColumnName("correct_items")
 			.IsRequired();
 
 		builder.Property(qa => qa.Score)
+			.HasColumnName("score")
 			.HasPrecision(5, 2);
 
-		builder.Property(qa => qa.StartedAt)
+		builder.Property(qa => qa.ExpiresAt)
+			.HasColumnName("expires_at")
 			.IsRequired();
 
-		builder.Property(qa => qa.CompletedAt);
+		builder.Property(qa => qa.IsEvaluated)
+			.HasColumnName("is_evaluated")
+			.HasDefaultValue(false)
+			.IsRequired();
+
+		builder.Property(qa => qa.CompletedAt)
+			.HasColumnName("completed_at");
 
 		builder.Property(qa => qa.CreatedAt)
+			.HasColumnName("created_at")
 			.IsRequired();
 
 		builder.Property(qa => qa.UpdatedAt)
+			.HasColumnName("updated_at")
 			.IsRequired();
 
 		builder.HasMany(qa => qa.Items)

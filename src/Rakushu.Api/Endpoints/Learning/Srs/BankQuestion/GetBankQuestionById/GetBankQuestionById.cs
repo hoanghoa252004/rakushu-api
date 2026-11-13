@@ -12,7 +12,8 @@ internal sealed class GetBankQuestionById : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
-		app.MapSrsBankQuestionEndpoints()
+		app.MapSrsQuestionEndpoints()
+			// 1. Endpoint
 			.MapGet("/{id:guid}", async (
 				[FromRoute] Guid id,
 				ISender sender,
@@ -22,10 +23,13 @@ internal sealed class GetBankQuestionById : IEndpoint
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
+			// 2. Description
 			.WithName("GetBankQuestionById")
-			.WithSummary("Get bank question detail by ID")
-			.WithDescription("Retrieves full details of a bank question including prompt, parsed choices, correct choice ID, audio URL, and explanation.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
+			.WithSummary("Curator")
+			.WithDescription("Retrieves full details of a specific question by its identifier, including question text, answer options, correct answer, and explanation.")
+			// 3. Authentication & Authorization
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			// 4. Response
 			.Produces<BankQuestionDetailDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)

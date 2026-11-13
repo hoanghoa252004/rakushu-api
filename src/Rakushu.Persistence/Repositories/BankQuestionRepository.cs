@@ -57,7 +57,6 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 	public async Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetQuestionsAsync(
 		KnowledgeMeaningId? meaningId = null,
 		Guid? questionTypeId = null,
-		string? difficulty = null,
 		bool? isActive = null,
 		int page = 1,
 		int pageSize = 20,
@@ -76,13 +75,10 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 
 		if (questionTypeId.HasValue)
 		{
-			query = query.Where(bq => bq.QuestionTypeId.Value == questionTypeId.Value);
+			var targetTypeId = QuestionTypeId.From(questionTypeId.Value);
+			query = query.Where(bq => bq.QuestionTypeId == targetTypeId);
 		}
 
-		if (!string.IsNullOrWhiteSpace(difficulty))
-		{
-			query = query.Where(bq => bq.Difficulty.ToLower() == difficulty.ToLower());
-		}
 
 		if (isActive.HasValue)
 		{
@@ -116,18 +112,6 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 			.ToListAsync(cancellationToken);
 
 		if (meanings.Count < count)
-		{
-			var savedMeanings = await _context.SavedItems
-				.AsNoTracking()
-				.Where(si => !excludeList.Contains(si.KnowledgeMeaningId) && !string.IsNullOrWhiteSpace(si.Meaning))
-				.Select(si => si.Meaning)
-				.Distinct()
-				.Take(count * 4)
-				.ToListAsync(cancellationToken);
-
-			meanings = meanings.Concat(savedMeanings).Distinct().ToList();
-		}
-
 		if (meanings.Count < count)
 		{
 			var defaultPool = new[]
@@ -148,5 +132,55 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		}
 
 		return meanings.OrderBy(_ => Random.Shared.Next()).Take(count).ToList();
+	}
+
+	public async Task<bool> HasBeenUsedInQuizAsync(
+		BankQuestionId id,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.Questions
+			.AnyAsync(qi => qi.BankQuestionId == id, cancellationToken);
+	}
+
+	public async Task<bool> ExistsDuplicateAsync(
+		KnowledgeMeaningId meaningId,
+		Guid questionTypeId,
+		string questionText,
+		BankQuestionId? excludeId = null,
+		CancellationToken cancellationToken = default)
+	{
+		var typedQuestionTypeId = QuestionTypeId.From(questionTypeId);
+		var trimmedText = questionText.Trim();
+
+		var query = _context.BankQuestions
+			.Where(bq =>
+				bq.KnowledgeMeaningId == meaningId &&
+				bq.QuestionTypeId == typedQuestionTypeId &&
+				bq.Question == trimmedText &&
+				bq.IsActive);
+
+		if (excludeId != null)
+		{
+			query = query.Where(bq => bq.Id != excludeId);
+		}
+
+		return await query.AnyAsync(cancellationToken);
+	}
+
+	public async Task<BankQuestion?> FindDuplicateAsync(
+		KnowledgeMeaningId meaningId,
+		Guid questionTypeId,
+		string questionText,
+		CancellationToken cancellationToken = default)
+	{
+		var typedQuestionTypeId = QuestionTypeId.From(questionTypeId);
+		var trimmedText = questionText.Trim();
+
+		return await _context.BankQuestions
+			.FirstOrDefaultAsync(bq =>
+				bq.KnowledgeMeaningId == meaningId &&
+				bq.QuestionTypeId == typedQuestionTypeId &&
+				bq.Question == trimmedText,
+				cancellationToken);
 	}
 }

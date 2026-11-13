@@ -24,7 +24,6 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 	Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetQuestionsAsync(
 		KnowledgeMeaningId? meaningId = null,
 		Guid? questionTypeId = null,
-		string? difficulty = null,
 		bool? isActive = null,
 		int page = 1,
 		int pageSize = 20,
@@ -33,5 +32,22 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 	Task<IReadOnlyList<string>> GetRandomDistractorMeaningsAsync(
 		IEnumerable<KnowledgeMeaningId> excludeMeaningIds,
 		int count,
+		CancellationToken cancellationToken = default);
+
+	Task<bool> HasBeenUsedInQuizAsync(
+		BankQuestionId id,
+		CancellationToken cancellationToken = default);
+
+	Task<bool> ExistsDuplicateAsync(
+		KnowledgeMeaningId meaningId,
+		Guid questionTypeId,
+		string questionText,
+		BankQuestionId? excludeId = null,
+		CancellationToken cancellationToken = default);
+
+	Task<BankQuestion?> FindDuplicateAsync(
+		KnowledgeMeaningId meaningId,
+		Guid questionTypeId,
+		string questionText,
 		CancellationToken cancellationToken = default);
 }

@@ -12,10 +12,13 @@ public sealed record FlashcardMediaContextDto(
 	int? EndTokenIndex);
 
 public sealed record FlashcardItemDto(
+	Guid? ItemId,
 	Guid SavedItemId,
 	string Expression,
 	string? Reading,
 	string Meaning,
+	string? Rating,
+	DateTimeOffset? ReviewedAt,
 	IReadOnlyList<FlashcardMediaContextDto> VideoContexts);
 
 public sealed record FlashcardSessionDetailDto(
@@ -27,24 +30,30 @@ public sealed record FlashcardSessionDetailDto(
 	int TotalItems,
 	IReadOnlyList<FlashcardItemDto> Items);
 
-public sealed record FlashcardItemRatingInput(
-	Guid SavedItemId,
-	string Rating);
+public sealed record FlashcardSessionSummaryDto(
+	Guid Id,
+	string Status,
+	int TotalItems,
+	int CompletedItems,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset ExpiresAt,
+	DateTimeOffset? CompletedAt);
 
 public sealed record FlashcardItemResultDto(
 	Guid SavedItemId,
 	string Expression,
+	string? Reading,
+	string Meaning,
 	string Rating,
 	int Quality,
 	int IntervalDays,
 	int Repetitions,
-	DateTimeOffset NextDueAt,
-	string NewStatus);
+	DateTimeOffset NextDueAt);
 
 public sealed record FlashcardSessionResultDto(
 	Guid SessionId,
 	string Status,
-	DateTimeOffset CompletedAt,
+	DateTimeOffset? CompletedAt,
 	int TotalItems,
 	int ForgotCount,
 	int HardCount,

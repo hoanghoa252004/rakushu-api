@@ -15,6 +15,10 @@ public sealed class QuizRepository : BaseRepository<Quiz, QuizId>, IQuizReposito
 	{
 		return await _context.Quizzes
 			.Include(q => q.Questions)
+				.ThenInclude(qn => qn.BankQuestion)
+					.ThenInclude(bq => bq.QuestionType)
+			.Include(q => q.Questions)
+				.ThenInclude(qn => qn.SavedItem)
 			.SingleOrDefaultAsync(q => q.Id == id, cancellationToken);
 	}
 }
