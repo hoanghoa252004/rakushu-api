@@ -167,4 +167,19 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 			.Select(a => a.Id)
 			.ToListAsync(cancellationToken);
 	}
+
+	public async Task<IReadOnlyList<QuizAttempt>> GetStaleAttemptsAsync(
+		DateTimeOffset now,
+		int maxCount,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.QuizAttempts
+			.Include(qa => qa.Items)
+			.Include(qa => qa.Quiz)
+				.ThenInclude(q => q.Questions)
+			.Where(a => a.Status == QuizAttemptStatus.InProgress && a.ExpiresAt < now)
+			.OrderBy(a => a.ExpiresAt)
+			.Take(maxCount)
+			.ToListAsync(cancellationToken);
+	}
 }

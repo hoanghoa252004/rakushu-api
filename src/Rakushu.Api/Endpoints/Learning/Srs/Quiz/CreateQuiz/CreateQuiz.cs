@@ -21,7 +21,7 @@ internal sealed class CreateQuiz : IEndpoint
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new CreateQuizAttemptCommand(dto.ItemIds, dto.Mode);
+				var command = new CreateQuizAttemptCommand(dto.ItemIds, dto.Mode, dto.DiscardActive);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchCreated("GetQuizAttempt", attemptId => new { attemptId });
@@ -42,4 +42,5 @@ internal sealed class CreateQuiz : IEndpoint
 
 internal sealed record CreateQuizRequestDto(
 	IReadOnlyList<Guid> ItemIds,
-	string? Mode = null);
+	string? Mode = null,
+	bool DiscardActive = false);

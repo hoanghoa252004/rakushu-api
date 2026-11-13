@@ -8,7 +8,7 @@ namespace Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 {
-	private static readonly TimeSpan DefaultDuration = TimeSpan.FromHours(1);
+	private static readonly TimeSpan DefaultDuration = TimeSpan.FromHours(24);
 
 	public UserId UserId { get; private set; } = null!;
 	public QuizId QuizId { get; private set; } = null!;
@@ -157,7 +157,6 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 	public void Expire(DateTimeOffset now)
 	{
 		Status = QuizAttemptStatus.Expired;
-		CompletedAt = now;
 		UpdatedAt = now;
 
 		AnsweredItems = _items.Count(i => i.AnsweredAt.HasValue);
@@ -177,7 +176,6 @@ public sealed class QuizAttempt : AggregateRoot<QuizAttemptId>
 			return Result.Failure(QuizAttemptErrors.NotInProgress);
 
 		Status = QuizAttemptStatus.Canceled;
-		CompletedAt = now;
 		UpdatedAt = now;
 
 		AnsweredItems = _items.Count(i => i.AnsweredAt.HasValue);

@@ -86,9 +86,17 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 					}
 					_quizAttemptRepository.Update(activeAttempt);
 				}
+				else if (request.DiscardActive)
+				{
+					var cancelResult = activeAttempt.Cancel(now);
+					if (cancelResult.IsFailure)
+						return Result.Failure<Guid>(cancelResult.Error);
+
+					_quizAttemptRepository.Update(activeAttempt);
+				}
 				else
 				{
-					return Result.Failure<Guid>(QuizAttemptErrors.ActiveAttemptInProgress);
+					return Result.Failure<Guid>(QuizAttemptErrors.ActiveAttemptInProgressWithId(activeAttempt.Id.Value));
 				}
 			}
 

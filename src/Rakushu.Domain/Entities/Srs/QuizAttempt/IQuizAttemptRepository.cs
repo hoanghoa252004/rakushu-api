@@ -35,6 +35,11 @@ public interface IQuizAttemptRepository : IBaseRepository<QuizAttempt, QuizAttem
 	Task<IReadOnlyList<QuizAttemptId>> GetPendingEvaluationAttemptIdsAsync(
 		int maxCount,
 		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<QuizAttempt>> GetStaleAttemptsAsync(
+		DateTimeOffset now,
+		int maxCount,
+		CancellationToken cancellationToken = default);
 }
 
 public sealed record QuizItemAnswerHistory(

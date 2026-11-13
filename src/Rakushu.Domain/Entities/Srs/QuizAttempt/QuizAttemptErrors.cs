@@ -31,6 +31,9 @@ public static class QuizAttemptErrors
 	public static readonly Error ActiveAttemptInProgress = Error.Conflict(
 		"QUIZ_ATTEMPT.ACTIVE_ATTEMPT_EXISTS", "You already have an active quiz attempt in progress. Please complete or delete it before starting a new one.");
 
+	public static Error ActiveAttemptInProgressWithId(Guid attemptId) => Error.Conflict(
+		"QUIZ_ATTEMPT.ACTIVE_ATTEMPT_EXISTS", $"You already have an active quiz attempt in progress ({attemptId}). Pass discardActive=true to cancel it, or complete it before starting a new one.");
+
 	public static readonly Error NoItemsAnswered = Error.Validation(
 		"QUIZ_ATTEMPT.NO_ITEMS_ANSWERED", "At least one question must be answered before submitting the quiz attempt.");
 
