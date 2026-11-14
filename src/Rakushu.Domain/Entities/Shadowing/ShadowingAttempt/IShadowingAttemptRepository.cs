@@ -69,4 +69,9 @@ public interface IShadowingAttemptRepository : IBaseRepository<ShadowingAttempt,
 		ShadowingSessionId sessionId,
 		IReadOnlyCollection<ShadowingRoleLineId> roleLineIds,
 		CancellationToken cancellationToken = default);
+
+	// All assessments for a given attempt, with their details loaded.
+	Task<IReadOnlyList<ShadowingAssessment.ShadowingAssessment>> GetAssessmentsWithDetailsAsync(
+		ShadowingAttemptId attemptId,
+		CancellationToken cancellationToken = default);
 }

@@ -136,4 +136,15 @@ public sealed class ShadowingAttemptRepository
 			.Where(d => d.ShadowingAttempt.ShadowingSessionId == sessionId && roleLineIds.Contains(d.ShadowingRoleLineId))
 			.ToListAsync(cancellationToken);
 	}
+
+	public async Task<IReadOnlyList<Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment>> GetAssessmentsWithDetailsAsync(
+		ShadowingAttemptId attemptId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingAssessments.AsNoTracking()
+			.Include(a => a.Details)
+			.Where(a => a.ShadowingAttemptId == attemptId)
+			.OrderBy(a => a.CreatedAt)
+			.ToListAsync(cancellationToken);
+	}
 }
