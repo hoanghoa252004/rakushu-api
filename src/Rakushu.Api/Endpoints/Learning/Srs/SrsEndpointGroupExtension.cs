@@ -52,6 +52,13 @@ internal static class SrsEndpointGroupExtension
 			.WithGroupName("srs");
 	}
 
+	internal static RouteGroupBuilder MapSrsQuestionTypeEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/srs/question-types")
+			.WithTags("Question Type")
+			.WithGroupName("srs");
+	}
+
 	internal static RouteGroupBuilder MapSrsBankQuestionEndpoints(this IEndpointRouteBuilder app)
 	{
 		return app.MapSrsQuestionEndpoints();

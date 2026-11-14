@@ -31,6 +31,7 @@ using Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
+using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.Quiz;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 using Rakushu.Domain.Entities.Srs.SavedItem;
@@ -98,6 +99,7 @@ public static class PersistenceServiceCollectionExtensions
 		// SRS Repositories
 		services.AddScoped<ISavedItemRepository, SavedItemRepository>();
 		services.AddScoped<IBankQuestionRepository, BankQuestionRepository>();
+		services.AddScoped<IQuestionTypeRepository, QuestionTypeRepository>();
 		services.AddScoped<IQuizRepository, QuizRepository>();
 		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 		services.AddScoped<IFlashcardSessionRepository, FlashcardSessionRepository>();
