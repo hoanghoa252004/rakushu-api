@@ -43,6 +43,7 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<QuizEvaluationWorker>();
 		services.AddHostedService<DraftQuestionGenerationWorker>();
 		services.AddHostedService<StaleQuizAttemptCleanupWorker>();
+		services.AddHostedService<StaleFlashcardSessionCleanupWorker>();
 
 		return services;
 	}

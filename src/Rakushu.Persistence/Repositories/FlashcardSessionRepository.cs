@@ -91,4 +91,18 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 						.ThenInclude(s => s!.Details)
 			.SingleOrDefaultAsync(fs => fs.Id == id, cancellationToken);
 	}
+
+	public async Task<IReadOnlyList<FlashcardSession>> GetStaleSessionsAsync(
+		DateTimeOffset now,
+		int maxCount,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.FlashcardSessions
+			.Include(fs => fs.Cards)
+			.Include(fs => fs.Items)
+			.Where(fs => fs.Status == FlashcardSessionStatus.InProgress && fs.ExpiresAt < now)
+			.OrderBy(fs => fs.ExpiresAt)
+			.Take(maxCount)
+			.ToListAsync(cancellationToken);
+	}
 }

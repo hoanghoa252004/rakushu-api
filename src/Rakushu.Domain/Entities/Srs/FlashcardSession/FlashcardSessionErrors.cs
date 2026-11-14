@@ -65,4 +65,8 @@ public static class FlashcardSessionErrors
 	public static readonly Error ActiveSessionInProgress = Error.Conflict(
 		"FLASHCARD_SESSION.ACTIVE_SESSION_EXISTS",
 		"You already have an active flashcard session in progress. Please complete or cancel it before starting a new one.");
+
+	public static Error ActiveSessionInProgressWithId(Guid sessionId) => Error.Conflict(
+		"FLASHCARD_SESSION.ACTIVE_SESSION_EXISTS",
+		$"You already have an active flashcard session in progress ({sessionId}). Pass discardActive=true to cancel it, or complete it before starting a new one.");
 }

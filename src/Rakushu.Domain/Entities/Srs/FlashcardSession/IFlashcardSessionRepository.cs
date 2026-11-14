@@ -17,4 +17,9 @@ public interface IFlashcardSessionRepository : IBaseRepository<FlashcardSession,
 		CancellationToken cancellationToken = default);
 
 	Task<FlashcardSession?> GetResultByIdAsync(FlashcardSessionId id, CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<FlashcardSession>> GetStaleSessionsAsync(
+		DateTimeOffset now,
+		int maxCount,
+		CancellationToken cancellationToken = default);
 }

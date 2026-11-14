@@ -38,7 +38,7 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 		if (attempt is null || attempt.UserId != userId)
 			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotFound);
 
-		if (attempt.Status != QuizAttemptStatus.Completed && attempt.Status != QuizAttemptStatus.Expired)
+		if (attempt.Status != QuizAttemptStatus.Completed)
 			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotCompleted);
 
 		var questionsDict = attempt.Quiz.Questions.ToDictionary(q => q.Id);

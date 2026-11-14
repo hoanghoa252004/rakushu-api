@@ -24,8 +24,7 @@ public sealed record SavedItemSummaryDto(
 	bool IsActive,
 	DateTimeOffset? DueAt,
 	DateTimeOffset SavedAt,
-	bool IsRevoked = false,
-	bool HasQuestions = false);
+	bool IsRevoked = false);
 
 public sealed record SavedItemDetailDto(
 	Guid Id,

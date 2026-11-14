@@ -240,23 +240,4 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 			.Take(limit)
 			.ToListAsync(cancellationToken);
 	}
-
-	public async Task<IReadOnlySet<Guid>> GetMeaningIdsWithPublishedQuestionsAsync(
-		IEnumerable<KnowledgeMeaningId> meaningIds,
-		CancellationToken cancellationToken = default)
-	{
-		var idList = meaningIds.Distinct().ToList();
-		if (idList.Count == 0)
-			return new HashSet<Guid>();
-
-		var result = await _context.BankQuestions
-			.Where(bq => idList.Contains(bq.KnowledgeMeaningId)
-				&& bq.IsActive
-				&& bq.Status == QuestionStatus.Published)
-			.Select(bq => bq.KnowledgeMeaningId)
-			.Distinct()
-			.ToListAsync(cancellationToken);
-
-		return result.Select(id => id.Value).ToHashSet();
-	}
 }

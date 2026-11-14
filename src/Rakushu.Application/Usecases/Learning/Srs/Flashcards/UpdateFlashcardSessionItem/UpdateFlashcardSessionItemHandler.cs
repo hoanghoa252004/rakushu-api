@@ -1,6 +1,7 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
@@ -13,17 +14,20 @@ namespace Rakushu.Application.Usecases.Learning.Srs.Flashcards.UpdateFlashcardSe
 internal sealed class UpdateFlashcardSessionItemHandler : IRequestHandler<UpdateFlashcardSessionItemCommand, Result>
 {
 	private readonly IFlashcardSessionRepository _flashcardSessionRepository;
+	private readonly IFlashcardSrsService _flashcardSrsService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public UpdateFlashcardSessionItemHandler(
 		IFlashcardSessionRepository flashcardSessionRepository,
+		IFlashcardSrsService flashcardSrsService,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_flashcardSessionRepository = flashcardSessionRepository;
+		_flashcardSrsService = flashcardSrsService;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
@@ -56,15 +60,12 @@ internal sealed class UpdateFlashcardSessionItemHandler : IRequestHandler<Update
 
 			if (session.IsExpired(now))
 			{
-				if (!session.HasAnyReviewedItems)
+				session.Expire(now);
+				if (session.HasAnyReviewedItems)
 				{
-					_flashcardSessionRepository.Delete(session);
+					await _flashcardSrsService.ApplySrsUpdatesAsync(session, now, cancellationToken);
 				}
-				else
-				{
-					session.Expire(now);
-					_flashcardSessionRepository.Update(session);
-				}
+				_flashcardSessionRepository.Update(session);
 				return Result.Failure(FlashcardSessionErrors.Expired);
 			}
 
@@ -75,7 +76,6 @@ internal sealed class UpdateFlashcardSessionItemHandler : IRequestHandler<Update
 			var rating = ParseRating(request.Rating);
 
 			sessionItem.UpdateRating(rating, now);
-			session.RefreshIdleTimeout(now);
 
 			_flashcardSessionRepository.Update(session);
 
