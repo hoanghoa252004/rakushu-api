@@ -185,6 +185,55 @@ public sealed class LearningUnitRepository : BaseRepository<LearningUnit, Learni
 		return result;
 	}
 
+	public async Task<IReadOnlyList<LearningUnitMediaContext>> GetMediaContextsByMeaningIdAsync(
+		KnowledgeMeaningId meaningId,
+		int maxCount = 10,
+		CancellationToken cancellationToken = default)
+	{
+		var learningUnits = await _context.LearningUnits
+			.AsNoTracking()
+			.Where(lu => lu.KnowledgeMeaningId == meaningId)
+			.Include(lu => lu.TranscriptSegment)
+				.ThenInclude(ts => ts.Transcript)
+					.ThenInclude(t => t.Video)
+						.ThenInclude(v => v.MediaAssets)
+			.Include(lu => lu.TranscriptSegment)
+				.ThenInclude(ts => ts.Subtitle)
+			.OrderBy(lu => lu.TranscriptSegment.StartTime)
+			.Take(maxCount)
+			.ToListAsync(cancellationToken);
+
+		var list = new List<LearningUnitMediaContext>(learningUnits.Count);
+
+		foreach (var lu in learningUnits)
+		{
+			var segment = lu.TranscriptSegment;
+			var video = segment?.Transcript?.Video;
+			if (video is null || segment is null)
+				continue;
+
+			var videoAsset = video.MediaAssets
+				.FirstOrDefault(a => a.AssetType == Rakushu.Domain.Entities.Material.Video.MediaAsset.MediaAssetType.Video);
+
+			list.Add(new LearningUnitMediaContext(
+				meaningId.Value,
+				video.Id.Value,
+				video.Title,
+				videoAsset?.StorageKey,
+				video.SourceUrl,
+				segment.StartTime,
+				segment.EndTime,
+				segment.Text,
+				segment.Subtitle?.Text,
+				lu.StartTokenIndex,
+				lu.EndTokenIndex,
+				segment.Id.Value,
+				lu.Id.Value));
+		}
+
+		return list;
+	}
+
 	public async Task<IReadOnlyDictionary<Guid, LearningUnitMediaContext>> GetMediaContextBySegmentIdsAsync(
 		IReadOnlyCollection<Guid> segmentIds,
 		CancellationToken cancellationToken = default)
