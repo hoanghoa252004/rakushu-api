@@ -76,7 +76,14 @@ internal sealed class GetMeaningMediaContextsHandler : IRequestHandler<GetMeanin
 			}
 
 			string clozeSentence = mc.OriginalSentence;
-			if (!string.IsNullOrEmpty(expression) && mc.OriginalSentence.Contains(expression, StringComparison.Ordinal))
+			if (mc.StartTokenIndex >= 0 && mc.EndTokenIndex > mc.StartTokenIndex && mc.EndTokenIndex <= mc.OriginalSentence.Length)
+			{
+				clozeSentence = string.Concat(
+					mc.OriginalSentence.AsSpan(0, mc.StartTokenIndex),
+					" ( ? ) ",
+					mc.OriginalSentence.AsSpan(mc.EndTokenIndex));
+			}
+			else if (!string.IsNullOrEmpty(expression) && mc.OriginalSentence.Contains(expression, StringComparison.Ordinal))
 			{
 				int index = mc.OriginalSentence.IndexOf(expression, StringComparison.Ordinal);
 				clozeSentence = string.Concat(
