@@ -15,7 +15,7 @@ using Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember;
 namespace Rakushu.Application.Usecases.Shadowing.ShadowingSessionInvitations;
 
 // ---- CREATE (HOST) ----
-public sealed record CreateShadowingSessionInvitationsCommand(Guid SessionId, IReadOnlyList<Guid> LearnerIds)
+public sealed record CreateShadowingSessionInvitationsCommand(Guid SessionId, IReadOnlyList<string> Emails)
 	: IRequest<Result<IReadOnlyList<Guid>>>;
 
 internal sealed class CreateShadowingSessionInvitationsValidator : AbstractValidator<CreateShadowingSessionInvitationsCommand>
@@ -23,8 +23,8 @@ internal sealed class CreateShadowingSessionInvitationsValidator : AbstractValid
 	public CreateShadowingSessionInvitationsValidator()
 	{
 		RuleFor(x => x.SessionId).NotEmpty();
-		RuleFor(x => x.LearnerIds).NotEmpty().Must(l => l.Count <= 50).WithMessage("At most 50 learners per request");
-		RuleForEach(x => x.LearnerIds).NotEmpty();
+		RuleFor(x => x.Emails).NotEmpty().Must(l => l.Count <= 50).WithMessage("At most 50 emails per request");
+		RuleForEach(x => x.Emails).NotEmpty().EmailAddress().WithMessage("Each email must be valid");
 	}
 }
 
@@ -56,13 +56,14 @@ internal sealed class CreateShadowingSessionInvitationsHandler(
 				return Result.Failure<IReadOnlyList<Guid>>(ShadowingSessionInvitationErrors.InvalidExpiry);
 
 			var created = new List<ShadowingSessionInvitation>();
-			foreach (var rawId in request.LearnerIds.Distinct())
+			foreach (var email in request.Emails.Select(e => e.Trim().ToLowerInvariant()).Distinct())
 			{
-				var learnerId = UserId.From(rawId);
+				var learner = await userRepository.GetByEmailAsync(email, cancellationToken);
+				if (learner is null)
+					return Result.Failure<IReadOnlyList<Guid>>(ShadowingSessionInvitationErrors.LearnerNotFound);
+				var learnerId = learner.Id;
 				if (learnerId == session.HostId)
 					return Result.Failure<IReadOnlyList<Guid>>(ShadowingSessionInvitationErrors.CannotInviteHost);
-				if (await userRepository.GetByIdAsync(learnerId, cancellationToken) is null)
-					return Result.Failure<IReadOnlyList<Guid>>(ShadowingSessionInvitationErrors.LearnerNotFound);
 				if (await memberRepository.ExistsAsync(session.Id, learnerId, cancellationToken))
 					return Result.Failure<IReadOnlyList<Guid>>(ShadowingSessionInvitationErrors.AlreadyMember);
 				if (await invitationRepository.PendingExistsAsync(session.Id, learnerId, cancellationToken))

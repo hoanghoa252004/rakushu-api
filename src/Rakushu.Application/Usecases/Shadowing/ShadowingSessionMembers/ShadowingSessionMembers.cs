@@ -259,3 +259,52 @@ internal sealed class ChooseShadowingSessionRoleHandler(
 		}, cancellationToken);
 	}
 }
+
+// ---- SWAP ROLES (HOST) ----
+public sealed record SwapShadowingSessionRolesCommand(Guid SessionId, Guid FirstMemberRecordId, Guid SecondMemberRecordId) : IRequest<Result>;
+
+internal sealed class SwapShadowingSessionRolesValidator : AbstractValidator<SwapShadowingSessionRolesCommand>
+{
+	public SwapShadowingSessionRolesValidator()
+	{
+		RuleFor(x => x.SessionId).NotEmpty();
+		RuleFor(x => x.FirstMemberRecordId).NotEmpty();
+		RuleFor(x => x.SecondMemberRecordId).NotEmpty();
+	}
+}
+
+internal sealed class SwapShadowingSessionRolesHandler(
+	IShadowingSessionRepository sessionRepository,
+	ICurrentUserContext currentUser,
+	IUnitOfWork unitOfWork)
+	: IRequestHandler<SwapShadowingSessionRolesCommand, Result>
+{
+	public async Task<Result> Handle(SwapShadowingSessionRolesCommand request, CancellationToken cancellationToken)
+	{
+		return await unitOfWork.ExecuteAsync(async () =>
+		{
+			if (request.FirstMemberRecordId == request.SecondMemberRecordId)
+				return Result.Failure(ShadowingSessionMemberErrors.CannotSwapSameMember);
+
+			var session = await sessionRepository.GetByIdAsync(ShadowingSessionId.From(request.SessionId), cancellationToken);
+			if (session is null)
+				return Result.Failure(ShadowingSessionErrors.NotFound);
+			if (currentUser.UserId is null || session.HostId != currentUser.UserId)
+				return Result.Failure(ShadowingSessionErrors.NotHost);
+			if (session.Status != ShadowingSessionStatus.Scheduled)
+				return Result.Failure(ShadowingSessionErrors.NotScheduled);
+
+			var first = session.Members.FirstOrDefault(m => m.Id.Value == request.FirstMemberRecordId);
+			var second = session.Members.FirstOrDefault(m => m.Id.Value == request.SecondMemberRecordId);
+			if (first is null || second is null)
+				return Result.Failure(ShadowingSessionMemberErrors.NotFound);
+			if (first.ShadowingRoleId is null || second.ShadowingRoleId is null)
+				return Result.Failure(ShadowingSessionMemberErrors.RoleNotAssigned);
+
+			var firstRoleId = first.ShadowingRoleId;
+			first.ChooseRole(second.ShadowingRoleId);
+			second.ChooseRole(firstRoleId);
+			return Result.Success();
+		}, cancellationToken);
+	}
+}

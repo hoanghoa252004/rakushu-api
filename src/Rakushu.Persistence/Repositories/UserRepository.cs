@@ -19,6 +19,16 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
 	}
 
+	public async Task<User?> GetProfileByEmailAsync(string email, CancellationToken cancellationToken = default)
+	{
+		return await _context.Users
+			.AsNoTracking()
+			.Include(u => u.Role)
+			.Include(u => u.Profile)
+				.ThenInclude(p => p!.Level)
+			.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
+	}
+
 	public async Task<User?> GetProfileByIdAsync(UserId id, CancellationToken cancellationToken = default)
 	{
 		return await _context.Users

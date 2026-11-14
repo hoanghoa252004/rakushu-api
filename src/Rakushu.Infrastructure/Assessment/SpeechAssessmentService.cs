@@ -255,7 +255,8 @@ public sealed class SpeechAssessmentService(
 			&& channels == RequiredChannels
 			&& bitDepth == RequiredBitDepth)
 		{
-			return "audio/wav; codecs=audio/pcm; samplerate=16000";
+			Console.WriteLine("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+			return "audio/wav; codecs=\"audio/pcm\"; samplerate=16000";
 		}
 
 		if (container == "ogg"
@@ -263,7 +264,7 @@ public sealed class SpeechAssessmentService(
 			&& sampleRate == RequiredSampleRate
 			&& channels == RequiredChannels)
 		{
-			return "audio/ogg; codecs=opus";
+			return "audio/ogg; codecs=\"opus\"";
 		}
 
 		return "unsupported";
