@@ -224,6 +224,7 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		CancellationToken cancellationToken = default)
 	{
 		var meaningIdsWithQuestions = _context.BankQuestions
+			.Where(bq => bq.Status == QuestionStatus.Draft || (bq.Status == QuestionStatus.Published && bq.IsActive))
 			.Select(bq => bq.KnowledgeMeaningId);
 
 		return await _context.SavedItems

@@ -174,30 +174,6 @@ internal sealed class GenerateDraftQuestionsHandler : IRequestHandler<GenerateDr
 					explanationText = $"「{expression}」{(string.IsNullOrWhiteSpace(reading) ? "" : $"({reading})")} có nghĩa là: {meaning.Meaning}.";
 				}
 
-				mediaContexts.TryGetValue(meaning.Id.Value, out var mediaContext);
-
-				string mediaType = "NONE";
-				string? mediaUrl = null;
-				string? mediaMetadata = null;
-
-				if (mediaContext is not null)
-				{
-					mediaType = "VIDEO";
-					mediaUrl = mediaContext.StorageKey ?? mediaContext.SourceUrl;
-
-					var metadataObj = new
-					{
-						startTime = mediaContext.StartTime.TotalSeconds,
-						endTime = mediaContext.EndTime.TotalSeconds,
-						segmentId = mediaContext.TranscriptSegmentId?.ToString(),
-						targetWord = expression,
-						reading = reading,
-						fullSentence = mediaContext.OriginalSentence,
-						vietnameseSub = mediaContext.TranslatedSentence
-					};
-					mediaMetadata = JsonSerializer.Serialize(metadataObj);
-				}
-
 				var draftResult = BankQuestionEntity.CreateDraftFromAi(
 					meaning.Id,
 					questionTypeId,
@@ -206,9 +182,9 @@ internal sealed class GenerateDraftQuestionsHandler : IRequestHandler<GenerateDr
 					correctChoiceId,
 					now,
 					explanationText,
-					mediaType: mediaType,
-					mediaUrl: mediaUrl,
-					mediaMetadata: mediaMetadata);
+					mediaType: "NONE",
+					mediaUrl: null,
+					mediaMetadata: null);
 
 				if (draftResult.IsSuccess)
 				{
