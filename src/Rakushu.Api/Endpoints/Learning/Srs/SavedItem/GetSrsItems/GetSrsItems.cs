@@ -17,20 +17,21 @@ internal sealed class GetSrsItems : IEndpoint
 	{
 		app.MapSrsSavedItemEndpoints()
 			.MapGet("", async (
-				[FromQuery] bool? isActive,
-				[FromQuery] bool? dueOnly,
+				[FromQuery] string? filter,
 				[FromQuery] int? page,
 				[FromQuery] int? pageSize,
+				[FromQuery] string? sortBy,
+				[FromQuery] string? sortOrder,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var query = new GetSrsItemsQuery(isActive, dueOnly, page ?? 1, pageSize ?? 50);
+				var query = new GetSrsItemsQuery(page ?? 1, pageSize ?? 50, filter, sortBy, sortOrder);
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetSrsItems")
 			.WithSummary("Learner")
-			.WithDescription("Returns a lightweight list of saved vocabulary items with basic word details and due dates. Filter by isActive (true/false) and dueOnly (true/false). For deep video context, call GET /api/srs/saved-items/{id}.")
+			.WithDescription("Returns a lightweight list of saved vocabulary items with basic word details, SM-2 metrics, and due dates. Filter by filter ('all', 'due', 'leech', 'mastered'). Supports sorting via sortBy ('saved', 'due', 'leech', 'alphabetical') and sortOrder ('asc', 'desc'). For deep video context, call GET /api/srs/saved-items/{id}.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<IReadOnlyList<SavedItemSummaryDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

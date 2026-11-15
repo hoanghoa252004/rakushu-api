@@ -54,28 +54,87 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 
 	public async Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
 		UserId userId,
-		bool? isActive,
-		bool? dueOnly,
 		int page,
 		int pageSize,
+		string? filter = null,
+		string? sortBy = null,
+		string? sortOrder = null,
 		CancellationToken cancellationToken = default)
 	{
-		var query = BuildUserItemsQuery(userId, isActive, dueOnly);
+		var query = BuildUserItemsQuery(userId, filter);
+
+		query = ApplySorting(query, sortBy, sortOrder);
 
 		return await query
-			.OrderBy(si => si.Schedule != null ? si.Schedule.DueAt : si.SavedAt)
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
 			.ToListAsync(cancellationToken);
 	}
 
+	private static IQueryable<SavedItem> ApplySorting(
+		IQueryable<SavedItem> query,
+		string? sortBy,
+		string? sortOrder)
+	{
+		var normalizedSortBy = sortBy?.Trim().ToLowerInvariant();
+		var isDesc = string.Equals(sortOrder?.Trim(), "desc", StringComparison.OrdinalIgnoreCase);
+		var isAsc = string.Equals(sortOrder?.Trim(), "asc", StringComparison.OrdinalIgnoreCase);
+
+		return normalizedSortBy switch
+		{
+			// 1. Mới lưu nhất (mặc định DESC: mới nhất lên đầu)
+			"saved" or "savedat" or "newest" or "recent" =>
+				isAsc
+					? query.OrderBy(si => si.SavedAt)
+					: query.OrderByDescending(si => si.SavedAt),
+
+			// 2. Cần ôn (mặc định ASC: đến hạn/quá hạn sớm nhất lên đầu)
+			"due" or "dueat" or "urgent" or "urgency" =>
+				isDesc
+					? query.OrderByDescending(si => si.Schedule != null ? si.Schedule.DueAt : si.SavedAt)
+					: query.OrderBy(si => si.Schedule != null ? si.Schedule.DueAt : si.SavedAt),
+
+			// 3. Từ hay quên (mặc định DESC: số lần quên tích lũy Lapses nhiều nhất lên đầu)
+			"leech" or "forgotten" or "lapses" or "difficulty" =>
+				isAsc
+					? query
+						.OrderBy(si => si.Schedule != null
+							? si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.Lapses).FirstOrDefault() ?? 0
+							: 0)
+						.ThenByDescending(si => si.Schedule != null
+							? si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (double?)d.EasinessFactor).FirstOrDefault() ?? 2.5
+							: 2.5)
+					: query
+						.OrderByDescending(si => si.Schedule != null
+							? si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.Lapses).FirstOrDefault() ?? 0
+							: 0)
+						.ThenBy(si => si.Schedule != null
+							? si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (double?)d.EasinessFactor).FirstOrDefault() ?? 2.5
+							: 2.5),
+
+			// 4. Bảng chữ cái (mặc định ASC: A->Z / あ->ん theo Reading rồi tới Expression)
+			"alphabetical" or "alpha" or "expression" or "reading" or "word" or "kana" =>
+				isDesc
+					? query
+						.OrderByDescending(si => si.KnowledgeMeaning.KnowledgeUnit.Reading)
+						.ThenByDescending(si => si.KnowledgeMeaning.KnowledgeUnit.Expression)
+					: query
+						.OrderBy(si => si.KnowledgeMeaning.KnowledgeUnit.Reading)
+						.ThenBy(si => si.KnowledgeMeaning.KnowledgeUnit.Expression),
+
+			// Mặc định: theo lịch ôn (DueAt ASC / SavedAt ASC)
+			_ => isDesc
+				? query.OrderByDescending(si => si.Schedule != null ? si.Schedule.DueAt : si.SavedAt)
+				: query.OrderBy(si => si.Schedule != null ? si.Schedule.DueAt : si.SavedAt)
+		};
+	}
+
 	public async Task<int> CountUserItemsAsync(
 		UserId userId,
-		bool? isActive,
-		bool? dueOnly,
+		string? filter = null,
 		CancellationToken cancellationToken = default)
 	{
-		var query = BuildUserItemsQuery(userId, isActive, dueOnly);
+		var query = BuildUserItemsQuery(userId, filter);
 		return await query.CountAsync(cancellationToken);
 	}
 
@@ -213,32 +272,40 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 
 	private IQueryable<SavedItem> BuildUserItemsQuery(
 		UserId userId,
-		bool? isActive,
-		bool? dueOnly)
+		string? filter)
 	{
 		var query = _context.SavedItems
 			.Include(si => si.Schedule)
+				.ThenInclude(sch => sch!.Details)
 			.Include(si => si.KnowledgeMeaning)
 				.ThenInclude(km => km.KnowledgeUnit)
 			.Where(si => si.UserId == userId);
 
-		if (isActive.HasValue)
-		{
-			query = query.Where(si => si.IsActive == isActive.Value);
-		}
+		var normalizedFilter = filter?.Trim().ToLowerInvariant();
 
-		if (dueOnly == true)
-		{
-			var now = DateTimeOffset.UtcNow;
-			query = query.Where(si => si.Schedule != null && si.Schedule.DueAt <= now);
-		}
-		else if (dueOnly == false)
-		{
-			var now = DateTimeOffset.UtcNow;
-			query = query.Where(si => si.Schedule != null && si.Schedule.DueAt > now);
-		}
+		var now = DateTimeOffset.UtcNow;
+		var endOfToday = new DateTimeOffset(now.Year, now.Month, now.Day, 23, 59, 59, 999, now.Offset);
 
-		return query;
+		return normalizedFilter switch
+		{
+			// 1. Cần ôn hôm nay & Quá hạn (Due today / Overdue)
+			"due" or "due_today" or "overdue" or "urgent" =>
+				query.Where(si => si.IsActive && si.Schedule != null && si.Schedule.DueAt <= endOfToday),
+
+			// 2. Từ hay quên (Leech: Lapses >= 8 hoặc EF <= 1.3001)
+			"leech" or "hay_quen" or "difficult" =>
+				query.Where(si => si.IsActive && si.Schedule != null &&
+					(si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.Lapses).FirstOrDefault() >= 8 ||
+					 si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (double?)d.EasinessFactor).FirstOrDefault() <= 1.3001)),
+
+			// 3. Đã thành thạo (Mastered: Interval >= 21 ngày)
+			"mastered" or "thanh_thao" or "solidified" =>
+				query.Where(si => si.IsActive && si.Schedule != null &&
+					si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() >= 21),
+
+			// 4. Mặc định: Lấy toàn bộ từ vựng đang học (Active)
+			_ => query.Where(si => si.IsActive)
+		};
 	}
 
 	public async Task<bool> HasAnyWithMeaningIdAsync(

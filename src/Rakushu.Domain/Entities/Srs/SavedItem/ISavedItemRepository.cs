@@ -12,16 +12,16 @@ public interface ISavedItemRepository : IBaseRepository<SavedItem, SavedItemId>
 
 	Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
 		UserId userId,
-		bool? isActive,
-		bool? dueOnly,
 		int page,
 		int pageSize,
+		string? filter = null,
+		string? sortBy = null,
+		string? sortOrder = null,
 		CancellationToken cancellationToken = default);
 
 	Task<int> CountUserItemsAsync(
 		UserId userId,
-		bool? isActive,
-		bool? dueOnly,
+		string? filter = null,
 		CancellationToken cancellationToken = default);
 
 	Task<IReadOnlyList<SavedItem>> GetDueItemsAsync(

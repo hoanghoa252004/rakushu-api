@@ -33,25 +33,37 @@ internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Res
 
 		var items = await _savedItemRepository.GetUserItemsAsync(
 			userId,
-			request.IsActive,
-			request.DueOnly,
 			page,
 			pageSize,
+			request.Filter,
+			request.SortBy,
+			request.SortOrder,
 			cancellationToken);
 
 		if (items.Count == 0)
 			return Result.Success<IReadOnlyList<SavedItemSummaryDto>>(Array.Empty<SavedItemSummaryDto>());
 
-		var dtos = items.Select(si => new SavedItemSummaryDto(
-			si.Id.Value,
-			si.KnowledgeMeaningId.Value,
-			si.Expression,
-			si.Reading,
-			si.Meaning,
-			si.IsActive,
-			si.Schedule?.DueAt,
-			si.SavedAt,
-			si.IsRevoked)).ToList();
+		var dtos = items.Select(si =>
+		{
+			var latestDetail = si.Schedule?.Details
+				.OrderByDescending(d => d.ReviewNumber)
+				.FirstOrDefault();
+
+			return new SavedItemSummaryDto(
+				si.Id.Value,
+				si.KnowledgeMeaningId.Value,
+				si.Expression,
+				si.Reading,
+				si.Meaning,
+				si.IsActive,
+				si.Schedule?.DueAt,
+				si.SavedAt,
+				si.IsRevoked,
+				latestDetail?.Lapses,
+				latestDetail?.EasinessFactor,
+				latestDetail?.IntervalDays,
+				latestDetail?.Repetitions);
+		}).ToList();
 
 		return Result.Success<IReadOnlyList<SavedItemSummaryDto>>(dtos);
 	}
