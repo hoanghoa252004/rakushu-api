@@ -185,7 +185,7 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			})
 			.WithName("GetShadowingAttemptAssessments")
 			.Produces<AttemptWithAssessmentsDto>(StatusCodes.Status200OK)
-			.WithSummary("Learner (member)")
+			.WithSummary("Learner (member) & Curator")
 			.WithDescription(
 				"Gets an attempt with paged details and its AI/curator assessments. " +
 				"Filter by memberId (default: the caller). " +

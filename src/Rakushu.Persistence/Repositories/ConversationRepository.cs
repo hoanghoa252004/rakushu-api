@@ -47,6 +47,66 @@ public sealed class ConversationRepository : BaseRepository<Conversation, Conver
 		return items;
 	}
 
+	public async Task<(IReadOnlyList<Conversation> Items, int Total)> GetConversationsPagedAsync(
+		UserId? learnerId,
+		VideoId? videoId,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default)
+	{
+		var query = _context.Set<Conversation>()
+			.AsNoTracking()
+			.Include(c => c.Learner)
+			.Include(c => c.Video)
+			.AsQueryable();
+
+		if (learnerId is not null)
+			query = query.Where(c => c.LearnerId == learnerId);
+		if (videoId is not null)
+			query = query.Where(c => c.VideoId == videoId);
+
+		var total = await query.CountAsync(cancellationToken);
+		var items = await query
+			.OrderByDescending(c => c.UpdatedAt)
+			.Skip((pageNumber - 1) * pageSize)
+			.Take(pageSize)
+			.ToListAsync(cancellationToken);
+
+		return (items, total);
+	}
+
+	public async Task<Conversation?> GetConversationDetailAsync(
+		ConversationId conversationId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.Set<Conversation>()
+			.AsNoTracking()
+			.Include(c => c.Learner)
+			.Include(c => c.Video)
+			.FirstOrDefaultAsync(c => c.Id == conversationId, cancellationToken);
+	}
+
+	public async Task<(IReadOnlyList<Message> Items, int Total)> GetMessagesPagedAsync(
+		ConversationId conversationId,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default)
+	{
+		var query = _context.Set<Message>()
+			.AsNoTracking()
+			.Include(m => m.Attachment)
+			.Where(m => m.ConversationId == conversationId);
+
+		var total = await query.CountAsync(cancellationToken);
+		var items = await query
+			.OrderByDescending(m => m.CreatedAt)
+			.Skip((pageNumber - 1) * pageSize)
+			.Take(pageSize)
+			.ToListAsync(cancellationToken);
+
+		return (items, total);
+	}
+
 	public async Task<IReadOnlyList<Message>> GetSimilarMessagesAsync(
 		UserId learnerId,
 		ConversationId currentConversationId,

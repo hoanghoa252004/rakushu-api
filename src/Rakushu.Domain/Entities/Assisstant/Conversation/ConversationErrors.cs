@@ -22,6 +22,9 @@ public static class ConversationErrors
 	public static readonly Error AttachmentNotFound = Error.NotFound(
 		"ASSISTANT.ATTACHMENT_NOT_FOUND", "The attachment file was not found in storage.");
 
+	public static readonly Error ConversationNotFound = Error.NotFound(
+		"ASSISTANT.CONVERSATION_NOT_FOUND", "The conversation was not found.");
+
 	public static readonly Error AiFailed = Error.Failure(
 		"ASSISTANT.AI_FAILED", "The assistant could not generate a response.");
 }

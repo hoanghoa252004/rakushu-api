@@ -46,6 +46,26 @@ public interface IConversationRepository : IBaseRepository<Conversation, Convers
 		Material.LearningUnit.LearningUnitId learningUnitId,
 		CancellationToken cancellationToken = default);
 
+	// Admin: conversations (Learner + Video loaded) filtered by learner/video, newest activity first.
+	Task<(IReadOnlyList<Conversation> Items, int Total)> GetConversationsPagedAsync(
+		UserId? learnerId,
+		VideoId? videoId,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default);
+
+	// Admin: conversation with Learner and Video loaded (no tracking).
+	Task<Conversation?> GetConversationDetailAsync(
+		ConversationId conversationId,
+		CancellationToken cancellationToken = default);
+
+	// Admin: messages (with attachment) of a conversation, newest first, paged.
+	Task<(IReadOnlyList<Message.Message> Items, int Total)> GetMessagesPagedAsync(
+		ConversationId conversationId,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default);
+
 	Task<bool> VideoExistsAsync(VideoId videoId, CancellationToken cancellationToken = default);
 
 	// Video with ContentCategory and Series loaded (no tracking).

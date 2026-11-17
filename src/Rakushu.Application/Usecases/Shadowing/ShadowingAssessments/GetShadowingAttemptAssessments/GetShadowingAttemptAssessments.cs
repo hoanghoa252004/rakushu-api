@@ -99,19 +99,22 @@ internal sealed class GetShadowingAttemptAssessmentsHandler(
 		if (!isCurator && !callerIsMember)
 			return Result.Failure<AttemptWithAssessmentsDto>(ShadowingSessionErrors.NotMember);
 
-		// --- Resolve the target member (default = caller) -----------------------
-		//     When MemberId is provided the target must still be a session member.
-		Guid resolvedMemberId = request.MemberId ?? currentUser.UserId!.Value;
-		var targetMember = session.Members.FirstOrDefault(m => m.MemberId.Value == resolvedMemberId);
-		if (targetMember is null)
-			return Result.Failure<AttemptWithAssessmentsDto>(ShadowingSessionErrors.NotMember);
-
 		// --- Load the specific attempt by ID ------------------------------------
 		var attempt = await attemptRepository.GetWithContextAsync(
 			ShadowingAttemptId.From(request.AttemptId), cancellationToken);
 
 		if (attempt is null || attempt.ShadowingSessionId.Value != request.SessionId)
 			return Result.Failure<AttemptWithAssessmentsDto>(ShadowingAttemptErrors.NotFound);
+
+		// --- Resolve the target member -------------------------------------------
+		//     Default = caller; a curator who is not a member defaults to the attempt owner.
+		Guid resolvedMemberId = request.MemberId
+			?? (isCurator && !callerIsMember
+				? attempt.ShadowingSessionMember.MemberId.Value
+				: currentUser.UserId!.Value);
+		var targetMember = session.Members.FirstOrDefault(m => m.MemberId.Value == resolvedMemberId);
+		if (targetMember is null)
+			return Result.Failure<AttemptWithAssessmentsDto>(ShadowingSessionErrors.NotMember);
 
 		// The attempt must belong to the resolved member
 		if (attempt.ShadowingSessionMember.MemberId.Value != resolvedMemberId)
