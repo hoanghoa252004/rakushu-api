@@ -74,6 +74,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 		services.AddScoped<IContentCategoryRepository, ContentCategoryRepository>();
 		services.AddScoped<IVideoRepository, VideoRepository>();
+		services.AddScoped<Rakushu.Domain.Entities.Assisstant.Conversation.IConversationRepository, ConversationRepository>();
 		services.AddScoped<IJapanesePartOfSpeechRepository, JapanesePartOfSpeechRepository>();
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();

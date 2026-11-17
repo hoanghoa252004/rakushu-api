@@ -66,7 +66,6 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
 
 		// AI SERVICE CLIENT
-		services.AddHttpClient<IAiServiceClient, AiServiceClient>();
 		services.AddHttpClient<IQuizContentGenerator, OllamaQuizContentGenerator>();
 
 		// SPEECH ASSESSMENT

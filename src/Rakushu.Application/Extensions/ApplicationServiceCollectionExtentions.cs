@@ -38,6 +38,7 @@ public static class ApplicationServiceCollectionExtentions
 		services.AddScoped<KnowledgeMatchingService>();
 		services.AddScoped<Rakushu.Application.Usecases.Material.TranscriptSegment.ISegmentNlpService, Rakushu.Application.Usecases.Material.TranscriptSegment.SegmentNlpService>();
 		services.AddScoped<LearningUnitOverlapResolver>();
+		services.AddScoped<Rakushu.Application.Usecases.Assistant.AssistantChatService>();
 
 		services.AddScoped<IKnowledgeMatcher, WordMatcher>();
 		services.AddScoped<IKnowledgeMatcher, CollocationMatcher>();

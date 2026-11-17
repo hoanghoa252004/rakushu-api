@@ -20,6 +20,12 @@ public sealed class AwsSettings
 	// Bedrock settings
 	public string BedrockModelId { get; set; } = string.Empty;
 
+	// Bedrock assistant (Converse) settings
+	public string BedrockChatModelId { get; set; } = string.Empty;
+	public string BedrockGuardrailId { get; set; } = string.Empty;
+	public string BedrockGuardrailVersion { get; set; } = "DRAFT";
+	public string AssistantSystemPrompt { get; set; } = string.Empty;
+
 	// Translate settings
 	public string TranslateDataAccessRoleArn { get; set; } = string.Empty;
 	// MediaConvert settings

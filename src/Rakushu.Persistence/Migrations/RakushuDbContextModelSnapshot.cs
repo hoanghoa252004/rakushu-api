@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 using Rakushu.Persistence;
 
 #nullable disable
@@ -21,6 +22,207 @@ namespace Rakushu.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Attachment.Attachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<string>("FileKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("file_key");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("message_id");
+
+                    b.Property<TimeSpan>("Timestamp")
+                        .HasColumnType("interval")
+                        .HasColumnName("timestamp");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_attachments");
+
+                    b.HasIndex("MessageId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_attachments_message_id");
+
+                    b.ToTable("attachments", "assistant");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Conversation.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("LearnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("learner_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("video_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_conversations");
+
+                    b.HasIndex("VideoId")
+                        .HasDatabaseName("ix_conversations_video_id");
+
+                    b.HasIndex("LearnerId", "VideoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_conversations_learner_id_video_id");
+
+                    b.ToTable("conversations", "assistant");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Message.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AiRequestPayload")
+                        .HasColumnType("text")
+                        .HasColumnName("ai_request_payload");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conversation_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<int?>("InputTokens")
+                        .HasColumnType("integer")
+                        .HasColumnName("input_tokens");
+
+                    b.Property<Guid?>("LearningUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("learning_unit_id");
+
+                    b.Property<int?>("OutputTokens")
+                        .HasColumnType("integer")
+                        .HasColumnName("output_tokens");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("role");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TranscriptSegmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("transcript_segment_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_messages");
+
+                    b.HasIndex("LearningUnitId")
+                        .HasDatabaseName("ix_messages_learning_unit_id");
+
+                    b.HasIndex("TranscriptSegmentId")
+                        .HasDatabaseName("ix_messages_transcript_segment_id");
+
+                    b.HasIndex("ConversationId", "CreatedAt")
+                        .HasDatabaseName("ix_messages_conversation_id_created_at");
+
+                    b.ToTable("messages", "assistant");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Message.MessageEmbedding.MessageEmbedding", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Dimensions")
+                        .HasColumnType("integer")
+                        .HasColumnName("dimensions");
+
+                    b.Property<Vector>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("vector(1024)")
+                        .HasColumnName("embedding");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("message_id");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("model_id");
+
+                    b.Property<string>("SourceContent")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source_content");
+
+                    b.HasKey("Id")
+                        .HasName("pk_message_embeddings");
+
+                    b.HasIndex("MessageId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_message_embeddings_message_id");
+
+                    b.ToTable("message_embeddings", "assistant");
+                });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Curation.IssueCategory.IssueCategory", b =>
                 {
@@ -3006,6 +3208,80 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("transactions", "subscription");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Attachment.Attachment", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Assisstant.Message.Message", "Message")
+                        .WithOne("Attachment")
+                        .HasForeignKey("Rakushu.Domain.Entities.Assisstant.Attachment.Attachment", "MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_attachments_messages_message_id");
+
+                    b.Navigation("Message");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Conversation.Conversation", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "Learner")
+                        .WithMany()
+                        .HasForeignKey("LearnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_conversations_users_learner_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_conversations_videos_video_id");
+
+                    b.Navigation("Learner");
+
+                    b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Message.Message", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Assisstant.Conversation.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_messages_conversations_conversation_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.LearningUnit.LearningUnit", "LearningUnit")
+                        .WithMany()
+                        .HasForeignKey("LearningUnitId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_messages_learning_units_learning_unit_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment", "TranscriptSegment")
+                        .WithMany()
+                        .HasForeignKey("TranscriptSegmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_messages_transcript_segments_transcript_segment_id");
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("LearningUnit");
+
+                    b.Navigation("TranscriptSegment");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Message.MessageEmbedding.MessageEmbedding", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Assisstant.Message.Message", "Message")
+                        .WithOne("Embedding")
+                        .HasForeignKey("Rakushu.Domain.Entities.Assisstant.Message.MessageEmbedding.MessageEmbedding", "MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_message_embeddings_messages_message_id");
+
+                    b.Navigation("Message");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Curation.Report.IssueDetail.IssueDetail", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Curation.Report.Report", "Report")
@@ -3944,6 +4220,18 @@ namespace Rakushu.Persistence.Migrations
                         .HasConstraintName("fk_transactions_payments_payment_id");
 
                     b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Conversation.Conversation", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Assisstant.Message.Message", b =>
+                {
+                    b.Navigation("Attachment");
+
+                    b.Navigation("Embedding");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Curation.Report.Report", b =>

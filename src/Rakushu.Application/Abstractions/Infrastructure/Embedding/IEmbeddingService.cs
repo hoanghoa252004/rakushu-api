@@ -8,6 +8,8 @@ namespace Rakushu.Application.Abstractions.Infrastructure.Rag;
 
 public interface IEmbeddingService
 {
+	string ModelId { get; }
+
 	Task<float[]> GenerateEmbeddingAsync(
 		string input,
 		CancellationToken cancellationToken = default);

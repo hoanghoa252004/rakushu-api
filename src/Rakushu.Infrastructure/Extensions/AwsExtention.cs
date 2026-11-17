@@ -1,7 +1,5 @@
 using Amazon.BedrockRuntime;
 using Amazon.MediaConvert;
-using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
-using Rakushu.Infrastructure.AudioClips;
 using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.SimpleEmail;
@@ -10,12 +8,16 @@ using Amazon.Translate;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Rakushu.Application.Abstractions.Infrastructure.Ai;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
+using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
 using Rakushu.Application.Abstractions.Infrastructure.Email;
 using Rakushu.Application.Abstractions.Infrastructure.Nlp;
 using Rakushu.Application.Abstractions.Infrastructure.Rag;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Infrastructure.Ai;
 using Rakushu.Infrastructure.ASR;
+using Rakushu.Infrastructure.AudioClips;
 using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
 using Rakushu.Infrastructure.Nlp;
@@ -61,6 +63,10 @@ internal static class AwsExtention
 				new AmazonBedrockRuntimeClient(
 					Amazon.RegionEndpoint.APNortheast1));
 
+			services.AddSingleton<IAmazonBedrockRuntimeAI>(_ =>
+				new AmazonBedrockRuntimeAIClient(
+					Amazon.RegionEndpoint.APSoutheast1));
+
 			services.AddSingleton<IAmazonTranslate>(_ =>
 				new AmazonTranslateClient(
 					Amazon.RegionEndpoint.APSoutheast1));
@@ -96,11 +102,17 @@ internal static class AwsExtention
 					awsCredentials,
 					Amazon.RegionEndpoint.APSoutheast1));
 
-			// AWS Bedrock
+			// AWS Bedrock (embedding)
 			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
 				new AmazonBedrockRuntimeClient(
 					awsCredentials,
 					Amazon.RegionEndpoint.APNortheast1));
+
+			// AWS Bedrock (AI chat)
+			services.AddSingleton<IAmazonBedrockRuntimeAI>(_ =>
+				new AmazonBedrockRuntimeAIClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1));
 
 			// AWS Translate
 			services.AddSingleton<IAmazonTranslate>(_ =>
@@ -126,6 +138,7 @@ internal static class AwsExtention
 		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();
 		// Bedrock
 		services.AddScoped<IEmbeddingService, AwsBedrockEmbeddingService>();
+		services.AddScoped<IAiService, AwsBedrockAiService>();
 		// Translate
 		services.AddScoped<ITranslateService, AwsTranslateService>();
 		// MediaConvert

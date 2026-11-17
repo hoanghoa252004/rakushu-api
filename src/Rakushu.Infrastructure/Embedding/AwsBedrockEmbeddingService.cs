@@ -17,6 +17,8 @@ public sealed class AwsBedrockEmbeddingService : IEmbeddingService
 	private readonly IAmazonBedrockRuntime _embeddingClient;
 	private readonly AwsSettings _awsSettings;
 
+	public string ModelId => _awsSettings.BedrockModelId;
+
 	public AwsBedrockEmbeddingService(IAmazonBedrockRuntime embeddingClient, IOptions<AwsSettings> awsSettings)
 	{
 		_embeddingClient = embeddingClient;

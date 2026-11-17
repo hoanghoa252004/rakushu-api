@@ -146,6 +146,12 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<FlashcardSession> FlashcardSessions => Set<FlashcardSession>();
 	public DbSet<FlashcardSessionItem> FlashcardSessionItems => Set<FlashcardSessionItem>();
 
+	// Assistant
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Conversation.Conversation> Conversations => Set<Rakushu.Domain.Entities.Assisstant.Conversation.Conversation>();
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Message.Message> Messages => Set<Rakushu.Domain.Entities.Assisstant.Message.Message>();
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Attachment.Attachment> Attachments => Set<Rakushu.Domain.Entities.Assisstant.Attachment.Attachment>();
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Message.MessageEmbedding.MessageEmbedding> MessageEmbeddings => Set<Rakushu.Domain.Entities.Assisstant.Message.MessageEmbedding.MessageEmbedding>();
+
 	// Curation & Issue Reporting
 	public DbSet<IssueCategory> IssueCategories => Set<IssueCategory>();
 	public DbSet<Report> Reports => Set<Report>();
