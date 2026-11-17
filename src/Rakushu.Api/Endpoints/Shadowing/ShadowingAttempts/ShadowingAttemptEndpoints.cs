@@ -5,11 +5,16 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Shadowing.ShadowingAttempts;
 using Rakushu.Application.Usecases.Shadowing.ShadowingAssessments.GetShadowingAttemptAssessments;
+using Rakushu.Application.Usecases.Shadowing.ShadowingAssessments.ReevaluateShadowingAssessment;
 using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Shadowing.ShadowingAttempts;
 
 public sealed record CreateAttemptDetailRequestDto(Guid RoleLineId, string? AudioKey, long? DurationMs, bool? IsSkipped);
+
+public sealed record ReevaluateAssessmentRequestDto(
+	string OverallFeedback,
+	List<ReevaluatedDetailInput> Details);
 
 internal sealed class ShadowingAttemptEndpoints : IEndpoint
 {
@@ -138,6 +143,27 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			.RequireAuthorization(readPolicy)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound);
+
+		attempts.MapPost("/{attemptId:guid}/assessments", async (
+				[FromRoute] Guid sessionId,
+				[FromRoute] Guid attemptId,
+				[FromBody] ReevaluateAssessmentRequestDto request,
+				ISender sender,
+				CancellationToken ct = default) =>
+			{
+				var result = await sender.Send(new ReevaluateShadowingAssessmentCommand(
+					sessionId, attemptId, request.OverallFeedback, request.Details), ct);
+				return result.MatchOk();
+			})
+			.WithName("ReevaluateShadowingAssessment")
+			.Produces<Guid>(StatusCodes.Status200OK)
+			.WithSummary("Curator")
+			.WithDescription("Creates a CuratorReevaluation assessment from the updated details (scores 0-100, feedback required) and the overall feedback. Details not sent are copied from the latest assessment. An attempt can have at most 2 assessments.")
+			.RequireAuthorization(p => p.RequireRole(RoleCodes.LinguisticCurator))
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
+			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict);
 
 		attempts.MapGet("/{attemptId:guid}/assessments", async (
 				[FromRoute] Guid sessionId,

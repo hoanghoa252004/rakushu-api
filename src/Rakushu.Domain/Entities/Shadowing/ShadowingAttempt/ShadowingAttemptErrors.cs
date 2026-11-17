@@ -48,6 +48,22 @@ public static class ShadowingAttemptErrors
 		"SHADOWING_ATTEMPT.NOT_ENOUGH_SKIPPED",
 		"The host can cancel a member's attempt only when skipped lines reach at least half of the member's lines.");
 
+	public static readonly Error NotAssessed = Error.Conflict(
+		"SHADOWING_ATTEMPT.NOT_ASSESSED",
+		"Only an attempt that has been assessed can be re-evaluated.");
+
+	public static readonly Error ReevaluationLimitReached = Error.Conflict(
+		"SHADOWING_ATTEMPT.REEVALUATION_LIMIT_REACHED",
+		"The attempt already has 2 assessments and cannot be re-evaluated again.");
+
+	public static readonly Error InvalidAssessmentDetail = Error.Validation(
+		"SHADOWING_ATTEMPT.INVALID_ASSESSMENT_DETAIL",
+		"Skipped attempt details cannot be assessed.");
+
+	public static readonly Error CuratorOnly = Error.Forbidden(
+		"SHADOWING_ATTEMPT.CURATOR_ONLY",
+		"Only a curator can re-evaluate an assessment.");
+
 	public static readonly Error HasNoDetails = Error.Conflict(
 		"SHADOWING_ATTEMPT.INCOMPLETE",
 		"All your role lines must be completed before submitting.");

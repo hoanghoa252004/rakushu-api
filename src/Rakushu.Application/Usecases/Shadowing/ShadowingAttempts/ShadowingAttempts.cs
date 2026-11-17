@@ -277,7 +277,6 @@ internal sealed class CreateAttemptDetailValidator : AbstractValidator<CreateAtt
 internal sealed class CreateAttemptDetailHandler(
 	IShadowingAttemptRepository attemptRepository,
 	IShadowingRoleLineRepository roleLineRepository,
-	IMediaConvertService mediaConvertService,
 	ICurrentUserContext currentUser,
 	IUnitOfWork unitOfWork)
 	: IRequestHandler<CreateAttemptDetailCommand, Result<Guid>>
@@ -310,19 +309,10 @@ internal sealed class CreateAttemptDetailHandler(
 				&& !await attemptRepository.IsRoleAttemptCancelledAsync(attempt.ShadowingSessionId, previous.ShadowingRoleId, cancellationToken))
 				return Result.Failure<Guid>(ShadowingAttemptErrors.PreviousLineNotCompleted);
 
-			// Normalize audio:
-			string audioKey = null!;
-			if(!string.IsNullOrWhiteSpace(request.AudioKey))
-			{
-				audioKey = await mediaConvertService.NormalizeForSpeechAssessmentAsync(
-					request.AudioKey,
-					$"shadowing/normalized/{request.AttemptId}/{request.RoleLineId}",
-					cancellationToken);
-			}
-
+			// Audio normalization is done later by the normalization worker.
 			var created = AttemptDetailEntity.Create(
 				attempt.Id, attempt.ShadowingSessionId, attempt.ShadowingSessionMember.MemberId.Value, line.Id,
-				audioKey, request.DurationMs, request.IsSkipped ?? false, DateTimeOffset.UtcNow);
+				request.AudioKey, request.DurationMs, request.IsSkipped ?? false, DateTimeOffset.UtcNow);
 			if (created.IsFailure)
 				return Result.Failure<Guid>(created.Error);
 

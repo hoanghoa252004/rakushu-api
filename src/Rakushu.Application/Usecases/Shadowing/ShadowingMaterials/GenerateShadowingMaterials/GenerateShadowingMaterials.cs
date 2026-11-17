@@ -60,6 +60,25 @@ internal sealed class GenerateShadowingMaterialsHandler(
 			return Result.Failure(ShadowingMaterialErrors.NoTranscriptSpeakers);
 		var roles = existingRoles.ToDictionary(r => r.SpeakerId, r => r);
 
+		var lines = await roleLineRepository.GetByMaterialIdAsync(material.Id, ct);
+		if (lines.Count == 0)
+		{
+			var createdLines = await CreateLinesAsync(material, start, end, roles, ct);
+			if (createdLines.IsFailure)
+				return Result.Failure(createdLines.Error);
+			lines = createdLines.Value;
+		}
+
+		return await DispatchClipJobsAsync(material, lines, ct);
+	}
+
+	private async Task<Result<IReadOnlyList<ShadowingRoleLine>>> CreateLinesAsync(
+		ShadowingMaterial material,
+		TranscriptSegment start,
+		TranscriptSegment end,
+		Dictionary<SpeakerId, ShadowingRole> roles,
+		CancellationToken ct)
+	{
 		var segments = await materialRepository.GetSegmentsBetweenAsync(material.VideoId, start.Sequence, end.Sequence, ct);
 
 		var groups = new List<Group>();
@@ -88,39 +107,74 @@ internal sealed class GenerateShadowingMaterialsHandler(
 		}
 
 		if (groups.Count == 0)
-			return Result.Failure(ShadowingMaterialErrors.NoTranscriptSpeakers);
+			return Result.Failure<IReadOnlyList<ShadowingRoleLine>>(ShadowingMaterialErrors.NoTranscriptSpeakers);
 
-		var sourceKey = await materialRepository.GetVideoSourceKeyAsync(material.VideoId, ct);
-		if (string.IsNullOrWhiteSpace(sourceKey))
-			return Result.Failure(ShadowingMaterialErrors.VideoNotReady);
-
-		var audioKeys = await Task.WhenAll(groups.Select((g, i) =>
-			audioClipService.ExtractClipAsync(
-				sourceKey,
-				$"shadowing/{material.Id.Value}/lines/{i + 1}",
-				g.Start,
-				g.End,
-				ct)));
-
-		return await unitOfWork.ExecuteAsync(async () =>
+		var created = new List<ShadowingRoleLine>();
+		var saved = await unitOfWork.ExecuteAsync(async () =>
 		{
 			for (var i = 0; i < groups.Count; i++)
 			{
 				var g = groups[i];
+				// The role line id is known only after creation, so the clip key is assigned once the line exists.
 				var lineResult = ShadowingRoleLine.Create(
-					roles[g.SpeakerId].Id, i + 1, g.Text, g.Start, g.End, audioKeys[i]);
+					roles[g.SpeakerId].Id, i + 1, g.Text, g.Start, g.End, "pending");
 				if (lineResult.IsFailure)
 					return Result.Failure(lineResult.Error);
 
-				lineResult.Value.SetSegments(g.SegmentIds);
-				roleLineRepository.Add(lineResult.Value);
+				var line = lineResult.Value;
+				line.SetAudioKey(ClipOutputKey(material, line) + ".m4a");
+				line.SetSegments(g.SegmentIds);
+				roleLineRepository.Add(line);
+				created.Add(line);
 			}
 
-			var statusResult = material.ChangeStatus(ShadowingMaterialStatus.Ready);
-			if (statusResult.IsFailure)
-				return Result.Failure(statusResult.Error);
-
 			return Result.Success();
+		}, ct);
+
+		if (saved.IsFailure)
+			return Result.Failure<IReadOnlyList<ShadowingRoleLine>>(saved.Error);
+		return Result.Success<IReadOnlyList<ShadowingRoleLine>>(created);
+	}
+
+	private static string ClipOutputKey(ShadowingMaterial material, ShadowingRoleLine line)
+		=> $"shadowing/{material.Id.Value}/lines/{line.Id.Value}";
+
+	private async Task<Result> DispatchClipJobsAsync(
+		ShadowingMaterial material,
+		IReadOnlyList<ShadowingRoleLine> lines,
+		CancellationToken ct)
+	{
+		var sourceKey = await materialRepository.GetVideoSourceKeyAsync(material.VideoId, ct);
+		if (string.IsNullOrWhiteSpace(sourceKey))
+			return Result.Failure(ShadowingMaterialErrors.VideoNotReady);
+
+		var jobs = await audioClipService.ListClipJobsAsync(lines.Select(l => l.Id.Value).ToList(), ct);
+		var pending = 0;
+
+		foreach (var line in lines)
+		{
+			var lineJobs = jobs.Where(j => j.RoleLineId == line.Id.Value).ToList();
+			if (lineJobs.Any(j => j.Status == NormalizeJobStatus.Complete))
+				continue;
+
+			pending++;
+			if (lineJobs.Any(j => j.Status == NormalizeJobStatus.InProgress))
+				continue;
+
+			if (lineJobs.Count > 0)
+				logger.LogWarning("Clip job failed for role line {LineId}: {Error}. Retrying.", line.Id.Value, lineJobs[0].Error);
+
+			await audioClipService.CreateClipJobAsync(
+				line.Id.Value, sourceKey, ClipOutputKey(material, line), line.StartTime, line.EndTime, ct);
+		}
+
+		if (pending > 0)
+			return Result.Success();
+
+		return await unitOfWork.ExecuteAsync(async () =>
+		{
+			var statusResult = material.ChangeStatus(ShadowingMaterialStatus.Ready);
+			return statusResult.IsFailure ? Result.Failure(statusResult.Error) : Result.Success();
 		}, ct);
 	}
 }

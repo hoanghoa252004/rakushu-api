@@ -34,6 +34,7 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<ShadowingMaterialProcessingWorker>();
 		services.AddHostedService<ShadowingSessionExpirationWorker>();
 		services.AddHostedService<ShadowingSessionCompletionWorker>();
+		services.AddHostedService<ShadowingAudioNormalizationWorker>();
 		services.AddHostedService<ShadowingAssessmentWorker>();
 
 		// SUBSCRIPTION
