@@ -144,7 +144,10 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound);
 
-		attempts.MapPost("/{attemptId:guid}/assessments", async (
+		var assessments = app.MapGroup("/api/shadowing-sessions/{sessionId:guid}/attempts")
+			.WithTags("Shadowing Assessment").WithGroupName("shadowing");
+
+		assessments.MapPost("/{attemptId:guid}/assessments", async (
 				[FromRoute] Guid sessionId,
 				[FromRoute] Guid attemptId,
 				[FromBody] ReevaluateAssessmentRequestDto request,
@@ -165,7 +168,7 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status409Conflict);
 
-		attempts.MapGet("/{attemptId:guid}/assessments", async (
+		assessments.MapGet("/{attemptId:guid}/assessments", async (
 				[FromRoute] Guid sessionId,
 				[FromRoute] Guid attemptId,
 				ISender sender,
