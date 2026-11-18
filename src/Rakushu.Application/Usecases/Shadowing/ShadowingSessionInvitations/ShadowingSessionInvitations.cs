@@ -162,14 +162,14 @@ internal sealed class RespondShadowingSessionInvitationHandler(
 }
 
 // ---- UPDATE LEARNER (HOST, PENDING ONLY) ----
-public sealed record UpdateShadowingSessionInvitationCommand(Guid InvitationId, Guid LearnerId) : IRequest<Result>;
+public sealed record UpdateShadowingSessionInvitationCommand(Guid InvitationId, string Email) : IRequest<Result>;
 
 internal sealed class UpdateShadowingSessionInvitationValidator : AbstractValidator<UpdateShadowingSessionInvitationCommand>
 {
 	public UpdateShadowingSessionInvitationValidator()
 	{
 		RuleFor(x => x.InvitationId).NotEmpty();
-		RuleFor(x => x.LearnerId).NotEmpty();
+		RuleFor(x => x.Email).NotEmpty().EmailAddress().WithMessage("Email must be valid");
 	}
 }
 
@@ -194,13 +194,15 @@ internal sealed class UpdateShadowingSessionInvitationHandler(
 			if (invitation.Status != SessionInvitationStatus.Pending)
 				return Result.Failure(ShadowingSessionInvitationErrors.NotPending);
 
-			var learnerId = UserId.From(request.LearnerId);
+			var learner = await userRepository.GetByEmailAsync(request.Email.Trim().ToLowerInvariant(), cancellationToken);
+			if (learner is null)
+				return Result.Failure(ShadowingSessionInvitationErrors.LearnerNotFound);
+
+			var learnerId = learner.Id;
 			if (learnerId == invitation.LearnerId)
 				return Result.Success();
 			if (learnerId == invitation.HostId)
 				return Result.Failure(ShadowingSessionInvitationErrors.CannotInviteHost);
-			if (await userRepository.GetByIdAsync(learnerId, cancellationToken) is null)
-				return Result.Failure(ShadowingSessionInvitationErrors.LearnerNotFound);
 			if (await memberRepository.ExistsAsync(invitation.ShadowingSessionId, learnerId, cancellationToken))
 				return Result.Failure(ShadowingSessionInvitationErrors.AlreadyMember);
 			if (await invitationRepository.PendingExistsAsync(invitation.ShadowingSessionId, learnerId, cancellationToken))

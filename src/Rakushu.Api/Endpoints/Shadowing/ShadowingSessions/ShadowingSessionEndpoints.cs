@@ -445,7 +445,7 @@ internal sealed class RespondShadowingSessionInvitationEndpoint : IEndpoint
 	}
 }
 
-public sealed record UpdateInvitationRequestDto(Guid LearnerId);
+public sealed record UpdateInvitationRequestDto(string Email);
 
 internal sealed class GetShadowingSessionMembersEndpoint : IEndpoint
 {
@@ -482,12 +482,12 @@ internal sealed class UpdateShadowingSessionInvitationEndpoint : IEndpoint
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(
-					new UpdateShadowingSessionInvitationCommand(invitationId, request.LearnerId), cancellationToken);
+					new UpdateShadowingSessionInvitationCommand(invitationId, request.Email), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("UpdateShadowingSessionInvitation")
 			.WithSummary("Learner (host)")
-			.WithDescription("Changes the invited learner of an invitation that is still Pending.")
+			.WithDescription("Changes the invited learner of an invitation that is still Pending, identified by the learner's email.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
