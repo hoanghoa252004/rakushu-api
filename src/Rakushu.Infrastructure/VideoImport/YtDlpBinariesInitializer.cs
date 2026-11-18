@@ -37,7 +37,7 @@ internal sealed class YtDlpBinariesInitializer(
 				await RunStepAsync("ffmpeg", folder, () => Utils.DownloadFFmpeg(folder));
 
 			// optional, for YouTube downloads
-			await RunStepAsync("deno", folder, () => Utils.DownloadDeno(folder));
+			//await RunStepAsync("deno", folder, () => Utils.DownloadDeno(folder));
 
 			binaries.YtDlpPath = Path.Combine(folder, Utils.YtDlpBinaryName);
 			binaries.FFmpegPath = Path.Combine(folder, Utils.FfmpegBinaryName);
