@@ -44,7 +44,7 @@ internal sealed class ImportExternalVideosHandler(
 
 					video.AddMediaAsset(mediaAsset.Value);
 
-					if (video.ChangeStatus(VideoStatus.Pending).IsSuccess)
+					if (video.ChangeStatus(VideoStatus.Moderating).IsSuccess)
 						imported++;
 				}
 				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

@@ -143,6 +143,16 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			.ToListAsync(cancellationToken);
 	}
 
+	public async Task<IReadOnlyList<Video>> GetModeratingVideosAsync(int batchSize, CancellationToken cancellationToken = default)
+	{
+		return await _context.Videos
+			.Include(v => v.MediaAssets)
+			.Where(v => v.Status == VideoStatus.Moderating)
+			.OrderBy(v => v.CreatedAt)
+			.Take(batchSize)
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<IReadOnlyList<Video>> GetImportingVideosAsync(int batchSize, CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos

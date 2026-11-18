@@ -15,5 +15,6 @@ public enum VideoStatus
 	Reviewing = 5, // Video is being reviewed by Linguistic Curator
 	Ready = 6, // Video is ready and available for using in the system (e.g., for learners to watch)
 	Archived = 7, // Video is archived and not available for using in the system (e.g., for learners to watch)
-		Importing = 8 // Video with VideoSource ImportedFromExternal, is being downloaded from external source and uploaded to storage
-	}
+			Importing = 8, // Video with VideoSource ImportedFromExternal, is being downloaded from external source and uploaded to storage
+			Moderating = 9 // Video is being auto-moderated (language + content) before moving to Pending
+		}

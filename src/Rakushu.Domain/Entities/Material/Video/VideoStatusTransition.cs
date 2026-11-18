@@ -18,6 +18,13 @@ public static class VideoStatusTransition
 		{
 			VideoStatus.Importing, new HashSet<VideoStatus>
 			{
+				VideoStatus.Moderating,
+				VideoStatus.Rejected
+			}
+		},
+		{
+			VideoStatus.Moderating, new HashSet<VideoStatus>
+			{
 				VideoStatus.Pending,
 				VideoStatus.Rejected
 			}

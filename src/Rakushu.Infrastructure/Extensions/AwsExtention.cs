@@ -59,6 +59,10 @@ internal static class AwsExtention
 				new AmazonTranscribeServiceClient(
 					Amazon.RegionEndpoint.APSoutheast1));
 
+			services.AddSingleton<Amazon.Rekognition.IAmazonRekognition>(_ =>
+				new Amazon.Rekognition.AmazonRekognitionClient(
+					Amazon.RegionEndpoint.APSoutheast1));
+
 			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
 				new AmazonBedrockRuntimeClient(
 					Amazon.RegionEndpoint.APNortheast1));
@@ -102,6 +106,12 @@ internal static class AwsExtention
 					awsCredentials,
 					Amazon.RegionEndpoint.APSoutheast1));
 
+			// AWS Rekognition
+			services.AddSingleton<Amazon.Rekognition.IAmazonRekognition>(_ =>
+				new Amazon.Rekognition.AmazonRekognitionClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1));
+
 			// AWS Bedrock (embedding)
 			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
 				new AmazonBedrockRuntimeClient(
@@ -136,6 +146,8 @@ internal static class AwsExtention
 		// Video import
 		Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<Rakushu.Infrastructure.VideoImport.YtDlpBinaries>(services);
 		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.VideoImport.IVideoImportService, Rakushu.Infrastructure.VideoImport.YtDlpVideoImportService>();
+		// Moderation
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Moderation.IVideoModerationService, Rakushu.Infrastructure.Moderation.AwsVideoModerationService>();
 		// Transcribe
 		services.AddScoped<IAsrService, AwsTranscribeService>();
 		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();

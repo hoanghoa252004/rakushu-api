@@ -81,7 +81,7 @@ internal sealed class CreateVideoHandler : IRequestHandler<CreateVideoCommand, R
 			{
 				VideoSource.Curated => VideoStatus.Draft,
 				VideoSource.ImportedFromExternal => VideoStatus.Importing,
-				_ => VideoStatus.Pending
+				_ => VideoStatus.Moderating
 			};
 
 
