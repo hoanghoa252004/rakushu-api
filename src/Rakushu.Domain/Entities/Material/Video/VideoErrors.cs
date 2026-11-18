@@ -32,6 +32,15 @@ public static class VideoErrors
 	public static readonly Error CannotUpdateVideoStatus = Error.Validation(
 		"VIDEO.CANNOT_UPDATE_VIDEO_STATUS", "User is not authorized to update video status.");
 
+	public static readonly Error SourceUrlRequired = Error.Validation(
+		"VIDEO.SOURCE_URL_REQUIRED", "SourceUrl is required for videos imported from external source.");
+
+	public static readonly Error InvalidYoutubeUrl = Error.Validation(
+		"VIDEO.INVALID_YOUTUBE_URL", "SourceUrl must be a valid YouTube link.");
+
+	public static readonly Error StorageKeyOfVideoRequired = Error.Validation(
+		"VIDEO.STORAGE_KEY_OF_VIDEO_REQUIRED", "StorageKeyOfVideo is required for videos that are not imported from external source.");
+
 	public static readonly Error InvalidSourceType = Error.Validation(
 		"VIDEO.INVALID_SOURCE_TYPE", "Invalid video source type.");
 

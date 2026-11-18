@@ -133,6 +133,9 @@ internal static class AwsExtention
 		services.AddScoped<IEmailService, AwsSesService>();
 		// S3
 		services.AddScoped<IStorageService, AwsS3Service>();
+		// Video import
+		Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<Rakushu.Infrastructure.VideoImport.YtDlpBinaries>(services);
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.VideoImport.IVideoImportService, Rakushu.Infrastructure.VideoImport.YtDlpVideoImportService>();
 		// Transcribe
 		services.AddScoped<IAsrService, AwsTranscribeService>();
 		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();

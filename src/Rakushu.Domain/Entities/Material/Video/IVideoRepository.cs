@@ -23,6 +23,10 @@ public interface IVideoRepository : IBaseRepository<Video, VideoId>
 		int batchSize,
 	CancellationToken cancellationToken = default);
 
+	Task<IReadOnlyList<Video>> GetImportingVideosAsync(
+		int batchSize,
+		CancellationToken cancellationToken = default);
+
 	Task<IReadOnlyList<Video>> GetProcessingVideosWithProcessedResultAsync(
 		int batchSize,
 		CancellationToken cancellationToken = default);

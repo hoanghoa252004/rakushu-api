@@ -16,6 +16,13 @@ public static class VideoStatusTransition
 			}
 		},
 		{
+			VideoStatus.Importing, new HashSet<VideoStatus>
+			{
+				VideoStatus.Pending,
+				VideoStatus.Rejected
+			}
+		},
+		{
 			VideoStatus.Pending, new HashSet<VideoStatus>
 			{
 				VideoStatus.Processing,

@@ -139,6 +139,26 @@ internal class AwsS3Service : IStorageService
 		await _s3.CompleteMultipartUploadAsync(request,cancellationToken);
 	}
 
+	public async Task<string> UploadMultipartPartAsync(
+		string key,
+		string uploadId,
+		int partNumber,
+		Stream partStream,
+		CancellationToken cancellationToken)
+	{
+		var response = await _s3.UploadPartAsync(new UploadPartRequest
+		{
+			BucketName = _s3Settings.BucketName,
+			Key = key,
+			UploadId = uploadId,
+			PartNumber = partNumber,
+			InputStream = partStream,
+			PartSize = partStream.Length
+		}, cancellationToken);
+
+		return response.ETag;
+	}
+
 	public async Task AbortMultipartUploadAsync(
 		string key,
 		string uploadId,

@@ -36,6 +36,10 @@ public static class InfrastructureServiceCollectionExtensions
 	{
 		services.AddScoped<ICurrentUserContext, WorkerCurrentUserContext>();
 
+		// yt-dlp binaries are downloaded once at worker startup
+		services.AddSingleton<Rakushu.Infrastructure.VideoImport.YtDlpBinaries>();
+		services.AddHostedService<Rakushu.Infrastructure.VideoImport.YtDlpBinariesInitializer>();
+
 		services.AddRakushuInfrastructureForCommon(configuration, environment);
 
 		return services;
