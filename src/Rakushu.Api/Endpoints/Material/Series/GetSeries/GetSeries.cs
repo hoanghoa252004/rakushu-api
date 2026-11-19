@@ -29,7 +29,7 @@ internal sealed class GetSeries : IEndpoint
 		.WithName("GetAllSeries")
 		.WithSummary("Learner & Curator")
 		.WithDescription("Retrieves all series with pagination support.")
-		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 		.Produces<PaginatedList<SeriesDto>>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status400BadRequest)
 		.ProducesProblem(StatusCodes.Status401Unauthorized)

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
@@ -25,7 +25,7 @@ internal sealed class GetSpeakersByVideo : IEndpoint
 			.WithName("GetVideoSpeakers")
 			.WithSummary("Learner, Curator")
 			.WithDescription("Gets the distinct speakers that appear in the segments of a video transcript.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<IReadOnlyList<SpeakerDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);

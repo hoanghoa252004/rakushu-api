@@ -84,9 +84,9 @@ internal sealed class GetShadowingMaterialsEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingMaterials")
-			.WithSummary("Learner, Curator")
-			.WithDescription("Gets materials of a video with paging, filter by status. Learner sees all materials of their own video, otherwise only Ready materials; Curator sees all.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.WithSummary("Learner, Curator, Admin")
+			.WithDescription("Gets materials of a video with paging, filter by status. Learner sees all materials of their own video, otherwise only Ready materials; Curator/Admin sees all.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<PaginatedList<ShadowingMaterialDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -110,9 +110,9 @@ internal sealed class GetShadowingMaterialByIdEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingMaterialById")
-			.WithSummary("Learner, Curator")
+			.WithSummary("Learner, Curator, Admin")
 			.WithDescription("Gets a material by id. Learner only gets Ready materials.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<ShadowingMaterialDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);

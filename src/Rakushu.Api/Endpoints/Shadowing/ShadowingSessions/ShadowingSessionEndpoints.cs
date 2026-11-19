@@ -193,7 +193,7 @@ internal sealed class GetAllShadowingSessionsEndpoint : IEndpoint
 			.Produces<PaginatedList<ShadowingSessionDto>>(StatusCodes.Status200OK)
 			.WithSummary("Learner & Curator")
 			.WithDescription("Gets sessions with members, material, video and host. Curator sees all sessions (optional visibility filter); learner only gets Public sessions and cannot request Private.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.Learner))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.Learner, RoleCodes.SystemAdministrator))
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
@@ -214,7 +214,7 @@ internal sealed class GetShadowingSessionEndpoint : IEndpoint
 			.Produces<ShadowingSessionDto>(StatusCodes.Status200OK)
 			.WithSummary("Learner / Curator")
 			.WithDescription("Gets a session detail. Learners need to be a member or the session must be public.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -461,7 +461,7 @@ internal sealed class GetShadowingSessionMembersEndpoint : IEndpoint
 			.WithName("GetShadowingSessionMembers")
 			.WithSummary("Learner (member), Curator")
 			.WithDescription("Gets the members of a session.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<IReadOnlyList<ShadowingSessionMemberDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)

@@ -40,7 +40,7 @@ internal sealed class GetShadowingSessionMembersHandler(
 		if (session is null)
 			return Result.Failure<IReadOnlyList<ShadowingSessionMemberDto>>(ShadowingSessionErrors.NotFound);
 
-		var isCurator = currentUser.Role == Rakushu.Domain.Entities.Identity.Role.RoleCodes.LinguisticCurator;
+		var isCurator = currentUser.Role == Rakushu.Domain.Entities.Identity.Role.RoleCodes.LinguisticCurator || currentUser.Role == Rakushu.Domain.Entities.Identity.Role.RoleCodes.SystemAdministrator;
 		if (!isCurator && !session.Members.Any(m => m.MemberId == currentUser.UserId))
 			return Result.Failure<IReadOnlyList<ShadowingSessionMemberDto>>(ShadowingSessionErrors.NotMember);
 

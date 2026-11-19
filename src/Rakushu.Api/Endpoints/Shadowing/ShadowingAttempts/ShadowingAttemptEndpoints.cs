@@ -105,7 +105,7 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			.RequireAuthorization(p => p.RequireRole(RoleCodes.Learner));
 
 		Action<Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder> readPolicy = p =>
-			p.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator);
+			p.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator);
 
 		attempts.MapGet("/{attemptId:guid}", async (
 				[FromRoute] Guid sessionId,

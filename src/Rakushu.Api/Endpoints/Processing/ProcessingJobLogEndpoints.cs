@@ -16,7 +16,7 @@ internal sealed class ProcessingJobLogEndpoints : IEndpoint
 		var group = app.MapGroup("/api/processing-job-logs")
 			.WithTags("ProcessingJobLogs")
 			.WithGroupName("material")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator));
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator));
 
 		group.MapGet("/", async (
 				[FromQuery] Guid? targetId,

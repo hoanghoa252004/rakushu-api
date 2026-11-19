@@ -447,7 +447,9 @@ internal static class AttemptMapper
 		a.Id.Value, a.ShadowingSessionId.Value, a.ShadowingSessionMember.MemberId.Value,
 		a.ShadowingSessionMember.ShadowingRoleId?.Value, a.Status, a.StartedAt, a.CompletedAt);
 
-	public static bool IsCurator(ICurrentUserContext user) => user.Role == Rakushu.Domain.Entities.Identity.Role.RoleCodes.LinguisticCurator;
+	public static bool IsCurator(ICurrentUserContext user) =>
+		user.Role == Rakushu.Domain.Entities.Identity.Role.RoleCodes.LinguisticCurator
+		|| user.Role == Rakushu.Domain.Entities.Identity.Role.RoleCodes.SystemAdministrator;
 }
 
 public sealed record GetShadowingAttemptQuery(Guid SessionId, Guid AttemptId, int PageNumber, int PageSize, bool? IsSkipped)
