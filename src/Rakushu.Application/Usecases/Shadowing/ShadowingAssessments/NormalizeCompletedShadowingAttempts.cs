@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
@@ -13,6 +15,7 @@ public sealed record NormalizeCompletedShadowingAttemptsCommand(int BatchSize = 
 internal sealed class NormalizeCompletedShadowingAttemptsHandler(
 	IShadowingAttemptRepository attemptRepository,
 	IMediaConvertService mediaConvertService,
+	IProcessingJobLogService jobLogService,
 	IUnitOfWork unitOfWork,
 	ILogger<NormalizeCompletedShadowingAttemptsHandler> logger)
 	: IRequestHandler<NormalizeCompletedShadowingAttemptsCommand, Result<int>>
@@ -36,15 +39,26 @@ internal sealed class NormalizeCompletedShadowingAttemptsHandler(
 
 					if (pending.Count > 0)
 					{
-						var jobs = await mediaConvertService.ListNormalizeJobsAsync(attempt.Id.Value, cancellationToken);
+						// Each normalize job has its own job log targeting the attempt detail.
+						var logs = await jobLogService.GetByTargetsAsync(
+							ProcessingJobType.ShadowingAudioNormalization,
+							pending.Select(d => d.Id.Value).ToList(),
+							cancellationToken);
+						var jobs = await mediaConvertService.ListNormalizeJobsAsync(
+							logs.Select(l => l.Id).ToList(), cancellationToken);
 
 						foreach (var detail in pending)
 						{
 							var lineId = detail.ShadowingRoleLineId.Value;
-							var lineJobs = jobs.Where(j => j.RoleLineId == lineId).ToList();
+							var detailLogs = logs.Where(l => l.TargetId == detail.Id.Value).ToList();
+							var detailLogIds = detailLogs.Select(l => l.Id).ToHashSet();
+							var lineJobs = jobs.Where(j => detailLogIds.Contains(j.JobLogId)).ToList();
 							var outputKey = $"shadowing/normalized/{attempt.Id.Value}/{lineId}";
 
-							if (lineJobs.Any(j => j.Status == NormalizeJobStatus.Complete))
+							await SyncLogsAsync(detailLogs, lineJobs, cancellationToken);
+
+							if (detailLogs.Any(l => l.IsSuccess && l.EndAt is not null)
+								|| lineJobs.Any(j => j.Status == NormalizeJobStatus.Complete))
 							{
 								detail.ReplaceAudioKey(outputKey + ".wav");
 								continue;
@@ -58,8 +72,25 @@ internal sealed class NormalizeCompletedShadowingAttemptsHandler(
 									"Normalize job failed for attempt {AttemptId}, role line {RoleLineId}: {Error}. Retrying.",
 									attempt.Id.Value, lineId, lineJobs[0].Error);
 
-							await mediaConvertService.CreateNormalizeJobAsync(
-								attempt.Id.Value, lineId, detail.AudioKey!, outputKey, cancellationToken);
+							var jobLog = await jobLogService.StartAsync(
+								ProcessingJobType.ShadowingAudioNormalization,
+								ProcessingJobTargetType.ShadowingAttemptDetail,
+								detail.Id.Value,
+								ProcessingJobServices.AwsMediaConvert,
+								detail.AudioKey,
+								cancellationToken);
+
+							try
+							{
+								var externalJobId = await mediaConvertService.CreateNormalizeJobAsync(
+									jobLog.Id, detail.AudioKey!, outputKey, cancellationToken);
+								await jobLogService.SetJobLabelAsync(jobLog.Id, externalJobId, cancellationToken);
+							}
+							catch (Exception ex) when (ex is not OperationCanceledException)
+							{
+								await jobLogService.FailAsync(jobLog.Id, ex.Message, CancellationToken.None);
+								throw;
+							}
 						}
 					}
 
@@ -78,5 +109,23 @@ internal sealed class NormalizeCompletedShadowingAttemptsHandler(
 
 			return Result.Success(count);
 		}, cancellationToken);
+	}
+
+	private async Task SyncLogsAsync(
+		IReadOnlyList<ProcessingJobLogInfo> logs,
+		IReadOnlyList<NormalizeJobInfo> jobs,
+		CancellationToken ct)
+	{
+		foreach (var log in logs.Where(l => !l.IsFinished))
+		{
+			var job = jobs.FirstOrDefault(j => j.JobLogId == log.Id);
+			if (job is null)
+				continue;
+
+			if (job.Status == NormalizeJobStatus.Complete)
+				await jobLogService.CompleteAsync(log.Id, job.RawResponse, ct);
+			else if (job.Status == NormalizeJobStatus.Failed)
+				await jobLogService.FailAsync(log.Id, job.RawResponse ?? job.Error, ct);
+		}
 	}
 }

@@ -115,9 +115,13 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration> SystemConfigurations => Set<Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration>();
 	public DbSet<Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory> SystemConfigurationHistories => Set<Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory>();
 
+	// Processing
+	public DbSet<Rakushu.Domain.Entities.Processing.ProcessingJobLog.ProcessingJobLog> ProcessingJobLogs => Set<Rakushu.Domain.Entities.Processing.ProcessingJobLog.ProcessingJobLog>();
+
 	// Subscriptions
 	public DbSet<Entitlement> Entitlements => Set<Entitlement>();
-	public DbSet<Feature> Features => Set<Feature>();	public DbSet<Payment> Payments => Set<Payment>();
+	public DbSet<Feature> Features => Set<Feature>();
+	public DbSet<Payment> Payments => Set<Payment>();
 	public DbSet<Plan> Plans => Set<Plan>();
 	public DbSet<Subscription> Subscriptions => Set<Subscription>();
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();

@@ -1773,6 +1773,86 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("videos", "material");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Processing.ProcessingJobLog.ProcessingJobLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("EndAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_at");
+
+                    b.Property<string>("Input")
+                        .HasColumnType("text")
+                        .HasColumnName("input");
+
+                    b.Property<bool>("IsFailed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_failed");
+
+                    b.Property<bool>("IsSuccess")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_success");
+
+                    b.Property<string>("JobLabel")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("job_label");
+
+                    b.Property<string>("JobType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("job_type");
+
+                    b.Property<string>("Output")
+                        .HasColumnType("text")
+                        .HasColumnName("output");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer")
+                        .HasColumnName("sequence");
+
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("service_name");
+
+                    b.Property<DateTime>("StartAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_at");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_id");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("target_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_processing_job_logs");
+
+                    b.HasIndex("JobLabel")
+                        .HasDatabaseName("ix_processing_job_logs_job_label");
+
+                    b.HasIndex("TargetId", "JobType", "StartAt")
+                        .HasDatabaseName("ix_processing_job_logs_target_id_job_type_start_at");
+
+                    b.HasIndex("TargetType", "TargetId", "Sequence")
+                        .HasDatabaseName("ix_processing_job_logs_target_type_target_id_sequence");
+
+                    b.ToTable("processing_job_logs", "processing");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment", b =>
                 {
                     b.Property<Guid>("Id")

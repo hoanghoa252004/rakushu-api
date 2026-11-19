@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
@@ -18,6 +20,7 @@ internal sealed class GenerateShadowingMaterialsHandler(
 	IShadowingRoleRepository roleRepository,
 	IShadowingRoleLineRepository roleLineRepository,
 	IMediaConvertService audioClipService,
+	IProcessingJobLogService jobLogService,
 	IUnitOfWork unitOfWork,
 	ILogger<GenerateShadowingMaterialsHandler> logger)
 	: IRequestHandler<GenerateShadowingMaterialsCommand, Result<int>>
@@ -148,13 +151,27 @@ internal sealed class GenerateShadowingMaterialsHandler(
 		if (string.IsNullOrWhiteSpace(sourceKey))
 			return Result.Failure(ShadowingMaterialErrors.VideoNotReady);
 
-		var jobs = await audioClipService.ListClipJobsAsync(lines.Select(l => l.Id.Value).ToList(), ct);
+		// Each clip job has its own job log (target: the material); the role line is recorded in the log input.
+		var logs = await jobLogService.GetByTargetsAsync(
+			ProcessingJobType.ShadowingAudioClip, [material.Id.Value], ct);
+		var logsByLine = logs
+			.Select(l => (Log: l, Input: ClipJobInput.Parse(l.Input)))
+			.Where(x => x.Input is not null)
+			.ToLookup(x => x.Input!.RoleLineId, x => x.Log);
+
+		var jobs = await audioClipService.ListClipJobsAsync(logs.Select(l => l.Id).ToList(), ct);
 		var pending = 0;
 
 		foreach (var line in lines)
 		{
-			var lineJobs = jobs.Where(j => j.RoleLineId == line.Id.Value).ToList();
-			if (lineJobs.Any(j => j.Status == NormalizeJobStatus.Complete))
+			var lineLogs = logsByLine[line.Id.Value].ToList();
+			var lineLogIds = lineLogs.Select(l => l.Id).ToHashSet();
+			var lineJobs = jobs.Where(j => lineLogIds.Contains(j.JobLogId)).ToList();
+
+			await SyncLogsAsync(lineLogs, lineJobs, ct);
+
+			if (lineLogs.Any(l => l.IsSuccess && l.EndAt is not null)
+				|| lineJobs.Any(j => j.Status == NormalizeJobStatus.Complete))
 				continue;
 
 			pending++;
@@ -164,8 +181,26 @@ internal sealed class GenerateShadowingMaterialsHandler(
 			if (lineJobs.Count > 0)
 				logger.LogWarning("Clip job failed for role line {LineId}: {Error}. Retrying.", line.Id.Value, lineJobs[0].Error);
 
-			await audioClipService.CreateClipJobAsync(
-				line.Id.Value, sourceKey, ClipOutputKey(material, line), line.StartTime, line.EndTime, ct);
+			var outputKey = ClipOutputKey(material, line);
+			var jobLog = await jobLogService.StartAsync(
+				ProcessingJobType.ShadowingAudioClip,
+				ProcessingJobTargetType.ShadowingMaterial,
+				material.Id.Value,
+				ProcessingJobServices.AwsMediaConvert,
+				ClipJobInput.Serialize(new ClipJobInput(line.Id.Value, sourceKey, outputKey, line.StartTime, line.EndTime)),
+				ct);
+
+			try
+			{
+				var externalJobId = await audioClipService.CreateClipJobAsync(
+					jobLog.Id, sourceKey, outputKey, line.StartTime, line.EndTime, ct);
+				await jobLogService.SetJobLabelAsync(jobLog.Id, externalJobId, ct);
+			}
+			catch (Exception ex) when (ex is not OperationCanceledException)
+			{
+				await jobLogService.FailAsync(jobLog.Id, ex.Message, CancellationToken.None);
+				throw;
+			}
 		}
 
 		if (pending > 0)
@@ -176,5 +211,42 @@ internal sealed class GenerateShadowingMaterialsHandler(
 			var statusResult = material.ChangeStatus(ShadowingMaterialStatus.Ready);
 			return statusResult.IsFailure ? Result.Failure(statusResult.Error) : Result.Success();
 		}, ct);
+	}
+
+	private async Task SyncLogsAsync(
+		IReadOnlyList<ProcessingJobLogInfo> logs,
+		IReadOnlyList<NormalizeJobInfo> jobs,
+		CancellationToken ct)
+	{
+		foreach (var log in logs.Where(l => !l.IsFinished))
+		{
+			var job = jobs.FirstOrDefault(j => j.JobLogId == log.Id);
+			if (job is null)
+				continue;
+
+			if (job.Status == NormalizeJobStatus.Complete)
+				await jobLogService.CompleteAsync(log.Id, job.RawResponse, ct);
+			else if (job.Status == NormalizeJobStatus.Failed)
+				await jobLogService.FailAsync(log.Id, job.RawResponse ?? job.Error, ct);
+		}
+	}
+
+	private sealed record ClipJobInput(Guid RoleLineId, string SourceKey, string OutputKey, TimeSpan Start, TimeSpan End)
+	{
+		public static string Serialize(ClipJobInput input) => System.Text.Json.JsonSerializer.Serialize(input);
+
+		public static ClipJobInput? Parse(string? input)
+		{
+			if (string.IsNullOrWhiteSpace(input))
+				return null;
+			try
+			{
+				return System.Text.Json.JsonSerializer.Deserialize<ClipJobInput>(input);
+			}
+			catch (System.Text.Json.JsonException)
+			{
+				return null;
+			}
+		}
 	}
 }

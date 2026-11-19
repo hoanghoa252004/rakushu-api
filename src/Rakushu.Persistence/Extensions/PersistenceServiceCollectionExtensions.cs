@@ -67,6 +67,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<RakushuDbContext>());
 
 		services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.JobLog.IProcessingJobLogService, ProcessingJobLogService>();
 		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Configuration.ISystemConfigurationProvider, SystemConfigurationProvider>();
 		//services.AddHostedService<Rakushu.Persistence.Configuration.SystemConfigurationSeeder>();
 		services.AddScoped<IUserRepository, UserRepository>();

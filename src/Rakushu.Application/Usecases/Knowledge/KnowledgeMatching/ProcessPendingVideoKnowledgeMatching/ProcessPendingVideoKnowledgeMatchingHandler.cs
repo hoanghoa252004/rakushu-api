@@ -1,4 +1,6 @@
 ﻿using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.ContentKnowledgeCollection;
@@ -22,6 +24,7 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly KnowledgeMatchingService _matchingService;
 	private readonly LearningUnitOverlapResolver _overlapResolver;
+	private readonly IProcessingJobLogService _jobLogService;
 
 	public ProcessPendingVideoKnowledgeMatchingHandler(
 		IVideoRepository videoRepository,
@@ -30,8 +33,10 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 		ITokenRepository tokenRepository,
 		IUnitOfWork unitOfWork,
 		KnowledgeMatchingService matchingService,
-		LearningUnitOverlapResolver overlapResolver)
+		LearningUnitOverlapResolver overlapResolver,
+		IProcessingJobLogService jobLogService)
 	{
+		_jobLogService = jobLogService;
 		_videoRepository = videoRepository;
 		_contentKnowledgeCollectionRepository = contentKnowledgeCollectionRepository;
 		_knowledgeUnitRepository = knowledgeUnitRepository;
@@ -99,6 +104,18 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 				var knowledgeUnitsById = knowledgeUnits
 					.ToDictionary(x => x.Id.Value);
 
+				var jobLog = await _jobLogService.StartAsync(
+					ProcessingJobType.LearningUnitMatching,
+					ProcessingJobTargetType.Video,
+					video.Id.Value,
+					ProcessingJobServices.RakushuApi,
+					transcript.Id.Value.ToString(),
+					cancellationToken);
+				var matchedCount = 0;
+
+				try
+				{
+
 				// 5. Matching từng Transcript Segment độc lập.
 				foreach (var segment in transcript.TranscriptSegments
 							 .OrderBy(x => x.Sequence))
@@ -161,8 +178,20 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 					{
 						cancellationToken.ThrowIfCancellationRequested();
 						segment.AddLearningUnit(learningUnit);
+						matchedCount++;
 					}
 				}
+				}
+				catch (Exception ex)
+				{
+					await _jobLogService.FailAsync(jobLog.Id, ex.Message, CancellationToken.None);
+					throw;
+				}
+
+				await _jobLogService.CompleteAsync(
+					jobLog.Id,
+					$"{{\"learningUnitCount\":{matchedCount}}}",
+					cancellationToken);
 			}
 
 			return Result.Success();

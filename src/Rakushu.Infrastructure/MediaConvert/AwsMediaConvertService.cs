@@ -3,6 +3,7 @@ using Amazon.MediaConvert.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
 using Rakushu.Infrastructure.Extensions.Options;
 using System.Collections.Concurrent;
 
@@ -77,8 +78,8 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 		throw new TimeoutException($"MediaConvert job {jobId} timed out.");
 	}
 
-	public async Task CreateClipJobAsync(
-		Guid roleLineId,
+	public async Task<string> CreateClipJobAsync(
+		Guid jobLogId,
 		string sourceKey,
 		string outputKeyWithoutExtension,
 		TimeSpan start,
@@ -88,17 +89,18 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 		var source = await GetSourceInfoAsync(sourceKey, cancellationToken);
 		var request = BuildClipRequest(sourceKey, outputKeyWithoutExtension, start, end, source, new Dictionary<string, string>
 		{
-			[RoleLineIdMetadataKey] = roleLineId.ToString(),
+			[JobLogIdMetadataKey] = jobLogId.ToString(),
 			[PurposeMetadataKey] = ClipPurpose
 		});
-		await _mediaConvert.CreateJobAsync(request, cancellationToken);
+		var response = await _mediaConvert.CreateJobAsync(request, cancellationToken);
+		return response.Job.Id;
 	}
 
 	public async Task<IReadOnlyList<NormalizeJobInfo>> ListClipJobsAsync(
-		IReadOnlyCollection<Guid> roleLineIds,
+		IReadOnlyCollection<Guid> jobLogIds,
 		CancellationToken cancellationToken)
 	{
-		var wanted = roleLineIds.Select(i => i.ToString()).ToHashSet();
+		var wanted = jobLogIds.Select(i => i.ToString()).ToHashSet();
 		var result = new List<NormalizeJobInfo>();
 		if (wanted.Count == 0)
 			return result;
@@ -120,11 +122,11 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 				{
 					if (job.UserMetadata is null
 						|| !job.UserMetadata.TryGetValue(PurposeMetadataKey, out var purpose) || purpose != ClipPurpose
-						|| !job.UserMetadata.TryGetValue(RoleLineIdMetadataKey, out var lineId)
-						|| !wanted.Contains(lineId))
+						|| !job.UserMetadata.TryGetValue(JobLogIdMetadataKey, out var logId)
+						|| !wanted.Contains(logId))
 						continue;
 
-					result.Add(new NormalizeJobInfo(Guid.Parse(lineId), mapped, job.ErrorMessage));
+					result.Add(new NormalizeJobInfo(Guid.Parse(logId), mapped, job.ErrorMessage, job.Id, SerializeJob(job)));
 				}
 
 				nextToken = response.NextToken;
@@ -367,34 +369,45 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 		};
 	}
 
-	private const string AttemptIdMetadataKey = "attemptId";
-	private const string RoleLineIdMetadataKey = "roleLineId";
+	private const string JobLogIdMetadataKey = "jobLogId";
 	private const string PurposeMetadataKey = "purpose";
 	private const string NormalizePurpose = "shadowing-normalize";
 
-	public async Task CreateNormalizeJobAsync(
-		Guid attemptId,
-		Guid roleLineId,
+	private static string SerializeJob(Job job) => JobLogSerializer.Serialize(new
+	{
+		job.Id,
+		Status = job.Status?.Value,
+		job.ErrorCode,
+		job.ErrorMessage,
+		job.CreatedAt,
+		job.UserMetadata,
+		job.OutputGroupDetails
+	})!;
+
+	public async Task<string> CreateNormalizeJobAsync(
+		Guid jobLogId,
 		string sourceKey,
 		string outputKeyWithoutExtension,
 		CancellationToken cancellationToken)
 	{
 		var request = BuildNormalizeRequest(sourceKey, outputKeyWithoutExtension, new Dictionary<string, string>
 		{
-			[AttemptIdMetadataKey] = attemptId.ToString(),
-			[RoleLineIdMetadataKey] = roleLineId.ToString(),
+			[JobLogIdMetadataKey] = jobLogId.ToString(),
 			[PurposeMetadataKey] = NormalizePurpose
 		});
-		await _mediaConvert.CreateJobAsync(request, cancellationToken);
+		var response = await _mediaConvert.CreateJobAsync(request, cancellationToken);
+		return response.Job.Id;
 	}
 
 	public async Task<IReadOnlyList<NormalizeJobInfo>> ListNormalizeJobsAsync(
-		Guid attemptId,
+		IReadOnlyCollection<Guid> jobLogIds,
 		CancellationToken cancellationToken)
 	{
 		const int maxPagesPerStatus = 25;
-		var attemptKey = attemptId.ToString();
+		var wanted = jobLogIds.Select(i => i.ToString()).ToHashSet();
 		var result = new List<NormalizeJobInfo>();
+		if (wanted.Count == 0)
+			return result;
 
 		var statuses = new (JobStatus Status, NormalizeJobStatus Mapped)[]
 		{
@@ -421,12 +434,12 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 				foreach (var job in response.Jobs ?? [])
 				{
 					if (job.UserMetadata is null
-						|| !job.UserMetadata.TryGetValue(AttemptIdMetadataKey, out var id) || id != attemptKey
-						|| !job.UserMetadata.TryGetValue(RoleLineIdMetadataKey, out var lineId)
-						|| !Guid.TryParse(lineId, out var roleLineId))
+						|| !job.UserMetadata.TryGetValue(PurposeMetadataKey, out var purpose) || purpose != NormalizePurpose
+						|| !job.UserMetadata.TryGetValue(JobLogIdMetadataKey, out var logId)
+						|| !wanted.Contains(logId))
 						continue;
 
-					result.Add(new NormalizeJobInfo(roleLineId, mapped, job.ErrorMessage));
+					result.Add(new NormalizeJobInfo(Guid.Parse(logId), mapped, job.ErrorMessage, job.Id, SerializeJob(job)));
 				}
 
 				nextToken = response.NextToken;

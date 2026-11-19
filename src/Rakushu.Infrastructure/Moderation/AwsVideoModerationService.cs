@@ -3,6 +3,7 @@ using Amazon.Rekognition.Model;
 using Amazon.TranscribeService;
 using Amazon.TranscribeService.Model;
 using Microsoft.Extensions.Options;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
 using Rakushu.Application.Abstractions.Infrastructure.Moderation;
 using Rakushu.Infrastructure.Extensions.Options;
 
@@ -18,22 +19,12 @@ internal sealed class AwsVideoModerationService(
 
 	private readonly AwsRuntimeSettings _settings = options;
 
-	public async Task<VideoModerationStatus> CheckAsync(
-		Guid videoId,
-		string storageKey,
-		CancellationToken cancellationToken = default)
-	{
-		var language = await CheckLanguageAsync(videoId, storageKey, cancellationToken);
-		var content = await CheckContentAsync(videoId, storageKey, cancellationToken);
-		return new VideoModerationStatus(language, content);
-	}
+	private static string LanguageJobName(Guid jobLogId) => $"moderation-language-{jobLogId:N}";
 
-	private static string LanguageJobName(Guid videoId) => $"moderation-language-{videoId:N}";
-
-	private async Task<LanguageModerationResult> CheckLanguageAsync(
-		Guid videoId, string storageKey, CancellationToken ct)
+	public async Task<LanguageModerationResult> CheckLanguageAsync(
+		Guid jobLogId, string storageKey, CancellationToken ct = default)
 	{
-		var jobName = LanguageJobName(videoId);
+		var jobName = LanguageJobName(jobLogId);
 
 		TranscriptionJob? job = null;
 		try
@@ -59,6 +50,7 @@ internal sealed class AwsVideoModerationService(
 		}
 
 		var status = job?.TranscriptionJobStatus?.Value;
+		var raw = JobLogSerializer.Serialize(job);
 
 		return status switch
 		{
@@ -66,17 +58,19 @@ internal sealed class AwsVideoModerationService(
 				ModerationJobState.Completed,
 				job!.LanguageCode?.Value,
 				job.IdentifiedLanguageScore,
-				null),
+				null,
+				jobName,
+				raw),
 			"FAILED" => new LanguageModerationResult(
-				ModerationJobState.Failed, null, null, job!.FailureReason),
-			_ => new LanguageModerationResult(ModerationJobState.InProgress, null, null, null)
+				ModerationJobState.Failed, null, null, job!.FailureReason, jobName, raw),
+			_ => new LanguageModerationResult(ModerationJobState.InProgress, null, null, null, jobName)
 		};
 	}
 
-	private async Task<ContentModerationResult> CheckContentAsync(
-		Guid videoId, string storageKey, CancellationToken ct)
+	public async Task<ContentModerationResult> CheckContentAsync(
+		Guid jobLogId, string storageKey, CancellationToken ct = default)
 	{
-		// ClientRequestToken makes StartContentModeration idempotent: the same video id always maps to the same job.
+		// ClientRequestToken makes StartContentModeration idempotent: the same job log id always maps to the same job.
 		var started = await rekognition.StartContentModerationAsync(new StartContentModerationRequest
 		{
 			Video = new Amazon.Rekognition.Model.Video
@@ -87,12 +81,13 @@ internal sealed class AwsVideoModerationService(
 					Name = storageKey
 				}
 			},
-			ClientRequestToken = videoId.ToString("N"),
-			JobTag = videoId.ToString("N"),
+			ClientRequestToken = jobLogId.ToString("N"),
+			JobTag = jobLogId.ToString("N"),
 			MinConfidence = MinModerationConfidence
 		}, ct);
 
 		var labels = new List<string>();
+		var responses = new List<GetContentModerationResponse>();
 		string? nextToken = null;
 
 		do
@@ -107,10 +102,13 @@ internal sealed class AwsVideoModerationService(
 			var status = response.JobStatus?.Value;
 
 			if (status == "IN_PROGRESS")
-				return new ContentModerationResult(ModerationJobState.InProgress, [], null);
+				return new ContentModerationResult(ModerationJobState.InProgress, [], null, started.JobId);
 
 			if (status == "FAILED")
-				return new ContentModerationResult(ModerationJobState.Failed, [], response.StatusMessage);
+				return new ContentModerationResult(
+					ModerationJobState.Failed, [], response.StatusMessage, started.JobId, JobLogSerializer.Serialize(response));
+
+			responses.Add(response);
 
 			labels.AddRange(response.ModerationLabels
 				.Select(m => m.ModerationLabel)
@@ -124,6 +122,8 @@ internal sealed class AwsVideoModerationService(
 		return new ContentModerationResult(
 			ModerationJobState.Completed,
 			labels.Distinct().ToList(),
-			null);
+			null,
+			started.JobId,
+			JobLogSerializer.Serialize(responses));
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
@@ -22,6 +24,7 @@ public sealed class ImportGeneratedTranscriptHandler
 	private readonly ISystemClock _systemClock;
 	private readonly IAsrService _asrService;
 	private readonly TranscriptSegmentBuilder _transcriptSegmentBuilder;
+	private readonly IProcessingJobLogService _jobLogService;
 
 	public ImportGeneratedTranscriptHandler(
 		IStorageService storageService,
@@ -30,8 +33,10 @@ public sealed class ImportGeneratedTranscriptHandler
 		IUnitOfWork unitOfWork,
 		ISystemClock systemClock,
 		IAsrService asrService,
-		TranscriptSegmentBuilder transcriptSegmentBuilder)
+		TranscriptSegmentBuilder transcriptSegmentBuilder,
+		IProcessingJobLogService jobLogService)
 	{
+		_jobLogService = jobLogService;
 		_storageService = storageService;
 		_videoRepository = videoRepository;
 		_asrOutputReader = asrOutputReader;
@@ -64,8 +69,18 @@ public sealed class ImportGeneratedTranscriptHandler
 				if (videoAsset is null)
 					continue;
 
-				// 1. Generate a stable AWS Transcribe job name.
-				var jobName = GetTranscriptionJobName(video.Id.Value);
+				// 1. Get (or create) the job log; its id defines the AWS Transcribe job name.
+				var mediaUri = _storageService.GetS3MediaUri(videoAsset.StorageKey);
+
+				var jobLog = await _jobLogService.GetOrStartAsync(
+					ProcessingJobType.Transcription,
+					ProcessingJobTargetType.Video,
+					video.Id.Value,
+					ProcessingJobServices.AwsTranscribe,
+					mediaUri,
+					cancellationToken);
+
+				var jobName = GetTranscriptionJobName(jobLog.Id);
 
 				// 3. Check whether the corresponding job already exists.
 				var job = await _asrService.GetJobAsync(
@@ -79,19 +94,27 @@ public sealed class ImportGeneratedTranscriptHandler
 						new StartTranscriptionRequest
 						(
 							jobName,
-							_storageService.GetS3MediaUri(videoAsset.StorageKey),
+							mediaUri,
 							"mp4",
 							"ja-JP",
 							GetTranscriptStorageKey(jobName)
 						),
 						cancellationToken);
 
+					await _jobLogService.SetJobLabelAsync(jobLog.Id, jobName, cancellationToken);
+
 					continue;
 				}
+
+				if (jobLog.JobLabel is null)
+					await _jobLogService.SetJobLabelAsync(jobLog.Id, jobName, cancellationToken);
 
 				// 5. Import the transcript only when the job has completed.
 				if (job.Status != "COMPLETED")
 				{
+					if (job.Status == "FAILED" && !jobLog.IsFinished)
+						await _jobLogService.FailAsync(jobLog.Id, JobLogSerializer.Serialize(job), cancellationToken);
+
 					// IN_PROGRESS: wait for the next worker execution.
 					// FAILED: log the failure reason and handle retries separately.
 					continue;
@@ -227,6 +250,11 @@ public sealed class ImportGeneratedTranscriptHandler
 
 				// 11. Attach the completed transcript to the video.
 				video.SetTranscript(transcript);
+
+				await _jobLogService.CompleteAsync(
+					jobLog.Id,
+					JobLogSerializer.Serialize(job),
+					cancellationToken);
 			}
 
 			return Result.Success();
@@ -234,9 +262,9 @@ public sealed class ImportGeneratedTranscriptHandler
 		}, cancellationToken);
 	}
 
-	private static string GetTranscriptionJobName(Guid videoId)
+	private static string GetTranscriptionJobName(Guid jobLogId)
 	{
-		return $"asr-video_id-{videoId:D}";
+		return $"asr-job_log_id-{jobLogId:D}";
 	}
 
 	private static string GetTranscriptStorageKey(string jobName)

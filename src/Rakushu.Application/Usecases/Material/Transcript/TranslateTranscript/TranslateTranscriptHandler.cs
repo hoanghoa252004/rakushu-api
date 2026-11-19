@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Subtitle;
@@ -20,13 +22,16 @@ public sealed class TranslateTranscriptHandler
 	private readonly IStorageService _storageService;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly ITranslateService _translateService;
+	private readonly IProcessingJobLogService _jobLogService;
 
 	public TranslateTranscriptHandler(
 		IStorageService storageService,
 		IVideoRepository videoRepository,
 		IUnitOfWork unitOfWork,
-		ITranslateService translateService)
+		ITranslateService translateService,
+		IProcessingJobLogService jobLogService)
 	{
+		_jobLogService = jobLogService;
 		_storageService = storageService;
 		_videoRepository = videoRepository;
 		_unitOfWork = unitOfWork;
@@ -68,16 +73,36 @@ public sealed class TranslateTranscriptHandler
 				// Xác định phương thức dịch TRƯỚC khi tìm Job.
 				if (totalCharacters <= RealtimeCharacterThreshold)
 				{
-					await TranslateRealtimeAsync(
-						segments,
-						segmentTexts,
+					var realtimeLog = await _jobLogService.StartAsync(
+						ProcessingJobType.Translation,
+						ProcessingJobTargetType.Video,
+						video.Id.Value,
+						ProcessingJobServices.AwsTranslate,
+						string.Join("\n", segmentTexts),
 						cancellationToken);
+
+					string translatedContent;
+					try
+					{
+						translatedContent = await TranslateRealtimeAsync(
+							segments,
+							segmentTexts,
+							cancellationToken);
+					}
+					catch (Exception ex)
+					{
+						await _jobLogService.FailAsync(realtimeLog.Id, ex.Message, CancellationToken.None);
+						throw;
+					}
+
+					await _jobLogService.CompleteAsync(realtimeLog.Id, translatedContent, cancellationToken);
 
 					continue;
 				}
 
 				// Chỉ những transcript vượt ngưỡng mới sử dụng Batch Job.
 				await TranslateBatchAsync(
+					video.Id.Value,
 					transcript.Id.ToString(),
 					segments,
 					segmentTexts,
@@ -101,7 +126,7 @@ public sealed class TranslateTranscriptHandler
 
 	#region Realtime Translation
 
-	private async Task TranslateRealtimeAsync(
+	private async Task<string> TranslateRealtimeAsync(
 		IReadOnlyList<Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment> segments,
 		IReadOnlyList<string> segmentTexts,
 		CancellationToken cancellationToken)
@@ -125,6 +150,8 @@ public sealed class TranslateTranscriptHandler
 			segments,
 			translatedLines,
 			cancellationToken);
+
+		return translatedContent;
 	}
 
 	#endregion
@@ -132,12 +159,21 @@ public sealed class TranslateTranscriptHandler
 	#region Batch Translation
 
 	private async Task TranslateBatchAsync(
+		Guid videoId,
 		string transcriptId,
 		IReadOnlyList<Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment> segments,
 		IReadOnlyList<string> segmentTexts,
 		CancellationToken cancellationToken)
 	{
-		var jobName = $"rakushu-transcript-{transcriptId}";
+		var jobLog = await _jobLogService.GetOrStartAsync(
+			ProcessingJobType.Translation,
+			ProcessingJobTargetType.Video,
+			videoId,
+			ProcessingJobServices.AwsTranslate,
+			$"translation/input/{transcriptId}/source.txt",
+			cancellationToken);
+
+		var jobName = $"rakushu-job-log-{jobLog.Id}";
 
 		// Chỉ tìm Job khi transcript thuộc Batch Translation.
 		var existingJob =
@@ -147,14 +183,22 @@ public sealed class TranslateTranscriptHandler
 
 		if (existingJob is null)
 		{
-			await CreateTranslationJobAsync(
+			var externalJobId = await CreateTranslationJobAsync(
 				transcriptId,
 				segmentTexts,
 				jobName,
 				cancellationToken);
 
+			await _jobLogService.SetJobLabelAsync(
+				jobLog.Id,
+				string.IsNullOrWhiteSpace(externalJobId) ? jobName : externalJobId,
+				cancellationToken);
+
 			return;
 		}
+
+		if (jobLog.JobLabel is null)
+			await _jobLogService.SetJobLabelAsync(jobLog.Id, existingJob.JobId, cancellationToken);
 
 		var job = await _translateService.GetBatchTranslationJobAsync(
 			existingJob.JobId,
@@ -177,10 +221,23 @@ public sealed class TranslateTranscriptHandler
 					job,
 					cancellationToken);
 
+				await _jobLogService.CompleteAsync(
+					jobLog.Id,
+					JobLogSerializer.Serialize(job),
+					cancellationToken);
+
 				return;
 
 			case "FAILED":
 			case "STOPPED":
+
+				if (!jobLog.IsFinished)
+				{
+					await _jobLogService.FailAsync(
+						jobLog.Id,
+						JobLogSerializer.Serialize(job),
+						cancellationToken);
+				}
 
 				// Chưa tự retry để tránh tạo Job lặp.
 				return;
@@ -190,7 +247,7 @@ public sealed class TranslateTranscriptHandler
 		}
 	}
 
-	private async Task CreateTranslationJobAsync(
+	private async Task<string?> CreateTranslationJobAsync(
 		string transcriptId,
 		IReadOnlyList<string> segmentTexts,
 		string jobName,
@@ -217,7 +274,7 @@ public sealed class TranslateTranscriptHandler
 		var inputS3Uri = _storageService.GetS3MediaUri(inputPrefix);
 		var outputS3Uri = _storageService.GetS3MediaUri(outputPrefix);
 
-		await _translateService.StartBatchTranslationJobAsync(
+		return await _translateService.StartBatchTranslationJobAsync(
 			inputS3Uri,
 			outputS3Uri,
 			SourceLanguageCode,

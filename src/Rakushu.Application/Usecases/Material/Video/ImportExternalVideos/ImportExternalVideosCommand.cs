@@ -1,5 +1,7 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
 using Rakushu.Application.Abstractions.Infrastructure.VideoImport;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Material.Video;
@@ -12,6 +14,7 @@ public sealed record ImportExternalVideosCommand(int BatchSize = 1) : IRequest<R
 internal sealed class ImportExternalVideosHandler(
 	IVideoRepository videoRepository,
 	IVideoImportService videoImportService,
+	IProcessingJobLogService jobLogService,
 	IUnitOfWork unitOfWork)
 	: IRequestHandler<ImportExternalVideosCommand, Result<int>>
 {
@@ -24,6 +27,7 @@ internal sealed class ImportExternalVideosHandler(
 			var imported = 0;
 			foreach (var video in videos)
 			{
+				Guid? jobLogId = null;
 				try
 				{
 					if (string.IsNullOrWhiteSpace(video.SourceUrl))
@@ -32,7 +36,20 @@ internal sealed class ImportExternalVideosHandler(
 						continue;
 					}
 
+					jobLogId = (await jobLogService.StartAsync(
+						ProcessingJobType.YoutubeImport,
+						ProcessingJobTargetType.Video,
+						video.Id.Value,
+						ProcessingJobServices.YtDlp,
+						video.SourceUrl,
+						cancellationToken)).Id;
+
 					var importResult = await videoImportService.ImportAsync(video.SourceUrl, cancellationToken);
+
+					await jobLogService.CompleteAsync(
+						jobLogId.Value,
+						JobLogSerializer.Serialize(importResult),
+						cancellationToken);
 
 					var mediaAsset = MediaAsset.Create(
 						video.Id,
@@ -49,10 +66,14 @@ internal sealed class ImportExternalVideosHandler(
 				}
 				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 				{
+					if (jobLogId is not null)
+						await jobLogService.FailAsync(jobLogId.Value, "Cancelled", CancellationToken.None);
 					throw;
 				}
 				catch (Exception ex)
 				{
+					if (jobLogId is not null)
+						await jobLogService.FailAsync(jobLogId.Value, ex.Message, CancellationToken.None);
 					Console.WriteLine($"=== ERROR: {ex.Message}");
 					Console.WriteLine($"=== EXCEPTION: {ex}");
 					Console.WriteLine($"=== STACK TRACE: {ex.StackTrace}");
