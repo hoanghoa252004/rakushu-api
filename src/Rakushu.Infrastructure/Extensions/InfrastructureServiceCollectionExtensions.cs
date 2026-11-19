@@ -62,7 +62,6 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<ISystemClock, SystemClock>();
 
 		// PAYMENT
-		services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.ConfigurationSection));
 		services.AddScoped<IPaymentService, VnPayService>();
 
 		// PAYMENT GATEWAY

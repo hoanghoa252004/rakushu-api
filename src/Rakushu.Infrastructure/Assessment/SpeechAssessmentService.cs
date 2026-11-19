@@ -1,5 +1,6 @@
 using Amazon.MediaConvert;
 using Amazon.MediaConvert.Model;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Rakushu.Application.Abstractions.Infrastructure.Assessment;
 using Rakushu.Infrastructure.Extensions.Options;
@@ -12,9 +13,10 @@ namespace Rakushu.Infrastructure.Assessment;
 public sealed class SpeechAssessmentService(
 	HttpClient httpClient,
 	IAmazonMediaConvert mediaConvert,
-	IOptions<AwsSettings> options) : ISpeechAssessmentService
+	IConfiguration configuration,
+	AzureRuntimeSettings options) : ISpeechAssessmentService
 {
-	private readonly AwsSettings _settings = options.Value;
+	private readonly AzureRuntimeSettings _settings = options;
 
 	private const int RequiredSampleRate = 16000;
 	private const int RequiredChannels = 1;
@@ -152,7 +154,7 @@ public sealed class SpeechAssessmentService(
 	new StringContent("true"),
 	"fallback_if_no_alignment");
 
-		var baseUrl = _settings.PitchAssessmentServiceBaseUrl.TrimEnd('/');
+		var baseUrl = configuration["PitchAssessmentServiceBaseUrl"];
 
 		using var response = await httpClient.PostAsync(
 			$"{baseUrl}/compare",

@@ -224,6 +224,93 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("message_embeddings", "assistant");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ConfigKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("config_key");
+
+                    b.Property<string>("ConfigValue")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("config_value");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("data_type");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("VersionInUsed")
+                        .HasColumnType("integer")
+                        .HasColumnName("version_in_used");
+
+                    b.HasKey("Id")
+                        .HasName("pk_system_configurations");
+
+                    b.HasIndex("ConfigKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_system_configurations_config_key");
+
+                    b.ToTable("system_configurations", "configuration");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ConfigValue")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("config_value");
+
+                    b.Property<Guid>("ConfigurationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("configuration_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_system_configuration_histories");
+
+                    b.HasIndex("ConfigurationId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_system_configuration_histories_active")
+                        .HasFilter("is_active = true");
+
+                    b.HasIndex("ConfigurationId", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_system_configuration_histories_configuration_id_version");
+
+                    b.ToTable("system_configuration_histories", "configuration");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Curation.IssueCategory.IssueCategory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3282,6 +3369,18 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Message");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration", "Configuration")
+                        .WithMany("Histories")
+                        .HasForeignKey("ConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_system_configuration_histories_system_configurations_config");
+
+                    b.Navigation("Configuration");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Curation.Report.IssueDetail.IssueDetail", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Curation.Report.Report", "Report")
@@ -4232,6 +4331,11 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("Attachment");
 
                     b.Navigation("Embedding");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration", b =>
+                {
+                    b.Navigation("Histories");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Curation.Report.Report", b =>

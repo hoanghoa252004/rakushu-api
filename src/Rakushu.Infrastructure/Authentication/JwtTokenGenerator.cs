@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Abstractions.Infrastructure.Configuration;
+using Rakushu.Domain.Entities.Configuration.SystemConfiguration;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Infrastructure.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,10 +15,12 @@ namespace Rakushu.Infrastructure.Authentication;
 public sealed class JwtTokenGenerator : IJwtTokenGenerator
 {
 	private readonly JwtSettings _jwtSettings;
+	private readonly ISystemConfigurationProvider _configurationProvider;
 
-	public JwtTokenGenerator(IOptions<JwtSettings> jwtOptions)
+	public JwtTokenGenerator(IOptions<JwtSettings> jwtOptions, ISystemConfigurationProvider configurationProvider)
 	{
 		_jwtSettings = jwtOptions.Value;
+		_configurationProvider = configurationProvider;
 	}
 
 	public string GenerateAccessToken(UserId userId, string role, DateTimeOffset expiredDate)
@@ -61,7 +65,9 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
 		return hashedToken;
 	}
 
-	public int GetAccessTokenExpirationMinutes() => _jwtSettings.AccessTokenExpirationMinutes;
+	public int GetAccessTokenExpirationMinutes()
+		=> _configurationProvider.GetInt(SystemConfigurationKey.JwtSettings_AccessTokenExpirationMinutes);
 
-	public int GetRefreshTokenExpirationDays() => _jwtSettings.RefreshTokenExpirationDays;
+	public int GetRefreshTokenExpirationDays()
+		=> _configurationProvider.GetInt(SystemConfigurationKey.JwtSettings_RefreshTokenExpirationDays);
 }

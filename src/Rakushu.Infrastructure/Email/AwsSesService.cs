@@ -17,12 +17,12 @@ namespace Rakushu.Infrastructure.Email;
 internal class AwsSesService : IEmailService
 {
 	private readonly IAmazonSimpleEmailService _ses;
-	private readonly AwsSettings _emailSettings;
+	private readonly AwsRuntimeSettings _emailSettings;
 
-	public AwsSesService(IAmazonSimpleEmailService ses, IOptions<AwsSettings> options)
+	public AwsSesService(IAmazonSimpleEmailService ses, AwsRuntimeSettings options)
 	{
 		_ses = ses;
-		_emailSettings = options.Value;
+		_emailSettings = options;
 	}
 
 	public async Task<Result> SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)

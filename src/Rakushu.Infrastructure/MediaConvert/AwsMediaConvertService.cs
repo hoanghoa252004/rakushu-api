@@ -1,9 +1,10 @@
 using Amazon.MediaConvert;
-using System.Collections.Concurrent;
 using Amazon.MediaConvert.Model;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
 using Rakushu.Infrastructure.Extensions.Options;
+using System.Collections.Concurrent;
 
 namespace Rakushu.Infrastructure.AudioClips;
 
@@ -18,12 +19,14 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 	private static readonly SemaphoreSlim JobSlots = new(MaxConcurrentJobs, MaxConcurrentJobs);
 
 	private readonly IAmazonMediaConvert _mediaConvert;
-	private readonly AwsSettings _settings;
+	private readonly AwsRuntimeSettings _settings;
+	private readonly IConfiguration _configuration;
 
-	public AwsMediaConvertService(IAmazonMediaConvert mediaConvert, IOptions<AwsSettings> options)
+	public AwsMediaConvertService(IAmazonMediaConvert mediaConvert, AwsRuntimeSettings options, IConfiguration configuration)
 	{
 		_mediaConvert = mediaConvert;
-		_settings = options.Value;
+		_settings = options;
+		_configuration = configuration;
 	}
 
 	public async Task<string> ExtractClipAsync(
@@ -158,7 +161,7 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 		var request = new CreateJobRequest
 		{
 			UserMetadata = userMetadata,
-			Role = _settings.MediaConvertRoleArn,
+			Role = _configuration["AwsSettings:MediaConvertRoleArn"],
 			Settings = new JobSettings
 			{
 				Inputs =
@@ -288,7 +291,7 @@ internal sealed class AwsMediaConvertService : IMediaConvertService
 
 		return new CreateJobRequest
 		{
-			Role = _settings.MediaConvertRoleArn,
+			Role = _configuration["AwsSettings:MediaConvertRoleArn"],
 			UserMetadata = userMetadata,
 
 			Settings = new JobSettings

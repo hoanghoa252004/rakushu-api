@@ -11,12 +11,12 @@ namespace Rakushu.Infrastructure.Moderation;
 internal sealed class AwsVideoModerationService(
 	IAmazonTranscribeService transcribe,
 	IAmazonRekognition rekognition,
-	IOptions<AwsSettings> options) : IVideoModerationService
+	AwsRuntimeSettings options) : IVideoModerationService
 {
 	private const float MinModerationConfidence = 75f;
 	private static readonly List<string> LanguageOptions = ["ja-JP", "en-US", "vi-VN", "ko-KR", "zh-CN"];
 
-	private readonly AwsSettings _settings = options.Value;
+	private readonly AwsRuntimeSettings _settings = options;
 
 	public async Task<VideoModerationStatus> CheckAsync(
 		Guid videoId,

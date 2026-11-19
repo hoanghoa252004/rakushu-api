@@ -111,10 +111,13 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<TranscriptSpeaker> TranscriptSpeakers => Set<TranscriptSpeaker>();
 	public DbSet<Video> Videos => Set<Video>();
 
+	// Configuration
+	public DbSet<Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration> SystemConfigurations => Set<Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration>();
+	public DbSet<Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory> SystemConfigurationHistories => Set<Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory>();
+
 	// Subscriptions
 	public DbSet<Entitlement> Entitlements => Set<Entitlement>();
-	public DbSet<Feature> Features => Set<Feature>();
-	public DbSet<Payment> Payments => Set<Payment>();
+	public DbSet<Feature> Features => Set<Feature>();	public DbSet<Payment> Payments => Set<Payment>();
 	public DbSet<Plan> Plans => Set<Plan>();
 	public DbSet<Subscription> Subscriptions => Set<Subscription>();
 	public DbSet<SubscriptionUsage> SubscriptionUsages => Set<SubscriptionUsage>();

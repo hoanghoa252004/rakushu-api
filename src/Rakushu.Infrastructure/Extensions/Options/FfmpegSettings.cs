@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Rakushu.Infrastructure.Extensions.Options;
 
-public sealed class FfmpegSettings
-{
-	public const string ConfigurationSection = nameof(FfmpegSettings);
-	public string ExecutablePath { get; set; } = string.Empty;
-}
+//public sealed class FfmpegSettings
+//{
+//	public const string ConfigurationSection = nameof(FfmpegSettings);
+//	public string ExecutablePath { get; set; } = string.Empty;
+//}

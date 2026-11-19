@@ -15,14 +15,14 @@ namespace Rakushu.Infrastructure.Rag;
 public sealed class AwsBedrockEmbeddingService : IEmbeddingService
 {
 	private readonly IAmazonBedrockRuntime _embeddingClient;
-	private readonly AwsSettings _awsSettings;
+	private readonly AwsRuntimeSettings _awsSettings;
 
 	public string ModelId => _awsSettings.BedrockModelId;
 
-	public AwsBedrockEmbeddingService(IAmazonBedrockRuntime embeddingClient, IOptions<AwsSettings> awsSettings)
+	public AwsBedrockEmbeddingService(IAmazonBedrockRuntime embeddingClient, AwsRuntimeSettings awsSettings)
 	{
 		_embeddingClient = embeddingClient;
-		_awsSettings = awsSettings.Value;
+		_awsSettings = awsSettings;
 	}
 
 	public async Task<float[]> GenerateEmbeddingAsync(

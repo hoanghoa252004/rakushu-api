@@ -1,6 +1,7 @@
 ﻿using Amazon.TranscribeService.Model;
 using Amazon.Translate;
 using Amazon.Translate.Model;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Infrastructure.Extensions.Options;
@@ -10,14 +11,17 @@ namespace Rakushu.Infrastructure.Translate;
 internal sealed class AwsTranslateService : ITranslateService
 {
 	private readonly IAmazonTranslate _translate;
-	private readonly AwsSettings _awsSettings;
+	private readonly AwsRuntimeSettings _awsSettings;
+	private readonly IConfiguration _configuration;
 
 	public AwsTranslateService(
 		IAmazonTranslate translate,
-		IOptions<AwsSettings> options)
+		AwsRuntimeSettings options,
+		IConfiguration configuration)
 	{
 		_translate = translate;
-		_awsSettings = options.Value;
+		_awsSettings = options;
+		_configuration = configuration;
 	}
 
 	public async Task<string> StartBatchTranslationJobAsync(
@@ -49,7 +53,7 @@ internal sealed class AwsTranslateService : ITranslateService
 				targetLanguageCode
 			},
 
-			DataAccessRoleArn = _awsSettings.TranslateDataAccessRoleArn
+			DataAccessRoleArn = _configuration["AwsSettings:TranslateDataAccessRoleArn"]
 		};
 
 		var response = await _translate.StartTextTranslationJobAsync(

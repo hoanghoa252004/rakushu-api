@@ -137,7 +137,9 @@ internal static class AwsExtention
 					Amazon.RegionEndpoint.APSoutheast1));
 		}
 
-		services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
+		//services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
+		services.AddScoped<AwsRuntimeSettings>();
+		services.AddScoped<AzureRuntimeSettings>();
 
 		// SES
 		services.AddScoped<IEmailService, AwsSesService>();
@@ -165,7 +167,7 @@ internal static class AwsExtention
 				.GetRequiredService<IConfiguration>();
 
 			//var baseUrl = "http://localhost:8000";
-			var baseUrl = configuration["AwsSettings:NlpBaseUrl"]
+			var baseUrl = configuration["NlpBaseUrl"]
 				?? throw new InvalidOperationException(
 					"NlpService:BaseUrl is not configured.");
 
