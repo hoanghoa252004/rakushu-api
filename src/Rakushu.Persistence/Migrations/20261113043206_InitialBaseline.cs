@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Rakushu.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class DomainModel : Migration
+    public partial class InitialBaseline : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,6 +22,12 @@ namespace Rakushu.Persistence.Migrations
 
             migrationBuilder.EnsureSchema(
                 name: "subscription");
+
+            migrationBuilder.EnsureSchema(
+                name: "srs");
+
+            migrationBuilder.EnsureSchema(
+                name: "curation");
 
             migrationBuilder.EnsureSchema(
                 name: "shadowing");
@@ -80,6 +86,26 @@ namespace Rakushu.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_features", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "issue_categories",
+                schema: "curation",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    target_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    target_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    current_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
+                    threshold = table.Column<int>(type: "integer", nullable: false, defaultValue: 3),
+                    last_reported_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_issue_categories", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -158,6 +184,44 @@ namespace Rakushu.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_proficiency_levels", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "question_types",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_question_types", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "reports",
+                schema: "curation",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    target_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    target_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    curator_notes = table.Column<string>(type: "text", nullable: true),
+                    resolved_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_reports", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -333,6 +397,7 @@ namespace Rakushu.Persistence.Migrations
                     meaning = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     japanese_meaning = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     knowledge_unit_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
@@ -415,6 +480,63 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "flashcard_sessions",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_flashcard_sessions", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_flashcard_sessions_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "issue_details",
+                schema: "curation",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    target_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    target_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    learner_feedback = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    report_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_issue_details", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_issue_details_reports_report_id",
+                        column: x => x.report_id,
+                        principalSchema: "curation",
+                        principalTable: "reports",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_issue_details_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "payments",
                 schema: "subscription",
                 columns: table => new
@@ -482,6 +604,28 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "quizzes",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    total_questions = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_quizzes", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_quizzes_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "refresh_tokens",
                 schema: "identity",
                 columns: table => new
@@ -534,6 +678,74 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "questions",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    knowledge_meaning_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    question_type_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    question = table.Column<string>(type: "text", nullable: false),
+                    answers = table.Column<string>(type: "jsonb", nullable: false),
+                    correct_answer = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    explanation = table.Column<string>(type: "text", nullable: true),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    media_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "NONE"),
+                    media_url = table.Column<string>(type: "text", nullable: true),
+                    media_metadata = table.Column<string>(type: "jsonb", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_questions", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_questions_knowledge_meanings_knowledge_meaning_id",
+                        column: x => x.knowledge_meaning_id,
+                        principalSchema: "knowledge",
+                        principalTable: "knowledge_meanings",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_questions_question_types_question_type_id",
+                        column: x => x.question_type_id,
+                        principalSchema: "srs",
+                        principalTable: "question_types",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "saved_items",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    knowledge_meaning_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    saved_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_saved_items", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_saved_items_knowledge_meanings_knowledge_meaning_id",
+                        column: x => x.knowledge_meaning_id,
+                        principalSchema: "knowledge",
+                        principalTable: "knowledge_meanings",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_saved_items_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -636,6 +848,45 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "quiz_attempts",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    quiz_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    mode = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    total_items = table.Column<int>(type: "integer", nullable: false),
+                    answered_items = table.Column<int>(type: "integer", nullable: false),
+                    correct_items = table.Column<int>(type: "integer", nullable: false),
+                    score = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
+                    expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    is_evaluated = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_quiz_attempts", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_quiz_attempts_quizzes_quiz_id",
+                        column: x => x.quiz_id,
+                        principalSchema: "srs",
+                        principalTable: "quizzes",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_quiz_attempts_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "videos",
                 schema: "material",
                 columns: table => new
@@ -679,6 +930,129 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "flashcard_session_cards",
+                schema: "srs",
+                columns: table => new
+                {
+                    flashcard_session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    saved_item_id = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_flashcard_session_cards", x => new { x.flashcard_session_id, x.saved_item_id });
+                    table.ForeignKey(
+                        name: "fk_flashcard_session_cards_flashcard_sessions_flashcard_sessio",
+                        column: x => x.flashcard_session_id,
+                        principalSchema: "srs",
+                        principalTable: "flashcard_sessions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_flashcard_session_cards_saved_items_saved_item_id",
+                        column: x => x.saved_item_id,
+                        principalSchema: "srs",
+                        principalTable: "saved_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "flashcard_session_items",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    flashcard_session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    saved_item_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    rating = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    reviewed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_flashcard_session_items", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_flashcard_session_items_flashcard_sessions_flashcard_sessio",
+                        column: x => x.flashcard_session_id,
+                        principalSchema: "srs",
+                        principalTable: "flashcard_sessions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_flashcard_session_items_saved_items_saved_item_id",
+                        column: x => x.saved_item_id,
+                        principalSchema: "srs",
+                        principalTable: "saved_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "quiz_items",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    quiz_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    saved_item_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    question_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    sequence = table.Column<int>(type: "integer", nullable: false),
+                    question = table.Column<string>(type: "text", nullable: false),
+                    answers = table.Column<string>(type: "jsonb", nullable: false),
+                    correct_answer = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    media_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "NONE"),
+                    media_url = table.Column<string>(type: "text", nullable: true),
+                    media_metadata = table.Column<string>(type: "jsonb", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_quiz_items", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_quiz_items_questions_bank_question_id",
+                        column: x => x.question_id,
+                        principalSchema: "srs",
+                        principalTable: "questions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_quiz_items_quizzes_quiz_id",
+                        column: x => x.quiz_id,
+                        principalSchema: "srs",
+                        principalTable: "quizzes",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_quiz_items_saved_items_saved_item_id",
+                        column: x => x.saved_item_id,
+                        principalSchema: "srs",
+                        principalTable: "saved_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "srs_schedules",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    saved_item_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    due_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_srs_schedules", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_srs_schedules_saved_items_saved_item_id",
+                        column: x => x.saved_item_id,
+                        principalSchema: "srs",
+                        principalTable: "saved_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -770,6 +1144,39 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "quiz_attempt_items",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    quiz_attempt_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    question_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    selected_answer = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    is_correct = table.Column<bool>(type: "boolean", nullable: true),
+                    time_spent_ms = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    feedback = table.Column<string>(type: "text", nullable: true),
+                    answered_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_quiz_attempt_items", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_quiz_attempt_items_quiz_attempts_quiz_attempt_id",
+                        column: x => x.quiz_attempt_id,
+                        principalSchema: "srs",
+                        principalTable: "quiz_attempts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_quiz_attempt_items_quiz_items_question_id",
+                        column: x => x.question_id,
+                        principalSchema: "srs",
+                        principalTable: "quiz_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "transcript_speakers",
                 schema: "material",
                 columns: table => new
@@ -799,6 +1206,49 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "srs_schedule_details",
+                schema: "srs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    srs_schedule_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    quiz_attempt_item_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    flashcard_session_item_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    review_number = table.Column<int>(type: "integer", nullable: false),
+                    quality = table.Column<int>(type: "integer", nullable: false),
+                    interval_days = table.Column<int>(type: "integer", nullable: false),
+                    easiness_factor = table.Column<double>(type: "double precision", nullable: false),
+                    repetitions = table.Column<int>(type: "integer", nullable: false),
+                    lapses = table.Column<int>(type: "integer", nullable: false),
+                    reviewed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_srs_schedule_details", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_srs_schedule_details_flashcard_session_items_flashcard_sess",
+                        column: x => x.flashcard_session_item_id,
+                        principalSchema: "srs",
+                        principalTable: "flashcard_session_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_srs_schedule_details_quiz_attempt_items_quiz_attempt_item_id",
+                        column: x => x.quiz_attempt_item_id,
+                        principalSchema: "srs",
+                        principalTable: "quiz_attempt_items",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_srs_schedule_details_srs_schedules_srs_schedule_id",
+                        column: x => x.srs_schedule_id,
+                        principalSchema: "srs",
+                        principalTable: "srs_schedules",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "transcript_segments",
                 schema: "material",
                 columns: table => new
@@ -809,7 +1259,7 @@ namespace Rakushu.Persistence.Migrations
                     start_time = table.Column<TimeSpan>(type: "interval", nullable: false),
                     end_time = table.Column<TimeSpan>(type: "interval", nullable: false),
                     transcript_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    transcript_speaker_id = table.Column<Guid>(type: "uuid", nullable: false)
+                    transcript_speaker_id = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -820,7 +1270,7 @@ namespace Rakushu.Persistence.Migrations
                         principalSchema: "material",
                         principalTable: "transcript_speakers",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_transcript_segments_transcripts_transcript_id",
                         column: x => x.transcript_id,
@@ -885,6 +1335,54 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "transcript_segments",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_materials",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    start_transcript_segment_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    end_transcript_segment_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    video_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    version = table.Column<int>(type: "integer", nullable: false),
+                    created_by_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_materials", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_materials_transcript_segments_end_transcript_segm",
+                        column: x => x.end_transcript_segment_id,
+                        principalSchema: "material",
+                        principalTable: "transcript_segments",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_shadowing_materials_transcript_segments_start_transcript_se",
+                        column: x => x.start_transcript_segment_id,
+                        principalSchema: "material",
+                        principalTable: "transcript_segments",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_shadowing_materials_users_created_by_id",
+                        column: x => x.created_by_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_shadowing_materials_videos_video_id",
+                        column: x => x.video_id,
+                        principalSchema: "material",
+                        principalTable: "videos",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -979,6 +1477,327 @@ namespace Rakushu.Persistence.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "shadowing_roles",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_material_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    speaker_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    sort_order = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_roles", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_roles_shadowing_materials_shadowing_material_id",
+                        column: x => x.shadowing_material_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_materials",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_shadowing_roles_speakers_speaker_id",
+                        column: x => x.speaker_id,
+                        principalSchema: "shadowing",
+                        principalTable: "speakers",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_sessions",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_material_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    host_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    visibility = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    scheduled_start_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    ended_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_sessions", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_sessions_shadowing_materials_shadowing_material_id",
+                        column: x => x.shadowing_material_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_materials",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_shadowing_sessions_users_host_id",
+                        column: x => x.host_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_role_lines",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_role_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    sort_order = table.Column<int>(type: "integer", nullable: false),
+                    text = table.Column<string>(type: "text", nullable: false),
+                    start_time = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    end_time = table.Column<TimeSpan>(type: "interval", nullable: false),
+                    audio_key = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_role_lines", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_role_lines_shadowing_roles_shadowing_role_id",
+                        column: x => x.shadowing_role_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_roles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_session_invitations",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    host_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    learner_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    sent_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    expired_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    responsed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_session_invitations", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_session_invitations_shadowing_sessions_shadowing_",
+                        column: x => x.shadowing_session_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_sessions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_shadowing_session_invitations_users_host_id",
+                        column: x => x.host_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_shadowing_session_invitations_users_learner_id",
+                        column: x => x.learner_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_role_line_transcript_segment",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    shadowing_role_line_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    transcript_segment_id = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_role_line_transcript_segment", x => new { x.shadowing_role_line_id, x.transcript_segment_id });
+                    table.ForeignKey(
+                        name: "fk_shadowing_role_line_transcript_segment_shadowing_role_lines",
+                        column: x => x.shadowing_role_line_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_role_lines",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_shadowing_role_line_transcript_segment_transcript_segments_",
+                        column: x => x.transcript_segment_id,
+                        principalSchema: "material",
+                        principalTable: "transcript_segments",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_session_members",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_role_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    member_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    join_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    shadowing_session_invitation_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    joined_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_session_members", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_session_members_shadowing_roles_shadowing_role_id",
+                        column: x => x.shadowing_role_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_roles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_shadowing_session_members_shadowing_session_invitations_sha",
+                        column: x => x.shadowing_session_invitation_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_session_invitations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_shadowing_session_members_shadowing_sessions_shadowing_sess",
+                        column: x => x.shadowing_session_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_sessions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_shadowing_session_members_users_member_id",
+                        column: x => x.member_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_attempts",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_session_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_session_member_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    started_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    completed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_attempts", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_attempts_shadowing_session_members_shadowing_sess",
+                        column: x => x.shadowing_session_member_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_session_members",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_shadowing_attempts_shadowing_sessions_shadowing_session_id",
+                        column: x => x.shadowing_session_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_sessions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_assessments",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_attempt_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    overall_score = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
+                    overal_feedback = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_assessments", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_assessments_shadowing_attempts_shadowing_attempt_",
+                        column: x => x.shadowing_attempt_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_attempts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_attempt_details",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_attempt_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_role_line_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    audio_key = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    duration_ms = table.Column<long>(type: "bigint", nullable: true),
+                    is_skipped = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    submitted_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_attempt_details", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_attempt_details_shadowing_attempts_shadowing_atte",
+                        column: x => x.shadowing_attempt_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_attempts",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_shadowing_attempt_details_shadowing_role_lines_shadowing_ro",
+                        column: x => x.shadowing_role_line_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_role_lines",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shadowing_assessment_details",
+                schema: "shadowing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_assessment_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    shadowing_attempt_detail_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    accuracy_score = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
+                    accuracy_assessment_response = table.Column<string>(type: "text", nullable: true),
+                    pitch_similarity_score = table.Column<decimal>(type: "numeric(5,2)", precision: 5, scale: 2, nullable: true),
+                    pitch_similarity_assessment_response = table.Column<string>(type: "text", nullable: true),
+                    feedback = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_shadowing_assessment_details", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_shadowing_assessment_details_shadowing_assessments_shadowin",
+                        column: x => x.shadowing_assessment_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_assessments",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_shadowing_assessment_details_shadowing_attempt_details_shad",
+                        column: x => x.shadowing_attempt_detail_id,
+                        principalSchema: "shadowing",
+                        principalTable: "shadowing_attempt_details",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "ix_bunsetsu_transcript_segment_id",
                 schema: "material",
@@ -1045,6 +1864,30 @@ namespace Rakushu.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_flashcard_session_cards_saved_item_id",
+                schema: "srs",
+                table: "flashcard_session_cards",
+                column: "saved_item_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_flashcard_session_items_flashcard_session_id",
+                schema: "srs",
+                table: "flashcard_session_items",
+                column: "flashcard_session_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_flashcard_session_items_saved_item_id",
+                schema: "srs",
+                table: "flashcard_session_items",
+                column: "saved_item_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_flashcard_sessions_user_id",
+                schema: "srs",
+                table: "flashcard_sessions",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_interests_content_category_id",
                 schema: "identity",
                 table: "interests",
@@ -1056,6 +1899,31 @@ namespace Rakushu.Persistence.Migrations
                 table: "interests",
                 columns: new[] { "profile_id", "content_category_id" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_issue_categories_target_type_target_id_category",
+                schema: "curation",
+                table: "issue_categories",
+                columns: new[] { "target_type", "target_id", "category" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_issue_details_report_id",
+                schema: "curation",
+                table: "issue_details",
+                column: "report_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_issue_details_target_type_target_id_category",
+                schema: "curation",
+                table: "issue_details",
+                columns: new[] { "target_type", "target_id", "category" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_issue_details_user_id",
+                schema: "curation",
+                table: "issue_details",
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_japanese_part_of_speeches_code",
@@ -1165,6 +2033,73 @@ namespace Rakushu.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_question_types_code",
+                schema: "srs",
+                table: "question_types",
+                column: "code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_questions_knowledge_meaning_id",
+                schema: "srs",
+                table: "questions",
+                column: "knowledge_meaning_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_questions_question_type_id",
+                schema: "srs",
+                table: "questions",
+                column: "question_type_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_attempt_items_question_id",
+                schema: "srs",
+                table: "quiz_attempt_items",
+                column: "question_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_attempt_items_quiz_attempt_id",
+                schema: "srs",
+                table: "quiz_attempt_items",
+                column: "quiz_attempt_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_attempts_quiz_id",
+                schema: "srs",
+                table: "quiz_attempts",
+                column: "quiz_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_attempts_user_id",
+                schema: "srs",
+                table: "quiz_attempts",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_items_bank_question_id",
+                schema: "srs",
+                table: "quiz_items",
+                column: "question_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_items_quiz_id",
+                schema: "srs",
+                table: "quiz_items",
+                column: "quiz_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_items_saved_item_id",
+                schema: "srs",
+                table: "quiz_items",
+                column: "saved_item_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quizzes_user_id",
+                schema: "srs",
+                table: "quizzes",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_refresh_tokens_token_hash",
                 schema: "identity",
                 table: "refresh_tokens",
@@ -1178,10 +2113,35 @@ namespace Rakushu.Persistence.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_reports_status",
+                schema: "curation",
+                table: "reports",
+                column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_reports_target_type_target_id_category",
+                schema: "curation",
+                table: "reports",
+                columns: new[] { "target_type", "target_id", "category" });
+
+            migrationBuilder.CreateIndex(
                 name: "ix_roles_code",
                 schema: "identity",
                 table: "roles",
                 column: "code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_saved_items_knowledge_meaning_id",
+                schema: "srs",
+                table: "saved_items",
+                column: "knowledge_meaning_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_saved_items_user_id_knowledge_meaning_id",
+                schema: "srs",
+                table: "saved_items",
+                columns: new[] { "user_id", "knowledge_meaning_id" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1198,10 +2158,197 @@ namespace Rakushu.Persistence.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_shadowing_assessment_details_shadowing_assessment_id_shadow",
+                schema: "shadowing",
+                table: "shadowing_assessment_details",
+                columns: new[] { "shadowing_assessment_id", "shadowing_attempt_detail_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_assessment_details_shadowing_attempt_detail_id",
+                schema: "shadowing",
+                table: "shadowing_assessment_details",
+                column: "shadowing_attempt_detail_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_assessments_shadowing_attempt_id",
+                schema: "shadowing",
+                table: "shadowing_assessments",
+                column: "shadowing_attempt_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_attempt_details_shadowing_attempt_id_shadowing_ro",
+                schema: "shadowing",
+                table: "shadowing_attempt_details",
+                columns: new[] { "shadowing_attempt_id", "shadowing_role_line_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_attempt_details_shadowing_role_line_id",
+                schema: "shadowing",
+                table: "shadowing_attempt_details",
+                column: "shadowing_role_line_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_attempts_shadowing_session_id",
+                schema: "shadowing",
+                table: "shadowing_attempts",
+                column: "shadowing_session_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_attempts_shadowing_session_member_id",
+                schema: "shadowing",
+                table: "shadowing_attempts",
+                column: "shadowing_session_member_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_materials_created_by_id",
+                schema: "shadowing",
+                table: "shadowing_materials",
+                column: "created_by_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_materials_end_transcript_segment_id",
+                schema: "shadowing",
+                table: "shadowing_materials",
+                column: "end_transcript_segment_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_materials_start_transcript_segment_id",
+                schema: "shadowing",
+                table: "shadowing_materials",
+                column: "start_transcript_segment_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_materials_video_id_version",
+                schema: "shadowing",
+                table: "shadowing_materials",
+                columns: new[] { "video_id", "version" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_role_line_transcript_segment_transcript_segment_id",
+                schema: "shadowing",
+                table: "shadowing_role_line_transcript_segment",
+                column: "transcript_segment_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_role_lines_shadowing_role_id_sort_order",
+                schema: "shadowing",
+                table: "shadowing_role_lines",
+                columns: new[] { "shadowing_role_id", "sort_order" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_roles_shadowing_material_id_sort_order",
+                schema: "shadowing",
+                table: "shadowing_roles",
+                columns: new[] { "shadowing_material_id", "sort_order" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_roles_shadowing_material_id_speaker_id",
+                schema: "shadowing",
+                table: "shadowing_roles",
+                columns: new[] { "shadowing_material_id", "speaker_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_roles_speaker_id",
+                schema: "shadowing",
+                table: "shadowing_roles",
+                column: "speaker_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_session_invitations_host_id",
+                schema: "shadowing",
+                table: "shadowing_session_invitations",
+                column: "host_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_session_invitations_learner_id",
+                schema: "shadowing",
+                table: "shadowing_session_invitations",
+                column: "learner_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_session_invitations_shadowing_session_id_learner_",
+                schema: "shadowing",
+                table: "shadowing_session_invitations",
+                columns: new[] { "shadowing_session_id", "learner_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_session_members_member_id",
+                schema: "shadowing",
+                table: "shadowing_session_members",
+                column: "member_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_session_members_shadowing_role_id",
+                schema: "shadowing",
+                table: "shadowing_session_members",
+                column: "shadowing_role_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_session_members_shadowing_session_id_member_id",
+                schema: "shadowing",
+                table: "shadowing_session_members",
+                columns: new[] { "shadowing_session_id", "member_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_session_members_shadowing_session_invitation_id",
+                schema: "shadowing",
+                table: "shadowing_session_members",
+                column: "shadowing_session_invitation_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_sessions_host_id",
+                schema: "shadowing",
+                table: "shadowing_sessions",
+                column: "host_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_shadowing_sessions_shadowing_material_id",
+                schema: "shadowing",
+                table: "shadowing_sessions",
+                column: "shadowing_material_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_speakers_code",
                 schema: "shadowing",
                 table: "speakers",
                 column: "code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_srs_schedule_details_flashcard_session_item_id",
+                schema: "srs",
+                table: "srs_schedule_details",
+                column: "flashcard_session_item_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_srs_schedule_details_quiz_attempt_item_id",
+                schema: "srs",
+                table: "srs_schedule_details",
+                column: "quiz_attempt_item_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_srs_schedule_details_srs_schedule_id",
+                schema: "srs",
+                table: "srs_schedule_details",
+                column: "srs_schedule_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_srs_schedules_due_at",
+                schema: "srs",
+                table: "srs_schedules",
+                column: "due_at");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_srs_schedules_saved_item_id",
+                schema: "srs",
+                table: "srs_schedules",
+                column: "saved_item_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1372,8 +2519,20 @@ namespace Rakushu.Persistence.Migrations
                 schema: "subscription");
 
             migrationBuilder.DropTable(
+                name: "flashcard_session_cards",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
                 name: "interests",
                 schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "issue_categories",
+                schema: "curation");
+
+            migrationBuilder.DropTable(
+                name: "issue_details",
+                schema: "curation");
 
             migrationBuilder.DropTable(
                 name: "knowledge_unit_elements",
@@ -1390,6 +2549,18 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "refresh_tokens",
                 schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_assessment_details",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_role_line_transcript_segment",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "srs_schedule_details",
+                schema: "srs");
 
             migrationBuilder.DropTable(
                 name: "subscription_usages",
@@ -1416,8 +2587,28 @@ namespace Rakushu.Persistence.Migrations
                 schema: "identity");
 
             migrationBuilder.DropTable(
-                name: "knowledge_meanings",
-                schema: "knowledge");
+                name: "reports",
+                schema: "curation");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_assessments",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_attempt_details",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "flashcard_session_items",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "quiz_attempt_items",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "srs_schedules",
+                schema: "srs");
 
             migrationBuilder.DropTable(
                 name: "features",
@@ -1440,16 +2631,76 @@ namespace Rakushu.Persistence.Migrations
                 schema: "knowledge");
 
             migrationBuilder.DropTable(
-                name: "knowledge_units",
-                schema: "knowledge");
+                name: "shadowing_attempts",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_role_lines",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "flashcard_sessions",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "quiz_attempts",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "quiz_items",
+                schema: "srs");
 
             migrationBuilder.DropTable(
                 name: "payments",
                 schema: "subscription");
 
             migrationBuilder.DropTable(
-                name: "transcript_segments",
-                schema: "material");
+                name: "shadowing_session_members",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "questions",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "quizzes",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "saved_items",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "plans",
+                schema: "subscription");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_roles",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_session_invitations",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "question_types",
+                schema: "srs");
+
+            migrationBuilder.DropTable(
+                name: "knowledge_meanings",
+                schema: "knowledge");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_sessions",
+                schema: "shadowing");
+
+            migrationBuilder.DropTable(
+                name: "knowledge_units",
+                schema: "knowledge");
+
+            migrationBuilder.DropTable(
+                name: "shadowing_materials",
+                schema: "shadowing");
 
             migrationBuilder.DropTable(
                 name: "knowledge_collections",
@@ -1460,8 +2711,8 @@ namespace Rakushu.Persistence.Migrations
                 schema: "knowledge");
 
             migrationBuilder.DropTable(
-                name: "plans",
-                schema: "subscription");
+                name: "transcript_segments",
+                schema: "material");
 
             migrationBuilder.DropTable(
                 name: "transcript_speakers",

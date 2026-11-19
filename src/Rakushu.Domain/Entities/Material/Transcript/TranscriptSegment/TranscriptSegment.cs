@@ -220,4 +220,9 @@ public sealed partial class TranscriptSegment : Entity<TranscriptSegmentId>
 
 		return result;
 	}
+
+	public void SetTranscriptSpeakerId(TranscriptSpeakerId transcriptSpeakerId)
+	{
+		TranscriptSpeakerId = transcriptSpeakerId;
+	}
 }

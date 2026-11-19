@@ -72,6 +72,7 @@ internal sealed class UpdateTranscriptSegmentHandler
 			{
 				var speakerId = SpeakerId.From(request.SpeakerId.Value);
 
+				// Check whether speaker exists
 				var speaker = await _speakerRepository.GetByIdAsync(
 					speakerId,
 					cancellationToken);
@@ -79,25 +80,17 @@ internal sealed class UpdateTranscriptSegmentHandler
 				if (speaker is null)
 					return Result.Failure(SpeakerErrors.NotFound);
 
-				var segmentSpeaker = segment.TranscriptSpeakerId is null
-					? null
-					: transcript.TranscriptSpeakers.FirstOrDefault(
-						x => x.Id == segment.TranscriptSpeakerId);
+				// Find the corresponding TranscriptSpeaker
+				var targetTranscriptSpeaker = transcript.TranscriptSpeakers
+					.FirstOrDefault(x => x.SpeakerId == speakerId);
 
-				if (segmentSpeaker is null)
+				if (targetTranscriptSpeaker is null)
 					return Result.Failure(TranscriptSpeakerErrors.NotFound);
 
-				if (segmentSpeaker.SpeakerId != speakerId)
+				// Update segment's TranscriptSpeakerId
+				if (segment.TranscriptSpeakerId != targetTranscriptSpeaker.Id)
 				{
-					if (transcript.TranscriptSpeakers.Any(
-						x => x.Id != segmentSpeaker.Id
-							 && x.SpeakerId == speakerId))
-					{
-						return Result.Failure(
-							TranscriptSpeakerErrors.SpeakerAlreadyAssigned);
-					}
-
-					segmentSpeaker.SetSpeakerId(speakerId);
+					segment.SetTranscriptSpeakerId(targetTranscriptSpeaker.Id);
 				}
 			}
 
