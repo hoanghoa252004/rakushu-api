@@ -44,6 +44,9 @@ internal sealed class IssueDetailConfiguration : IEntityTypeConfiguration<IssueD
 		builder.Property(id => id.LearnerFeedback)
 			.HasMaxLength(1000);
 
+		builder.Property(id => id.TargetSnapshot)
+			.HasColumnType("jsonb");
+
 		builder.Property(id => id.ReportId)
 			.HasConversion(
 				id => id != null ? id.Value : (Guid?)null,

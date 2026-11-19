@@ -51,18 +51,24 @@ public sealed class IssueDetailRepository : BaseRepository<IssueDetail, IssueDet
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<IReadOnlyList<IssueDetail>> GetByUserIdAsync(
+	public async Task<(IReadOnlyList<IssueDetail> Items, int TotalCount)> GetByUserIdAsync(
 		UserId userId,
 		int page,
 		int pageSize,
 		CancellationToken cancellationToken = default)
 	{
-		return await _context.IssueDetails
+		var query = _context.IssueDetails
 			.Include(id => id.Report)
-			.Where(id => id.UserId == userId)
+			.Where(id => id.UserId == userId);
+
+		var totalCount = await query.CountAsync(cancellationToken);
+
+		var items = await query
 			.OrderByDescending(id => id.CreatedAt)
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
 			.ToListAsync(cancellationToken);
+
+		return (items, totalCount);
 	}
 }

@@ -38,7 +38,8 @@ public sealed record QuizQuestionDto(
 	string? Explanation = null,
 	string? MediaType = null,
 	string? MediaUrl = null,
-	QuestionMediaMetadataDto? MediaMetadata = null);
+	QuestionMediaMetadataDto? MediaMetadata = null,
+	Guid? BankQuestionId = null);
 
 public sealed record QuizAttemptDetailDto(
 	Guid Id,
@@ -70,7 +71,8 @@ public sealed record QuizAnswerResultDto(
 	string? QuestionType = null,
 	string? MediaType = null,
 	string? MediaUrl = null,
-	QuestionMediaMetadataDto? MediaMetadata = null);
+	QuestionMediaMetadataDto? MediaMetadata = null,
+	Guid? BankQuestionId = null);
 
 public sealed record QuizAttemptResultDto(
 	Guid Id,

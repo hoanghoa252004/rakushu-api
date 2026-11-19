@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.QuestionType;
@@ -20,6 +21,20 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 			.Include(bq => bq.KnowledgeMeaning)
 				.ThenInclude(km => km.KnowledgeUnit)
 			.FirstOrDefaultAsync(bq => bq.Id == id, cancellationToken);
+	}
+
+	public async Task<bool> HasCurationReferencesAsync(
+		BankQuestionId id,
+		CancellationToken cancellationToken = default)
+	{
+		var targetId = id.Value;
+		var hasIssueDetails = await _context.IssueDetails
+			.AnyAsync(d => d.TargetType == TargetType.BankQuestion && d.TargetId == targetId, cancellationToken);
+		if (hasIssueDetails)
+			return true;
+
+		return await _context.Reports
+			.AnyAsync(r => r.TargetType == TargetType.BankQuestion && r.TargetId == targetId, cancellationToken);
 	}
 
 	public async Task<bool> QuestionTypeExistsAsync(

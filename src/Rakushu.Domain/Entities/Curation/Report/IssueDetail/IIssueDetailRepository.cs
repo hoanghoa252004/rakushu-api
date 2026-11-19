@@ -22,7 +22,7 @@ public interface IIssueDetailRepository : IBaseRepository<IssueDetail, IssueDeta
 		string category,
 		CancellationToken cancellationToken = default);
 
-	Task<IReadOnlyList<IssueDetail>> GetByUserIdAsync(
+	Task<(IReadOnlyList<IssueDetail> Items, int TotalCount)> GetByUserIdAsync(
 		UserId userId,
 		int page,
 		int pageSize,

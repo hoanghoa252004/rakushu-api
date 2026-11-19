@@ -2,6 +2,7 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 
 namespace Rakushu.Application.Usecases.Curation.Curator.DismissReport;
@@ -9,15 +10,18 @@ namespace Rakushu.Application.Usecases.Curation.Curator.DismissReport;
 internal sealed class DismissReportHandler : IRequestHandler<DismissReportCommand, Result>
 {
 	private readonly IReportRepository _reportRepository;
+	private readonly IIssueCategoryRepository _issueCategoryRepository;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public DismissReportHandler(
 		IReportRepository reportRepository,
+		IIssueCategoryRepository issueCategoryRepository,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_reportRepository = reportRepository;
+		_issueCategoryRepository = issueCategoryRepository;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
@@ -41,6 +45,14 @@ internal sealed class DismissReportHandler : IRequestHandler<DismissReportComman
 
 			var now = _systemClock.UtcNow;
 			report.Dismiss(request.Reason, now);
+
+			var categoryAggregator = await _issueCategoryRepository.GetByTargetAndCategoryAsync(
+				report.TargetType,
+				report.TargetId,
+				report.Category,
+				cancellationToken);
+
+			categoryAggregator?.ResetCount(now);
 
 			return Result.Success();
 		}, cancellationToken);

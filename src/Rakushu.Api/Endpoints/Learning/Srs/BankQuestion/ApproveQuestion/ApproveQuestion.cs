@@ -28,6 +28,7 @@ internal sealed class ApproveQuestion : IEndpoint
 			.WithDescription("Approves and publishes an AI-generated draft question into the official question bank.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces(StatusCodes.Status204NoContent)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound);

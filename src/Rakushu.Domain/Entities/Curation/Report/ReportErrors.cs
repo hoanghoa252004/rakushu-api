@@ -10,6 +10,9 @@ public static class ReportErrors
 	public static readonly Error InvalidTargetId = Error.Validation(
 		"REPORT.INVALID_TARGET_ID", "Target ID cannot be empty.");
 
+	public static readonly Error TargetNotFound = Error.NotFound(
+		"REPORT.TARGET_NOT_FOUND", "The target entity to report was not found.");
+
 	public static readonly Error EmptyCategory = Error.Validation(
 		"REPORT.EMPTY_CATEGORY", "Category name cannot be empty.");
 

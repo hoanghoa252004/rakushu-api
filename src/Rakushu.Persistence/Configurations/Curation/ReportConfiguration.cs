@@ -36,6 +36,9 @@ internal sealed class ReportConfiguration : IEntityTypeConfiguration<Report>
 
 		builder.Property(r => r.CuratorNotes);
 
+		builder.Property(r => r.TargetSnapshot)
+			.HasColumnType("jsonb");
+
 		builder.Property(r => r.ResolvedAt);
 
 		builder.Property(r => r.CreatedAt)

@@ -27,12 +27,13 @@ internal sealed class SubmitIssue : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("SubmitLearnerIssue")
-			.WithSummary("Submit an issue report ticket for a learning unit, meaning, or question")
-			.WithDescription("Allows learners to report errors, typos, unclear definitions, or audio issues. Aggregates reports and automatically escalates to a Curator ticket when threshold is met.")
+			.WithSummary("Learner")
+			.WithDescription("Submits an issue report regarding a transcript segment, learning unit, or bank question. Automatically escalates to a curator ticket when the threshold is reached.")
 			.RequireAuthorization()
 			.Produces<SubmitIssueResponse>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
+			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}

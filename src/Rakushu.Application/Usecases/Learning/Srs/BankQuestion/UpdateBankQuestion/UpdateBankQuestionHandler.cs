@@ -80,6 +80,12 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 				return Result.Failure(BankQuestionErrors.NotFound);
 			}
 
+			// Câu hỏi đã Published nhưng bị hủy kích hoạt (!IsActive) => đã xóa mềm (Archived), khóa chỉ đọc tuyệt đối
+			if (question.Status == QuestionStatus.Published && !question.IsActive)
+			{
+				return Result.Failure(BankQuestionErrors.AlreadyArchived);
+			}
+
 			bool isDuplicate = await _bankQuestionRepository.ExistsDuplicateAsync(
 				question.KnowledgeMeaningId,
 				question.QuestionTypeId.Value,

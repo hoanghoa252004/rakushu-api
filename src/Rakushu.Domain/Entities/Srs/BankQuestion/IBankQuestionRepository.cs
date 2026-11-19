@@ -40,6 +40,10 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		BankQuestionId id,
 		CancellationToken cancellationToken = default);
 
+	Task<bool> HasCurationReferencesAsync(
+		BankQuestionId id,
+		CancellationToken cancellationToken = default);
+
 	Task<bool> ExistsDuplicateAsync(
 		KnowledgeMeaningId meaningId,
 		Guid questionTypeId,

@@ -35,6 +35,12 @@ internal sealed class ApproveQuestionHandler : IRequestHandler<ApproveQuestionCo
 				return Result.Failure(BankQuestionErrors.NotFound);
 			}
 
+			// Không cho phép duyệt/hồi sinh câu hỏi đã xóa mềm (Published && !IsActive)
+			if (question.Status == QuestionStatus.Published && !question.IsActive)
+			{
+				return Result.Failure(BankQuestionErrors.AlreadyArchived);
+			}
+
 			var now = _systemClock.UtcNow;
 			question.Publish(now);
 			_bankQuestionRepository.Update(question);

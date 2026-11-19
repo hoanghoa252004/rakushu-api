@@ -11,6 +11,7 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 	public Guid TargetId { get; private set; }
 	public string Category { get; private set; } = null!;
 	public string? LearnerFeedback { get; private set; }
+	public string? TargetSnapshot { get; private set; }
 	public ReportId? ReportId { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 
@@ -28,7 +29,8 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 		string category,
 		DateTimeOffset now,
 		string? learnerFeedback = null,
-		ReportId? reportId = null)
+		ReportId? reportId = null,
+		string? targetSnapshot = null)
 	{
 		var validation = Validate(userId, targetId, category);
 		if (validation.IsFailure)
@@ -41,6 +43,7 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 			TargetId = targetId,
 			Category = category.Trim(),
 			LearnerFeedback = string.IsNullOrWhiteSpace(learnerFeedback) ? null : learnerFeedback.Trim(),
+			TargetSnapshot = string.IsNullOrWhiteSpace(targetSnapshot) ? null : targetSnapshot.Trim(),
 			ReportId = reportId,
 			CreatedAt = now
 		});

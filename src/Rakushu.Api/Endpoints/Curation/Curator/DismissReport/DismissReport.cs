@@ -12,7 +12,7 @@ internal sealed class DismissReport : IEndpoint
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapCuratorCurationEndpoints()
-			.MapPost("/{id:guid}/dismiss", async (
+			.MapPatch("/{id:guid}/dismiss", async (
 				[FromRoute] Guid id,
 				[FromBody] DismissReportRequestDto dto,
 				ISender sender,
@@ -23,11 +23,11 @@ internal sealed class DismissReport : IEndpoint
 				return result.MatchNoContent();
 			})
 			.WithName("DismissReport")
-			.WithSummary("Dismiss report as false alarm or not an error")
-			.WithDescription("Closes the curator report with an explanation of why no change was needed.")
+			.WithSummary("Curator, Administrator")
+			.WithDescription("Dismisses an escalated report as a false alarm or invalid issue, recording the reason and resetting the aggregation counter.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces(StatusCodes.Status204NoContent)
-			.ProducesProblem(StatusCodes.Status400BadRequest)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)

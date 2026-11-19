@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TranscriptSegmentEntity = Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment.TranscriptSegment;
 
 namespace Rakushu.Persistence.Repositories;
 public sealed class TranscriptRepository : BaseRepository<Transcript, TranscriptId>, ITranscriptRepository
@@ -82,5 +84,22 @@ public sealed class TranscriptRepository : BaseRepository<Transcript, Transcript
 			.SingleOrDefaultAsync(
 				t => t.VideoId == videoId,
 				cancellationToken);
+	}
+
+	public async Task<TranscriptSegmentEntity?> GetSegmentWithCurationContextByIdAsync(
+		TranscriptSegmentId segmentId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.TranscriptSegments
+			.AsNoTracking()
+			.Include(ts => ts.Transcript)
+				.ThenInclude(t => t.Video)
+					.ThenInclude(v => v.MediaAssets)
+			.Include(ts => ts.Subtitle)
+			.Include(ts => ts.LearningUnits)
+				.ThenInclude(lu => lu.KnowledgeMeaning)
+					.ThenInclude(km => km.KnowledgeUnit)
+			.AsSplitQuery()
+			.FirstOrDefaultAsync(ts => ts.Id == segmentId, cancellationToken);
 	}
 }

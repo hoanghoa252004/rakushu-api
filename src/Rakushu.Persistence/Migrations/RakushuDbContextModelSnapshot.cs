@@ -107,6 +107,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("target_id");
 
+                    b.Property<string>("TargetSnapshot")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("target_snapshot");
+
                     b.Property<string>("TargetType")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -165,6 +169,10 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<Guid>("TargetId")
                         .HasColumnType("uuid")
                         .HasColumnName("target_id");
+
+                    b.Property<string>("TargetSnapshot")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("target_snapshot");
 
                     b.Property<string>("TargetType")
                         .IsRequired()

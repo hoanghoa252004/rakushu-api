@@ -137,7 +137,8 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 				Explanation: isFinished ? question.BankQuestion?.Explanation : null,
 				MediaType: question.MediaType,
 				MediaUrl: resolvedMediaUrl,
-				MediaMetadata: mediaMetadataDto));
+				MediaMetadata: mediaMetadataDto,
+				BankQuestionId: question.BankQuestionId?.Value));
 		}
 
 		return Result.Success(new QuizAttemptDetailDto(

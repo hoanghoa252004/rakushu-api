@@ -11,6 +11,7 @@ public sealed class Report : AggregateRoot<ReportId>
 	public string Category { get; private set; } = null!;
 	public ReportStatus Status { get; private set; } = ReportStatus.Pending;
 	public string? CuratorNotes { get; private set; }
+	public string? TargetSnapshot { get; private set; }
 	public DateTimeOffset? ResolvedAt { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
@@ -26,7 +27,8 @@ public sealed class Report : AggregateRoot<ReportId>
 		TargetType targetType,
 		Guid targetId,
 		string category,
-		DateTimeOffset now)
+		DateTimeOffset now,
+		string? targetSnapshot = null)
 	{
 		var validation = Validate(targetId, category);
 		if (validation.IsFailure)
@@ -37,6 +39,7 @@ public sealed class Report : AggregateRoot<ReportId>
 			TargetType = targetType,
 			TargetId = targetId,
 			Category = category.Trim(),
+			TargetSnapshot = string.IsNullOrWhiteSpace(targetSnapshot) ? null : targetSnapshot.Trim(),
 			Status = ReportStatus.Pending,
 			CreatedAt = now,
 			UpdatedAt = now
