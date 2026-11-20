@@ -24,11 +24,12 @@ internal sealed class ProcessingJobLogEndpoints : IEndpoint
 				[FromQuery] ProcessingJobType? jobType,
 				[FromQuery] bool? isSuccess,
 				[FromQuery] bool? isFailed,
+				[FromQuery] Guid? parentJobLogId,
 				ISender sender,
 				CancellationToken ct) =>
 			{
 				var result = await sender.Send(
-					new GetProcessingJobLogsQuery(targetId, targetType, jobType, isSuccess, isFailed), ct);
+					new GetProcessingJobLogsQuery(targetId, targetType, jobType, isSuccess, isFailed, parentJobLogId), ct);
 				return result.MatchOk();
 			})
 			.WithName("GetProcessingJobLogs")

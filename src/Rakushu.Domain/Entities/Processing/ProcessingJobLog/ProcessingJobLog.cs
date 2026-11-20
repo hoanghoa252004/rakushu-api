@@ -12,8 +12,11 @@ public sealed class ProcessingJobLog : Entity<ProcessingJobLogId>
 	public ProcessingJobTargetType TargetType { get; private set; }
 	public Guid TargetId { get; private set; }
 
-	/// <summary>Order of the job within its target (1, 2, 3...). Parallel jobs share the same sequence.</summary>
+	/// <summary>Order of the job stage within its target (1, 2, 3...). Parallel jobs share the same sequence.</summary>
 	public int Sequence { get; private set; }
+
+	/// <summary>The log of the job this run depends on (ran right before it), if any.</summary>
+	public ProcessingJobLogId? ParentJobLogId { get; private set; }
 	public string ServiceName { get; private set; } = null!;
 	public string? JobLabel { get; private set; }
 	public string? Input { get; private set; }
@@ -33,6 +36,7 @@ public sealed class ProcessingJobLog : Entity<ProcessingJobLogId>
 		ProcessingJobTargetType targetType,
 		Guid targetId,
 		int sequence,
+		ProcessingJobLogId? parentJobLogId,
 		string serviceName,
 		string? input,
 		DateTime now)
@@ -49,6 +53,7 @@ public sealed class ProcessingJobLog : Entity<ProcessingJobLogId>
 			TargetType = targetType,
 			TargetId = targetId,
 			Sequence = sequence,
+			ParentJobLogId = parentJobLogId,
 			ServiceName = serviceName,
 			Input = input,
 			IsSuccess = false,

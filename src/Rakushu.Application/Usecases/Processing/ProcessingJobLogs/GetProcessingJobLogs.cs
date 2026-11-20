@@ -10,7 +10,8 @@ public sealed record GetProcessingJobLogsQuery(
 	ProcessingJobTargetType? TargetType,
 	ProcessingJobType? JobType,
 	bool? IsSuccess,
-	bool? IsFailed) : IRequest<Result<IReadOnlyList<ProcessingJobLogDetail>>>;
+	bool? IsFailed,
+	Guid? ParentJobLogId) : IRequest<Result<IReadOnlyList<ProcessingJobLogDetail>>>;
 
 internal sealed class GetProcessingJobLogsHandler(IProcessingJobLogService jobLogService)
 	: IRequestHandler<GetProcessingJobLogsQuery, Result<IReadOnlyList<ProcessingJobLogDetail>>>
@@ -25,7 +26,8 @@ internal sealed class GetProcessingJobLogsHandler(IProcessingJobLogService jobLo
 				request.TargetType,
 				request.JobType,
 				request.IsSuccess,
-				request.IsFailed),
+				request.IsFailed,
+				request.ParentJobLogId),
 			cancellationToken);
 
 		return Result.Success(logs);

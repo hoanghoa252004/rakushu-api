@@ -19,42 +19,47 @@ internal sealed class ProcessingJobLogService(IServiceScopeFactory scopeFactory,
 		Guid targetId,
 		string serviceName,
 		string? input,
-		CancellationToken cancellationToken = default)
+		CancellationToken cancellationToken = default,
+		Guid? parentJobLogId = null)
 	{
 		await using var scope = scopeFactory.CreateAsyncScope();
 		var db = scope.ServiceProvider.GetRequiredService<RakushuDbContext>();
 
-		var sequence = await GetNextSequenceAsync(db, jobType, targetType, targetId, cancellationToken);
-		var log = ProcessingJobLog.Start(jobType, targetType, targetId, sequence, serviceName, input, clock.UtcNow.UtcDateTime);
+		var stage = ProcessingJobStages.Get(jobType);
+		var parentId = parentJobLogId is not null
+			? ProcessingJobLogId.From(parentJobLogId.Value)
+			: await FindParentAsync(db, stage, targetType, targetId, cancellationToken);
+
+		var log = ProcessingJobLog.Start(
+			jobType, targetType, targetId, stage.Sequence, parentId, serviceName, input, clock.UtcNow.UtcDateTime);
 
 		db.ProcessingJobLogs.Add(log);
 		await db.SaveChangesAsync(cancellationToken);
 		return ToInfo(log);
 	}
 
-	private static async Task<int> GetNextSequenceAsync(
+	/// <summary>Latest run of any parent job type of the same target (a retry links to the newest run).</summary>
+	private static async Task<ProcessingJobLogId?> FindParentAsync(
 		RakushuDbContext db,
-		ProcessingJobType jobType,
+		ProcessingJobStages.Stage stage,
 		ProcessingJobTargetType targetType,
 		Guid targetId,
 		CancellationToken cancellationToken)
 	{
-		var targetLogs = db.ProcessingJobLogs
-			.Where(l => l.TargetType == targetType && l.TargetId == targetId);
+		if (stage.ParentJobTypes.Count == 0)
+			return null;
 
-		var maxSequence = await targetLogs.MaxAsync(l => (int?)l.Sequence, cancellationToken);
-		if (maxSequence is null)
-			return 1;
+		var parentTypes = stage.ParentJobTypes.ToList();
+		var parent = await db.ProcessingJobLogs
+			.AsNoTracking()
+			.Where(l => l.TargetType == targetType
+				&& l.TargetId == targetId
+				&& parentTypes.Contains(l.JobType))
+			.OrderByDescending(l => l.EndAt ?? l.StartAt)
+			.Select(l => l.Id)
+			.FirstOrDefaultAsync(cancellationToken);
 
-		var latestJobTypes = await targetLogs
-			.Where(l => l.Sequence == maxSequence.Value)
-			.Select(l => l.JobType)
-			.Distinct()
-			.ToListAsync(cancellationToken);
-
-		return ProcessingJobParallelGroups.CanJoin(jobType, latestJobTypes)
-			? maxSequence.Value
-			: maxSequence.Value + 1;
+		return parent;
 	}
 
 	public Task SetJobLabelAsync(Guid jobLogId, string jobLabel, CancellationToken cancellationToken = default)
@@ -117,6 +122,11 @@ internal sealed class ProcessingJobLogService(IServiceScopeFactory scopeFactory,
 			query = query.Where(l => l.IsSuccess == filter.IsSuccess);
 		if (filter.IsFailed is not null)
 			query = query.Where(l => l.IsFailed == filter.IsFailed);
+		if (filter.ParentJobLogId is not null)
+		{
+			var parentId = ProcessingJobLogId.From(filter.ParentJobLogId.Value);
+			query = query.Where(l => l.ParentJobLogId == parentId);
+		}
 
 		return await query
 			.OrderBy(l => l.TargetType)
@@ -126,6 +136,7 @@ internal sealed class ProcessingJobLogService(IServiceScopeFactory scopeFactory,
 			.Select(l => new ProcessingJobLogDetail(
 				l.Id.Value,
 				l.Sequence,
+				l.ParentJobLogId == null ? null : (Guid?)l.ParentJobLogId.Value,
 				l.JobType,
 				l.TargetType,
 				l.TargetId,

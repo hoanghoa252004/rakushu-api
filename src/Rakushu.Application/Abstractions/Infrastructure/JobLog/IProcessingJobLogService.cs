@@ -8,13 +8,18 @@ namespace Rakushu.Application.Abstractions.Infrastructure.JobLog;
 /// </summary>
 public interface IProcessingJobLogService
 {
+	/// <summary>
+	/// Starts a log. Sequence comes from <see cref="ProcessingJobStages"/>. The parent is
+	/// <paramref name="parentJobLogId"/> when given, otherwise the latest log of a parent job type of the target.
+	/// </summary>
 	Task<ProcessingJobLogInfo> StartAsync(
 		ProcessingJobType jobType,
 		ProcessingJobTargetType targetType,
 		Guid targetId,
 		string serviceName,
 		string? input,
-		CancellationToken cancellationToken = default);
+		CancellationToken cancellationToken = default,
+		Guid? parentJobLogId = null);
 
 	Task SetJobLabelAsync(Guid jobLogId, string jobLabel, CancellationToken cancellationToken = default);
 
@@ -45,11 +50,13 @@ public sealed record ProcessingJobLogFilter(
 	ProcessingJobTargetType? TargetType,
 	ProcessingJobType? JobType,
 	bool? IsSuccess,
-	bool? IsFailed);
+	bool? IsFailed,
+	Guid? ParentJobLogId);
 
 public sealed record ProcessingJobLogDetail(
 	Guid Id,
 	int Sequence,
+	Guid? ParentJobLogId,
 	ProcessingJobType JobType,
 	ProcessingJobTargetType TargetType,
 	Guid TargetId,

@@ -26,6 +26,10 @@ internal sealed class ProcessingJobLogConfiguration : IEntityTypeConfiguration<P
 
 		builder.Property(x => x.TargetId).IsRequired();
 		builder.Property(x => x.Sequence).IsRequired();
+		builder.Property(x => x.ParentJobLogId)
+			.HasConversion(
+				id => id == null ? (Guid?)null : id.Value,
+				value => value == null ? null : ProcessingJobLogId.From(value.Value));
 		builder.Property(x => x.ServiceName).HasMaxLength(100).IsRequired();
 		builder.Property(x => x.JobLabel).HasMaxLength(255);
 		builder.Property(x => x.Input);
@@ -40,5 +44,6 @@ internal sealed class ProcessingJobLogConfiguration : IEntityTypeConfiguration<P
 		builder.HasIndex(x => new { x.TargetId, x.JobType, x.StartAt });
 		builder.HasIndex(x => new { x.TargetType, x.TargetId, x.Sequence });
 		builder.HasIndex(x => x.JobLabel);
+		builder.HasIndex(x => x.ParentJobLogId);
 	}
 }

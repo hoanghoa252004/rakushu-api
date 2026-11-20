@@ -44,12 +44,13 @@ internal sealed class GetAdminConversationMessages : IEndpoint
 			.MapGet("/admin/conversations/{conversationId:guid}/messages", async (
 				[FromRoute] Guid conversationId,
 				ISender sender,
+				[FromQuery] string? modelId,
 				[FromQuery] int pageNumber = 1,
 				[FromQuery] int pageSize = 20,
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(
-					new GetAdminConversationMessagesQuery(conversationId, pageNumber, pageSize), cancellationToken);
+					new GetAdminConversationMessagesQuery(conversationId, modelId, pageNumber, pageSize), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetAdminConversationMessages")

@@ -43,7 +43,8 @@ public sealed record MessageDto(
 	string? ErrorMessage,
 	DateTime CreatedAt,
 	DateTime? CompletedAt,
-	AttachmentDto? Attachment);
+	AttachmentDto? Attachment,
+	string? ModelId = null);
 
 // Shared by the Converse and ConverseStream flows.
 public sealed class AssistantChatService(
@@ -51,6 +52,7 @@ public sealed class AssistantChatService(
 	IConversationRepository conversationRepository,
 	IEmbeddingService embeddingService,
 	IStorageService storageService,
+	IAiService aiService,
 	IUnitOfWork unitOfWork)
 {
 	public const int RecentMessageCount = 10;
@@ -251,6 +253,7 @@ public sealed class AssistantChatService(
 		{
 			var reply = Message.CreateAssistantPlaceholder(prepared.Conversation.Id, prepared.SegmentId);
 			reply.SetAiRequestPayload(BuildAiRequestPayload(prepared.AiRequest));
+			reply.SetModelId(aiService.ModelId);
 
 			if (error is not null)
 				reply.Fail(error);
@@ -265,13 +268,17 @@ public sealed class AssistantChatService(
 		}, cancellationToken);
 	}
 
-	private static string BuildAiRequestPayload(AiChatRequest request)
+	private string BuildAiRequestPayload(AiChatRequest request)
 	{
 		var payload = new
 		{
+			model_id = aiService.ModelId,
+			system_prompt = aiService.BuildSystemPrompt(request),
 			video_context = request.VideoContext,
 			transcript_context = request.TranscriptContext,
 			learning_units_context = request.LearningUnitsContext,
+			related_messages_context = (request.RelatedMessages ?? [])
+				.Select(r => new { video_title = r.VideoTitle, role = r.IsUser ? "learner" : "assistant", text = r.Text }),
 			conversation_context = request.History
 				.Where(t => !string.IsNullOrWhiteSpace(t.Text))
 				.Select(t => new { role = t.IsUser ? "learner" : "assistant", text = t.Text }),
@@ -306,7 +313,8 @@ public sealed class AssistantChatService(
 			message.ErrorMessage,
 			message.CreatedAt,
 			message.CompletedAt,
-			attachment);
+			attachment,
+			message.ModelId);
 	}
 
 	private async Task<AiImage?> LoadImageAsync(string key, string contentType, CancellationToken cancellationToken)

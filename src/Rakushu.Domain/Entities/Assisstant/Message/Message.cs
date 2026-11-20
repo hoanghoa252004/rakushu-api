@@ -22,6 +22,8 @@ public sealed partial class Message : Entity<MessageId>
 	public string? ErrorMessage { get; private set; }
 	// Debug only: the payload (context + question) that was sent to the AI to produce this message.
 	public string? AiRequestPayload { get; private set; }
+	// The AI model that produced this message.
+	public string? ModelId { get; private set; }
 	public DateTime CreatedAt { get; private set; }
 	public DateTime? CompletedAt { get; private set; }
 
@@ -82,6 +84,8 @@ public sealed partial class Message : Entity<MessageId>
 		=> new(MessageId.Create(), conversationId, transcriptSegmentId, MessageRole.Assistant, null, MessageStatus.Processing);
 
 	public void SetAiRequestPayload(string? payload) => AiRequestPayload = payload;
+
+	public void SetModelId(string? modelId) => ModelId = modelId;
 
 	public void Complete(string content, int? inputTokens, int? outputTokens)
 	{

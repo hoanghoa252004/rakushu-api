@@ -90,12 +90,16 @@ public sealed class ConversationRepository : BaseRepository<Conversation, Conver
 		ConversationId conversationId,
 		int pageNumber,
 		int pageSize,
+		string? modelId = null,
 		CancellationToken cancellationToken = default)
 	{
 		var query = _context.Set<Message>()
 			.AsNoTracking()
 			.Include(m => m.Attachment)
 			.Where(m => m.ConversationId == conversationId);
+
+		if (!string.IsNullOrWhiteSpace(modelId))
+			query = query.Where(m => m.ModelId == modelId);
 
 		var total = await query.CountAsync(cancellationToken);
 		var items = await query
@@ -105,6 +109,29 @@ public sealed class ConversationRepository : BaseRepository<Conversation, Conver
 			.ToListAsync(cancellationToken);
 
 		return (items, total);
+	}
+
+	public async Task<IReadOnlyDictionary<ConversationId, (long InputTokens, long OutputTokens)>> GetTokenTotalsAsync(
+		IReadOnlyCollection<ConversationId> conversationIds,
+		CancellationToken cancellationToken = default)
+	{
+		if (conversationIds.Count == 0)
+			return new Dictionary<ConversationId, (long, long)>();
+
+		var ids = conversationIds.ToList();
+		var rows = await _context.Set<Message>()
+			.AsNoTracking()
+			.Where(m => ids.Contains(m.ConversationId))
+			.GroupBy(m => m.ConversationId)
+			.Select(g => new
+			{
+				Id = g.Key,
+				Input = g.Sum(m => (long?)m.InputTokens) ?? 0,
+				Output = g.Sum(m => (long?)m.OutputTokens) ?? 0
+			})
+			.ToListAsync(cancellationToken);
+
+		return rows.ToDictionary(r => r.Id, r => (r.Input, r.Output));
 	}
 
 	public async Task<IReadOnlyList<Message>> GetSimilarMessagesAsync(

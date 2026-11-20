@@ -18,7 +18,9 @@ public sealed record AdminConversationDto(
 	string VideoTitle,
 	string Title,
 	DateTime CreatedAt,
-	DateTime UpdatedAt);
+	DateTime UpdatedAt,
+	long TotalInputTokens,
+	long TotalOutputTokens);
 
 public sealed record AdminConversationMessagesDto(
 	AdminConversationDto Conversation,
@@ -26,7 +28,7 @@ public sealed record AdminConversationMessagesDto(
 
 internal static class AdminConversationMapper
 {
-	internal static AdminConversationDto ToDto(Conversation c) => new(
+	internal static AdminConversationDto ToDto(Conversation c, long inputTokens, long outputTokens) => new(
 		c.Id.Value,
 		c.LearnerId.Value,
 		c.Learner.FullName,
@@ -35,7 +37,9 @@ internal static class AdminConversationMapper
 		c.Video.Title,
 		c.Title,
 		c.CreatedAt,
-		c.UpdatedAt);
+		c.UpdatedAt,
+		inputTokens,
+		outputTokens);
 }
 
 // List conversations
@@ -67,7 +71,16 @@ internal sealed class GetAdminConversationsHandler(IConversationRepository conve
 			request.PageSize,
 			cancellationToken);
 
-		var dtos = items.Select(AdminConversationMapper.ToDto).ToList();
+		var totals = await conversationRepository.GetTokenTotalsAsync(
+			items.Select(c => c.Id).ToList(), cancellationToken);
+
+		var dtos = items
+			.Select(c =>
+			{
+				totals.TryGetValue(c.Id, out var t);
+				return AdminConversationMapper.ToDto(c, t.InputTokens, t.OutputTokens);
+			})
+			.ToList();
 		return Result.Success(PaginatedList<AdminConversationDto>.Create(dtos, total, request.PageNumber, request.PageSize));
 	}
 }
@@ -75,6 +88,7 @@ internal sealed class GetAdminConversationsHandler(IConversationRepository conve
 // Paged messages of one conversation (newest first) with presigned attachment urls
 public sealed record GetAdminConversationMessagesQuery(
 	Guid ConversationId,
+	string? ModelId,
 	int PageNumber,
 	int PageSize) : IRequest<Result<AdminConversationMessagesDto>>;
 
@@ -103,7 +117,10 @@ internal sealed class GetAdminConversationMessagesHandler(
 			return Result.Failure<AdminConversationMessagesDto>(ConversationErrors.ConversationNotFound);
 
 		var (messages, total) = await conversationRepository.GetMessagesPagedAsync(
-			conversation.Id, request.PageNumber, request.PageSize, cancellationToken);
+			conversation.Id, request.PageNumber, request.PageSize, request.ModelId, cancellationToken);
+
+		var totals = await conversationRepository.GetTokenTotalsAsync([conversation.Id], cancellationToken);
+		totals.TryGetValue(conversation.Id, out var tokens);
 
 		var dtos = new List<MessageDto>(messages.Count);
 		foreach (var m in messages)
@@ -115,7 +132,7 @@ internal sealed class GetAdminConversationMessagesHandler(
 		}
 
 		return Result.Success(new AdminConversationMessagesDto(
-			AdminConversationMapper.ToDto(conversation),
+			AdminConversationMapper.ToDto(conversation, tokens.InputTokens, tokens.OutputTokens),
 			PaginatedList<MessageDto>.Create(dtos, total, request.PageNumber, request.PageSize)));
 	}
 }

@@ -27,4 +27,8 @@ public static class SystemConfigurationErrors
 
 	public static readonly Error VersionAlreadyActive = Error.Conflict(
 		"SYSTEM_CONFIGURATION.VERSION_ALREADY_ACTIVE", "The specified version is already in use.");
+
+	public static Error ValueExistsInVersion(int version) => Error.Conflict(
+		"SYSTEM_CONFIGURATION.VALUE_EXISTS_IN_VERSION",
+		$"A configuration with this value already exists in version {version}. Please switch to version {version} instead.");
 }

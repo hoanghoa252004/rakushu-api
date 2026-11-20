@@ -47,6 +47,7 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
 		builder.Property(m => m.Content);
 		builder.Property(m => m.ErrorMessage).HasMaxLength(1000);
 		builder.Property(m => m.AiRequestPayload);
+		builder.Property(m => m.ModelId).HasMaxLength(200);
 		builder.Property(m => m.CreatedAt).IsRequired();
 
 		builder.HasIndex(m => new { m.ConversationId, m.CreatedAt });

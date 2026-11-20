@@ -149,6 +149,11 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("learning_unit_id");
 
+                    b.Property<string>("ModelId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("model_id");
+
                     b.Property<int?>("OutputTokens")
                         .HasColumnType("integer")
                         .HasColumnName("output_tokens");
@@ -1814,6 +1819,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("output");
 
+                    b.Property<Guid?>("ParentJobLogId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_job_log_id");
+
                     b.Property<int>("Sequence")
                         .HasColumnType("integer")
                         .HasColumnName("sequence");
@@ -1843,6 +1852,9 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasIndex("JobLabel")
                         .HasDatabaseName("ix_processing_job_logs_job_label");
+
+                    b.HasIndex("ParentJobLogId")
+                        .HasDatabaseName("ix_processing_job_logs_parent_job_log_id");
 
                     b.HasIndex("TargetId", "JobType", "StartAt")
                         .HasDatabaseName("ix_processing_job_logs_target_id_job_type_start_at");

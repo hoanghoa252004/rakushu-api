@@ -59,11 +59,17 @@ public interface IConversationRepository : IBaseRepository<Conversation, Convers
 		ConversationId conversationId,
 		CancellationToken cancellationToken = default);
 
-	// Admin: messages (with attachment) of a conversation, newest first, paged.
+	// Admin: messages (with attachment) of a conversation, newest first, paged. Optional model filter.
 	Task<(IReadOnlyList<Message.Message> Items, int Total)> GetMessagesPagedAsync(
 		ConversationId conversationId,
 		int pageNumber,
 		int pageSize,
+		string? modelId = null,
+		CancellationToken cancellationToken = default);
+
+	// Admin: total input/output tokens per conversation (conversations without messages are omitted).
+	Task<IReadOnlyDictionary<ConversationId, (long InputTokens, long OutputTokens)>> GetTokenTotalsAsync(
+		IReadOnlyCollection<ConversationId> conversationIds,
 		CancellationToken cancellationToken = default);
 
 	Task<bool> VideoExistsAsync(VideoId videoId, CancellationToken cancellationToken = default);

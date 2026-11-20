@@ -58,6 +58,10 @@ public sealed class SystemConfiguration : Entity<SystemConfigurationId>
 		if (newValue == ConfigValue)
 			return Result.Failure(SystemConfigurationErrors.SameValue);
 
+		var existing = _histories.FirstOrDefault(h => h.ConfigValue == newValue);
+		if (existing is not null)
+			return Result.Failure(SystemConfigurationErrors.ValueExistsInVersion(existing.Version));
+
 		foreach (var history in _histories)
 			history.SetActive(false);
 

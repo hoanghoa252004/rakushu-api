@@ -39,6 +39,10 @@ internal sealed class AwsBedrockAiService : IAiService
 		_settings = options;
 	}
 
+	public string ModelId => _settings.BedrockChatModelId;
+
+	public string BuildSystemPrompt(AiChatRequest request) => BuildSystem(request)[0].Text;
+
 	public async Task<AiChatResult> ConverseAsync(AiChatRequest request, CancellationToken cancellationToken = default)
 	{
 		var converse = new ConverseRequest

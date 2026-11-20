@@ -71,6 +71,22 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 					continue;
 				}
 
+				// Parent là job Nlp trước đó của video.
+				var nlpLog = await _jobLogService.GetLatestAsync(
+					ProcessingJobType.Nlp,
+					video.Id.Value,
+					cancellationToken);
+
+				// Log bắt đầu trước mọi nhánh skip để job luôn kết thúc (kể cả khi không có gì để match).
+				var jobLog = await _jobLogService.StartAsync(
+					ProcessingJobType.LearningUnitMatching,
+					ProcessingJobTargetType.Video,
+					video.Id.Value,
+					ProcessingJobServices.RakushuApi,
+					transcript.Id.Value.ToString(),
+					cancellationToken,
+					nlpLog?.Id);
+
 				// 2. Lấy Knowledge Collection theo Content Category.
 				var contentCollections = await _contentKnowledgeCollectionRepository
 					.GetByContentCategoryIdOrderedByPriorityAsync(
@@ -78,7 +94,13 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 						cancellationToken);
 
 				if (contentCollections.Count == 0)
+				{
+					await _jobLogService.CompleteAsync(
+						jobLog.Id,
+						"{\"learningUnitCount\":0,\"reason\":\"No knowledge collection for content category\"}",
+						cancellationToken);
 					continue;
+				}
 
 				var collectionIds = contentCollections
 					.Select(x => x.KnowledgeCollectionId)
@@ -92,7 +114,13 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 						cancellationToken);
 
 				if (knowledgeUnits.Count == 0)
+				{
+					await _jobLogService.CompleteAsync(
+						jobLog.Id,
+						"{\"learningUnitCount\":0,\"reason\":\"No active knowledge unit\"}",
+						cancellationToken);
 					continue;
+				}
 
 				// 4. Tạo bảng priority: số nhỏ hơn có độ ưu tiên cao hơn.
 				var priorities = contentCollections
@@ -104,13 +132,6 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 				var knowledgeUnitsById = knowledgeUnits
 					.ToDictionary(x => x.Id.Value);
 
-				var jobLog = await _jobLogService.StartAsync(
-					ProcessingJobType.LearningUnitMatching,
-					ProcessingJobTargetType.Video,
-					video.Id.Value,
-					ProcessingJobServices.RakushuApi,
-					transcript.Id.Value.ToString(),
-					cancellationToken);
 				var matchedCount = 0;
 
 				try

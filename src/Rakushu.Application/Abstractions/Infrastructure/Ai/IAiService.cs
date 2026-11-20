@@ -2,6 +2,12 @@ namespace Rakushu.Application.Abstractions.Infrastructure.Ai;
 
 public interface IAiService
 {
+	// The chat model currently used (for logging).
+	string ModelId { get; }
+
+	// The full system prompt (base prompt + injected contexts) sent to the model.
+	string BuildSystemPrompt(AiChatRequest request);
+
 	Task<AiChatResult> ConverseAsync(
 		AiChatRequest request,
 		CancellationToken cancellationToken = default);
