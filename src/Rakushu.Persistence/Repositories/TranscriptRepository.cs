@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
@@ -101,5 +101,25 @@ public sealed class TranscriptRepository : BaseRepository<Transcript, Transcript
 					.ThenInclude(km => km.KnowledgeUnit)
 			.AsSplitQuery()
 			.FirstOrDefaultAsync(ts => ts.Id == segmentId, cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<TranscriptSegmentEntity>> GetOverlappingSegmentsWithLearningUnitsAsync(
+		VideoId videoId,
+		TimeSpan rangeStart,
+		TimeSpan rangeEnd,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.TranscriptSegments
+			.AsNoTracking()
+			.Include(ts => ts.LearningUnits)
+				.ThenInclude(lu => lu.KnowledgeMeaning)
+					.ThenInclude(km => km.KnowledgeUnit)
+						.ThenInclude(ku => ku.ProficiencyLevel)
+			.Where(ts => ts.Transcript.VideoId == videoId
+				&& ts.StartTime <= rangeEnd
+				&& ts.EndTime >= rangeStart)
+			.OrderBy(ts => ts.Sequence)
+			.AsSplitQuery()
+			.ToListAsync(cancellationToken);
 	}
 }

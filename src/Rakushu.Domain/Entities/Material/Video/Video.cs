@@ -207,4 +207,13 @@ public sealed partial class Video : AggregateRoot<VideoId>
 		Transcript = null!;
 		UpdatedAt = DateTimeOffset.UtcNow;
 	}
+
+	public void SyncActualDuration(TimeSpan actualDuration, DateTimeOffset updatedAt)
+	{
+		if (actualDuration.TotalSeconds >= 1.0 && Math.Abs(Duration.TotalSeconds - actualDuration.TotalSeconds) >= 1.0)
+		{
+			Duration = TimeSpan.FromSeconds(Math.Round(actualDuration.TotalSeconds));
+			UpdatedAt = updatedAt;
+		}
+	}
 }

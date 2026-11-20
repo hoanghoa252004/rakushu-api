@@ -7,6 +7,8 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
+using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerVideoProgress;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
@@ -108,6 +110,10 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IIssueCategoryRepository, IssueCategoryRepository>();
 		services.AddScoped<IReportRepository, ReportRepository>();
 		services.AddScoped<IIssueDetailRepository, IssueDetailRepository>();
+
+		// Video History & Encounter Tracking Repositories
+		services.AddScoped<ILearnerVideoProgressRepository, LearnerVideoProgressRepository>();
+		services.AddScoped<ILearnerEncounteredLearningUnitRepository, LearnerEncounteredLearningUnitRepository>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();

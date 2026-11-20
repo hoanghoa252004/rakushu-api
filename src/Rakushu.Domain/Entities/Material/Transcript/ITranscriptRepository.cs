@@ -1,4 +1,4 @@
-﻿using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
@@ -18,5 +18,11 @@ public interface ITranscriptRepository : IBaseRepository<Transcript, TranscriptI
 
 	Task<TranscriptSegmentEntity?> GetSegmentWithCurationContextByIdAsync(
 		TranscriptSegmentId segmentId,
+		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<TranscriptSegmentEntity>> GetOverlappingSegmentsWithLearningUnitsAsync(
+		VideoId videoId,
+		TimeSpan rangeStart,
+		TimeSpan rangeEnd,
 		CancellationToken cancellationToken = default);
 }

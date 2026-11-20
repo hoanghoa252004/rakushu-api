@@ -43,4 +43,9 @@ public interface ISavedItemRepository : IBaseRepository<SavedItem, SavedItemId>
 	Task<bool> HasAnyWithMeaningIdAsync(
 		KnowledgeMeaningId meaningId,
 		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<SavedItem>> GetByUserAndMeaningsWithScheduleAsync(
+		UserId userId,
+		IReadOnlyCollection<KnowledgeMeaningId> meaningIds,
+		CancellationToken cancellationToken = default);
 }

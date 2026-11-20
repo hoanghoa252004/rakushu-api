@@ -928,6 +928,155 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("proficiency_levels", "knowledge");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit.LearnerEncounteredLearningUnit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("EncounterCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("encounter_count");
+
+                    b.Property<string>("EncounterSourcesJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("encounter_sources_json")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
+                    b.Property<DateTimeOffset>("FirstEncounteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_encountered_at");
+
+                    b.Property<Guid>("KnowledgeMeaningId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("knowledge_meaning_id");
+
+                    b.Property<Guid>("KnowledgeUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("knowledge_unit_id");
+
+                    b.Property<DateTimeOffset>("LastEncounteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_encountered_at");
+
+                    b.Property<Guid>("LearningUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("learning_unit_id");
+
+                    b.Property<int>("RawPlaybackCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("raw_playback_count");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("video_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_learner_encountered_learning_units");
+
+                    b.HasIndex("KnowledgeMeaningId")
+                        .HasDatabaseName("ix_learner_encountered_learning_units_knowledge_meaning_id");
+
+                    b.HasIndex("KnowledgeUnitId")
+                        .HasDatabaseName("ix_learner_encountered_learning_units_knowledge_unit_id");
+
+                    b.HasIndex("LearningUnitId")
+                        .HasDatabaseName("ix_learner_encountered_learning_units_learning_unit_id");
+
+                    b.HasIndex("VideoId")
+                        .HasDatabaseName("ix_learner_encountered_learning_units_video_id");
+
+                    b.HasIndex("UserId", "KnowledgeMeaningId")
+                        .HasDatabaseName("ix_learner_encountered_learning_units_user_id_knowledge_meanin");
+
+                    b.HasIndex("UserId", "KnowledgeUnitId")
+                        .HasDatabaseName("ix_learner_encountered_learning_units_user_id_knowledge_unit_id");
+
+                    b.HasIndex("UserId", "LearningUnitId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_learner_encountered_learning_units_user_id_learning_unit_id");
+
+                    b.HasIndex("UserId", "VideoId")
+                        .HasDatabaseName("ix_learner_encountered_learning_units_user_id_video_id");
+
+                    b.ToTable("learner_encountered_learning_units", "learning");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerVideoProgress.LearnerVideoProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<double>("CompletionRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(0.0)
+                        .HasColumnName("completion_rate");
+
+                    b.Property<bool>("IsCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_completed");
+
+                    b.Property<DateTimeOffset>("LastWatchedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_watched_at");
+
+                    b.Property<double>("LastWatchedSecond")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(0.0)
+                        .HasColumnName("last_watched_second");
+
+                    b.Property<double>("TotalWatchedSeconds")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("double precision")
+                        .HasDefaultValue(0.0)
+                        .HasColumnName("total_watched_seconds");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("video_id");
+
+                    b.Property<string>("WatchedIntervalsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("watched_intervals_json")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
+                    b.HasKey("Id")
+                        .HasName("pk_learner_video_progresses");
+
+                    b.HasIndex("VideoId")
+                        .HasDatabaseName("ix_learner_video_progresses_video_id");
+
+                    b.HasIndex("UserId", "LastWatchedAt")
+                        .HasDatabaseName("ix_learner_video_progresses_user_id_last_watched_at");
+
+                    b.HasIndex("UserId", "VideoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_learner_video_progresses_user_id_video_id");
+
+                    b.ToTable("learner_video_progresses", "learning");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3214,6 +3363,75 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("JapanesePartOfSpeech");
 
                     b.Navigation("KnowledgeUnit");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit.LearnerEncounteredLearningUnit", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", "KnowledgeMeaning")
+                        .WithMany()
+                        .HasForeignKey("KnowledgeMeaningId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encountered_learning_units_knowledge_meanings_knowl");
+
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeUnit.KnowledgeUnit", "KnowledgeUnit")
+                        .WithMany()
+                        .HasForeignKey("KnowledgeUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encountered_learning_units_knowledge_units_knowledg");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.LearningUnit.LearningUnit", "LearningUnit")
+                        .WithMany()
+                        .HasForeignKey("LearningUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encountered_learning_units_learning_units_learning_");
+
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encountered_learning_units_users_user_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encountered_learning_units_videos_video_id");
+
+                    b.Navigation("KnowledgeMeaning");
+
+                    b.Navigation("KnowledgeUnit");
+
+                    b.Navigation("LearningUnit");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerVideoProgress.LearnerVideoProgress", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_video_progresses_users_user_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_video_progresses_videos_video_id");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Material.Bunsetsu.Bunsetsu", b =>

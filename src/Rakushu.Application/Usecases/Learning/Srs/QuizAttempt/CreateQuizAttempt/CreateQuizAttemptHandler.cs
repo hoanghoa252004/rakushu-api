@@ -7,6 +7,7 @@ using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.QuestionType;
@@ -27,6 +28,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly IBankQuestionRepository _bankQuestionRepository;
 	private readonly ILearningUnitRepository _learningUnitRepository;
+	private readonly ILearnerEncounteredLearningUnitRepository _encounterRepository;
 	private readonly IQuizRepository _quizRepository;
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly IQuizContentGenerator _quizContentGenerator;
@@ -39,6 +41,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		ISavedItemRepository savedItemRepository,
 		IBankQuestionRepository bankQuestionRepository,
 		ILearningUnitRepository learningUnitRepository,
+		ILearnerEncounteredLearningUnitRepository encounterRepository,
 		IQuizRepository quizRepository,
 		IQuizAttemptRepository quizAttemptRepository,
 		IQuizContentGenerator quizContentGenerator,
@@ -50,6 +53,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		_savedItemRepository = savedItemRepository;
 		_bankQuestionRepository = bankQuestionRepository;
 		_learningUnitRepository = learningUnitRepository;
+		_encounterRepository = encounterRepository;
 		_quizRepository = quizRepository;
 		_quizAttemptRepository = quizAttemptRepository;
 		_quizContentGenerator = quizContentGenerator;
@@ -109,6 +113,31 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			var meaningIds = items.Select(i => i.KnowledgeMeaningId).Distinct().ToList();
 			var bankQuestions = (await _bankQuestionRepository.GetByMeaningIdsAsync(meaningIds, cancellationToken)).ToList();
 
+			// Case 2.4: Dynamic Priority Score Ordering (PriorityScore = UrgencyScore - ImmersionBonusScore)
+			// Overdue / rarely seen words appear first (Questions 1, 2, 3...), while words frequently heard
+			// in videos over the last 7 days are pushed toward the end of the quiz.
+			var encounterCounts7d = await _encounterRepository.GetEffectiveEncounterCountsByMeaningsAsync(
+				userId,
+				meaningIds,
+				now.AddDays(-7),
+				cancellationToken);
+
+			var orderedItems = items
+				.OrderByDescending(item =>
+				{
+					double urgencyScore = 0;
+					if (item.Schedule is not null && item.Schedule.DueAt < now)
+					{
+						urgencyScore = (now - item.Schedule.DueAt).TotalDays * 2.0;
+					}
+
+					int recentEncounters = encounterCounts7d.GetValueOrDefault(item.KnowledgeMeaningId, 0);
+					double immersionBonusScore = recentEncounters * 1.5;
+					return urgencyScore - immersionBonusScore;
+				})
+				.ThenBy(item => item.Schedule != null ? item.Schedule.DueAt : item.SavedAt)
+				.ToList();
+
 			var quizResult = QuizEntity.Create(userId, now);
 			if (quizResult.IsFailure)
 				return Result.Failure<CreateQuizAttemptResultDto>(quizResult.Error);
@@ -117,7 +146,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			int position = 1;
 			var skippedItems = new List<SkippedItemDto>();
 
-			foreach (var item in items)
+			foreach (var item in orderedItems)
 			{
 				var matchingQuestions = bankQuestions
 					.Where(bq => bq.KnowledgeMeaningId == item.KnowledgeMeaningId)

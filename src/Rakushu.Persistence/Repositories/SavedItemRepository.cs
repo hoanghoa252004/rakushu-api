@@ -315,4 +315,23 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 		return await _context.SavedItems
 			.AnyAsync(si => si.KnowledgeMeaningId == meaningId, cancellationToken);
 	}
+
+	public async Task<IReadOnlyList<SavedItem>> GetByUserAndMeaningsWithScheduleAsync(
+		UserId userId,
+		IReadOnlyCollection<KnowledgeMeaningId> meaningIds,
+		CancellationToken cancellationToken = default)
+	{
+		if (meaningIds.Count == 0)
+		{
+			return [];
+		}
+
+		return await _context.SavedItems
+			.Include(si => si.Schedule)
+				.ThenInclude(sch => sch!.Details)
+			.Include(si => si.KnowledgeMeaning)
+				.ThenInclude(km => km.KnowledgeUnit)
+			.Where(si => si.UserId == userId && si.IsActive && meaningIds.Contains(si.KnowledgeMeaningId))
+			.ToListAsync(cancellationToken);
+	}
 }
