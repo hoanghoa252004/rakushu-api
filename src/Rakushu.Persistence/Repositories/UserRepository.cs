@@ -84,6 +84,46 @@ public sealed class UserRepository : BaseRepository<User, UserId>, IUserReposito
 			.ToListAsync(cancellationToken);
 	}
 
+	public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetPagedAsync(
+		Guid? roleId,
+		UserStatus? status,
+		string? searchTerm,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default)
+	{
+		var query = _context.Users
+			.AsNoTracking()
+			.Where(u => u.Role.Code != RoleCodes.SystemAdministrator);
+
+		if (roleId.HasValue)
+			query = query.Where(u => u.RoleId.Value == roleId.Value);
+
+		if (status.HasValue)
+			query = query.Where(u => u.Status == status.Value);
+
+		if (!string.IsNullOrWhiteSpace(searchTerm))
+		{
+			var key = searchTerm.Trim().ToLower();
+			query = query.Where(u => u.FullName.ToLower().Contains(key)
+				|| u.Email.ToLower().Contains(key)
+				|| u.Role.Name.ToLower().Contains(key));
+		}
+
+		var total = await query.CountAsync(cancellationToken);
+
+		var items = await query
+			.OrderBy(u => u.UpdatedAt)
+			.Skip((pageNumber - 1) * pageSize)
+			.Take(pageSize)
+			.Include(u => u.Role)
+			.Include(u => u.Profile)
+			.AsSplitQuery()
+			.ToListAsync(cancellationToken);
+
+		return (items, total);
+	}
+
 	public override async Task<IEnumerable<User>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
 		return await _context.Users

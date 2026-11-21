@@ -34,47 +34,18 @@ internal sealed class GetMyVideosHandler : IRequestHandler<GetMyVideosQuery, Res
 			return Result.Failure<PaginatedList<VideoDetailDto>>(VideoErrors.NotFound);
 
 		var userId = UserId.From(_currentUserContext.UserId.Value);
-		var videos = await _repository.GetAllAsync(cancellationToken);
+		var (videos, totalCount) = await _repository.GetPagedAsync(
+			new[] { VideoSource.UploadedByLearner, VideoSource.ImportedFromExternal },
+			null,
+			_currentUserContext.UserId.Value,
+			request.SearchKey,
+			request.ContentCategoryId,
+			request.SeriesId,
+			request.PageNumber,
+			request.PageSize,
+			cancellationToken);
 
-		// Filter videos created by current user with UploadedByLearner or ImportedFromExternal source
-		var filteredVideos = videos.Where(v =>
-			v.LearnerId == userId &&
-			(v.SourceType == VideoSource.UploadedByLearner ||
-			 v.SourceType == VideoSource.ImportedFromExternal));
-
-		// Filter by SearchKey (title or slug)
-		if (!string.IsNullOrWhiteSpace(request.SearchKey))
-		{
-			var searchKeyLower = request.SearchKey.ToLower();
-			filteredVideos = filteredVideos.Where(v =>
-				v.Title.ToLower().Contains(searchKeyLower) ||
-				v.Slug.ToLower().Contains(searchKeyLower));
-		}
-
-		// Filter by ContentCategoryId
-		if (request.ContentCategoryId.HasValue)
-		{
-			var categoryId = ContentCategoryId.From(request.ContentCategoryId.Value);
-			filteredVideos = filteredVideos.Where(v => v.ContentCategoryId == categoryId);
-		}
-
-		// Filter by SeriesId
-		if (request.SeriesId.HasValue)
-		{
-			var seriesId = SeriesId.From(request.SeriesId.Value);
-			filteredVideos = filteredVideos.Where(v => v.SeriesId == seriesId);
-		}
-
-		// Calculate total count before paging
-		var totalCount = filteredVideos.Count();
-
-		// Apply paging
-		var items = filteredVideos
-			.OrderByDescending(v => v.CreatedAt)
-			.Skip((request.PageNumber - 1) * request.PageSize)
-			.Take(request.PageSize)
-			.Select(VideoDetailDto.FromEntity)
-			.ToList();
+		var items = videos.Select(VideoDetailDto.FromEntity).ToList();
 
 		// Generate pre-signed URLs for media assets
 		var enrichedItems = await Task.WhenAll(

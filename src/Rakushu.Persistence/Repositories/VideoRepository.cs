@@ -89,6 +89,62 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			.FirstOrDefaultAsync(v => v.Transcript != null && v.Transcript.TranscriptSegments.Any(s => s.Bunsetsus.Any(b => b.Tokens.Any(tok => tok.Id == tokenId))), cancellationToken);
 	}
 
+	public async Task<(IReadOnlyList<Video> Items, int TotalCount)> GetPagedAsync(
+		IReadOnlyCollection<VideoSource> sourceTypes,
+		VideoStatus? status,
+		Guid? learnerId,
+		string? searchKey,
+		Guid? categoryId,
+		Guid? seriesId,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default)
+	{
+		var query = _context.Videos.AsNoTracking().Where(v => sourceTypes.Contains(v.SourceType));
+
+		if (status.HasValue)
+			query = query.Where(v => v.Status == status.Value);
+
+		if (learnerId.HasValue)
+			{
+				var id = Rakushu.Domain.Entities.Identity.User.UserId.From(learnerId.Value);
+				query = query.Where(v => v.LearnerId == id);
+			}
+
+		if (!string.IsNullOrWhiteSpace(searchKey))
+		{
+			var key = searchKey.ToLower();
+			query = query.Where(v => v.Title.ToLower().Contains(key) || v.Slug.ToLower().Contains(key));
+		}
+
+		if (categoryId.HasValue)
+			{
+				var id = Rakushu.Domain.Entities.Knowledge.ContentCategory.ContentCategoryId.From(categoryId.Value);
+				query = query.Where(v => v.ContentCategoryId == id);
+			}
+
+		if (seriesId.HasValue)
+			{
+				var id = Rakushu.Domain.Entities.Material.Series.SeriesId.From(seriesId.Value);
+				query = query.Where(v => v.SeriesId == id);
+			}
+
+		var total = await query.CountAsync(cancellationToken);
+
+		var items = await query
+			.OrderByDescending(v => v.CreatedAt)
+			.Skip((pageNumber - 1) * pageSize)
+			.Take(pageSize)
+			.Include(v => v.Learner)
+			.Include(v => v.ContentCategory)
+			.Include(v => v.Series)
+			.Include(v => v.MediaAssets)
+			.AsSplitQuery()
+			.ToListAsync(cancellationToken);
+
+		return (items, total);
+	}
+
 	public override async Task<IEnumerable<Video>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
