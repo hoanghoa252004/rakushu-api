@@ -22,4 +22,13 @@ public interface IFlashcardSessionRepository : IBaseRepository<FlashcardSession,
 		DateTimeOffset now,
 		int maxCount,
 		CancellationToken cancellationToken = default);
+
+	Task<FlashcardRatingSummary> GetRatingSummaryByUserAsync(
+		UserId userId,
+		CancellationToken cancellationToken = default);
 }
+
+public sealed record FlashcardRatingSummary(
+	int EasyCount,
+	int HardCount,
+	int ForgotCount);

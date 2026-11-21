@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
+using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -104,5 +105,45 @@ public sealed class FlashcardSessionRepository : BaseRepository<FlashcardSession
 			.OrderBy(fs => fs.ExpiresAt)
 			.Take(maxCount)
 			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<FlashcardRatingSummary> GetRatingSummaryByUserAsync(
+		UserId userId,
+		CancellationToken cancellationToken = default)
+	{
+		var counts = await _context.FlashcardSessionItems
+			.AsNoTracking()
+			.Where(item =>
+				item.FlashcardSession.UserId == userId &&
+				item.FlashcardSession.Status != FlashcardSessionStatus.Canceled)
+			.GroupBy(item => item.Rating)
+			.Select(group => new
+			{
+				Rating = group.Key,
+				Count = group.Count()
+			})
+			.ToListAsync(cancellationToken);
+
+		int easy = 0;
+		int hard = 0;
+		int forgot = 0;
+
+		foreach (var row in counts)
+		{
+			switch (row.Rating)
+			{
+				case FlashcardRating.Easy:
+					easy = row.Count;
+					break;
+				case FlashcardRating.Hard:
+					hard = row.Count;
+					break;
+				case FlashcardRating.Forgot:
+					forgot = row.Count;
+					break;
+			}
+		}
+
+		return new FlashcardRatingSummary(easy, hard, forgot);
 	}
 }
