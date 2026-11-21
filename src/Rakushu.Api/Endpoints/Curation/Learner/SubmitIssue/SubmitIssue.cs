@@ -21,14 +21,16 @@ internal sealed class SubmitIssue : IEndpoint
 					dto.TargetType,
 					dto.TargetId,
 					dto.Category,
-					dto.LearnerFeedback);
+					dto.LearnerFeedback,
+					dto.StartCharIndex,
+					dto.EndCharIndex);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("SubmitLearnerIssue")
 			.WithSummary("Learner")
-			.WithDescription("Submits an issue report regarding a transcript segment, learning unit, or bank question. Automatically escalates to a curator ticket when the threshold is reached.")
+			.WithDescription("Submits an issue report regarding a transcript segment (including OOV character ranges), learning unit, or bank question. Automatically escalates to a curator ticket when the threshold is reached.")
 			.RequireAuthorization()
 			.Produces<SubmitIssueResponse>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
@@ -43,4 +45,6 @@ internal sealed record SubmitIssueRequestDto(
 	string TargetType,
 	Guid TargetId,
 	string Category,
-	string? LearnerFeedback);
+	string? LearnerFeedback,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null);

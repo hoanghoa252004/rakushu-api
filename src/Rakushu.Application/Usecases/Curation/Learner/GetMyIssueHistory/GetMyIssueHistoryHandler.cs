@@ -92,7 +92,15 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 			}
 			else
 			{
-				(targetTitle, targetContext) = await ResolveLearnerTargetContextAsync(x.TargetType, x.TargetId, cancellationToken);
+				bool isOovIssue = string.Equals(x.Category, CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
+				(targetTitle, targetContext) = await ResolveLearnerTargetContextAsync(
+					x.TargetType,
+					x.TargetId,
+					isOovIssue,
+					x.StartCharIndex ?? reportedSnapshot?.StartCharIndex,
+					x.EndCharIndex ?? reportedSnapshot?.EndCharIndex,
+					reportedSnapshot?.SelectedOovText,
+					cancellationToken);
 
 				if (!isFinalized)
 				{
@@ -113,6 +121,29 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 				targetTitle = CurationContextHelper.FormatSnapshotTitle(x.TargetType, reportedSnapshot);
 			}
 
+			int? startCharIdx = x.StartCharIndex ?? reportedSnapshot?.StartCharIndex;
+			int? endCharIdx = x.EndCharIndex ?? reportedSnapshot?.EndCharIndex;
+			string? selectedOovText =
+				reportedSnapshot?.SelectedOovText
+				?? CurationContextHelper.ExtractOovText(
+					targetContext?.OriginalSentenceJp ?? reportedSnapshot?.OriginalSentenceJp,
+					startCharIdx,
+					endCharIdx);
+
+			if (targetContext is not null && startCharIdx.HasValue && endCharIdx.HasValue)
+			{
+				targetContext = targetContext with
+				{
+					TargetToken = targetContext.TargetToken ?? selectedOovText,
+					StartTokenIndex = targetContext.StartTokenIndex ?? startCharIdx,
+					EndTokenIndex = targetContext.EndTokenIndex ?? endCharIdx,
+					StartCharIndex = startCharIdx,
+					EndCharIndex = endCharIdx,
+					SelectedOovText = selectedOovText,
+					VideoSourceType = targetContext.VideoSourceType ?? reportedSnapshot?.VideoSourceType
+				};
+			}
+
 			dtos.Add(new LearnerIssueHistoryDto(
 				x.Id.Value,
 				x.TargetType.ToString(),
@@ -125,7 +156,10 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 				x.CreatedAt,
 				x.Report?.ResolvedAt,
 				targetContext,
-				reportedSnapshot));
+				reportedSnapshot,
+				startCharIdx,
+				endCharIdx,
+				selectedOovText));
 		}
 
 		var pagedList = new PaginatedList<LearnerIssueHistoryDto>(dtos, totalCount, page, pageSize);
@@ -185,7 +219,17 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 					endSecs,
 					snap.OriginalSentenceJp,
 					snap.SubtitleVn,
-					null, null, null, null, null, null);
+					snap.TargetToken,
+					snap.StartTokenIndex,
+					snap.EndTokenIndex,
+					snap.Expression,
+					snap.Reading,
+					snap.Meaning,
+					IsActive: null,
+					StartCharIndex: snap.StartCharIndex,
+					EndCharIndex: snap.EndCharIndex,
+					SelectedOovText: snap.SelectedOovText,
+					VideoSourceType: snap.VideoSourceType);
 				return (title, ctx);
 			}
 
@@ -214,7 +258,9 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 					snap.EndTokenIndex,
 					snap.Expression ?? token,
 					snap.Reading,
-					snap.Meaning);
+					snap.Meaning,
+					IsActive: null,
+					VideoSourceType: snap.VideoSourceType);
 				return (title, ctx);
 			}
 
@@ -230,6 +276,10 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 	private async Task<(string? TargetTitle, LearnerTargetContextDto? Context)> ResolveLearnerTargetContextAsync(
 		TargetType targetType,
 		Guid targetId,
+		bool isOovIssue,
+		int? startCharIndex,
+		int? endCharIndex,
+		string? snapshotOovText,
 		CancellationToken cancellationToken)
 	{
 		try
@@ -286,6 +336,21 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 
 						var title = $"Video: {videoTitle} ({timestampFormatted})";
 
+						var oovText = snapshotOovText
+							?? CurationContextHelper.ExtractOovText(seg.Text, startCharIndex, endCharIndex);
+						var matchedOovUnit = isOovIssue
+							? CurationContextHelper.FindMatchingLearningUnitForOov(
+								seg,
+								startCharIndex,
+								endCharIndex,
+								oovText)
+							: null;
+
+						if (isOovIssue && !string.IsNullOrWhiteSpace(oovText))
+						{
+							title = $"Video: {videoTitle} ({timestampFormatted}) - OOV 「{oovText}」";
+						}
+
 						var context = new LearnerTargetContextDto(
 							null,
 							null,
@@ -300,12 +365,17 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 							endTimeSecs,
 							seg.Text,
 							seg.Subtitle?.Text,
-							null,
-							null,
-							null,
-							null,
-							null,
-							null);
+							isOovIssue ? oovText : null,
+							isOovIssue ? startCharIndex : null,
+							isOovIssue ? endCharIndex : null,
+							matchedOovUnit?.KnowledgeMeaning?.KnowledgeUnit?.Expression,
+							matchedOovUnit?.KnowledgeMeaning?.KnowledgeUnit?.Reading,
+							matchedOovUnit?.KnowledgeMeaning?.Meaning,
+							IsActive: null,
+							StartCharIndex: isOovIssue ? startCharIndex : null,
+							EndCharIndex: isOovIssue ? endCharIndex : null,
+							SelectedOovText: isOovIssue ? oovText : null,
+							VideoSourceType: video?.SourceType.ToString());
 
 						return (title, context);
 					}
@@ -353,7 +423,9 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 							lu.EndTokenIndex,
 							token,
 							lu.KnowledgeMeaning?.KnowledgeUnit?.Reading,
-							lu.KnowledgeMeaning?.Meaning);
+							lu.KnowledgeMeaning?.Meaning,
+							IsActive: null,
+							VideoSourceType: video?.SourceType.ToString());
 
 						return (title, context);
 					}

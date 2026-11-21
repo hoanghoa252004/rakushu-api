@@ -27,4 +27,7 @@ public static class ReportErrors
 
 	public static readonly Error EmptyCuratorNotes = Error.Validation(
 		"REPORT.EMPTY_CURATOR_NOTES", "Curator notes cannot be empty.");
+
+	public static readonly Error InvalidCharRange = Error.Validation(
+		"REPORT.INVALID_CHAR_RANGE", "Character range [startCharIndex, endCharIndex) must be non-negative and endCharIndex must be greater than startCharIndex.");
 }

@@ -21,4 +21,7 @@ public static class IssueDetailErrors
 
 	public static readonly Error CannotDeleteUnderReview = Error.Validation(
 		"ISSUE_DETAIL.CANNOT_DELETE_UNDER_REVIEW", "Cannot delete an issue report that is already under review or has been resolved.");
+
+	public static readonly Error InvalidCharRange = Error.Validation(
+		"ISSUE_DETAIL.INVALID_CHAR_RANGE", "Character range [startCharIndex, endCharIndex) must be non-negative and endCharIndex must be greater than startCharIndex.");
 }

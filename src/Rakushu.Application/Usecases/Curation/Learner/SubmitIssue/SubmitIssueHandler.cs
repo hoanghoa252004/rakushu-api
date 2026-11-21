@@ -10,6 +10,7 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Curation.Learner.SubmitIssue;
@@ -59,7 +60,13 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 		if (!Enum.TryParse<TargetType>(request.TargetType, true, out var targetType))
 			return Result.Failure<SubmitIssueResponse>(ReportErrors.InvalidTargetId);
 
+		bool isOov = string.Equals(request.Category?.Trim(), CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
+		string normalizedCategory = isOov ? CurationContextHelper.OovCategory : request.Category!.Trim();
+		int? startCharIndex = isOov ? request.StartCharIndex : null;
+		int? endCharIndex = isOov ? request.EndCharIndex : null;
+
 		string? targetSnapshotJson = null;
+		int effectiveThreshold = 3;
 
 		if (targetType == TargetType.BankQuestion)
 		{
@@ -81,7 +88,24 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 			if (seg is null)
 				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
 
-			targetSnapshotJson = CurationContextHelper.SerializeTranscriptSegment(seg);
+			var video = seg.Transcript?.Video;
+			bool isPersonalVideo = video is not null && video.SourceType != VideoSource.Curated;
+			if (isPersonalVideo && video!.LearnerId != userId)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
+
+			if (isOov)
+			{
+				var selectedText = CurationContextHelper.ExtractOovText(seg.Text, startCharIndex, endCharIndex);
+				if (string.IsNullOrWhiteSpace(selectedText))
+					return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.InvalidCharRange);
+			}
+
+			if (isPersonalVideo)
+			{
+				effectiveThreshold = 1;
+			}
+
+			targetSnapshotJson = CurationContextHelper.SerializeTranscriptSegment(seg, startCharIndex, endCharIndex);
 		}
 		else if (targetType == TargetType.LearningUnit)
 		{
@@ -92,6 +116,16 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 			if (lu is null)
 				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
 
+			var video = lu.TranscriptSegment?.Transcript?.Video;
+			bool isPersonalVideo = video is not null && video.SourceType != VideoSource.Curated;
+			if (isPersonalVideo && video!.LearnerId != userId)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
+
+			if (isPersonalVideo)
+			{
+				effectiveThreshold = 1;
+			}
+
 			targetSnapshotJson = CurationContextHelper.SerializeLearningUnit(lu);
 		}
 
@@ -99,7 +133,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 			userId,
 			targetType,
 			request.TargetId,
-			request.Category,
+			normalizedCategory,
+			startCharIndex,
+			endCharIndex,
 			cancellationToken);
 
 		if (hasActive)
@@ -113,10 +149,12 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 				userId,
 				targetType,
 				request.TargetId,
-				request.Category,
+				normalizedCategory,
 				now,
 				request.LearnerFeedback,
-				targetSnapshot: targetSnapshotJson);
+				targetSnapshot: targetSnapshotJson,
+				startCharIndex: startCharIndex,
+				endCharIndex: endCharIndex);
 
 			if (detailResult.IsFailure)
 				return Result.Failure<SubmitIssueResponse>(detailResult.Error);
@@ -126,7 +164,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 			var categoryAggregator = await _issueCategoryRepository.GetByTargetAndCategoryAsync(
 				targetType,
 				request.TargetId,
-				request.Category,
+				normalizedCategory,
+				startCharIndex,
+				endCharIndex,
 				cancellationToken);
 
 			bool thresholdReached;
@@ -136,9 +176,11 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 				var createCatResult = IssueCategory.Create(
 					targetType,
 					request.TargetId,
-					request.Category,
+					normalizedCategory,
 					now,
-					threshold: 3);
+					threshold: effectiveThreshold,
+					startCharIndex: startCharIndex,
+					endCharIndex: endCharIndex);
 
 				if (createCatResult.IsFailure)
 					return Result.Failure<SubmitIssueResponse>(createCatResult.Error);
@@ -157,7 +199,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 				var activeReport = await _reportRepository.GetActiveReportByTargetAndCategoryAsync(
 					targetType,
 					request.TargetId,
-					request.Category,
+					normalizedCategory,
+					startCharIndex,
+					endCharIndex,
 					cancellationToken);
 
 				if (activeReport is null)
@@ -165,7 +209,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 					var unassignedDetails = await _issueDetailRepository.GetUnassignedByTargetAndCategoryAsync(
 						targetType,
 						request.TargetId,
-						request.Category,
+						normalizedCategory,
+						startCharIndex,
+						endCharIndex,
 						cancellationToken);
 
 					var canonicalSnapshot = unassignedDetails
@@ -177,9 +223,11 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 					var reportResult = Report.Create(
 						targetType,
 						request.TargetId,
-						request.Category,
+						normalizedCategory,
 						now,
-						targetSnapshot: canonicalSnapshot);
+						targetSnapshot: canonicalSnapshot,
+						startCharIndex: startCharIndex,
+						endCharIndex: endCharIndex);
 
 					if (reportResult.IsFailure)
 						return Result.Failure<SubmitIssueResponse>(reportResult.Error);

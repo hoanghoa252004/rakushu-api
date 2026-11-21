@@ -50,6 +50,8 @@ internal sealed class DismissReportHandler : IRequestHandler<DismissReportComman
 				report.TargetType,
 				report.TargetId,
 				report.Category,
+				report.StartCharIndex,
+				report.EndCharIndex,
 				cancellationToken);
 
 			categoryAggregator?.ResetCount(now);

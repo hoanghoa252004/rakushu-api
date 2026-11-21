@@ -10,7 +10,8 @@ public sealed class SubmitIssueValidator : AbstractValidator<SubmitIssueCommand>
 		"AudioVideoSync",
 		"CutoffContext",
 		"GrammarOrTranscriptError",
-		"SubtitleTranslationError"
+		"SubtitleTranslationError",
+		CurationContextHelper.OovCategory
 	};
 
 	private static readonly HashSet<string> ValidLearningUnitCategories = new(StringComparer.OrdinalIgnoreCase)
@@ -51,6 +52,34 @@ public sealed class SubmitIssueValidator : AbstractValidator<SubmitIssueCommand>
 			.MaximumLength(1000)
 			.When(x => !string.IsNullOrEmpty(x.LearnerFeedback))
 			.WithMessage("LearnerFeedback cannot exceed 1000 characters.");
+
+		When(x => string.Equals(x.Category, CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase), () =>
+		{
+			RuleFor(x => x.StartCharIndex)
+				.NotNull()
+				.GreaterThanOrEqualTo(0)
+				.WithMessage("StartCharIndex is required and must be >= 0 for OOV reports.");
+
+			RuleFor(x => x.EndCharIndex)
+				.NotNull()
+				.GreaterThan(x => x.StartCharIndex ?? -1)
+				.WithMessage("EndCharIndex is required and must be greater than StartCharIndex for OOV reports.");
+
+			RuleFor(x => x)
+				.Must(x => (x.EndCharIndex ?? 0) - (x.StartCharIndex ?? 0) <= 100)
+				.WithMessage("Selected OOV span cannot exceed 100 characters.");
+		});
+
+		When(x => !string.Equals(x.Category, CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase), () =>
+		{
+			RuleFor(x => x.StartCharIndex)
+				.Null()
+				.WithMessage("StartCharIndex is only allowed for OOV reports.");
+
+			RuleFor(x => x.EndCharIndex)
+				.Null()
+				.WithMessage("EndCharIndex is only allowed for OOV reports.");
+		});
 	}
 
 	private static bool IsCategoryValidForTargetType(string? targetType, string? category)

@@ -7,4 +7,6 @@ public sealed record SubmitIssueCommand(
 	string TargetType,
 	Guid TargetId,
 	string Category,
-	string? LearnerFeedback) : IRequest<Result<SubmitIssueResponse>>;
+	string? LearnerFeedback,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null) : IRequest<Result<SubmitIssueResponse>>;

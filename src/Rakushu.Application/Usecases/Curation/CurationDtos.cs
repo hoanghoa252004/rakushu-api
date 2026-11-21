@@ -20,7 +20,11 @@ public sealed record CurationTargetSnapshotDto(
 	int? EndTokenIndex = null,
 	string? Expression = null,
 	string? Reading = null,
-	string? Meaning = null);
+	string? Meaning = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
 
 public sealed record LearnerTargetContextDto(
 	string? QuestionTitle,
@@ -42,7 +46,11 @@ public sealed record LearnerTargetContextDto(
 	string? Expression,
 	string? Reading,
 	string? Meaning,
-	bool? IsActive = null);
+	bool? IsActive = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
 
 public sealed record LearnerIssueHistoryDto(
 	Guid Id,
@@ -56,7 +64,10 @@ public sealed record LearnerIssueHistoryDto(
 	DateTimeOffset CreatedAt,
 	DateTimeOffset? ResolvedAt,
 	LearnerTargetContextDto? TargetContext,
-	CurationTargetSnapshotDto? ReportedSnapshot = null);
+	CurationTargetSnapshotDto? ReportedSnapshot = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null);
 
 public sealed record LearnerIssueSummaryDto(
 	int TotalCount,
@@ -74,7 +85,11 @@ public sealed record CuratorReportSummaryDto(
 	string Status,
 	int ReportCount,
 	DateTimeOffset CreatedAt,
-	DateTimeOffset? ResolvedAt);
+	DateTimeOffset? ResolvedAt,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
 
 public sealed record CuratorReportDetailDto(
 	Guid ReportId,
@@ -87,7 +102,30 @@ public sealed record CuratorReportDetailDto(
 	DateTimeOffset? ResolvedAt,
 	IReadOnlyList<IssueFeedbackDto> Feedbacks,
 	ReportTargetContextDto? Context,
-	CurationTargetSnapshotDto? ReportedSnapshot = null);
+	CurationTargetSnapshotDto? ReportedSnapshot = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
+
+public sealed record CuratorOovStatDto(
+	Guid VideoId,
+	string VideoTitle,
+	Guid SegmentId,
+	double StartTimeSeconds,
+	string TimestampFormatted,
+	string SentenceJp,
+	string? SubtitleVn,
+	int StartCharIndex,
+	int EndCharIndex,
+	string OovText,
+	int ReportCount,
+	int UniqueLearnerCount,
+	Guid? ActiveReportId,
+	string ReportStatus,
+	DateTimeOffset FirstReportedAt,
+	DateTimeOffset LastReportedAt,
+	IReadOnlyList<string> SampleFeedbacks);
 
 public sealed record IssueFeedbackDto(
 	Guid UserId,
@@ -130,4 +168,5 @@ public sealed record VideoLearningUnitContextDto(
 	int EndTokenIndex,
 	string? Expression,
 	string? Meaning,
-	string? Reading = null);
+	string? Reading = null,
+	string? VideoSourceType = null);

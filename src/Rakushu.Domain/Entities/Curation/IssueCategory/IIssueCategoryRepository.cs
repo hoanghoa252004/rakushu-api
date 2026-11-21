@@ -9,5 +9,7 @@ public interface IIssueCategoryRepository : IBaseRepository<IssueCategory, Issue
 		TargetType targetType,
 		Guid targetId,
 		string category,
+		int? startCharIndex = null,
+		int? endCharIndex = null,
 		CancellationToken cancellationToken = default);
 }

@@ -12,6 +12,8 @@ namespace Rakushu.Application.Usecases.Curation;
 
 public static class CurationContextHelper
 {
+	public const string OovCategory = "Oov";
+
 	private static readonly JsonSerializerOptions JsonOptions = new()
 	{
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -34,9 +36,130 @@ public static class CurationContextHelper
 		return JsonSerializer.Serialize(snapshot, JsonOptions);
 	}
 
-	public static string SerializeTranscriptSegment(TranscriptSegment segment)
+	public static string? ExtractOovText(string? sentence, int? startCharIndex, int? endCharIndex)
+	{
+		if (string.IsNullOrEmpty(sentence) ||
+			!startCharIndex.HasValue ||
+			!endCharIndex.HasValue ||
+			startCharIndex.Value < 0 ||
+			endCharIndex.Value <= startCharIndex.Value ||
+			endCharIndex.Value > sentence.Length)
+		{
+			return null;
+		}
+
+		return sentence.Substring(startCharIndex.Value, endCharIndex.Value - startCharIndex.Value);
+	}
+
+	public static LearningUnit? FindMatchingLearningUnitForOov(
+		TranscriptSegment? segment,
+		int? startCharIndex,
+		int? endCharIndex,
+		string? selectedOovText = null)
+	{
+		if (segment is null || segment.LearningUnits is null || segment.LearningUnits.Count == 0)
+		{
+			return null;
+		}
+
+		var sentence = segment.Text ?? string.Empty;
+		var oovText = !string.IsNullOrWhiteSpace(selectedOovText)
+			? selectedOovText.Trim()
+			: ExtractOovText(sentence, startCharIndex, endCharIndex)?.Trim();
+
+		var orderedTokens = segment.Bunsetsus?
+			.SelectMany(b => b.Tokens)
+			.OrderBy(t => t.Sequence)
+			.ToList() ?? [];
+
+		LearningUnit? bestMatch = null;
+		double bestScore = 0;
+
+		if (startCharIndex.HasValue && endCharIndex.HasValue && endCharIndex.Value > startCharIndex.Value)
+		{
+			int targetStart = startCharIndex.Value;
+			int targetEnd = endCharIndex.Value;
+
+			foreach (var lu in segment.LearningUnits)
+			{
+				if (lu.KnowledgeMeaning?.KnowledgeUnit is null)
+				{
+					continue;
+				}
+
+				double candidateScore = 0;
+
+				// 1. Direct half-open char-offset match (KnowledgeMatching units)
+				if (lu.StartTokenIndex >= 0 &&
+					lu.EndTokenIndex > lu.StartTokenIndex &&
+					lu.EndTokenIndex <= sentence.Length)
+				{
+					candidateScore = Math.Max(
+						candidateScore,
+						ComputeSpanIoU(lu.StartTokenIndex, lu.EndTokenIndex, targetStart, targetEnd));
+				}
+
+				// 2. Token-indexed match mapped via Token.StartIndex..EndIndex (CuratorDefine units)
+				if (orderedTokens.Count > 0 &&
+					lu.StartTokenIndex >= 0 &&
+					lu.EndTokenIndex >= lu.StartTokenIndex &&
+					lu.EndTokenIndex < orderedTokens.Count)
+				{
+					int tokCharStart = orderedTokens[lu.StartTokenIndex].StartIndex;
+					int tokCharEnd = orderedTokens[lu.EndTokenIndex].EndIndex;
+					if (tokCharEnd > tokCharStart)
+					{
+						candidateScore = Math.Max(
+							candidateScore,
+							ComputeSpanIoU(tokCharStart, tokCharEnd, targetStart, targetEnd));
+					}
+				}
+
+				if (candidateScore >= 0.5 && candidateScore > bestScore)
+				{
+					bestScore = candidateScore;
+					bestMatch = lu;
+				}
+			}
+		}
+
+		if (bestMatch is not null)
+		{
+			return bestMatch;
+		}
+
+		// 3. Fallback: exact Expression match against reported OOV surface text
+		if (!string.IsNullOrWhiteSpace(oovText))
+		{
+			return segment.LearningUnits.FirstOrDefault(lu =>
+				string.Equals(
+					lu.KnowledgeMeaning?.KnowledgeUnit?.Expression?.Trim(),
+					oovText,
+					StringComparison.Ordinal));
+		}
+
+		return null;
+	}
+
+	private static double ComputeSpanIoU(int startA, int endA, int startB, int endB)
+	{
+		int overlap = Math.Min(endA, endB) - Math.Max(startA, startB);
+		if (overlap <= 0)
+		{
+			return 0;
+		}
+
+		int union = Math.Max(endA, endB) - Math.Min(startA, startB);
+		return union > 0 ? (double)overlap / union : 0;
+	}
+
+	public static string SerializeTranscriptSegment(
+		TranscriptSegment segment,
+		int? startCharIndex = null,
+		int? endCharIndex = null)
 	{
 		var video = segment.Transcript?.Video;
+		var selectedOovText = ExtractOovText(segment.Text, startCharIndex, endCharIndex);
 		var snapshot = new CurationTargetSnapshotDto(
 			TargetType: nameof(TargetType.TranscriptSegment),
 			VideoId: video?.Id.Value,
@@ -44,7 +167,14 @@ public static class CurationContextHelper
 			StartTimeSeconds: segment.StartTime.TotalSeconds,
 			EndTimeSeconds: segment.EndTime.TotalSeconds,
 			OriginalSentenceJp: segment.Text,
-			SubtitleVn: segment.Subtitle?.Text);
+			SubtitleVn: segment.Subtitle?.Text,
+			TargetToken: selectedOovText,
+			StartTokenIndex: startCharIndex,
+			EndTokenIndex: endCharIndex,
+			StartCharIndex: startCharIndex,
+			EndCharIndex: endCharIndex,
+			SelectedOovText: selectedOovText,
+			VideoSourceType: video?.SourceType.ToString());
 
 		return JsonSerializer.Serialize(snapshot, JsonOptions);
 	}
@@ -67,7 +197,8 @@ public static class CurationContextHelper
 			EndTokenIndex: learningUnit.EndTokenIndex,
 			Expression: expression,
 			Reading: learningUnit.KnowledgeMeaning?.KnowledgeUnit?.Reading,
-			Meaning: learningUnit.KnowledgeMeaning?.Meaning);
+			Meaning: learningUnit.KnowledgeMeaning?.Meaning,
+			VideoSourceType: video?.SourceType.ToString());
 
 		return JsonSerializer.Serialize(snapshot, JsonOptions);
 	}
@@ -115,6 +246,12 @@ public static class CurationContextHelper
 			{
 				var videoTitle = snapshot.VideoTitle ?? "Video bài học";
 				var timestamp = FormatTimestamp(snapshot.StartTimeSeconds ?? 0);
+				var oovText = snapshot.SelectedOovText ?? snapshot.TargetToken;
+				if (!string.IsNullOrWhiteSpace(oovText))
+				{
+					return $"Video: {videoTitle} ({timestamp}) - OOV 「{oovText}」";
+				}
+
 				return !string.IsNullOrWhiteSpace(snapshot.VideoTitle)
 					? $"Video: {videoTitle} ({timestamp})"
 					: null;

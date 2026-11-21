@@ -89,8 +89,22 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 						includeThumbnail: true,
 						cancellationToken);
 
+					var oovText = CurationContextHelper.ExtractOovText(
+						segment.Text,
+						report.StartCharIndex,
+						report.EndCharIndex);
+
+					var isOovReport = string.Equals(report.Category, CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
+					var matchedOovUnit = isOovReport
+						? CurationContextHelper.FindMatchingLearningUnitForOov(
+							segment,
+							report.StartCharIndex,
+							report.EndCharIndex,
+							oovText)
+						: null;
+
 					videoContext = new VideoLearningUnitContextDto(
-						null,
+						matchedOovUnit?.Id.Value,
 						video?.Id.Value ?? Guid.Empty,
 						video?.Title ?? "Video bài học",
 						videoUrl,
@@ -103,11 +117,13 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 						CurationContextHelper.FormatTimestamp(startTimeSecs),
 						segment.Text ?? string.Empty,
 						segment.Subtitle?.Text,
-						null,
-						0,
-						0,
-						null,
-						null);
+						oovText,
+						report.StartCharIndex ?? 0,
+						report.EndCharIndex ?? 0,
+						matchedOovUnit?.KnowledgeMeaning?.KnowledgeUnit?.Expression,
+						matchedOovUnit?.KnowledgeMeaning?.Meaning,
+						matchedOovUnit?.KnowledgeMeaning?.KnowledgeUnit?.Reading,
+						video?.SourceType.ToString());
 				}
 			}
 			else if (report.TargetType == TargetType.LearningUnit)
@@ -149,7 +165,8 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 						unit.EndTokenIndex,
 						targetToken,
 						unit.KnowledgeMeaning?.Meaning,
-						unit.KnowledgeMeaning?.KnowledgeUnit?.Reading);
+						unit.KnowledgeMeaning?.KnowledgeUnit?.Reading,
+						video?.SourceType.ToString());
 				}
 			}
 		}
@@ -169,6 +186,16 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 				.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
 		var reportedSnapshot = CurationContextHelper.DeserializeSnapshot(rawSnapshotJson);
 
+		int? startCharIndex = report.StartCharIndex ?? reportedSnapshot?.StartCharIndex;
+		int? endCharIndex = report.EndCharIndex ?? reportedSnapshot?.EndCharIndex;
+		string? selectedOovText =
+			reportedSnapshot?.SelectedOovText
+			?? CurationContextHelper.ExtractOovText(
+				videoContext?.OriginalSentenceJp ?? reportedSnapshot?.OriginalSentenceJp,
+				startCharIndex,
+				endCharIndex);
+		string? videoSourceType = videoContext?.VideoSourceType ?? reportedSnapshot?.VideoSourceType;
+
 		var dto = new CuratorReportDetailDto(
 			report.Id.Value,
 			report.TargetType.ToString(),
@@ -180,7 +207,11 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 			report.ResolvedAt,
 			feedbacks,
 			context,
-			reportedSnapshot);
+			reportedSnapshot,
+			startCharIndex,
+			endCharIndex,
+			selectedOovText,
+			videoSourceType);
 
 		return Result.Success(dto);
 	}

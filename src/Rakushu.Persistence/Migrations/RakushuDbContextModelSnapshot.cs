@@ -44,9 +44,17 @@ namespace Rakushu.Persistence.Migrations
                         .HasDefaultValue(1)
                         .HasColumnName("current_count");
 
+                    b.Property<int?>("EndCharIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("end_char_index");
+
                     b.Property<DateTimeOffset>("LastReportedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_reported_at");
+
+                    b.Property<int?>("StartCharIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("start_char_index");
 
                     b.Property<Guid>("TargetId")
                         .HasColumnType("uuid")
@@ -73,7 +81,13 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasIndex("TargetType", "TargetId", "Category")
                         .IsUnique()
-                        .HasDatabaseName("ix_issue_categories_target_type_target_id_category");
+                        .HasDatabaseName("ix_issue_categories_non_oov_unique")
+                        .HasFilter("start_char_index IS NULL AND end_char_index IS NULL");
+
+                    b.HasIndex("TargetType", "TargetId", "Category", "StartCharIndex", "EndCharIndex")
+                        .IsUnique()
+                        .HasDatabaseName("ix_issue_categories_oov_span_unique")
+                        .HasFilter("start_char_index IS NOT NULL AND end_char_index IS NOT NULL");
 
                     b.ToTable("issue_categories", "curation");
                 });
@@ -94,6 +108,10 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<int?>("EndCharIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("end_char_index");
+
                     b.Property<string>("LearnerFeedback")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
@@ -102,6 +120,10 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<Guid?>("ReportId")
                         .HasColumnType("uuid")
                         .HasColumnName("report_id");
+
+                    b.Property<int?>("StartCharIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("start_char_index");
 
                     b.Property<Guid>("TargetId")
                         .HasColumnType("uuid")
@@ -130,6 +152,10 @@ namespace Rakushu.Persistence.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_issue_details_user_id");
 
+                    b.HasIndex("TargetId", "StartCharIndex", "EndCharIndex")
+                        .HasDatabaseName("ix_issue_details_oov_span")
+                        .HasFilter("category = 'Oov' AND start_char_index IS NOT NULL AND end_char_index IS NOT NULL");
+
                     b.HasIndex("TargetType", "TargetId", "Category")
                         .HasDatabaseName("ix_issue_details_target_type_target_id_category");
 
@@ -156,9 +182,17 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("curator_notes");
 
+                    b.Property<int?>("EndCharIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("end_char_index");
+
                     b.Property<DateTimeOffset?>("ResolvedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("resolved_at");
+
+                    b.Property<int?>("StartCharIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("start_char_index");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -192,6 +226,9 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasIndex("TargetType", "TargetId", "Category")
                         .HasDatabaseName("ix_reports_target_type_target_id_category");
+
+                    b.HasIndex("TargetType", "TargetId", "Category", "StartCharIndex", "EndCharIndex")
+                        .HasDatabaseName("ix_reports_target_category_span");
 
                     b.ToTable("reports", "curation");
                 });

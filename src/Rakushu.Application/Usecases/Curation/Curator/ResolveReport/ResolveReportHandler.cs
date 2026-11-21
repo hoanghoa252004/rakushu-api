@@ -50,6 +50,8 @@ internal sealed class ResolveReportHandler : IRequestHandler<ResolveReportComman
 				report.TargetType,
 				report.TargetId,
 				report.Category,
+				report.StartCharIndex,
+				report.EndCharIndex,
 				cancellationToken);
 
 			categoryAggregator?.ResetCount(now);

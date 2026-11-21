@@ -12,6 +12,8 @@ public interface IReportRepository : IBaseRepository<Report, ReportId>
 		TargetType targetType,
 		Guid targetId,
 		string category,
+		int? startCharIndex = null,
+		int? endCharIndex = null,
 		CancellationToken cancellationToken = default);
 
 	Task<(IReadOnlyList<Report> Items, int TotalCount)> GetReportsAsync(

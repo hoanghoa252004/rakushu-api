@@ -23,6 +23,8 @@ public sealed class ReportRepository : BaseRepository<Report, ReportId>, IReport
 		TargetType targetType,
 		Guid targetId,
 		string category,
+		int? startCharIndex = null,
+		int? endCharIndex = null,
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.Reports
@@ -31,6 +33,8 @@ public sealed class ReportRepository : BaseRepository<Report, ReportId>, IReport
 				r => r.TargetType == targetType &&
 					 r.TargetId == targetId &&
 					 r.Category == category &&
+					 r.StartCharIndex == startCharIndex &&
+					 r.EndCharIndex == endCharIndex &&
 					 (r.Status == ReportStatus.Pending || r.Status == ReportStatus.InReview),
 				cancellationToken);
 	}

@@ -73,6 +73,11 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 				targetTitle = await ResolveTargetTitleAsync(r.TargetType, r.TargetId, cancellationToken);
 			}
 
+			int? startCharIdx = r.StartCharIndex ?? snap?.StartCharIndex;
+			int? endCharIdx = r.EndCharIndex ?? snap?.EndCharIndex;
+			string? selectedOovText = snap?.SelectedOovText
+				?? CurationContextHelper.ExtractOovText(snap?.OriginalSentenceJp, startCharIdx, endCharIdx);
+
 			dtos.Add(new CuratorReportSummaryDto(
 				r.Id.Value,
 				r.TargetType.ToString(),
@@ -82,7 +87,11 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 				r.Status.ToString(),
 				r.Details.Count,
 				r.CreatedAt,
-				r.ResolvedAt));
+				r.ResolvedAt,
+				startCharIdx,
+				endCharIdx,
+				selectedOovText,
+				snap?.VideoSourceType));
 		}
 
 		var pagedList = new PaginatedList<CuratorReportSummaryDto>(

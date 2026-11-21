@@ -99,6 +99,8 @@ public sealed class TranscriptRepository : BaseRepository<Transcript, Transcript
 			.Include(ts => ts.LearningUnits)
 				.ThenInclude(lu => lu.KnowledgeMeaning)
 					.ThenInclude(km => km.KnowledgeUnit)
+			.Include(ts => ts.Bunsetsus)
+				.ThenInclude(b => b.Tokens)
 			.AsSplitQuery()
 			.FirstOrDefaultAsync(ts => ts.Id == segmentId, cancellationToken);
 	}

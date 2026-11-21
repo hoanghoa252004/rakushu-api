@@ -39,6 +39,10 @@ internal sealed class ReportConfiguration : IEntityTypeConfiguration<Report>
 		builder.Property(r => r.TargetSnapshot)
 			.HasColumnType("jsonb");
 
+		builder.Property(r => r.StartCharIndex);
+
+		builder.Property(r => r.EndCharIndex);
+
 		builder.Property(r => r.ResolvedAt);
 
 		builder.Property(r => r.CreatedAt)
@@ -53,6 +57,8 @@ internal sealed class ReportConfiguration : IEntityTypeConfiguration<Report>
 			.OnDelete(DeleteBehavior.SetNull);
 
 		builder.HasIndex(r => new { r.TargetType, r.TargetId, r.Category });
+		builder.HasIndex(r => new { r.TargetType, r.TargetId, r.Category, r.StartCharIndex, r.EndCharIndex })
+			.HasDatabaseName("ix_reports_target_category_span");
 		builder.HasIndex(r => r.Status);
 	}
 }
