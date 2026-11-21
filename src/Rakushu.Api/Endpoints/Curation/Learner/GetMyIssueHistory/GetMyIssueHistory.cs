@@ -16,12 +16,16 @@ internal sealed class GetMyIssueHistory : IEndpoint
 			.MapGet("/my-history", async (
 				[FromQuery] int? page,
 				[FromQuery] int? pageSize,
+				[FromQuery] string? status,
+				[FromQuery] string? targetType,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
 				var query = new GetMyIssueHistoryQuery(
 					page is null or <= 0 ? 1 : page.Value,
-					pageSize is null or <= 0 ? 20 : pageSize.Value);
+					pageSize is null or <= 0 ? 20 : pageSize.Value,
+					status,
+					targetType);
 
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();

@@ -115,8 +115,7 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 					{
 						var videoTitle = seg.Transcript?.Video?.Title ?? "Video bài học";
 						var timestamp = CurationContextHelper.FormatTimestamp(seg.StartTime.TotalSeconds);
-						var preview = seg.Text.Length > 35 ? seg.Text[..35] + "..." : seg.Text;
-						return $"Video: {videoTitle} ({timestamp}) - 「{preview}」";
+						return $"Video: {videoTitle} ({timestamp})";
 					}
 					return null;
 

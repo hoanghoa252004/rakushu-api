@@ -115,14 +115,6 @@ public static class CurationContextHelper
 			{
 				var videoTitle = snapshot.VideoTitle ?? "Video bài học";
 				var timestamp = FormatTimestamp(snapshot.StartTimeSeconds ?? 0);
-				if (!string.IsNullOrWhiteSpace(snapshot.OriginalSentenceJp))
-				{
-					var preview = snapshot.OriginalSentenceJp.Length > 35
-						? snapshot.OriginalSentenceJp[..35] + "..."
-						: snapshot.OriginalSentenceJp;
-					return $"Video: {videoTitle} ({timestamp}) - 「{preview}」";
-				}
-
 				return !string.IsNullOrWhiteSpace(snapshot.VideoTitle)
 					? $"Video: {videoTitle} ({timestamp})"
 					: null;

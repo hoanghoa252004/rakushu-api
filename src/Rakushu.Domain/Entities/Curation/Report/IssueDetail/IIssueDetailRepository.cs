@@ -26,5 +26,11 @@ public interface IIssueDetailRepository : IBaseRepository<IssueDetail, IssueDeta
 		UserId userId,
 		int page,
 		int pageSize,
+		string? status = null,
+		TargetType? targetType = null,
+		CancellationToken cancellationToken = default);
+
+	Task<(int TotalCount, int PendingCount, int InvestigatingCount, int ResolvedCount, int DismissedCount)> GetSummaryByUserIdAsync(
+		UserId userId,
 		CancellationToken cancellationToken = default);
 }

@@ -148,7 +148,8 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 						unit.StartTokenIndex,
 						unit.EndTokenIndex,
 						targetToken,
-						unit.KnowledgeMeaning?.Meaning);
+						unit.KnowledgeMeaning?.Meaning,
+						unit.KnowledgeMeaning?.KnowledgeUnit?.Reading);
 				}
 			}
 		}

@@ -51,7 +51,20 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 		int page = Math.Max(1, request.Page);
 		int pageSize = Math.Clamp(request.PageSize, 1, 100);
 
-		var (issues, totalCount) = await _issueDetailRepository.GetByUserIdAsync(userId, page, pageSize, cancellationToken);
+		TargetType? targetType = null;
+		if (!string.IsNullOrWhiteSpace(request.TargetType) &&
+			Enum.TryParse<TargetType>(request.TargetType, true, out var parsedTargetType))
+		{
+			targetType = parsedTargetType;
+		}
+
+		var (issues, totalCount) = await _issueDetailRepository.GetByUserIdAsync(
+			userId,
+			page,
+			pageSize,
+			request.Status,
+			targetType,
+			cancellationToken);
 
 		var dtos = new List<LearnerIssueHistoryDto>(issues.Count);
 		foreach (var x in issues)
@@ -271,8 +284,7 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 							includeThumbnail: false,
 							cancellationToken);
 
-						var preview = seg.Text.Length > 35 ? seg.Text[..35] + "..." : seg.Text;
-						var title = $"Video: {videoTitle} ({timestampFormatted}) - 「{preview}」";
+						var title = $"Video: {videoTitle} ({timestampFormatted})";
 
 						var context = new LearnerTargetContextDto(
 							null,

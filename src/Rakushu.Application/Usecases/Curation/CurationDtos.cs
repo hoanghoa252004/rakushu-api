@@ -58,6 +58,13 @@ public sealed record LearnerIssueHistoryDto(
 	LearnerTargetContextDto? TargetContext,
 	CurationTargetSnapshotDto? ReportedSnapshot = null);
 
+public sealed record LearnerIssueSummaryDto(
+	int TotalCount,
+	int PendingCount,
+	int InvestigatingCount,
+	int ResolvedCount,
+	int DismissedCount);
+
 public sealed record CuratorReportSummaryDto(
 	Guid ReportId,
 	string TargetType,
@@ -122,4 +129,5 @@ public sealed record VideoLearningUnitContextDto(
 	int StartTokenIndex,
 	int EndTokenIndex,
 	string? Expression,
-	string? Meaning);
+	string? Meaning,
+	string? Reading = null);
