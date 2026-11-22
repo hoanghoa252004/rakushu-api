@@ -2,6 +2,7 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Application.Usecases.Embedding;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
@@ -43,6 +44,7 @@ using Rakushu.Domain.Entities.Subscriptions.Plan;
 using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using Rakushu.Domain.Entities.Subscriptions.Transaction;
 using Rakushu.Persistence.Connection;
+using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
 
 namespace Rakushu.Persistence.Extensions;
@@ -114,6 +116,9 @@ public static class PersistenceServiceCollectionExtensions
 		// Video History & Encounter Tracking Repositories
 		services.AddScoped<ILearnerVideoProgressRepository, LearnerVideoProgressRepository>();
 		services.AddScoped<ILearnerEncounteredLearningUnitRepository, LearnerEncounteredLearningUnitRepository>();
+
+		// Read-Only Analytics Query Services
+		services.AddScoped<ILearnerAnalyticsQueryService, LearnerAnalyticsQueryService>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();

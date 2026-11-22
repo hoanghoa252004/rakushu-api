@@ -19,9 +19,19 @@ public interface ISavedItemRepository : IBaseRepository<SavedItem, SavedItemId>
 		string? sortOrder = null,
 		CancellationToken cancellationToken = default);
 
+	Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
+		UserId userId,
+		SavedItemQueryOptions options,
+		CancellationToken cancellationToken = default);
+
 	Task<int> CountUserItemsAsync(
 		UserId userId,
 		string? filter = null,
+		CancellationToken cancellationToken = default);
+
+	Task<int> CountUserItemsAsync(
+		UserId userId,
+		SavedItemQueryOptions options,
 		CancellationToken cancellationToken = default);
 
 	Task<IReadOnlyList<SavedItem>> GetDueItemsAsync(

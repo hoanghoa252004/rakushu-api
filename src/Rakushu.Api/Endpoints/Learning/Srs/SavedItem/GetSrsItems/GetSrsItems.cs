@@ -22,16 +22,35 @@ internal sealed class GetSrsItems : IEndpoint
 				[FromQuery] int? pageSize,
 				[FromQuery] string? sortBy,
 				[FromQuery] string? sortOrder,
+				[FromQuery] string? level,
+				[FromQuery] string? knowledgeType,
+				[FromQuery] string? status,
+				[FromQuery] string? search,
+				[FromQuery] string? dueDate,
+				[FromQuery] string? timeZone,
+				[FromQuery] bool? isActive,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var query = new GetSrsItemsQuery(page ?? 1, pageSize ?? 50, filter, sortBy, sortOrder);
+				var query = new GetSrsItemsQuery(
+					page ?? 1,
+					pageSize ?? 50,
+					filter,
+					sortBy,
+					sortOrder,
+					level,
+					knowledgeType,
+					status,
+					search,
+					dueDate,
+					timeZone,
+					isActive);
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetSrsItems")
 			.WithSummary("Learner")
-			.WithDescription("Returns a lightweight list of saved vocabulary items with basic word details, SM-2 metrics, and due dates. Filter by filter ('all', 'due', 'leech', 'mastered'). Supports sorting via sortBy ('saved', 'due', 'leech', 'alphabetical') and sortOrder ('asc', 'desc'). For deep video context, call GET /api/srs/saved-items/{id}.")
+			.WithDescription("Returns saved vocabulary items with word details, SM-2 metrics, JLPT level, knowledge type, and maturity status. Supports filtering by filter, level, knowledgeType, status, search, dueDate (yyyy-MM-dd), timeZone, and isActive, plus sorting via sortBy ('saved', 'due', 'leech', 'alphabetical', 'interval') and sortOrder.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<IReadOnlyList<SavedItemSummaryDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Knowledge.KnowledgeUnit;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
@@ -52,7 +53,7 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 				cancellationToken);
 	}
 
-	public async Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
+	public Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
 		UserId userId,
 		int page,
 		int pageSize,
@@ -61,9 +62,23 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 		string? sortOrder = null,
 		CancellationToken cancellationToken = default)
 	{
-		var query = BuildUserItemsQuery(userId, filter);
+		return GetUserItemsAsync(
+			userId,
+			new SavedItemQueryOptions(page, pageSize, filter, sortBy, sortOrder),
+			cancellationToken);
+	}
 
-		query = ApplySorting(query, sortBy, sortOrder);
+	public async Task<IReadOnlyList<SavedItem>> GetUserItemsAsync(
+		UserId userId,
+		SavedItemQueryOptions options,
+		CancellationToken cancellationToken = default)
+	{
+		var query = BuildUserItemsQuery(userId, options);
+
+		query = ApplySorting(query, options.SortBy, options.SortOrder);
+
+		int page = Math.Max(1, options.Page);
+		int pageSize = Math.Max(1, options.PageSize);
 
 		return await query
 			.Skip((page - 1) * pageSize)
@@ -122,6 +137,24 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 						.OrderBy(si => si.KnowledgeMeaning.KnowledgeUnit.Reading)
 						.ThenBy(si => si.KnowledgeMeaning.KnowledgeUnit.Expression),
 
+			"interval" => isDesc
+				? query
+					.OrderByDescending(si => si.Schedule != null
+						? (si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() ?? -1)
+						: -1)
+					.ThenByDescending(si => si.Schedule != null
+						? (si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.Repetitions).FirstOrDefault() ?? 0)
+						: 0)
+					.ThenBy(si => si.SavedAt)
+				: query
+					.OrderBy(si => si.Schedule != null
+						? (si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() ?? -1)
+						: -1)
+					.ThenBy(si => si.Schedule != null
+						? (si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.Repetitions).FirstOrDefault() ?? 0)
+						: 0)
+					.ThenBy(si => si.SavedAt),
+
 			// Mặc định: theo lịch ôn (DueAt ASC / SavedAt ASC)
 			_ => isDesc
 				? query.OrderByDescending(si => si.Schedule != null ? si.Schedule.DueAt : si.SavedAt)
@@ -129,12 +162,20 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 		};
 	}
 
-	public async Task<int> CountUserItemsAsync(
+	public Task<int> CountUserItemsAsync(
 		UserId userId,
 		string? filter = null,
 		CancellationToken cancellationToken = default)
 	{
-		var query = BuildUserItemsQuery(userId, filter);
+		return CountUserItemsAsync(userId, new SavedItemQueryOptions(Filter: filter), cancellationToken);
+	}
+
+	public async Task<int> CountUserItemsAsync(
+		UserId userId,
+		SavedItemQueryOptions options,
+		CancellationToken cancellationToken = default)
+	{
+		var query = BuildUserItemsQuery(userId, options);
 		return await query.CountAsync(cancellationToken);
 	}
 
@@ -272,39 +313,117 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 
 	private IQueryable<SavedItem> BuildUserItemsQuery(
 		UserId userId,
-		string? filter)
+		SavedItemQueryOptions options)
 	{
 		var query = _context.SavedItems
 			.Include(si => si.Schedule)
 				.ThenInclude(sch => sch!.Details)
 			.Include(si => si.KnowledgeMeaning)
 				.ThenInclude(km => km.KnowledgeUnit)
+					.ThenInclude(ku => ku.ProficiencyLevel)
 			.Where(si => si.UserId == userId);
 
-		var normalizedFilter = filter?.Trim().ToLowerInvariant();
+		bool targetIsActive = options.IsActive
+			?? !string.Equals(options.Status?.Trim(), "inactive", StringComparison.OrdinalIgnoreCase);
+		query = query.Where(si => si.IsActive == targetIsActive);
 
-		var now = DateTimeOffset.UtcNow;
-		var endOfToday = new DateTimeOffset(now.Year, now.Month, now.Day, 23, 59, 59, 999, now.Offset);
+		var now = options.NowUtc ?? DateTimeOffset.UtcNow;
+		var endOfTodayExclusive = options.EndOfTodayUtc
+			?? new DateTimeOffset(now.Year, now.Month, now.Day, 0, 0, 0, now.Offset).AddDays(1);
 
-		return normalizedFilter switch
+		query = ApplyStatusOrFilter(query, options.Filter, endOfTodayExclusive);
+		query = ApplyStatusOrFilter(query, options.Status, endOfTodayExclusive);
+
+		if (!string.IsNullOrWhiteSpace(options.Level))
+		{
+			var levelUpper = options.Level.Trim().ToUpperInvariant();
+			query = query.Where(si => si.KnowledgeMeaning.KnowledgeUnit.ProficiencyLevel.Code.ToUpper() == levelUpper);
+		}
+
+		if (!string.IsNullOrWhiteSpace(options.KnowledgeType)
+			&& Enum.TryParse<KnowledgeUnitType>(options.KnowledgeType.Trim(), ignoreCase: true, out var knowledgeType))
+		{
+			query = query.Where(si => si.KnowledgeMeaning.KnowledgeUnit.KnowledgeType == knowledgeType);
+		}
+
+		if (!string.IsNullOrWhiteSpace(options.Search))
+		{
+			var escaped = options.Search.Trim()
+				.Replace("\\", "\\\\")
+				.Replace("%", "\\%")
+				.Replace("_", "\\_");
+			var pattern = $"%{escaped}%";
+			query = query.Where(si =>
+				EF.Functions.ILike(si.KnowledgeMeaning.KnowledgeUnit.Expression, pattern, "\\")
+				|| (si.KnowledgeMeaning.KnowledgeUnit.Reading != null
+					&& EF.Functions.ILike(si.KnowledgeMeaning.KnowledgeUnit.Reading, pattern, "\\"))
+				|| EF.Functions.ILike(si.KnowledgeMeaning.Meaning, pattern, "\\"));
+		}
+
+		if (options.DueFromUtc.HasValue)
+		{
+			var dueFromUtc = options.DueFromUtc.Value;
+			query = query.Where(si => si.Schedule != null && si.Schedule.DueAt >= dueFromUtc);
+		}
+
+		if (options.DueBeforeUtc.HasValue)
+		{
+			var dueBeforeUtc = options.DueBeforeUtc.Value;
+			query = query.Where(si => si.Schedule != null && si.Schedule.DueAt < dueBeforeUtc);
+		}
+
+		return query;
+	}
+
+	private static IQueryable<SavedItem> ApplyStatusOrFilter(
+		IQueryable<SavedItem> query,
+		string? value,
+		DateTimeOffset endOfTodayExclusive)
+	{
+		var normalized = value?.Trim().ToLowerInvariant();
+		if (string.IsNullOrEmpty(normalized))
+		{
+			return query;
+		}
+
+		return normalized switch
 		{
 			// 1. Cần ôn hôm nay & Quá hạn (Due today / Overdue)
 			"due" or "due_today" or "overdue" or "urgent" =>
-				query.Where(si => si.IsActive && si.Schedule != null && si.Schedule.DueAt <= endOfToday),
+				query.Where(si => si.Schedule != null && si.Schedule.DueAt < endOfTodayExclusive),
 
 			// 2. Từ hay quên (Leech: Lapses >= 8 hoặc EF <= 1.3001)
 			"leech" or "hay_quen" or "difficult" =>
-				query.Where(si => si.IsActive && si.Schedule != null &&
+				query.Where(si => si.Schedule != null &&
 					(si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.Lapses).FirstOrDefault() >= 8 ||
 					 si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (double?)d.EasinessFactor).FirstOrDefault() <= 1.3001)),
 
-			// 3. Đã thành thạo (Mastered: Interval >= 21 ngày)
+			// 3. Từ mới chưa có lần ôn tập nào
+			"new" =>
+				query.Where(si => si.Schedule == null || !si.Schedule.Details.Any()),
+
+			// 4. Đang học (Interval < 7 ngày và đã có ít nhất 1 lần ôn)
+			"learning" =>
+				query.Where(si => si.Schedule != null && si.Schedule.Details.Any() &&
+					(si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() ?? 0) < 7),
+
+			// 5. Mới quen / Young (7 <= Interval < 21 ngày)
+			"young" =>
+				query.Where(si => si.Schedule != null &&
+					(si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() ?? 0) >= 7 &&
+					(si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() ?? 0) < 21),
+
+			// 6. Đã thành thạo (Mastered: Interval >= 21 ngày)
 			"mastered" or "thanh_thao" or "solidified" =>
-				query.Where(si => si.IsActive && si.Schedule != null &&
+				query.Where(si => si.Schedule != null &&
 					si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() >= 21),
 
-			// 4. Mặc định: Lấy toàn bộ từ vựng đang học (Active)
-			_ => query.Where(si => si.IsActive)
+			// 7. Đã lưu nhưng chưa thành thạo (Interval < 21 ngày hoặc chưa ôn)
+			"saved" or "not_mastered" =>
+				query.Where(si => si.Schedule == null || !si.Schedule.Details.Any() ||
+					(si.Schedule.Details.OrderByDescending(d => d.ReviewNumber).Select(d => (int?)d.IntervalDays).FirstOrDefault() ?? 0) < 21),
+
+			_ => query
 		};
 	}
 

@@ -9,4 +9,11 @@ public sealed record GetSrsItemsQuery(
 	int PageSize = 50,
 	string? Filter = null,
 	string? SortBy = null,
-	string? SortOrder = null) : IRequest<Result<IReadOnlyList<SavedItemSummaryDto>>>;
+	string? SortOrder = null,
+	string? Level = null,
+	string? KnowledgeType = null,
+	string? Status = null,
+	string? Search = null,
+	string? DueDate = null,
+	string? TimeZone = null,
+	bool? IsActive = null) : IRequest<Result<IReadOnlyList<SavedItemSummaryDto>>>;

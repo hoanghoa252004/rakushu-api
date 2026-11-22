@@ -84,6 +84,13 @@ internal static class SwaggerExtension
 				Description = "APIs for Learner Video Watch History, Playback Progress Tracking, Krashen i+1 Recommendations, and Immersion Vocabulary Coverage."
 			});
 
+			options.SwaggerDoc("analytics", new OpenApiInfo
+			{
+				Title = "Analytics API",
+				Version = "v1",
+				Description = "APIs for Learner Statistics, SRS Heatmaps, Quiz Diagnostics, and Shadowing Pronunciation Analytics."
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -127,6 +134,7 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/srs/swagger.json", "SRS API");
 			options.SwaggerEndpoint("/swagger/curation/swagger.json", "Curation API");
 			options.SwaggerEndpoint("/swagger/learning/swagger.json", "Learning API");
+			options.SwaggerEndpoint("/swagger/analytics/swagger.json", "Analytics API");
 		});
 
 		return app;

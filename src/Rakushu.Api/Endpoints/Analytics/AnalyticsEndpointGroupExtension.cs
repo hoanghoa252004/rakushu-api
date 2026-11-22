@@ -1,0 +1,18 @@
+namespace Rakushu.Api.Endpoints.Analytics;
+
+internal static class AnalyticsEndpointGroupExtension
+{
+	internal static RouteGroupBuilder MapLearnerAnalyticsEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/analytics/learner")
+			.WithTags("Learner Analytics")
+			.WithGroupName("analytics");
+	}
+
+	internal static RouteGroupBuilder MapShadowingAnalyticsEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/analytics/shadowing")
+			.WithTags("Shadowing Analytics")
+			.WithGroupName("analytics");
+	}
+}

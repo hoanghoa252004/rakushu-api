@@ -29,7 +29,10 @@ public sealed record SavedItemSummaryDto(
 	double? EasinessFactor = null,
 	int? IntervalDays = null,
 	int? Repetitions = null,
-	int RecentEncounterCount = 0);
+	int RecentEncounterCount = 0,
+	string? JlptLevel = null,
+	string? KnowledgeType = null,
+	string? Status = null);
 
 public sealed record SavedItemDetailDto(
 	Guid Id,
