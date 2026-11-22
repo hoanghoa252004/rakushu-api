@@ -15,4 +15,11 @@ internal static class AnalyticsEndpointGroupExtension
 			.WithTags("Shadowing Analytics")
 			.WithGroupName("analytics");
 	}
+
+	internal static RouteGroupBuilder MapCuratorAnalyticsEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/analytics/curator")
+			.WithTags("Curator Analytics")
+			.WithGroupName("analytics");
+	}
 }

@@ -88,7 +88,7 @@ internal static class SwaggerExtension
 			{
 				Title = "Analytics API",
 				Version = "v1",
-				Description = "APIs for Learner Statistics, SRS Heatmaps, Quiz Diagnostics, and Shadowing Pronunciation Analytics."
+				Description = "APIs for Learner Statistics, SRS Heatmaps, Quiz Diagnostics, Shadowing Pronunciation Analytics, and Curator Dashboard Analytics."
 			});
 
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
