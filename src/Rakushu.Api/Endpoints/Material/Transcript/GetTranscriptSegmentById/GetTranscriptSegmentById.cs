@@ -28,7 +28,7 @@ internal sealed class GetTranscriptSegmentById : IEndpoint
 		.WithName("GetTranscriptSegmentById")
 		.WithSummary("Curator")
 		.WithDescription("Retrieves a specific transcript segment with bunsetsus and tokens detail.")
-		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 		.Produces<TranscriptSegmentDetailDto>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status404NotFound)
 		.ProducesProblem(StatusCodes.Status500InternalServerError);

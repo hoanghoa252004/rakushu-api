@@ -28,9 +28,10 @@ public sealed record CreateShadowingSessionRequestDto(
 	string Visibility,
 	DateTimeOffset ScheduledStartAt);
 
-public sealed record CreateInvitationsRequestDto(List<Guid> LearnerIds);
+public sealed record CreateInvitationsRequestDto(List<string> Emails);
 public sealed record RespondInvitationRequestDto(string Status);
 public sealed record ChooseRoleRequestDto(Guid RoleId);
+public sealed record SwapRolesRequestDto(Guid FirstMemberId, Guid SecondMemberId);
 
 internal sealed class CreateShadowingSessionEndpoint : IEndpoint
 {
@@ -192,7 +193,7 @@ internal sealed class GetAllShadowingSessionsEndpoint : IEndpoint
 			.Produces<PaginatedList<ShadowingSessionDto>>(StatusCodes.Status200OK)
 			.WithSummary("Learner & Curator")
 			.WithDescription("Gets sessions with members, material, video and host. Curator sees all sessions (optional visibility filter); learner only gets Public sessions and cannot request Private.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.Learner))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.Learner, RoleCodes.SystemAdministrator))
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
@@ -213,7 +214,7 @@ internal sealed class GetShadowingSessionEndpoint : IEndpoint
 			.Produces<ShadowingSessionDto>(StatusCodes.Status200OK)
 			.WithSummary("Learner / Curator")
 			.WithDescription("Gets a session detail. Learners need to be a member or the session must be public.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -330,6 +331,35 @@ internal sealed class ChooseShadowingSessionRoleEndpoint : IEndpoint
 	}
 }
 
+internal sealed class SwapShadowingSessionRolesEndpoint : IEndpoint
+{
+	public void MapEndpoint(IEndpointRouteBuilder app)
+	{
+		app.MapGroup("/api/shadowing-sessions/{sessionId:guid}/members")
+			.WithTags("ShadowingSessionMember").WithGroupName("shadowing")
+			.MapPut("/role/swap", async (
+				[FromRoute] Guid sessionId,
+				[FromBody] SwapRolesRequestDto request,
+				ISender sender,
+				CancellationToken cancellationToken = default) =>
+			{
+				var result = await sender.Send(
+					new SwapShadowingSessionRolesCommand(sessionId, request.FirstMemberId, request.SecondMemberId), cancellationToken);
+				return result.MatchOk();
+			})
+			.WithName("SwapShadowingSessionRoles")
+			.WithSummary("Learner (host)")
+			.WithDescription("Host swaps the roles of two members of a Scheduled session. Both members must have chosen a role.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
+			.Produces(StatusCodes.Status200OK)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
+			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
+			.ProducesProblem(StatusCodes.Status500InternalServerError);
+	}
+}
+
 internal sealed class CreateShadowingSessionInvitationsEndpoint : IEndpoint
 {
 	public void MapEndpoint(IEndpointRouteBuilder app)
@@ -343,13 +373,13 @@ internal sealed class CreateShadowingSessionInvitationsEndpoint : IEndpoint
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(
-					new CreateShadowingSessionInvitationsCommand(sessionId, request.LearnerIds), cancellationToken);
+					new CreateShadowingSessionInvitationsCommand(sessionId, request.Emails), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("CreateShadowingSessionInvitations")
 			.Produces<IReadOnlyList<Guid>>(StatusCodes.Status200OK)
 			.WithSummary("Learner (host)")
-			.WithDescription("Invites learners. ExpiredAt is 1 hour after the session's scheduledStartAt. Fails if the learner already has a pending invitation for the session.")
+			.WithDescription("Invites learners by email. ExpiredAt is 1 hour after the session's scheduledStartAt. Fails if the learner already has a pending invitation for the session.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
@@ -415,7 +445,7 @@ internal sealed class RespondShadowingSessionInvitationEndpoint : IEndpoint
 	}
 }
 
-public sealed record UpdateInvitationRequestDto(Guid LearnerId);
+public sealed record UpdateInvitationRequestDto(string Email);
 
 internal sealed class GetShadowingSessionMembersEndpoint : IEndpoint
 {
@@ -431,7 +461,7 @@ internal sealed class GetShadowingSessionMembersEndpoint : IEndpoint
 			.WithName("GetShadowingSessionMembers")
 			.WithSummary("Learner (member), Curator")
 			.WithDescription("Gets the members of a session.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<IReadOnlyList<ShadowingSessionMemberDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
@@ -452,12 +482,12 @@ internal sealed class UpdateShadowingSessionInvitationEndpoint : IEndpoint
 				CancellationToken cancellationToken = default) =>
 			{
 				var result = await sender.Send(
-					new UpdateShadowingSessionInvitationCommand(invitationId, request.LearnerId), cancellationToken);
+					new UpdateShadowingSessionInvitationCommand(invitationId, request.Email), cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("UpdateShadowingSessionInvitation")
 			.WithSummary("Learner (host)")
-			.WithDescription("Changes the invited learner of an invitation that is still Pending.")
+			.WithDescription("Changes the invited learner of an invitation that is still Pending, identified by the learner's email.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

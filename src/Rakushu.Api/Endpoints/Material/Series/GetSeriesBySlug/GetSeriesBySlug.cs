@@ -27,7 +27,7 @@ internal sealed class GetSeriesBySlug : IEndpoint
 		.WithName("GetSeriesBySlug")
 		.WithSummary("Get series by slug")
 		.WithDescription("Retrieves a single series by its slug.")
-		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 		.Produces<SeriesDto>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status401Unauthorized)
 		.ProducesProblem(StatusCodes.Status404NotFound)

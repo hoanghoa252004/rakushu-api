@@ -42,7 +42,7 @@ internal sealed class GetShadowingMaterialByIdHandler(
 		if (material is null)
 			return Result.Failure<ShadowingMaterialDto>(ShadowingMaterialErrors.NotFound);
 
-		if (currentUser.Role != RoleCodes.LinguisticCurator)
+		if (currentUser.Role != RoleCodes.LinguisticCurator && currentUser.Role != RoleCodes.SystemAdministrator)
 		{
 			if (currentUser.UserId is null
 				|| !await repository.IsVisibleToUserAsync(material.Id, currentUser.UserId, cancellationToken))

@@ -31,9 +31,12 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<KnowledgeMatchingWorker>();
 		services.AddHostedService<TranslateTranscriptWorker>();
 		services.AddHostedService<VideoReviewingWorker>();
+		services.AddHostedService<Rakushu.Worker.Jobs.Video.Import.VideoImportWorker>();
+		services.AddHostedService<Rakushu.Worker.Jobs.Video.Moderation.VideoModerationWorker>();
 		services.AddHostedService<ShadowingMaterialProcessingWorker>();
 		services.AddHostedService<ShadowingSessionExpirationWorker>();
 		services.AddHostedService<ShadowingSessionCompletionWorker>();
+		services.AddHostedService<ShadowingAudioNormalizationWorker>();
 		services.AddHostedService<ShadowingAssessmentWorker>();
 
 		// SUBSCRIPTION

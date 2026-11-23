@@ -1,22 +1,18 @@
-﻿using Microsoft.Extensions.Options;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
-using Rakushu.Infrastructure.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Rakushu.Application.Abstractions.Infrastructure.Configuration;
+using Rakushu.Domain.Entities.Configuration.SystemConfiguration;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Infrastructure.Authentication;
 
 internal sealed class VerificationCodeHasher : IVerificationCodeHasher
 {
-	private readonly JwtSettings _jwtSettings;
+	private readonly ISystemConfigurationProvider _configurationProvider;
 
-	public VerificationCodeHasher(IOptions<JwtSettings> jwtOptions)
+	public VerificationCodeHasher(ISystemConfigurationProvider configurationProvider)
 	{
-		_jwtSettings = jwtOptions.Value;
+		_configurationProvider = configurationProvider;
 	}
 
 	public string Generate6DigitCode()
@@ -28,7 +24,7 @@ internal sealed class VerificationCodeHasher : IVerificationCodeHasher
 
 	public DateTimeOffset GetExpirationTime(DateTimeOffset now)
 	{
-		return now.AddMinutes(_jwtSettings.EmailVerificationTokenExipationMinutes);
+		return now.AddMinutes(_configurationProvider.GetInt(SystemConfigurationKey.JwtSettings_EmailVerificationTokenExpirationMinutes));
 	}
 
 	public string Hash(string code)

@@ -66,6 +66,11 @@ public sealed class ShadowingAttemptDetail : AggregateRoot<ShadowingAttemptDetai
 		return Domain.Common.Results.Result.Success(detail);
 	}
 
+	public void ReplaceAudioKey(string audioKey)
+	{
+		AudioKey = audioKey;
+	}
+
 	private static Domain.Common.Results.Result Validate(string? audioKey, long? durationMs, bool isSkipped)
 	{
 		if (isSkipped)

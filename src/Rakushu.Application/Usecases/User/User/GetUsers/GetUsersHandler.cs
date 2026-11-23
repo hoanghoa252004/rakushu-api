@@ -27,40 +27,23 @@ internal sealed class GetUsersHandler : IRequestHandler<GetUsersQuery, Result<Pa
 
 	public async Task<Result<PaginatedList<UserListItemDto>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
 	{
-		if (string.IsNullOrWhiteSpace(request.Status) == false && !Enum.TryParse<UserStatus>(request.Status, true, out var status))
-		{
-			return Result.Failure<PaginatedList<UserListItemDto>>(UserErrors.InvalidStatus);
-		}
-
-		var list = (await _userRepository.GetAllAsync(cancellationToken))
-			.Where(u => u.Role.Code != RoleCodes.SystemAdministrator);
-
-		if (request.RoleId.HasValue)
-		{
-			list = list.Where(p => p.RoleId.Value == request.RoleId);
-		}
-
+		UserStatus? parsedStatus = null;
 		if (!string.IsNullOrWhiteSpace(request.Status))
 		{
-			list = list.Where(p => p.Status.ToString().ToLower() == request.Status.ToLower());
+			if (!Enum.TryParse<UserStatus>(request.Status, true, out var s))
+				return Result.Failure<PaginatedList<UserListItemDto>>(UserErrors.InvalidStatus);
+			parsedStatus = s;
 		}
 
-		if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-		{
-			var key = request.SearchTerm.Trim();
-			list = list.Where(p => p.FullName.Contains(key, StringComparison.OrdinalIgnoreCase)
-									|| p.Email.Contains(key, StringComparison.OrdinalIgnoreCase)
-									|| p.Role.Name.Contains(key, StringComparison.OrdinalIgnoreCase));
-		}
+		var (pagedUsers, totalCount) = await _userRepository.GetPagedAsync(
+			request.RoleId,
+			parsedStatus,
+			request.SearchTerm,
+			request.PageNumber,
+			request.PageSize,
+			cancellationToken);
 
-		// Calculate total count before paging
-		var totalCount = list.Count();
-
-		// Apply paging
-		var items = list
-			.OrderBy(c => c.UpdatedAt)
-			.Skip((request.PageNumber - 1) * request.PageSize)
-			.Take(request.PageSize)
+		var items = pagedUsers
 			.Select(c => new UserListItemDto(
 				c.Id.Value,
 				c.FullName,

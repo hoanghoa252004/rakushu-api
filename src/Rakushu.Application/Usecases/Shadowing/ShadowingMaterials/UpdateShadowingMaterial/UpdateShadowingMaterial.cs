@@ -62,6 +62,9 @@ internal sealed class UpdateShadowingMaterialHandler(
 			if (material.Status == ShadowingMaterialStatus.Archived)
 				return Result.Failure(ShadowingMaterialErrors.NotEditable);
 
+			if (await repository.HasSessionsAsync(material.Id, cancellationToken))
+				return Result.Failure(ShadowingMaterialErrors.HasSessions);
+
 			var renamed = material.Rename(request.Name);
 			if (renamed.IsFailure)
 				return renamed;
@@ -84,9 +87,6 @@ internal sealed class UpdateShadowingMaterialHandler(
 
 			if (rangeChanged || speakersChanged)
 			{
-				if (await repository.HasSessionsAsync(material.Id, cancellationToken))
-					return Result.Failure(ShadowingMaterialErrors.HasSessions);
-
 				if (material.Status != ShadowingMaterialStatus.Processing)
 				{
 					if (currentUserContext.Role == RoleCodes.Learner

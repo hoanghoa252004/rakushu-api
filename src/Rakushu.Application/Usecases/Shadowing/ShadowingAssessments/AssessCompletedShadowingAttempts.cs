@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Rakushu.Application.Abstractions.Infrastructure.Assessment;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
@@ -15,6 +17,7 @@ public sealed record AssessCompletedShadowingAttemptsCommand(int BatchSize = 5) 
 internal sealed class AssessCompletedShadowingAttemptsHandler(
 	IShadowingAttemptRepository attemptRepository,
 	ISpeechAssessmentService speechAssessmentService,
+	IProcessingJobLogService jobLogService,
 	IStorageService storageService,
 	IUnitOfWork unitOfWork,
 	ILogger<AssessCompletedShadowingAttemptsHandler> logger)
@@ -39,9 +42,16 @@ internal sealed class AssessCompletedShadowingAttemptsHandler(
 						var userUrl = await storageService.CreatePresignedReadUrlAsync(detail.AudioKey!, cancellationToken);
 						var referenceUrl = await storageService.CreatePresignedReadUrlAsync(detail.ShadowingRoleLine.AudioKey, cancellationToken);
 
-						var accuracy = await speechAssessmentService.AssessAccuracyAsync(
-							detail.ShadowingRoleLine.Text,
-							userUrl,
+						var accuracy = await RunLoggedAsync(
+							ProcessingJobType.PronunciationAssessment,
+							detail.Id.Value,
+							ProcessingJobServices.AzureSpeech,
+							new { detail.ShadowingRoleLine.Text, UserAudioKey = detail.AudioKey },
+							() => speechAssessmentService.AssessAccuracyAsync(
+								detail.ShadowingRoleLine.Text,
+								userUrl,
+								cancellationToken),
+							r => r.RawResponse,
 							cancellationToken);
 
 						decimal? pitchScore = null;
@@ -49,10 +59,22 @@ internal sealed class AssessCompletedShadowingAttemptsHandler(
 
 						if (accuracy.Score >= 50m)
 						{
-							var pitch = await speechAssessmentService.AssessPitchSimilarityAsync(
-								detail.ShadowingRoleLine.Text,
-								referenceUrl,
-								userUrl,
+							var pitch = await RunLoggedAsync(
+								ProcessingJobType.PitchAssessment,
+								detail.Id.Value,
+								ProcessingJobServices.RakushuEngine,
+								new
+								{
+									detail.ShadowingRoleLine.Text,
+									ReferenceAudioKey = detail.ShadowingRoleLine.AudioKey,
+									UserAudioKey = detail.AudioKey
+								},
+								() => speechAssessmentService.AssessPitchSimilarityAsync(
+									detail.ShadowingRoleLine.Text,
+									referenceUrl,
+									userUrl,
+									cancellationToken),
+								r => r.RawResponse,
 								cancellationToken);
 
 							pitchScore = pitch.Score;
@@ -80,5 +102,37 @@ internal sealed class AssessCompletedShadowingAttemptsHandler(
 
 			return Result.Success(count);
 		}, cancellationToken);
+	}
+
+	private async Task<T> RunLoggedAsync<T>(
+		ProcessingJobType jobType,
+		Guid attemptDetailId,
+		string serviceName,
+		object input,
+		Func<Task<T>> call,
+		Func<T, string?> rawResponse,
+		CancellationToken cancellationToken)
+	{
+		var jobLog = await jobLogService.StartAsync(
+			jobType,
+			ProcessingJobTargetType.ShadowingAttemptDetail,
+			attemptDetailId,
+			serviceName,
+			JobLogSerializer.Serialize(input),
+			cancellationToken);
+
+		T result;
+		try
+		{
+			result = await call();
+		}
+		catch (Exception ex)
+		{
+			await jobLogService.FailAsync(jobLog.Id, ex.Message, CancellationToken.None);
+			throw;
+		}
+
+		await jobLogService.CompleteAsync(jobLog.Id, rawResponse(result), cancellationToken);
+		return result;
 	}
 }

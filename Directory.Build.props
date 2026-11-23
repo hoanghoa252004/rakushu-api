@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+	<!-- AWSSDK.Core 4.1.x depends on System.IO.Hashing 11.0.0 for net8.0 (an AWS-supported combination); silence its TFM warning. -->
+	<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+  </PropertyGroup>
+</Project>

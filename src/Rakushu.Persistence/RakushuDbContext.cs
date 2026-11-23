@@ -113,6 +113,13 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<TranscriptSpeaker> TranscriptSpeakers => Set<TranscriptSpeaker>();
 	public DbSet<Video> Videos => Set<Video>();
 
+	// Configuration
+	public DbSet<Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration> SystemConfigurations => Set<Rakushu.Domain.Entities.Configuration.SystemConfiguration.SystemConfiguration>();
+	public DbSet<Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory> SystemConfigurationHistories => Set<Rakushu.Domain.Entities.Configuration.SystemConfigurationHistory.SystemConfigurationHistory>();
+
+	// Processing
+	public DbSet<Rakushu.Domain.Entities.Processing.ProcessingJobLog.ProcessingJobLog> ProcessingJobLogs => Set<Rakushu.Domain.Entities.Processing.ProcessingJobLog.ProcessingJobLog>();
+
 	// Subscriptions
 	public DbSet<Entitlement> Entitlements => Set<Entitlement>();
 	public DbSet<Feature> Features => Set<Feature>();
@@ -147,6 +154,12 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<QuizAttemptItem> QuizAttemptItems => Set<QuizAttemptItem>();
 	public DbSet<FlashcardSession> FlashcardSessions => Set<FlashcardSession>();
 	public DbSet<FlashcardSessionItem> FlashcardSessionItems => Set<FlashcardSessionItem>();
+
+	// Assistant
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Conversation.Conversation> Conversations => Set<Rakushu.Domain.Entities.Assisstant.Conversation.Conversation>();
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Message.Message> Messages => Set<Rakushu.Domain.Entities.Assisstant.Message.Message>();
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Attachment.Attachment> Attachments => Set<Rakushu.Domain.Entities.Assisstant.Attachment.Attachment>();
+	public DbSet<Rakushu.Domain.Entities.Assisstant.Message.MessageEmbedding.MessageEmbedding> MessageEmbeddings => Set<Rakushu.Domain.Entities.Assisstant.Message.MessageEmbedding.MessageEmbedding>();
 
 	// Curation & Issue Reporting
 	public DbSet<IssueCategory> IssueCategories => Set<IssueCategory>();

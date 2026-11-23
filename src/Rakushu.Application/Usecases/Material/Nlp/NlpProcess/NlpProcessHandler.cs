@@ -1,5 +1,7 @@
 ﻿using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Application.Abstractions.Infrastructure.Nlp;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
@@ -22,6 +24,7 @@ public sealed class NlpProcessHandler : IRequestHandler<NlpProcessCommand, Resul
 	private readonly INlpService _nlpService;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly ISystemClock _systemClock;
+	private readonly IProcessingJobLogService _jobLogService;
 
 	public NlpProcessHandler(
 		IVideoRepository videoRepository,
@@ -29,8 +32,10 @@ public sealed class NlpProcessHandler : IRequestHandler<NlpProcessCommand, Resul
 		IDependencyRelationshipRepository dependencyRepository,
 		INlpService nlpService,
 		IUnitOfWork unitOfWork,
-		ISystemClock systemClock)
+		ISystemClock systemClock,
+		IProcessingJobLogService jobLogService)
 	{
+		_jobLogService = jobLogService;
 		_videoRepository = videoRepository;
 		_partOfSpeechRepository = partOfSpeechRepository;
 		_dependencyRepository = dependencyRepository;
@@ -101,8 +106,30 @@ public sealed class NlpProcessHandler : IRequestHandler<NlpProcessCommand, Resul
 					.ToList();
 
 				// 5. Gọi GiNZA.
-				var nlpResponse = await _nlpService.TranscriptAnalyzeAsync(
-					nlpRequest,
+				var jobLog = await _jobLogService.StartAsync(
+					ProcessingJobType.Nlp,
+					ProcessingJobTargetType.Video,
+					video.Id.Value,
+					ProcessingJobServices.RakushuEngine,
+					JobLogSerializer.Serialize(nlpRequest),
+					cancellationToken);
+
+				TranscriptNlpAnalysisResponse nlpResponse;
+				try
+				{
+					nlpResponse = await _nlpService.TranscriptAnalyzeAsync(
+						nlpRequest,
+						cancellationToken);
+				}
+				catch (Exception ex)
+				{
+					await _jobLogService.FailAsync(jobLog.Id, ex.Message, CancellationToken.None);
+					throw;
+				}
+
+				await _jobLogService.CompleteAsync(
+					jobLog.Id,
+					JobLogSerializer.Serialize(nlpResponse),
 					cancellationToken);
 
 				// 6. Index kết quả theo TranscriptSegmentId.

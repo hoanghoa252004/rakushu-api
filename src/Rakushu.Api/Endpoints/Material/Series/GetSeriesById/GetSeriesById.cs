@@ -27,7 +27,7 @@ internal sealed class GetSeriesById : IEndpoint
 		.WithName("GetSeriesById")
 		.WithSummary("Get series by ID")
 		.WithDescription("Retrieves a single series by its ID.")
-		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 		.Produces<SeriesDto>(StatusCodes.Status200OK)
 		.ProducesProblem(StatusCodes.Status401Unauthorized)
 		.ProducesProblem(StatusCodes.Status404NotFound)

@@ -36,6 +36,10 @@ public static class InfrastructureServiceCollectionExtensions
 	{
 		services.AddScoped<ICurrentUserContext, WorkerCurrentUserContext>();
 
+		// yt-dlp binaries are downloaded once at worker startup
+		services.AddSingleton<Rakushu.Infrastructure.VideoImport.YtDlpBinaries>();
+		services.AddHostedService<Rakushu.Infrastructure.VideoImport.YtDlpBinariesInitializer>();
+
 		services.AddRakushuInfrastructureForCommon(configuration, environment);
 
 		return services;
@@ -58,7 +62,6 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddSingleton<ISystemClock, SystemClock>();
 
 		// PAYMENT
-		services.Configure<VnPaySettings>(configuration.GetSection(VnPaySettings.ConfigurationSection));
 		services.AddScoped<IPaymentService, VnPayService>();
 
 		// PAYMENT GATEWAY
@@ -66,7 +69,6 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
 
 		// AI SERVICE CLIENT
-		services.AddHttpClient<IAiServiceClient, AiServiceClient>();
 		services.AddHttpClient<IQuizContentGenerator, OllamaQuizContentGenerator>();
 
 		// SPEECH ASSESSMENT

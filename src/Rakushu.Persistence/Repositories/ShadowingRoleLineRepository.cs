@@ -13,6 +13,16 @@ public sealed class ShadowingRoleLineRepository
 {
 	public ShadowingRoleLineRepository(RakushuDbContext context) : base(context) { }
 
+	public async Task<IReadOnlyList<ShadowingRoleLine>> GetByMaterialIdAsync(
+		ShadowingMaterialId materialId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingRoleLines
+			.Where(l => l.ShadowingRole.ShadowingMaterialId == materialId)
+			.OrderBy(l => l.SortOrder)
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<ShadowingRoleLine?> GetByIdWithSegmentsAsync(
 		ShadowingRoleLineId id,
 		CancellationToken cancellationToken = default)

@@ -28,6 +28,14 @@ public static class ShadowingSessionMemberErrors
 		"SHADOWING_SESSION_MEMBER.ROLE_NOT_IN_MATERIAL",
 		"The role does not belong to the material of this session.");
 
+	public static readonly Error CannotSwapSameMember = Error.Validation(
+		"SHADOWING_SESSION_MEMBER.CANNOT_SWAP_SAME_MEMBER",
+		"Two different members are required to swap roles.");
+
+	public static readonly Error RoleNotAssigned = Error.Conflict(
+		"SHADOWING_SESSION_MEMBER.ROLE_NOT_ASSIGNED",
+		"Both members must have chosen a role before swapping.");
+
 	public static readonly Error RoleAlreadyTaken = Error.Conflict(
 		"SHADOWING_SESSION_MEMBER.ROLE_ALREADY_TAKEN",
 		"The role has already been chosen by another member.");

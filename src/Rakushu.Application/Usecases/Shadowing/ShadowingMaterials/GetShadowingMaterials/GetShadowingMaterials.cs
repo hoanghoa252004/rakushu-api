@@ -50,7 +50,7 @@ internal sealed class GetShadowingMaterialsHandler(
 			return Result.Failure<PaginatedList<ShadowingMaterialDto>>(parsedStatus.Error);
 
 		// Curators see all; learners only see materials they created or that belong to sessions they joined.
-		var isCurator = currentUser.Role == RoleCodes.LinguisticCurator;
+		var isCurator = currentUser.Role == RoleCodes.LinguisticCurator || currentUser.Role == RoleCodes.SystemAdministrator;
 		if (!isCurator && currentUser.UserId is null)
 			return Result.Failure<PaginatedList<ShadowingMaterialDto>>(ShadowingMaterialErrors.NotAvailable);
 

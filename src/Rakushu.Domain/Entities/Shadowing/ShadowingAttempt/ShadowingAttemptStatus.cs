@@ -11,5 +11,6 @@ public enum ShadowingAttemptStatus
 	InProgress = 1,
 	Completed = 2,
 	Assessed = 3,
-	Cancelled = 4
+	Cancelled = 4,
+	Normalized = 5
 }

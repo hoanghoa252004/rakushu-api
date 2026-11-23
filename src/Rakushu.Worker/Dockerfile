@@ -2,6 +2,21 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER root
+
+# Install Python 3 for yt-dlp
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Grant write permission to the application user
+RUN mkdir -p /app/tools && \
+    chown -R $APP_UID:$APP_UID /app
+
 USER $APP_UID
 WORKDIR /app
 

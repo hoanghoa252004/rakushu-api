@@ -89,6 +89,20 @@ internal static class SwaggerExtension
 				Title = "Analytics API",
 				Version = "v1",
 				Description = "APIs for Learner Statistics, SRS Heatmaps, Quiz Diagnostics, Shadowing Pronunciation Analytics, and Curator Dashboard Analytics."
+      });
+      
+			options.SwaggerDoc("assistant", new OpenApiInfo
+			{
+				Title = "Assistant API",
+				Version = "v1",
+				Description = "APIs for the AI Assistant."
+			});
+
+			options.SwaggerDoc("configuration", new OpenApiInfo
+			{
+				Title = "Configuration API",
+				Version = "v1",
+				Description = "APIs for system configuration."
 			});
 
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -135,6 +149,8 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/curation/swagger.json", "Curation API");
 			options.SwaggerEndpoint("/swagger/learning/swagger.json", "Learning API");
 			options.SwaggerEndpoint("/swagger/analytics/swagger.json", "Analytics API");
+			options.SwaggerEndpoint("/swagger/assistant/swagger.json", "Assistant API");
+			options.SwaggerEndpoint("/swagger/configuration/swagger.json", "Configuration API");
 		});
 
 		return app;

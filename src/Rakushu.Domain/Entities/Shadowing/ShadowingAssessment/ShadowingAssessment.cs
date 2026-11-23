@@ -40,6 +40,26 @@ public sealed class ShadowingAssessment : Entity<ShadowingAssessmentId>
 	public static ShadowingAssessment CreateAutomated(ShadowingAttemptId attemptId, DateTimeOffset now)
 		=> new(attemptId, now);
 
+	public static ShadowingAssessment CreateCuratorReevaluation(
+		ShadowingAttemptId attemptId, string overallFeedback, DateTimeOffset now)
+		=> new(attemptId, now)
+		{
+			Type = ShadowingAssessmentType.CuratorReevaluation,
+			OveralFeedback = overallFeedback
+		};
+
+	public void AddDetail(
+		ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetailId attemptDetailId,
+		decimal accuracyScore,
+		string? accuracyResponse,
+		decimal? pitchScore,
+		string? pitchResponse,
+		string? feedback)
+	{
+		_details.Add(new ShadowingAssessmentDetail.ShadowingAssessmentDetail(
+			Id, attemptDetailId, accuracyScore, accuracyResponse, pitchScore, pitchResponse, feedback));
+	}
+
 	public void AddDetail(
 		ShadowingAttempt.ShadowingAttemptDetail.ShadowingAttemptDetailId attemptDetailId,
 		decimal accuracyScore,

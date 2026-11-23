@@ -32,6 +32,13 @@ public interface IStorageService
 		string uploadId, 
 		IReadOnlyList<CompletedPartDto> parts, 
 		CancellationToken cancellationToken); 
+	// Server-side upload of a single part, returns ETag
+	Task<string> UploadMultipartPartAsync(
+		string key,
+		string uploadId,
+		int partNumber,
+		Stream partStream,
+		CancellationToken cancellationToken);
 	Task AbortMultipartUploadAsync(
 		string key, 
 		string uploadId, 

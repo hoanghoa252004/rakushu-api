@@ -54,9 +54,9 @@ internal sealed class CreateShadowingMaterialEndpoint : IEndpoint
 				return result.MatchCreated("GetShadowingMaterialById", id => new { videoId, materialId = id });
 			})
 			.WithName("CreateShadowingMaterial")
-			.WithSummary("Learner, Curator")
+			.WithSummary("Learner")
 			.WithDescription("Creates a shadowing material for a transcript segment range with the selected transcript speakers (one role per speaker). Status starts as Processing. A learner can only have one Processing material at a time.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status201Created)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status404NotFound)
@@ -84,9 +84,9 @@ internal sealed class GetShadowingMaterialsEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingMaterials")
-			.WithSummary("Learner, Curator")
-			.WithDescription("Gets materials of a video with paging, filter by status. Learner sees all materials of their own video, otherwise only Ready materials; Curator sees all.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.WithSummary("Learner, Curator, Admin")
+			.WithDescription("Gets materials of a video with paging, filter by status. Learner sees all materials of their own video, otherwise only Ready materials; Curator/Admin sees all.")
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<PaginatedList<ShadowingMaterialDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -110,9 +110,9 @@ internal sealed class GetShadowingMaterialByIdEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingMaterialById")
-			.WithSummary("Learner, Curator")
+			.WithSummary("Learner, Curator, Admin")
 			.WithDescription("Gets a material by id. Learner only gets Ready materials.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<ShadowingMaterialDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -147,9 +147,9 @@ internal sealed class UpdateShadowingMaterialEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("UpdateShadowingMaterial")
-			.WithSummary("Learner, Curator")
+			.WithSummary("Learner")
 			.WithDescription("Updates name, segment range and transcript speakers. Range/speakers can only change while no session exists; roles and lines are rebuilt and the material returns to Processing.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
@@ -171,9 +171,9 @@ internal sealed class GetShadowingRolesEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingRoles")
-			.WithSummary("Curator")
+			.WithSummary("Learner")
 			.WithDescription("Gets all roles of a material ordered by sortOrder.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<IReadOnlyList<ShadowingRoleDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
@@ -198,9 +198,9 @@ internal sealed class GetShadowingRoleLinesEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingRoleLines")
-			.WithSummary("Curator")
+			.WithSummary("Learner")
 			.WithDescription("Gets role lines of a material with paging, filter by speakerId or roleId. AudioUrl is a presigned read URL.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<PaginatedList<ShadowingRoleLineDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
@@ -221,9 +221,9 @@ internal sealed class DeleteShadowingMaterialEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("DeleteShadowingMaterial")
-			.WithSummary("Learner, Curator")
+			.WithSummary("Learner")
 			.WithDescription("Deletes a material (with its roles and lines) only when no session has been created from it.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)

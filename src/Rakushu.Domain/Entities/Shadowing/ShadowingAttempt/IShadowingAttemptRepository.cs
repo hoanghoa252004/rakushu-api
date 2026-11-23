@@ -52,7 +52,12 @@ public interface IShadowingAttemptRepository : IBaseRepository<ShadowingAttempt,
 
 	void AddDetail(ShadowingAttemptDetail.ShadowingAttemptDetail detail);
 
-	// Tracked Completed attempts whose session is Completed, with Details and their RoleLine loaded.
+	// Tracked Completed attempts whose session is Completed, with Details loaded (awaiting audio normalization).
+	Task<IReadOnlyList<ShadowingAttempt>> GetPendingNormalizationAsync(
+		int batchSize,
+		CancellationToken cancellationToken = default);
+
+	// Tracked Normalized attempts whose session is Completed, with Details and their RoleLine loaded.
 	Task<IReadOnlyList<ShadowingAttempt>> GetPendingAssessmentAsync(
 		int batchSize,
 		CancellationToken cancellationToken = default);
@@ -68,5 +73,10 @@ public interface IShadowingAttemptRepository : IBaseRepository<ShadowingAttempt,
 	Task<IReadOnlyList<ShadowingAttemptDetail.ShadowingAttemptDetail>> GetSessionDetailsAsync(
 		ShadowingSessionId sessionId,
 		IReadOnlyCollection<ShadowingRoleLineId> roleLineIds,
+		CancellationToken cancellationToken = default);
+
+	// All assessments for a given attempt, with their details loaded.
+	Task<IReadOnlyList<ShadowingAssessment.ShadowingAssessment>> GetAssessmentsWithDetailsAsync(
+		ShadowingAttemptId attemptId,
 		CancellationToken cancellationToken = default);
 }

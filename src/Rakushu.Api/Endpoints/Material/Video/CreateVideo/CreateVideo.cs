@@ -55,5 +55,5 @@ internal record CreateVideoRequestDto(
 	int SortOrder,
 	string SourceType,
 	string? SourceUrl,
-	string StorageKeyOfVideo,
+	string? StorageKeyOfVideo,
 	string StorageKeyOfThumbnail);
