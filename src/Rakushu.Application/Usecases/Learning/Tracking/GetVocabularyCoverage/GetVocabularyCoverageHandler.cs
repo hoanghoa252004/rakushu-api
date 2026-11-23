@@ -158,6 +158,45 @@ internal sealed class GetVocabularyCoverageHandler
 			? (int)Math.Clamp(Math.Round((totalEncounteredUnits * 100.0) / totalSystemUnits), 0, 100)
 			: 0;
 
+		// 4. Unique encountered items grouped by KnowledgeUnitId (1-to-1 match with LevelCoverages.EncounteredUnitsCount)
+		var savedItemByMeaningId = activeSavedItems
+			.GroupBy(s => s.KnowledgeMeaningId)
+			.ToDictionary(g => g.Key, g => g.First().Id.Value);
+
+		var encounteredItems = encounteredRows
+			.Where(e => e.KnowledgeMeaning?.KnowledgeUnit?.ProficiencyLevel is not null)
+			.GroupBy(e => e.KnowledgeUnitId.Value)
+			.Select(g =>
+			{
+				var ordered = g.OrderByDescending(x => x.LastEncounteredAt).ToList();
+				var latest = ordered[0];
+				var savedRow = ordered.FirstOrDefault(x => savedItemByMeaningId.ContainsKey(x.KnowledgeMeaningId));
+				var primary = savedRow ?? latest;
+				var km = primary.KnowledgeMeaning!;
+				var ku = km.KnowledgeUnit!;
+				bool isSaved = savedItemByMeaningId.TryGetValue(km.Id, out var savedItemId);
+
+				return new EncounteredCoverageItemDto(
+					ku.Id.Value,
+					km.Id.Value,
+					ku.Expression,
+					ku.Reading,
+					km.Meaning,
+					ku.ProficiencyLevel!.Code,
+					g.Sum(x => x.EncounterCount),
+					g.Select(x => x.VideoId.Value).Distinct().Count(),
+					isSaved,
+					isSaved ? savedItemId : null,
+					latest.VideoId.Value,
+					latest.Video?.Title,
+					latest.LearningUnit?.TranscriptSegment is not null
+						? Math.Round(latest.LearningUnit.TranscriptSegment.StartTime.TotalSeconds, 2)
+						: null);
+			})
+			.OrderByDescending(x => x.TotalEncounterCount)
+			.ThenBy(x => x.Expression, StringComparer.Ordinal)
+			.ToList();
+
 		return Result.Success(new VocabularyCoverageOverviewDto(
 			targetLevelCode,
 			totalEncounteredUnits,
@@ -165,6 +204,7 @@ internal sealed class GetVocabularyCoverageHandler
 			overallPct,
 			levelCoverages,
 			exposureBuckets,
-			domainCoverages));
+			domainCoverages,
+			encounteredItems));
 	}
 }

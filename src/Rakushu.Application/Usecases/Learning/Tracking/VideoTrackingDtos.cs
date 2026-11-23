@@ -122,6 +122,21 @@ public sealed record DomainTopicCoverageDto(
 	int TotalUnitsCount,
 	int CoveragePercent);
 
+public sealed record EncounteredCoverageItemDto(
+	Guid KnowledgeUnitId,
+	Guid KnowledgeMeaningId,
+	string Expression,
+	string? Reading,
+	string Meaning,
+	string JlptLevel,
+	int TotalEncounterCount,
+	int DistinctVideoCount,
+	bool IsSavedToSrs,
+	Guid? SavedItemId,
+	Guid? LatestVideoId,
+	string? LatestVideoTitle,
+	double? LatestTimestampSeconds);
+
 public sealed record VocabularyCoverageOverviewDto(
 	string? TargetLevelCode,
 	int TotalEncounteredUniqueUnits,
@@ -129,4 +144,5 @@ public sealed record VocabularyCoverageOverviewDto(
 	int OverallCoveragePercent,
 	IReadOnlyList<JlptLevelCoverageDto> LevelCoverages,
 	ExposureDepthBucketsDto ExposureBuckets,
-	IReadOnlyList<DomainTopicCoverageDto> DomainCoverages);
+	IReadOnlyList<DomainTopicCoverageDto> DomainCoverages,
+	IReadOnlyList<EncounteredCoverageItemDto>? EncounteredItems = null);
