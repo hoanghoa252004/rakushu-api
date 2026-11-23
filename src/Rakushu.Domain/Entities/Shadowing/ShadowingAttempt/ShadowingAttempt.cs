@@ -60,9 +60,18 @@ public sealed class ShadowingAttempt : Entity<ShadowingAttemptId>
 		return Domain.Common.Results.Result.Success();
 	}
 
-	public Domain.Common.Results.Result MarkAssessed()
+	public Domain.Common.Results.Result MarkNormalized()
 	{
 		if (Status != ShadowingAttemptStatus.Completed)
+			return Domain.Common.Results.Result.Failure(ShadowingAttemptErrors.NotInProgress);
+
+		Status = ShadowingAttemptStatus.Normalized;
+		return Domain.Common.Results.Result.Success();
+	}
+
+	public Domain.Common.Results.Result MarkAssessed()
+	{
+		if (Status != ShadowingAttemptStatus.Normalized)
 			return Domain.Common.Results.Result.Failure(ShadowingAttemptErrors.NotInProgress);
 
 		Status = ShadowingAttemptStatus.Assessed;

@@ -5,6 +5,7 @@ using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Material.Transcript;
 using Rakushu.Application.Usecases.Material.Transcript.GetDetailTranscript;
+using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Material.Transcript.GetDetailTranscript;
 
@@ -35,6 +36,7 @@ internal sealed class GetDetailTranscript : IEndpoint
 			return result.MatchOk();
 		})
 		.WithName("GetDetailTranscript")
+		.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 		.WithSummary("Get transcript detail")
 		.WithDescription("Retrieves a transcript detail with paginated segments and optional time filtering for curator ( segment + item + learning unit + bunsetsu + token )")
 		.Produces<PaginatedList<TranscriptSegmentDetailDto>>(StatusCodes.Status200OK)

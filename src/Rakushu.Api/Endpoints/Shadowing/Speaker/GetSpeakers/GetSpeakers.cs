@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Endpoints.Shadowing.Speaker;
@@ -28,7 +28,7 @@ internal sealed class GetSpeakers : IEndpoint
 			.WithName("GetSpeakers")
 			.WithSummary("Learner, Curator")
 			.WithDescription("Gets speakers with paging. AvatarUrl is a presigned read URL when the speaker has an avatar.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<PaginatedList<SpeakerDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);

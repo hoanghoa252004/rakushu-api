@@ -90,7 +90,7 @@ internal sealed class GetShadowingSessionsHandler(
 			return Result.Failure<PaginatedList<ShadowingSessionDto>>(parsedVisibility.Error);
 
 		var hostId = request.HostId.HasValue ? UserId.From(request.HostId.Value) : null;
-		var isCurator = currentUser.Role == RoleCodes.LinguisticCurator;
+		var isCurator = currentUser.Role == RoleCodes.LinguisticCurator || currentUser.Role == RoleCodes.SystemAdministrator;
 		if (!isCurator && parsedVisibility.Value == ShadowingSessionVisibility.Private)
 			return Result.Failure<PaginatedList<ShadowingSessionDto>>(ShadowingSessionErrors.NotPublic);
 

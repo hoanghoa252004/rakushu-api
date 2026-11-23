@@ -9,6 +9,16 @@ namespace Rakushu.Domain.Entities.Material.Video;
 
 public interface IVideoRepository : IBaseRepository<Video, VideoId>
 {
+	Task<(IReadOnlyList<Video> Items, int TotalCount)> GetPagedAsync(
+		IReadOnlyCollection<VideoSource> sourceTypes,
+		VideoStatus? status,
+		Guid? learnerId,
+		string? searchKey,
+		Guid? categoryId,
+		Guid? seriesId,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default);
 	Task<Video?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
 	Task<Video?> GetByMediaAssetIdAsync(MediaAssetId mediaAssetId, CancellationToken cancellationToken = default);
 	Task<Video?> GetByTranscriptIdAsync(TranscriptId transcriptId, CancellationToken cancellationToken = default);
@@ -22,6 +32,14 @@ public interface IVideoRepository : IBaseRepository<Video, VideoId>
 	Task<IReadOnlyList<Video>> GetProcessingVideosWithReviewedTranscriptForTranslateAsync(
 		int batchSize,
 	CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<Video>> GetModeratingVideosAsync(
+		int batchSize,
+		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<Video>> GetImportingVideosAsync(
+		int batchSize,
+		CancellationToken cancellationToken = default);
 
 	Task<IReadOnlyList<Video>> GetProcessingVideosWithProcessedResultAsync(
 		int batchSize,

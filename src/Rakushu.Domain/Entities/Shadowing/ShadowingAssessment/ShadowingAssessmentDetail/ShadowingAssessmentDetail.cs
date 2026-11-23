@@ -37,7 +37,8 @@ public sealed class ShadowingAssessmentDetail : Entity<ShadowingAssessmentDetail
 		decimal? accuracyScore,
 		string? accuracyResponse,
 		decimal? pitchScore,
-		string? pitchResponse) : base(ShadowingAssessmentDetailId.Create())
+		string? pitchResponse,
+		string? feedback = null) : base(ShadowingAssessmentDetailId.Create())
 	{
 		ShadowingAssessmentId = assessmentId;
 		ShadowingAttemptDetailId = attemptDetailId;
@@ -45,5 +46,6 @@ public sealed class ShadowingAssessmentDetail : Entity<ShadowingAssessmentDetail
 		AccuracyAssessmentResponse = accuracyResponse;
 		PitchSimilarityScore = pitchScore;
 		PitchSimilarityAssessmentResponse = pitchResponse;
+		Feedback = feedback;
 	}
 }

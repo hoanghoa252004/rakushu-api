@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Rakushu.Application.Usecases.Embedding;
 using Rakushu.Domain.Common.Contract;
+using Rakushu.Domain.Entities.Configuration.SystemConfiguration;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
@@ -65,6 +66,10 @@ public static class PersistenceServiceCollectionExtensions
 
 		services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<RakushuDbContext>());
 
+		services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.JobLog.IProcessingJobLogService, ProcessingJobLogService>();
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Configuration.ISystemConfigurationProvider, SystemConfigurationProvider>();
+		//services.AddHostedService<Rakushu.Persistence.Configuration.SystemConfigurationSeeder>();
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IRoleRepository, RoleRepository>();
 		services.AddScoped<IPlanRepository, PlanRepository>();
@@ -74,6 +79,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 		services.AddScoped<IContentCategoryRepository, ContentCategoryRepository>();
 		services.AddScoped<IVideoRepository, VideoRepository>();
+		services.AddScoped<Rakushu.Domain.Entities.Assisstant.Conversation.IConversationRepository, ConversationRepository>();
 		services.AddScoped<IJapanesePartOfSpeechRepository, JapanesePartOfSpeechRepository>();
 		services.AddScoped<IDependencyRelationshipRepository, DependencyRelationshipRepository>();
 		services.AddScoped<IProficiencyLevelRepository, ProficiencyLevelRepository>();

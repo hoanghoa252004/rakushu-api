@@ -100,12 +100,24 @@ public sealed class ShadowingAttemptRepository
 		_context.ShadowingAttemptDetails.Add(detail);
 	}
 
+	public async Task<IReadOnlyList<ShadowingAttempt>> GetPendingNormalizationAsync(
+		int batchSize, CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingAttempts
+			.Include(a => a.Details)
+			.Where(a => a.Status == ShadowingAttemptStatus.Completed
+				&& a.ShadowingSession.Status == ShadowingSessionStatus.Completed)
+			.OrderBy(a => a.CompletedAt)
+			.Take(batchSize)
+			.ToListAsync(cancellationToken);
+	}
+
 	public async Task<IReadOnlyList<ShadowingAttempt>> GetPendingAssessmentAsync(
 		int batchSize, CancellationToken cancellationToken = default)
 	{
 		return await _context.ShadowingAttempts
 			.Include(a => a.Details).ThenInclude(d => d.ShadowingRoleLine)
-			.Where(a => a.Status == ShadowingAttemptStatus.Completed
+			.Where(a => a.Status == ShadowingAttemptStatus.Normalized
 				&& a.ShadowingSession.Status == ShadowingSessionStatus.Completed)
 			.OrderBy(a => a.CompletedAt)
 			.Take(batchSize)
@@ -134,6 +146,17 @@ public sealed class ShadowingAttemptRepository
 		return await _context.ShadowingAttemptDetails.AsNoTracking()
 			.Include(d => d.ShadowingAttempt)
 			.Where(d => d.ShadowingAttempt.ShadowingSessionId == sessionId && roleLineIds.Contains(d.ShadowingRoleLineId))
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<Rakushu.Domain.Entities.Shadowing.ShadowingAssessment.ShadowingAssessment>> GetAssessmentsWithDetailsAsync(
+		ShadowingAttemptId attemptId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.ShadowingAssessments.AsNoTracking()
+			.Include(a => a.Details)
+			.Where(a => a.ShadowingAttemptId == attemptId)
+			.OrderBy(a => a.CreatedAt)
 			.ToListAsync(cancellationToken);
 	}
 }

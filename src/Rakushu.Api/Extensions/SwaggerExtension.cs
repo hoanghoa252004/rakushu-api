@@ -77,6 +77,20 @@ internal static class SwaggerExtension
 				Description = "APIs for Learner Issue Reporting and Curator Triage."
 			});
 
+			options.SwaggerDoc("assistant", new OpenApiInfo
+			{
+				Title = "Assistant API",
+				Version = "v1",
+				Description = "APIs for the AI Assistant."
+			});
+
+			options.SwaggerDoc("configuration", new OpenApiInfo
+			{
+				Title = "Configuration API",
+				Version = "v1",
+				Description = "APIs for system configuration."
+			});
+
 			options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 			{
 				Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -119,6 +133,8 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/shadowing/swagger.json", "Shadowing API");
 			options.SwaggerEndpoint("/swagger/srs/swagger.json", "SRS API");
 			options.SwaggerEndpoint("/swagger/curation/swagger.json", "Curation API");
+			options.SwaggerEndpoint("/swagger/assistant/swagger.json", "Assistant API");
+			options.SwaggerEndpoint("/swagger/configuration/swagger.json", "Configuration API");
 		});
 
 		return app;

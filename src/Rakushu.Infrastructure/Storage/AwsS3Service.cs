@@ -17,12 +17,12 @@ namespace Rakushu.Infrastructure.Storage;
 internal class AwsS3Service : IStorageService
 {
 	private readonly IAmazonS3 _s3;
-	private readonly AwsSettings _s3Settings;
+	private readonly AwsRuntimeSettings _s3Settings;
 
-	public AwsS3Service(IAmazonS3 s3, IOptions<AwsSettings> options)
+	public AwsS3Service(IAmazonS3 s3, AwsRuntimeSettings options)
 	{
 		_s3 = s3;
-		_s3Settings = options.Value;
+		_s3Settings = options;
 	}
 
 	public async Task<string> CreatePresignedUploadUrlAsync(
@@ -137,6 +137,26 @@ internal class AwsS3Service : IStorageService
 		};
 
 		await _s3.CompleteMultipartUploadAsync(request,cancellationToken);
+	}
+
+	public async Task<string> UploadMultipartPartAsync(
+		string key,
+		string uploadId,
+		int partNumber,
+		Stream partStream,
+		CancellationToken cancellationToken)
+	{
+		var response = await _s3.UploadPartAsync(new UploadPartRequest
+		{
+			BucketName = _s3Settings.BucketName,
+			Key = key,
+			UploadId = uploadId,
+			PartNumber = partNumber,
+			InputStream = partStream,
+			PartSize = partStream.Length
+		}, cancellationToken);
+
+		return response.ETag;
 	}
 
 	public async Task AbortMultipartUploadAsync(

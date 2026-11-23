@@ -1,29 +1,24 @@
-﻿using Microsoft.Extensions.Options;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Abstractions.Infrastructure.Configuration;
 using Rakushu.Application.Abstractions.Infrastructure.Payment;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Configuration.SystemConfiguration;
 using Rakushu.Domain.Entities.Subscriptions.Payment;
-using Rakushu.Infrastructure.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Rakushu.Infrastructure.Payment.VnPay;
 
 internal sealed class VnPayService : IPaymentService
 {
-	private readonly VnPaySettings _vnPaySettings;
+	private readonly ISystemConfigurationProvider _config;
 	private readonly ISystemClock _systemClock;
 
 	public VnPayService(
-		IOptions<VnPaySettings> options,
+		ISystemConfigurationProvider config,
 		ISystemClock systemClock
 		)
-	{ 
-		_vnPaySettings = options.Value;
+	{
+		_config = config;
 		_systemClock = systemClock;
 	}
 
@@ -31,7 +26,7 @@ internal sealed class VnPayService : IPaymentService
 
 	public Result<string> CreatePaymentUrl(CreatePaymentUrlParams parameters, CancellationToken cancellationToken = default)
 	{
-		var timeZoneById = TimeZoneInfo.FindSystemTimeZoneById(_vnPaySettings.TimeZoneId);
+		var timeZoneById = TimeZoneInfo.FindSystemTimeZoneById(_config.GetString(SystemConfigurationKey.VnPaySettings_TimeZoneId));
 		var createdAt = TimeZoneInfo.ConvertTime(parameters.CreatedAt, timeZoneById);
 		var expiredAt = TimeZoneInfo.ConvertTime(parameters.ExpiredAt, timeZoneById);
 
@@ -39,14 +34,14 @@ internal sealed class VnPayService : IPaymentService
 		var amount = ((long)parameters.Amount * 100).ToString();
 
 		pay.AddRequestData("vnp_IpAddr", parameters.IpAddress);
-		pay.AddRequestData("vnp_Command", _vnPaySettings.Command);
-		pay.AddRequestData("vnp_Version", _vnPaySettings.Version);
-		pay.AddRequestData("vnp_TmnCode", _vnPaySettings.TmnCode);
-		pay.AddRequestData("vnp_Locale", _vnPaySettings.Locale);
-		pay.AddRequestData("vnp_CurrCode", _vnPaySettings.CurrCode);
-		pay.AddRequestData("vnp_ReturnUrl", _vnPaySettings.ReturnUrl);
-		pay.AddRequestData("vnp_OrderType", _vnPaySettings.OrderType);
-		pay.AddRequestData("vnp_BankCode", _vnPaySettings.BankCode);
+		pay.AddRequestData("vnp_Command", _config.GetString(SystemConfigurationKey.VnPaySettings_Command));
+		pay.AddRequestData("vnp_Version", _config.GetString(SystemConfigurationKey.VnPaySettings_Version));
+		pay.AddRequestData("vnp_TmnCode", _config.GetString(SystemConfigurationKey.VnPaySettings_TmnCode));
+		pay.AddRequestData("vnp_Locale", _config.GetString(SystemConfigurationKey.VnPaySettings_Locale));
+		pay.AddRequestData("vnp_CurrCode", _config.GetString(SystemConfigurationKey.VnPaySettings_CurrCode));
+		pay.AddRequestData("vnp_ReturnUrl", _config.GetString(SystemConfigurationKey.VnPaySettings_ReturnUrl));
+		pay.AddRequestData("vnp_OrderType", _config.GetString(SystemConfigurationKey.VnPaySettings_OrderType));
+		pay.AddRequestData("vnp_BankCode", _config.GetString(SystemConfigurationKey.VnPaySettings_BankCode));
 		pay.AddRequestData("vnp_CreateDate", createdAt.ToString("yyyyMMddHHmmss"));
 		pay.AddRequestData("vnp_ExpireDate", expiredAt.ToString("yyyyMMddHHmmss"));
 
@@ -54,15 +49,15 @@ internal sealed class VnPayService : IPaymentService
 		pay.AddRequestData("vnp_OrderInfo", parameters.Description);
 		pay.AddRequestData("vnp_TxnRef", parameters.TxnRef);
 
-		var baseUrl = _vnPaySettings.BaseUrl;
-		var hashSecret = _vnPaySettings.HashSecret;
+		var baseUrl = _config.GetString(SystemConfigurationKey.VnPaySettings_BaseUrl);
+		var hashSecret = _config.GetString(SystemConfigurationKey.VnPaySettings_HashSecret);
 		var paymentUrl = pay.CreateRequestUrl(baseUrl, hashSecret);
 
 		return Result.Success(paymentUrl);
 	}
 
 	public DateTimeOffset GetPaymentExpiration()
-		=> _systemClock.UtcNow.AddSeconds(_vnPaySettings.PaymentExpiredInSeconds);
+		=> _systemClock.UtcNow.AddSeconds(_config.GetInt(SystemConfigurationKey.VnPaySettings_PaymentExpiredInSeconds));
 
 	public Result<string?> GetResponseData(IReadOnlyDictionary<string, string> parameters, string key, CancellationToken cancellationToken = default)
 	{
@@ -75,7 +70,7 @@ internal sealed class VnPayService : IPaymentService
 	}
 
 	public DateTimeOffset GetTransactionExpiration()
-		=> _systemClock.UtcNow.AddSeconds(_vnPaySettings.TransactionExpiredInSeconds);
+		=> _systemClock.UtcNow.AddSeconds(_config.GetInt(SystemConfigurationKey.VnPaySettings_TransactionExpiredInSeconds));
 
 	public Result ValidateSignature(IReadOnlyDictionary<string, string> parameters, string secureHash, CancellationToken cancellationToken = default)
 	{
@@ -92,8 +87,7 @@ internal sealed class VnPayService : IPaymentService
 				}
 			}
 
-			// Get hash secret from configuration
-			var hashSecret = _vnPaySettings.HashSecret;
+			var hashSecret = _config.GetString(SystemConfigurationKey.VnPaySettings_HashSecret);
 
 			// Validate the signature
 			return vnpay.ValidateSignature(secureHash, hashSecret) ?

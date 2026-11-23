@@ -1,4 +1,6 @@
 ﻿using MediatR;
+using Rakushu.Application.Abstractions.Infrastructure.JobLog;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Knowledge.ContentKnowledgeCollection;
@@ -22,6 +24,7 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly KnowledgeMatchingService _matchingService;
 	private readonly LearningUnitOverlapResolver _overlapResolver;
+	private readonly IProcessingJobLogService _jobLogService;
 
 	public ProcessPendingVideoKnowledgeMatchingHandler(
 		IVideoRepository videoRepository,
@@ -30,8 +33,10 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 		ITokenRepository tokenRepository,
 		IUnitOfWork unitOfWork,
 		KnowledgeMatchingService matchingService,
-		LearningUnitOverlapResolver overlapResolver)
+		LearningUnitOverlapResolver overlapResolver,
+		IProcessingJobLogService jobLogService)
 	{
+		_jobLogService = jobLogService;
 		_videoRepository = videoRepository;
 		_contentKnowledgeCollectionRepository = contentKnowledgeCollectionRepository;
 		_knowledgeUnitRepository = knowledgeUnitRepository;
@@ -66,6 +71,22 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 					continue;
 				}
 
+				// Parent là job Nlp trước đó của video.
+				var nlpLog = await _jobLogService.GetLatestAsync(
+					ProcessingJobType.Nlp,
+					video.Id.Value,
+					cancellationToken);
+
+				// Log bắt đầu trước mọi nhánh skip để job luôn kết thúc (kể cả khi không có gì để match).
+				var jobLog = await _jobLogService.StartAsync(
+					ProcessingJobType.LearningUnitMatching,
+					ProcessingJobTargetType.Video,
+					video.Id.Value,
+					ProcessingJobServices.RakushuApi,
+					transcript.Id.Value.ToString(),
+					cancellationToken,
+					nlpLog?.Id);
+
 				// 2. Lấy Knowledge Collection theo Content Category.
 				var contentCollections = await _contentKnowledgeCollectionRepository
 					.GetByContentCategoryIdOrderedByPriorityAsync(
@@ -73,7 +94,13 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 						cancellationToken);
 
 				if (contentCollections.Count == 0)
+				{
+					await _jobLogService.CompleteAsync(
+						jobLog.Id,
+						"{\"learningUnitCount\":0,\"reason\":\"No knowledge collection for content category\"}",
+						cancellationToken);
 					continue;
+				}
 
 				var collectionIds = contentCollections
 					.Select(x => x.KnowledgeCollectionId)
@@ -87,7 +114,13 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 						cancellationToken);
 
 				if (knowledgeUnits.Count == 0)
+				{
+					await _jobLogService.CompleteAsync(
+						jobLog.Id,
+						"{\"learningUnitCount\":0,\"reason\":\"No active knowledge unit\"}",
+						cancellationToken);
 					continue;
+				}
 
 				// 4. Tạo bảng priority: số nhỏ hơn có độ ưu tiên cao hơn.
 				var priorities = contentCollections
@@ -98,6 +131,11 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 
 				var knowledgeUnitsById = knowledgeUnits
 					.ToDictionary(x => x.Id.Value);
+
+				var matchedCount = 0;
+
+				try
+				{
 
 				// 5. Matching từng Transcript Segment độc lập.
 				foreach (var segment in transcript.TranscriptSegments
@@ -161,8 +199,20 @@ public sealed class ProcessPendingVideoKnowledgeMatchingHandler
 					{
 						cancellationToken.ThrowIfCancellationRequested();
 						segment.AddLearningUnit(learningUnit);
+						matchedCount++;
 					}
 				}
+				}
+				catch (Exception ex)
+				{
+					await _jobLogService.FailAsync(jobLog.Id, ex.Message, CancellationToken.None);
+					throw;
+				}
+
+				await _jobLogService.CompleteAsync(
+					jobLog.Id,
+					$"{{\"learningUnitCount\":{matchedCount}}}",
+					cancellationToken);
 			}
 
 			return Result.Success();

@@ -28,8 +28,5 @@ internal sealed class CreateVideoValidator : AbstractValidator<CreateVideoComman
 
 		RuleFor(x => x.SourceType)
 				.NotEmpty().WithMessage("VideoSource is required");
-
-		RuleFor(x => x.StorageKeyOfVideo)
-			.NotEmpty().WithMessage("StorageKeyOfVideo is required");
 	}
 }

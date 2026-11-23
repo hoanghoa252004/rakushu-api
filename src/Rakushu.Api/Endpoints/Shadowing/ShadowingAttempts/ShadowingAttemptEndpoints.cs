@@ -4,11 +4,17 @@ using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Shadowing.ShadowingAttempts;
+using Rakushu.Application.Usecases.Shadowing.ShadowingAssessments.GetShadowingAttemptAssessments;
+using Rakushu.Application.Usecases.Shadowing.ShadowingAssessments.ReevaluateShadowingAssessment;
 using Rakushu.Domain.Entities.Identity.Role;
 
 namespace Rakushu.Api.Endpoints.Shadowing.ShadowingAttempts;
 
 public sealed record CreateAttemptDetailRequestDto(Guid RoleLineId, string? AudioKey, long? DurationMs, bool? IsSkipped);
+
+public sealed record ReevaluateAssessmentRequestDto(
+	string OverallFeedback,
+	List<ReevaluatedDetailInput> Details);
 
 internal sealed class ShadowingAttemptEndpoints : IEndpoint
 {
@@ -99,7 +105,7 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			.RequireAuthorization(p => p.RequireRole(RoleCodes.Learner));
 
 		Action<Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder> readPolicy = p =>
-			p.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator);
+			p.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator);
 
 		attempts.MapGet("/{attemptId:guid}", async (
 				[FromRoute] Guid sessionId,
@@ -135,6 +141,59 @@ internal sealed class ShadowingAttemptEndpoints : IEndpoint
 			.WithSummary("Learner (member, own attempts), Curator (all)")
 			.WithDescription("Lists attempts of a session with session progress (1.0 = 100%, skipped and cancelled count as done) and material role summary.")
 			.RequireAuthorization(readPolicy)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
+			.ProducesProblem(StatusCodes.Status404NotFound);
+
+		var assessments = app.MapGroup("/api/shadowing-sessions/{sessionId:guid}/attempts")
+			.WithTags("Shadowing Assessment").WithGroupName("shadowing");
+
+		assessments.MapPost("/{attemptId:guid}/assessments", async (
+				[FromRoute] Guid sessionId,
+				[FromRoute] Guid attemptId,
+				[FromBody] ReevaluateAssessmentRequestDto request,
+				ISender sender,
+				CancellationToken ct = default) =>
+			{
+				var result = await sender.Send(new ReevaluateShadowingAssessmentCommand(
+					sessionId, attemptId, request.OverallFeedback, request.Details), ct);
+				return result.MatchOk();
+			})
+			.WithName("ReevaluateShadowingAssessment")
+			.Produces<Guid>(StatusCodes.Status200OK)
+			.WithSummary("Curator")
+			.WithDescription("Creates a CuratorReevaluation assessment from the updated details (scores 0-100, feedback required) and the overall feedback. Details not sent are copied from the latest assessment. An attempt can have at most 2 assessments.")
+			.RequireAuthorization(p => p.RequireRole(RoleCodes.LinguisticCurator))
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
+			.ProducesProblem(StatusCodes.Status403Forbidden)
+			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict);
+
+		assessments.MapGet("/{attemptId:guid}/assessments", async (
+				[FromRoute] Guid sessionId,
+				[FromRoute] Guid attemptId,
+				ISender sender,
+				[FromQuery] int pageNumber = 1,
+				[FromQuery] int pageSize = 10,
+				[FromQuery] bool? isSkipped = null,
+				[FromQuery] Guid? memberId = null,
+				CancellationToken ct = default) =>
+			{
+				var result = await sender.Send(
+					new GetShadowingAttemptAssessmentsQuery(
+						sessionId, attemptId, pageNumber, pageSize, isSkipped, memberId), ct);
+				return result.MatchOk();
+			})
+			.WithName("GetShadowingAttemptAssessments")
+			.Produces<AttemptWithAssessmentsDto>(StatusCodes.Status200OK)
+			.WithSummary("Learner (member) & Curator")
+			.WithDescription(
+				"Gets an attempt with paged details and its AI/curator assessments. " +
+				"Filter by memberId (default: the caller). " +
+				"Filter by isSkipped on attempt details. " +
+				"Only session members can call this endpoint. " +
+				"Cancelled attempts are returned with an empty Assessments list.")
+			.RequireAuthorization(readPolicy)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound);
 	}

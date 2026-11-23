@@ -9,6 +9,10 @@ namespace Rakushu.Domain.Entities.Shadowing.ShadowingRoleLine;
 
 public interface IShadowingRoleLineRepository : IBaseRepository<ShadowingRoleLine, ShadowingRoleLineId>
 {
+	Task<IReadOnlyList<ShadowingRoleLine>> GetByMaterialIdAsync(
+		ShadowingMaterialId materialId,
+		CancellationToken cancellationToken = default);
+
 	Task<ShadowingRoleLine?> GetByIdWithSegmentsAsync(
 		ShadowingRoleLineId id,
 		CancellationToken cancellationToken = default);

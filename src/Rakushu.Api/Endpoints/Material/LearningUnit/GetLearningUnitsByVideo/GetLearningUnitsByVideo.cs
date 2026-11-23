@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
@@ -30,7 +30,7 @@ internal sealed class GetLearningUnitsByVideo : IEndpoint
 			.WithName("GetVideoLearningUnits")
 			.WithSummary("Learner, Curator")
 			.WithDescription("Gets learning units of a video with paging. Filter: type (Word, Collocation, Grammar, Terminology, ProperNoun).")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<PaginatedList<LearningUnitSummaryDto>>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status404NotFound)

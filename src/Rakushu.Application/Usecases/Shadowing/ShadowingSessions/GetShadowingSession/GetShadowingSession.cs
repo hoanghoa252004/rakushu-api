@@ -27,7 +27,7 @@ internal sealed class GetShadowingSessionHandler(
 		if (session is null)
 			return Result.Failure<ShadowingSessionDto>(ShadowingSessionErrors.NotFound);
 
-		var isCurator = currentUser.Role == RoleCodes.LinguisticCurator;
+		var isCurator = currentUser.Role == RoleCodes.LinguisticCurator || currentUser.Role == RoleCodes.SystemAdministrator;
 		var isMember = currentUser.UserId is not null && session.Members.Any(m => m.MemberId == currentUser.UserId);
 		var isPublic = session.Visibility == ShadowingSessionVisibility.Public;
 		if (!isCurator && !isMember && !isPublic)

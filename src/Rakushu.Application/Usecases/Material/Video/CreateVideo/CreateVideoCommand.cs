@@ -13,7 +13,7 @@ public sealed record CreateVideoCommand(
 	int SortOrder,
 	string SourceType,
 	string? SourceUrl,
-	string StorageKeyOfVideo,
+	string? StorageKeyOfVideo,
 	string StorageKeyOfThumbnail
 ) : IRequest<Result<Guid>>;
 

@@ -42,6 +42,8 @@ public sealed class ShadowingRoleLine : Entity<ShadowingRoleLineId>
 
 	public void SetSortOrder(int sortOrder) => SortOrder = sortOrder;
 
+	public void SetAudioKey(string audioKey) => AudioKey = audioKey;
+
 	public void SetSegments(IEnumerable<TranscriptSegmentId> segmentIds)
 	{
 		var target = segmentIds.Select(s => s.Value).ToHashSet();

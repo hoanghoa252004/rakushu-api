@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
@@ -27,7 +27,7 @@ internal sealed class GetLearningUnitById : IEndpoint
 			.WithName("GetLearningUnitById")
 			.WithSummary("Learner, Curator")
 			.WithDescription("Gets a learning unit with its knowledge unit, knowledge collection, the used meaning, and the total meaning count of the knowledge unit.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<LearningUnitDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);

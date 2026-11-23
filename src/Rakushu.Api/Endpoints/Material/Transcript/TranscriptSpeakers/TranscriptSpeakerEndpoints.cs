@@ -48,7 +48,7 @@ internal sealed class GetTranscriptSpeakersEndpoint : IEndpoint
 			.WithName("GetTranscriptSpeakers")
 			.WithSummary("Curator")
 			.WithDescription("Retrieves the speakers of a transcript, including speaker information.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<IReadOnlyList<TranscriptSpeakerDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound);
 	}
@@ -69,9 +69,9 @@ internal sealed class GetTranscriptSpeakerByIdEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetTranscriptSpeakerById")
-			.WithSummary("Curator")
+			.WithSummary("Curator, Admin")
 			.WithDescription("Retrieves a transcript speaker, including speaker information.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<TranscriptSpeakerDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound);
 	}

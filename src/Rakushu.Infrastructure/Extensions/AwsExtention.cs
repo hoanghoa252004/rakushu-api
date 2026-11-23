@@ -1,7 +1,5 @@
 using Amazon.BedrockRuntime;
 using Amazon.MediaConvert;
-using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
-using Rakushu.Infrastructure.AudioClips;
 using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.SimpleEmail;
@@ -10,12 +8,16 @@ using Amazon.Translate;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Rakushu.Application.Abstractions.Infrastructure.Ai;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
+using Rakushu.Application.Abstractions.Infrastructure.AudioClips;
 using Rakushu.Application.Abstractions.Infrastructure.Email;
 using Rakushu.Application.Abstractions.Infrastructure.Nlp;
 using Rakushu.Application.Abstractions.Infrastructure.Rag;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Infrastructure.Ai;
 using Rakushu.Infrastructure.ASR;
+using Rakushu.Infrastructure.AudioClips;
 using Rakushu.Infrastructure.Email;
 using Rakushu.Infrastructure.Extensions.Options;
 using Rakushu.Infrastructure.Nlp;
@@ -57,9 +59,17 @@ internal static class AwsExtention
 				new AmazonTranscribeServiceClient(
 					Amazon.RegionEndpoint.APSoutheast1));
 
+			services.AddSingleton<Amazon.Rekognition.IAmazonRekognition>(_ =>
+				new Amazon.Rekognition.AmazonRekognitionClient(
+					Amazon.RegionEndpoint.APSoutheast1));
+
 			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
 				new AmazonBedrockRuntimeClient(
 					Amazon.RegionEndpoint.APNortheast1));
+
+			services.AddSingleton<IAmazonBedrockRuntimeAI>(_ =>
+				new AmazonBedrockRuntimeAIClient(
+					Amazon.RegionEndpoint.APSoutheast1));
 
 			services.AddSingleton<IAmazonTranslate>(_ =>
 				new AmazonTranslateClient(
@@ -96,11 +106,23 @@ internal static class AwsExtention
 					awsCredentials,
 					Amazon.RegionEndpoint.APSoutheast1));
 
-			// AWS Bedrock
+			// AWS Rekognition
+			services.AddSingleton<Amazon.Rekognition.IAmazonRekognition>(_ =>
+				new Amazon.Rekognition.AmazonRekognitionClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1));
+
+			// AWS Bedrock (embedding)
 			services.AddSingleton<IAmazonBedrockRuntime>(_ =>
 				new AmazonBedrockRuntimeClient(
 					awsCredentials,
 					Amazon.RegionEndpoint.APNortheast1));
+
+			// AWS Bedrock (AI chat)
+			services.AddSingleton<IAmazonBedrockRuntimeAI>(_ =>
+				new AmazonBedrockRuntimeAIClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.APSoutheast1));
 
 			// AWS Translate
 			services.AddSingleton<IAmazonTranslate>(_ =>
@@ -115,17 +137,25 @@ internal static class AwsExtention
 					Amazon.RegionEndpoint.APSoutheast1));
 		}
 
-		services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
+		//services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));
+		services.AddScoped<AwsRuntimeSettings>();
+		services.AddScoped<AzureRuntimeSettings>();
 
 		// SES
 		services.AddScoped<IEmailService, AwsSesService>();
 		// S3
 		services.AddScoped<IStorageService, AwsS3Service>();
+		// Video import
+		Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<Rakushu.Infrastructure.VideoImport.YtDlpBinaries>(services);
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.VideoImport.IVideoImportService, Rakushu.Infrastructure.VideoImport.YtDlpVideoImportService>();
+		// Moderation
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Moderation.IVideoModerationService, Rakushu.Infrastructure.Moderation.AwsVideoModerationService>();
 		// Transcribe
 		services.AddScoped<IAsrService, AwsTranscribeService>();
 		services.AddScoped<IAsrOutputReader, AwsAsrOutputReader>();
 		// Bedrock
 		services.AddScoped<IEmbeddingService, AwsBedrockEmbeddingService>();
+		services.AddScoped<IAiService, AwsBedrockAiService>();
 		// Translate
 		services.AddScoped<ITranslateService, AwsTranslateService>();
 		// MediaConvert
@@ -137,7 +167,7 @@ internal static class AwsExtention
 				.GetRequiredService<IConfiguration>();
 
 			//var baseUrl = "http://localhost:8000";
-			var baseUrl = configuration["AwsSettings:NlpBaseUrl"]
+			var baseUrl = configuration["NlpBaseUrl"]
 				?? throw new InvalidOperationException(
 					"NlpService:BaseUrl is not configured.");
 

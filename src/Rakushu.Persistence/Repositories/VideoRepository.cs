@@ -5,6 +5,7 @@ using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Material.Video.MediaAsset;
+using Rakushu.Domain.Entities.Processing.ProcessingJobLog;
 
 namespace Rakushu.Persistence.Repositories;
 
@@ -88,6 +89,62 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			.FirstOrDefaultAsync(v => v.Transcript != null && v.Transcript.TranscriptSegments.Any(s => s.Bunsetsus.Any(b => b.Tokens.Any(tok => tok.Id == tokenId))), cancellationToken);
 	}
 
+	public async Task<(IReadOnlyList<Video> Items, int TotalCount)> GetPagedAsync(
+		IReadOnlyCollection<VideoSource> sourceTypes,
+		VideoStatus? status,
+		Guid? learnerId,
+		string? searchKey,
+		Guid? categoryId,
+		Guid? seriesId,
+		int pageNumber,
+		int pageSize,
+		CancellationToken cancellationToken = default)
+	{
+		var query = _context.Videos.AsNoTracking().Where(v => sourceTypes.Contains(v.SourceType));
+
+		if (status.HasValue)
+			query = query.Where(v => v.Status == status.Value);
+
+		if (learnerId.HasValue)
+			{
+				var id = Rakushu.Domain.Entities.Identity.User.UserId.From(learnerId.Value);
+				query = query.Where(v => v.LearnerId == id);
+			}
+
+		if (!string.IsNullOrWhiteSpace(searchKey))
+		{
+			var key = searchKey.ToLower();
+			query = query.Where(v => v.Title.ToLower().Contains(key) || v.Slug.ToLower().Contains(key));
+		}
+
+		if (categoryId.HasValue)
+			{
+				var id = Rakushu.Domain.Entities.Knowledge.ContentCategory.ContentCategoryId.From(categoryId.Value);
+				query = query.Where(v => v.ContentCategoryId == id);
+			}
+
+		if (seriesId.HasValue)
+			{
+				var id = Rakushu.Domain.Entities.Material.Series.SeriesId.From(seriesId.Value);
+				query = query.Where(v => v.SeriesId == id);
+			}
+
+		var total = await query.CountAsync(cancellationToken);
+
+		var items = await query
+			.OrderByDescending(v => v.CreatedAt)
+			.Skip((pageNumber - 1) * pageSize)
+			.Take(pageSize)
+			.Include(v => v.Learner)
+			.Include(v => v.ContentCategory)
+			.Include(v => v.Series)
+			.Include(v => v.MediaAssets)
+			.AsSplitQuery()
+			.ToListAsync(cancellationToken);
+
+		return (items, total);
+	}
+
 	public override async Task<IEnumerable<Video>> GetAllAsync(CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
@@ -106,6 +163,19 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 		int batchSize,
 		CancellationToken cancellationToken = default)
 	{
+		// Bỏ qua video đã matching xong (kể cả khi không tìm được learning unit nào).
+		var matchedVideoIds = (await _context.ProcessingJobLogs
+			.AsNoTracking()
+			.Where(l =>
+				l.JobType == ProcessingJobType.LearningUnitMatching &&
+				l.TargetType == ProcessingJobTargetType.Video &&
+				l.IsSuccess)
+			.Select(l => l.TargetId)
+			.Distinct()
+			.ToListAsync(cancellationToken))
+			.Select(VideoId.From)
+			.ToList();
+
 		return await _context.Videos
 			//.AsNoTracking()
 			.Include(v => v.Transcript)
@@ -119,9 +189,10 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 				v.Status == VideoStatus.Processing &&
 				v.Transcript != null &&
 				v.Transcript.IsReviewed
-				&& v.Transcript.TranscriptSegments.All(s => s.LearningUnits.Any() == false))
-			.Take(batchSize)
+				&& v.Transcript.TranscriptSegments.All(s => s.LearningUnits.Any() == false)
+				&& !matchedVideoIds.Contains(v.Id))
 			.OrderBy(v => v.CreatedAt)
+			.Take(batchSize)
 			.ToListAsync(cancellationToken);
 	}
 
@@ -143,18 +214,69 @@ public sealed class VideoRepository : BaseRepository<Video, VideoId>, IVideoRepo
 			.ToListAsync(cancellationToken);
 	}
 
-	public async Task<IReadOnlyList<Video>> GetProcessingVideosWithProcessedResultAsync(int batchSize, CancellationToken cancellationToken = default)
+	public async Task<IReadOnlyList<Video>> GetModeratingVideosAsync(int batchSize, CancellationToken cancellationToken = default)
 	{
 		return await _context.Videos
-			.Where(v =>
-				v.Status == VideoStatus.Processing &&
-				v.Transcript != null &&
-				v.Transcript.TranscriptSegments.Count() > 0 &&
-				v.Transcript.TranscriptSegments.SelectMany(s => s.TranscriptItems).Count() > 0 &&
-				v.Transcript.TranscriptSegments.Count(s => s.Subtitle != null) > 0 &&
-				v.Transcript.TranscriptSegments.SelectMany(s => s.Bunsetsus).Count() > 0 &&
-				v.Transcript.TranscriptSegments.SelectMany(s => s.Bunsetsus).SelectMany(b => b.Tokens).Count() > 0 &&
-				v.Transcript.TranscriptSegments.SelectMany(s => s.LearningUnits).Count() > 0)
+			.Include(v => v.MediaAssets)
+			.Where(v => v.Status == VideoStatus.Moderating)
+			.OrderBy(v => v.CreatedAt)
+			.Take(batchSize)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<Video>> GetImportingVideosAsync(int batchSize, CancellationToken cancellationToken = default)
+	{
+		return await _context.Videos
+			.Include(v => v.MediaAssets)
+			.Where(v => v.Status == VideoStatus.Importing)
+			.OrderBy(v => v.CreatedAt)
+			.Take(batchSize)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<IReadOnlyList<Video>> GetProcessingVideosWithProcessedResultAsync(int batchSize, CancellationToken cancellationToken = default)
+	{
+		var processingVideoIds = (await _context.Videos
+			.AsNoTracking()
+			.Where(v => v.Status == VideoStatus.Processing && v.Transcript != null)
+			.Select(v => v.Id)
+			.ToListAsync(cancellationToken))
+			.Select(id => id.Value)
+			.ToList();
+
+		if (processingVideoIds.Count == 0)
+			return [];
+
+		var logs = await _context.ProcessingJobLogs
+			.AsNoTracking()
+			.Where(l =>
+				l.TargetType == ProcessingJobTargetType.Video &&
+				processingVideoIds.Contains(l.TargetId) &&
+				(l.JobType == ProcessingJobType.LearningUnitMatching || l.JobType == ProcessingJobType.Translation))
+			.Select(l => new { l.TargetId, l.JobType, l.IsSuccess, l.EndAt, l.StartAt })
+			.ToListAsync(cancellationToken);
+
+		// Video sẵn sàng review khi: LearningUnitMatching đã thành công và mọi job Translation (tất cả chunk) đã kết thúc,
+		// job Translation mới nhất (chunk cuối / batch) thành công.
+		var readyIds = logs
+			.GroupBy(l => l.TargetId)
+			.Where(g =>
+			{
+				var matchingDone = g.Any(l => l.JobType == ProcessingJobType.LearningUnitMatching && l.IsSuccess);
+				var translations = g.Where(l => l.JobType == ProcessingJobType.Translation).ToList();
+				return matchingDone
+					&& translations.Count > 0
+					&& translations.All(l => l.EndAt != null)
+					&& translations.OrderByDescending(l => l.StartAt).First().IsSuccess;
+			})
+			.Select(g => VideoId.From(g.Key))
+			.ToList();
+
+		if (readyIds.Count == 0)
+			return [];
+
+		return await _context.Videos
+			.Where(v => v.Status == VideoStatus.Processing && readyIds.Contains(v.Id))
 			.OrderBy(v => v.CreatedAt)
 			.Take(batchSize)
 			.ToListAsync(cancellationToken);

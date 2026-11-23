@@ -15,6 +15,10 @@ namespace Rakushu.Application.Usecases.Material.Video.CreateVideo;
 
 internal sealed class CreateVideoHandler : IRequestHandler<CreateVideoCommand, Result<Guid>>
 {
+	private static readonly System.Text.RegularExpressions.Regex YoutubeUrlRegex = new(
+		@"^(https?://)?((www\.|m\.|music\.)?youtube\.com/(watch\?(.*&)?v=|shorts/|embed/|live/)|youtu\.be/)[A-Za-z0-9_-]{11}([?&#/].*)?$",
+		System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Compiled);
+
 	private readonly IVideoRepository _repository;
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly ISystemClock _systemClock;
@@ -55,10 +59,30 @@ internal sealed class CreateVideoHandler : IRequestHandler<CreateVideoCommand, R
 			if (sourceType == VideoSource.Curated && _currentUserContext.Role != RoleCodes.LinguisticCurator)
 				return Result.Failure<Guid>(VideoErrors.UnauthorizedVideoSourceForCurator);
 
+			var isExternalImport = sourceType == VideoSource.ImportedFromExternal;
+
+			if (isExternalImport)
+			{
+				if (string.IsNullOrWhiteSpace(request.SourceUrl))
+					return Result.Failure<Guid>(VideoErrors.SourceUrlRequired);
+
+				if (!YoutubeUrlRegex.IsMatch(request.SourceUrl.Trim()))
+					return Result.Failure<Guid>(VideoErrors.InvalidYoutubeUrl);
+			}
+			else if (string.IsNullOrWhiteSpace(request.StorageKeyOfVideo))
+			{
+				return Result.Failure<Guid>(VideoErrors.StorageKeyOfVideoRequired);
+			}
+
 			var now = _systemClock.UtcNow;
 
 			// Determine initial status based on source type
-			var initialStatus = sourceType == VideoSource.Curated ? VideoStatus.Draft : VideoStatus.Pending;
+			var initialStatus = sourceType switch
+			{
+				VideoSource.Curated => VideoStatus.Draft,
+				VideoSource.ImportedFromExternal => VideoStatus.Importing,
+				_ => VideoStatus.Moderating
+			};
 
 
 			var videoResult = Domain.Entities.Material.Video.Video.Create(
@@ -74,25 +98,14 @@ internal sealed class CreateVideoHandler : IRequestHandler<CreateVideoCommand, R
 				now,
 				now,
 				request.Description,
-				request.SourceUrl);
+				request.SourceUrl?.Trim());
 
 			if (videoResult.IsFailure)
 				return Result.Failure<Guid>(videoResult.Error);
 
-			// Get metadata of media asset from storage service
-			var videoMetadataResult = await _storageService.GetMediaAssetMetadataAsync(request.StorageKeyOfVideo, cancellationToken);
-
 			var thumbnailMetadataResult = await _storageService.GetMediaAssetMetadataAsync(request.StorageKeyOfThumbnail, cancellationToken);
 
-			// Create media assets for video and thumbnail
-			var videoMediaAsset = Rakushu.Domain.Entities.Material.Video.MediaAsset.MediaAsset.Create(
-				videoResult.Value.Id,
-				MediaAssetType.Video,
-				request.StorageKeyOfVideo,
-				videoMetadataResult.ContentType,
-				videoMetadataResult.FileName,
-				videoMetadataResult.FileSizeBytes);
-
+			// Create media assets for video (not for external import, created by import worker) and thumbnail
 			var thumbnailMediaAsset = Rakushu.Domain.Entities.Material.Video.MediaAsset.MediaAsset.Create(
 				videoResult.Value.Id,
 				MediaAssetType.Thumbnail,
@@ -101,8 +114,22 @@ internal sealed class CreateVideoHandler : IRequestHandler<CreateVideoCommand, R
 				thumbnailMetadataResult.FileName,
 				thumbnailMetadataResult.FileSizeBytes);
 
-			videoResult.Value.AddMediaAsset(videoMediaAsset.Value);
+			if (!isExternalImport)
+			{
+				var videoMetadataResult = await _storageService.GetMediaAssetMetadataAsync(request.StorageKeyOfVideo!, cancellationToken);
 
+				var videoMediaAsset = Rakushu.Domain.Entities.Material.Video.MediaAsset.MediaAsset.Create(
+					videoResult.Value.Id,
+					MediaAssetType.Video,
+					request.StorageKeyOfVideo!,
+					videoMetadataResult.ContentType,
+					videoMetadataResult.FileName,
+					videoMetadataResult.FileSizeBytes);
+
+				videoResult.Value.AddMediaAsset(videoMediaAsset.Value);
+			}
+
+			videoResult.Value.AddMediaAsset(thumbnailMediaAsset.Value);
 			videoResult.Value.AddMediaAsset(thumbnailMediaAsset.Value);
 
 			_repository.Add(videoResult.Value);

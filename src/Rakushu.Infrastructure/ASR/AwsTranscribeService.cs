@@ -1,6 +1,5 @@
 ﻿using Amazon.TranscribeService;
 using Amazon.TranscribeService.Model;
-using Microsoft.Extensions.Options;
 using Rakushu.Application.Abstractions.Infrastructure.ASR;
 using Rakushu.Infrastructure.Extensions.Options;
 using System;
@@ -14,14 +13,14 @@ namespace Rakushu.Infrastructure.ASR;
 internal sealed class AwsTranscribeService : IAsrService
 {
 	private readonly IAmazonTranscribeService _client;
-	private readonly AwsSettings _awsSettings;
+	private readonly AwsRuntimeSettings _awsSettings;
 
 	public AwsTranscribeService(
-		 IOptions<AwsSettings> options,
+		 AwsRuntimeSettings options,
 		IAmazonTranscribeService client)
 	{
 		_client = client;
-		_awsSettings = options.Value;
+		_awsSettings = options;
 	}
 
 	public async Task<StartTranscriptionResult> StartAsync(
