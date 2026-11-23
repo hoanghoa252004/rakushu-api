@@ -43,12 +43,17 @@ internal sealed class YtDlpVideoImportService : IVideoImportService
 
 			var output = new Progress<string>(line => _logger.LogInformation("[yt-dlp] {Line}", line));
 
+			var options = new OptionSet();
+			if (!string.IsNullOrWhiteSpace(_binaries.DenoPath))
+				options.AddCustomOption("--js-runtimes", $"deno:{_binaries.DenoPath}");
+
 			var result = await ytdl.RunVideoDownload(
 				sourceUrl,
 				format: "best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
 				mergeFormat: DownloadMergeFormat.Mp4,
 				ct: cancellationToken,
-				output: output);
+				output: output,
+				overrideOptions: options);
 
 			var filesInFolder = Directory.GetFiles(workFolder);
 			_logger.LogInformation(
