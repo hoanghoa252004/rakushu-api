@@ -116,6 +116,74 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		return (items, totalCount);
 	}
 
+	public async Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetReviewQueueAsync(
+		QuestionStatus? status = QuestionStatus.Draft,
+		string? level = null,
+		string? questionTypeCode = null,
+		string? mediaType = null,
+		string? search = null,
+		int page = 1,
+		int pageSize = 20,
+		CancellationToken cancellationToken = default)
+	{
+		var query = _context.BankQuestions
+			.AsNoTracking()
+			.Include(bq => bq.QuestionType)
+			.Include(bq => bq.KnowledgeMeaning)
+				.ThenInclude(km => km.KnowledgeUnit)
+					.ThenInclude(ku => ku.ProficiencyLevel)
+			.AsQueryable();
+
+		if (status.HasValue)
+		{
+			query = query.Where(bq => bq.Status == status.Value);
+		}
+
+		if (!string.IsNullOrWhiteSpace(level) && !string.Equals(level.Trim(), "ALL", StringComparison.OrdinalIgnoreCase))
+		{
+			string normalizedLevel = level.Trim().ToUpperInvariant();
+			query = query.Where(bq =>
+				bq.KnowledgeMeaning.KnowledgeUnit.ProficiencyLevel != null
+				&& EF.Functions.ILike(bq.KnowledgeMeaning.KnowledgeUnit.ProficiencyLevel.Code, normalizedLevel));
+		}
+
+		if (!string.IsNullOrWhiteSpace(questionTypeCode) && !string.Equals(questionTypeCode.Trim(), "ALL", StringComparison.OrdinalIgnoreCase))
+		{
+			string normalizedType = questionTypeCode.Trim();
+			query = query.Where(bq =>
+				bq.QuestionType != null
+				&& EF.Functions.ILike(bq.QuestionType.Code, normalizedType));
+		}
+
+		if (!string.IsNullOrWhiteSpace(mediaType) && !string.Equals(mediaType.Trim(), "ALL", StringComparison.OrdinalIgnoreCase))
+		{
+			string normalizedMedia = mediaType.Trim();
+			query = query.Where(bq => EF.Functions.ILike(bq.MediaType, normalizedMedia));
+		}
+
+		if (!string.IsNullOrWhiteSpace(search))
+		{
+			string pattern = $"%{search.Trim()}%";
+			query = query.Where(bq =>
+				EF.Functions.ILike(bq.Question, pattern)
+				|| EF.Functions.ILike(bq.KnowledgeMeaning.KnowledgeUnit.Expression, pattern)
+				|| (bq.KnowledgeMeaning.KnowledgeUnit.Reading != null && EF.Functions.ILike(bq.KnowledgeMeaning.KnowledgeUnit.Reading, pattern))
+				|| EF.Functions.ILike(bq.KnowledgeMeaning.Meaning, pattern));
+		}
+
+		int totalCount = await query.CountAsync(cancellationToken);
+		int totalPages = totalCount > 0 ? (int)Math.Ceiling((double)totalCount / pageSize) : 1;
+		int safePage = Math.Clamp(page, 1, totalPages);
+
+		var items = await query
+			.OrderByDescending(bq => bq.CreatedAt)
+			.Skip((safePage - 1) * pageSize)
+			.Take(pageSize)
+			.ToListAsync(cancellationToken);
+
+		return (items, totalCount);
+	}
+
 	public async Task<IReadOnlyList<string>> GetRandomDistractorMeaningsAsync(
 		IEnumerable<KnowledgeMeaningId> excludeMeaningIds,
 		int count,

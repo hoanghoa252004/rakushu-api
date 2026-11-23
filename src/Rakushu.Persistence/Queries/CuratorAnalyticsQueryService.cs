@@ -54,6 +54,10 @@ internal sealed partial class CuratorAnalyticsQueryService : ICuratorAnalyticsQu
 			videos.LowConfidenceLearningUnitsCount,
 			cancellationToken);
 
+		var learnerActivity = await GetLearnerActivitySectionAsync(
+			windowStartUtc,
+			cancellationToken);
+
 		return new CuratorDashboardDto(
 			days,
 			timeZone.Id,
@@ -61,7 +65,8 @@ internal sealed partial class CuratorAnalyticsQueryService : ICuratorAnalyticsQu
 			reports,
 			videos,
 			questionBank,
-			knowledge);
+			knowledge,
+			learnerActivity);
 	}
 
 	public async Task<CuratorSummaryDto> GetCuratorSummaryAsync(

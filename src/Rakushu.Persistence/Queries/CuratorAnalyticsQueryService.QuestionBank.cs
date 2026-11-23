@@ -133,6 +133,11 @@ internal sealed partial class CuratorAnalyticsQueryService
 				KnowledgeUnitExpression = q.KnowledgeMeaning != null && q.KnowledgeMeaning.KnowledgeUnit != null
 					? q.KnowledgeMeaning.KnowledgeUnit.Expression
 					: null,
+				JlptLevel = q.KnowledgeMeaning != null
+					&& q.KnowledgeMeaning.KnowledgeUnit != null
+					&& q.KnowledgeMeaning.KnowledgeUnit.ProficiencyLevel != null
+					? q.KnowledgeMeaning.KnowledgeUnit.ProficiencyLevel.Code
+					: null,
 				q.MediaType,
 				q.CreatedAt
 			})
@@ -145,7 +150,8 @@ internal sealed partial class CuratorAnalyticsQueryService
 			TruncateText(q.Question, 140),
 			q.KnowledgeUnitExpression,
 			string.IsNullOrWhiteSpace(q.MediaType) ? "NONE" : q.MediaType.Trim().ToUpperInvariant(),
-			q.CreatedAt)).ToList();
+			q.CreatedAt,
+			string.IsNullOrWhiteSpace(q.JlptLevel) ? null : q.JlptLevel.Trim().ToUpperInvariant())).ToList();
 
 		return new CuratorQuestionBankAnalyticsDto(
 			publishedCount + draftCount,

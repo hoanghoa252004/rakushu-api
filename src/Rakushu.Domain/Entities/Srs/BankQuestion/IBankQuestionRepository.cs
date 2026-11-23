@@ -31,6 +31,16 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		int pageSize = 20,
 		CancellationToken cancellationToken = default);
 
+	Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetReviewQueueAsync(
+		QuestionStatus? status = QuestionStatus.Draft,
+		string? level = null,
+		string? questionTypeCode = null,
+		string? mediaType = null,
+		string? search = null,
+		int page = 1,
+		int pageSize = 20,
+		CancellationToken cancellationToken = default);
+
 	Task<IReadOnlyList<string>> GetRandomDistractorMeaningsAsync(
 		IEnumerable<KnowledgeMeaningId> excludeMeaningIds,
 		int count,

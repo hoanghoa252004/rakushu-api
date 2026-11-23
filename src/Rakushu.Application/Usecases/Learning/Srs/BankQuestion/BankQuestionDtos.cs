@@ -44,3 +44,26 @@ public sealed record BankQuestionDetailDto(
 	string MediaType = "NONE",
 	string? MediaUrl = null,
 	QuestionMediaMetadataDto? MediaMetadata = null);
+
+public sealed record BankQuestionReviewItemDto(
+	Guid Id,
+	Guid MeaningId,
+	string? Expression,
+	string? Reading,
+	string? Meaning,
+	string? JlptLevel,
+	Guid QuestionTypeId,
+	string? QuestionTypeCode,
+	string? QuestionTypeName,
+	string Question,
+	bool IsActive,
+	QuestionStatus Status,
+	string MediaType,
+	DateTimeOffset CreatedAt);
+
+public sealed record BankQuestionReviewQueueResponseDto(
+	int TotalCount,
+	int Page,
+	int PageSize,
+	int TotalPages,
+	IReadOnlyList<BankQuestionReviewItemDto> Items);

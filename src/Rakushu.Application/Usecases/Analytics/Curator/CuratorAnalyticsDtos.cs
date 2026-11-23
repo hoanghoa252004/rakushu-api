@@ -7,7 +7,8 @@ public sealed record CuratorDashboardDto(
 	CuratorReportsAnalyticsDto Reports,
 	CuratorVideosAnalyticsDto Videos,
 	CuratorQuestionBankAnalyticsDto QuestionBank,
-	CuratorKnowledgeAnalyticsDto Knowledge);
+	CuratorKnowledgeAnalyticsDto Knowledge,
+	CuratorLearnerActivityAnalyticsDto? LearnerActivity = null);
 
 public sealed record CuratorSummaryDto(
 	DateTimeOffset GeneratedAt,
@@ -160,7 +161,8 @@ public sealed record CuratorDraftQuestionItemDto(
 	string PromptText,
 	string? KnowledgeUnitExpression,
 	string MediaType,
-	DateTimeOffset CreatedAt);
+	DateTimeOffset CreatedAt,
+	string? JlptLevel = null);
 
 public sealed record CuratorKnowledgeAnalyticsDto(
 	int TotalCollections,
@@ -190,3 +192,47 @@ public sealed record CuratorCollectionSummaryItemDto(
 	bool IsActive,
 	int ItemsCount,
 	DateTimeOffset UpdatedAt);
+
+public sealed record CuratorLearnerActivityAnalyticsDto(
+	int CompletedQuizAttempts,
+	int TotalAnsweredItems,
+	int TotalWrongItems,
+	double AvgQuizAccuracyPercent,
+	int ActiveQuizLearnersCount,
+	int TotalHighErrorQuestionsCount,
+	IReadOnlyList<CuratorLevelPerformanceDto> LevelBreakdown,
+	IReadOnlyList<CuratorLevelErrorCountDto> LevelErrorCounts,
+	IReadOnlyList<CuratorHighErrorQuestionItemDto> HighErrorQuestions);
+
+public sealed record CuratorLevelPerformanceDto(
+	string LevelCode,
+	int AnsweredCount,
+	int CorrectCount,
+	double AccuracyPercent,
+	int LearnersCount);
+
+public sealed record CuratorHighErrorQuestionItemDto(
+	Guid BankQuestionId,
+	string QuestionTypeCode,
+	string QuestionTypeName,
+	string PromptText,
+	string? KnowledgeUnitExpression,
+	string? KnowledgeUnitReading,
+	string JlptLevel,
+	int TotalAnswers,
+	int WrongAnswers,
+	double ErrorRatePercent,
+	int DistinctLearnersWrong);
+
+public sealed record CuratorLevelErrorCountDto(
+	string LevelCode,
+	int QuestionCount);
+
+public sealed record CuratorHighErrorQuestionsResponseDto(
+	int PeriodDays,
+	int TotalCount,
+	int Page,
+	int PageSize,
+	int TotalPages,
+	IReadOnlyList<CuratorLevelErrorCountDto> LevelCounts,
+	IReadOnlyList<CuratorHighErrorQuestionItemDto> Items);
