@@ -2,8 +2,11 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Abstractions.Persistence.Queries;
+using Rakushu.Application.Usecases.Curation;
 using Rakushu.Application.Usecases.Shadowing.ShadowingAttempts;
 using Rakushu.Domain.Common.Results;
+using Rakushu.Domain.Entities.Curation.Report;
+using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment;
 using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
@@ -15,15 +18,18 @@ internal sealed class GetShadowingAttemptAssessmentsHandler
 	: IRequestHandler<GetShadowingAttemptAssessmentsQuery, Result<ShadowingAttemptAssessmentsResponseDto>>
 {
 	private readonly ILearnerAnalyticsQueryService _analyticsQueryService;
+	private readonly IIssueDetailRepository _issueDetailRepository;
 	private readonly IStorageService _storageService;
 	private readonly ICurrentUserContext _currentUserContext;
 
 	public GetShadowingAttemptAssessmentsHandler(
 		ILearnerAnalyticsQueryService analyticsQueryService,
+		IIssueDetailRepository issueDetailRepository,
 		IStorageService storageService,
 		ICurrentUserContext currentUserContext)
 	{
 		_analyticsQueryService = analyticsQueryService;
+		_issueDetailRepository = issueDetailRepository;
 		_storageService = storageService;
 		_currentUserContext = currentUserContext;
 	}
@@ -71,6 +77,19 @@ internal sealed class GetShadowingAttemptAssessmentsHandler
 		int totalRecordedSeconds = (int)Math.Round(
 			ctx.Lines.Where(l => !l.IsSkipped).Sum(l => l.DurationMs ?? 0L) / 1000.0);
 
+		var latestReevalIssue = await _issueDetailRepository.GetLatestByTargetAndCategoryAsync(
+			TargetType.ShadowingAttempt,
+			ctx.AttemptId,
+			CurationContextHelper.ShadowingReevaluationCategory,
+			UserId.From(ctx.MemberId),
+			cancellationToken);
+
+		string? reevaluationRequestStatus = latestReevalIssue is not null
+			? CurationContextHelper.MapLearnerIssueStatus(latestReevalIssue.Report)
+			: null;
+		Guid? reevaluationIssueId = latestReevalIssue?.Id.Value;
+		Guid? reevaluationReportId = latestReevalIssue?.ReportId?.Value;
+
 		return Result.Success(new ShadowingAttemptAssessmentsResponseDto(
 			ctx.AttemptId,
 			ctx.SessionId,
@@ -86,7 +105,10 @@ internal sealed class GetShadowingAttemptAssessmentsHandler
 			skippedLinesCount,
 			primaryAssessment,
 			mappedAssessments,
-			topLevelLines));
+			topLevelLines,
+			reevaluationRequestStatus,
+			reevaluationIssueId,
+			reevaluationReportId));
 	}
 
 	private async Task<Dictionary<string, string?>> PresignAudioKeysAsync(

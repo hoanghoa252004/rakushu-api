@@ -18,6 +18,24 @@ public interface IIssueDetailRepository : IBaseRepository<IssueDetail, IssueDeta
 		int? endCharIndex = null,
 		CancellationToken cancellationToken = default);
 
+	Task<bool> HasAnyIssueAsync(
+		UserId userId,
+		TargetType targetType,
+		Guid targetId,
+		string category,
+		CancellationToken cancellationToken = default);
+
+	Task<int> CountByReportIdAsync(
+		ReportId reportId,
+		CancellationToken cancellationToken = default);
+
+	Task<IssueDetail?> GetLatestByTargetAndCategoryAsync(
+		TargetType targetType,
+		Guid targetId,
+		string category,
+		UserId? userId = null,
+		CancellationToken cancellationToken = default);
+
 	Task<IReadOnlyList<IssueDetail>> GetUnassignedByTargetAndCategoryAsync(
 		TargetType targetType,
 		Guid targetId,

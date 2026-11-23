@@ -1,6 +1,7 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
@@ -11,6 +12,8 @@ using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Curation.Learner.SubmitIssue;
@@ -23,6 +26,7 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 	private readonly IBankQuestionRepository _bankQuestionRepository;
 	private readonly ILearningUnitRepository _learningUnitRepository;
 	private readonly ITranscriptRepository _transcriptRepository;
+	private readonly ILearnerAnalyticsQueryService _learnerAnalyticsQueryService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
@@ -34,6 +38,7 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 		IBankQuestionRepository bankQuestionRepository,
 		ILearningUnitRepository learningUnitRepository,
 		ITranscriptRepository transcriptRepository,
+		ILearnerAnalyticsQueryService learnerAnalyticsQueryService,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
@@ -44,6 +49,7 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 		_bankQuestionRepository = bankQuestionRepository;
 		_learningUnitRepository = learningUnitRepository;
 		_transcriptRepository = transcriptRepository;
+		_learnerAnalyticsQueryService = learnerAnalyticsQueryService;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
@@ -61,7 +67,12 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 			return Result.Failure<SubmitIssueResponse>(ReportErrors.InvalidTargetId);
 
 		bool isOov = string.Equals(request.Category?.Trim(), CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
-		string normalizedCategory = isOov ? CurationContextHelper.OovCategory : request.Category!.Trim();
+		bool isShadowingReeval = string.Equals(request.Category?.Trim(), CurationContextHelper.ShadowingReevaluationCategory, StringComparison.OrdinalIgnoreCase);
+		string normalizedCategory = isOov
+			? CurationContextHelper.OovCategory
+			: isShadowingReeval
+				? CurationContextHelper.ShadowingReevaluationCategory
+				: request.Category!.Trim();
 		int? startCharIndex = isOov ? request.StartCharIndex : null;
 		int? endCharIndex = isOov ? request.EndCharIndex : null;
 
@@ -128,21 +139,60 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 
 			targetSnapshotJson = CurationContextHelper.SerializeLearningUnit(lu);
 		}
+		else if (targetType == TargetType.ShadowingAttempt)
+		{
+			var attemptCtx = await _learnerAnalyticsQueryService.GetAttemptAssessmentsContextAsync(
+				ShadowingAttemptId.From(request.TargetId),
+				cancellationToken);
 
-		var hasActive = await _issueDetailRepository.HasActiveIssueAsync(
-			userId,
-			targetType,
-			request.TargetId,
-			normalizedCategory,
-			startCharIndex,
-			endCharIndex,
-			cancellationToken);
+			if (attemptCtx is null || attemptCtx.MemberId != userId.Value)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
 
-		if (hasActive)
-			return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.AlreadyReported);
+			if (attemptCtx.AttemptStatus != ShadowingAttemptStatus.Assessed || attemptCtx.Assessments.Count == 0)
+				return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.ShadowingAttemptNotAssessed);
+
+			if (attemptCtx.Assessments.Count >= 2 ||
+				attemptCtx.Assessments.Any(a => a.Type == ShadowingAssessmentType.CuratorReevaluation))
+			{
+				return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.ShadowingAlreadyReevaluated);
+			}
+
+			if (!attemptCtx.Lines.Any(l => !l.IsSkipped))
+				return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.ShadowingNoAssessedLines);
+
+			effectiveThreshold = 1;
+			targetSnapshotJson = CurationContextHelper.SerializeShadowingAttempt(attemptCtx);
+		}
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
+			if (targetType == TargetType.ShadowingAttempt)
+			{
+				var hasAnyReevalIssue = await _issueDetailRepository.HasAnyIssueAsync(
+					userId,
+					targetType,
+					request.TargetId,
+					normalizedCategory,
+					cancellationToken);
+
+				if (hasAnyReevalIssue)
+					return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.ShadowingReevaluationRequestLimitReached);
+			}
+			else
+			{
+				var hasActive = await _issueDetailRepository.HasActiveIssueAsync(
+					userId,
+					targetType,
+					request.TargetId,
+					normalizedCategory,
+					startCharIndex,
+					endCharIndex,
+					cancellationToken);
+
+				if (hasActive)
+					return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.AlreadyReported);
+			}
+
 			var now = _systemClock.UtcNow;
 
 			var detailResult = IssueDetail.Create(

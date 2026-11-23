@@ -1,10 +1,12 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Curation.Curator.GetReportDetail;
@@ -15,6 +17,7 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 	private readonly IBankQuestionRepository _bankQuestionRepository;
 	private readonly ILearningUnitRepository _learningUnitRepository;
 	private readonly ITranscriptRepository _transcriptRepository;
+	private readonly ILearnerAnalyticsQueryService _learnerAnalyticsQueryService;
 	private readonly IStorageService _storageService;
 
 	public GetReportDetailHandler(
@@ -22,12 +25,14 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 		IBankQuestionRepository bankQuestionRepository,
 		ILearningUnitRepository learningUnitRepository,
 		ITranscriptRepository transcriptRepository,
+		ILearnerAnalyticsQueryService learnerAnalyticsQueryService,
 		IStorageService storageService)
 	{
 		_reportRepository = reportRepository;
 		_bankQuestionRepository = bankQuestionRepository;
 		_learningUnitRepository = learningUnitRepository;
 		_transcriptRepository = transcriptRepository;
+		_learnerAnalyticsQueryService = learnerAnalyticsQueryService;
 		_storageService = storageService;
 	}
 
@@ -50,6 +55,7 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 
 		BankQuestionContextDto? questionContext = null;
 		VideoLearningUnitContextDto? videoContext = null;
+		ShadowingAttemptContextDto? shadowingContext = null;
 
 		try
 		{
@@ -169,14 +175,23 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 						video?.SourceType.ToString());
 				}
 			}
+			else if (report.TargetType == TargetType.ShadowingAttempt)
+			{
+				var attemptCtx = await _learnerAnalyticsQueryService.GetAttemptAssessmentsContextAsync(
+					ShadowingAttemptId.From(report.TargetId), cancellationToken);
+				if (attemptCtx is not null)
+				{
+					shadowingContext = CurationContextHelper.BuildShadowingAttemptContext(attemptCtx);
+				}
+			}
 		}
 		catch
 		{
 			// Non-critical: Context enrichment failure should not block fetching the report ticket
 		}
 
-		var context = (questionContext is not null || videoContext is not null)
-			? new ReportTargetContextDto(questionContext, videoContext)
+		var context = (questionContext is not null || videoContext is not null || shadowingContext is not null)
+			? new ReportTargetContextDto(questionContext, videoContext, shadowingContext)
 			: null;
 
 		var rawSnapshotJson = report.TargetSnapshot

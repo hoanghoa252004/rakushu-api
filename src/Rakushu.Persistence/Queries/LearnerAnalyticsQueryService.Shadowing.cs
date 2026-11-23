@@ -355,7 +355,9 @@ internal sealed partial class LearnerAnalyticsQueryService
 			{
 				AttemptId = a.Id.Value,
 				SessionId = a.ShadowingSessionId.Value,
+				SessionTitle = a.ShadowingSession.Title,
 				MemberId = a.ShadowingSessionMember.MemberId.Value,
+				LearnerName = a.ShadowingSessionMember.Member.FullName,
 				MaterialName = a.ShadowingSession.ShadowingMaterial.Name,
 				VideoTitle = a.ShadowingSession.ShadowingMaterial.Video.Title,
 				SpeakerName = a.ShadowingSessionMember.ShadowingRole != null
@@ -460,6 +462,8 @@ internal sealed partial class LearnerAnalyticsQueryService
 			row.StartedAt,
 			row.CompletedAt,
 			lines,
-			assessments);
+			assessments,
+			row.SessionTitle,
+			row.LearnerName);
 	}
 }

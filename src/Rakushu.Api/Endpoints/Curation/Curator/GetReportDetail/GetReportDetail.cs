@@ -24,7 +24,7 @@ internal sealed class GetReportDetail : IEndpoint
 			})
 			.WithName("GetReportDetail")
 			.WithSummary("Curator, Administrator")
-			.WithDescription("Retrieves comprehensive details of a report ticket, including enriched target context (bank question, transcript segment, or learning unit), reported snapshot, and learner feedback.")
+			.WithDescription("Retrieves comprehensive details of a report ticket, including enriched target context (bank question, transcript segment, learning unit, or shadowing attempt), reported snapshot, and learner feedback.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<CuratorReportDetailDto>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

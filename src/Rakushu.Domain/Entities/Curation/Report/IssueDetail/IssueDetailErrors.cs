@@ -24,4 +24,16 @@ public static class IssueDetailErrors
 
 	public static readonly Error InvalidCharRange = Error.Validation(
 		"ISSUE_DETAIL.INVALID_CHAR_RANGE", "Character range [startCharIndex, endCharIndex) must be non-negative and endCharIndex must be greater than startCharIndex.");
+
+	public static readonly Error ShadowingAttemptNotAssessed = Error.Conflict(
+		"ISSUE_DETAIL.SHADOWING_ATTEMPT_NOT_ASSESSED", "Only assessed shadowing attempts can be requested for curator re-evaluation.");
+
+	public static readonly Error ShadowingAlreadyReevaluated = Error.Conflict(
+		"ISSUE_DETAIL.SHADOWING_ALREADY_REEVALUATED", "This shadowing attempt has already been re-evaluated by a curator.");
+
+	public static readonly Error ShadowingNoAssessedLines = Error.Validation(
+		"ISSUE_DETAIL.SHADOWING_NO_ASSESSED_LINES", "Cannot request re-evaluation for a shadowing attempt with no non-skipped lines.");
+
+	public static readonly Error ShadowingReevaluationRequestLimitReached = Error.Conflict(
+		"ISSUE_DETAIL.SHADOWING_REEVALUATION_REQUEST_LIMIT_REACHED", "You have already submitted a curator re-evaluation request for this shadowing attempt.");
 }

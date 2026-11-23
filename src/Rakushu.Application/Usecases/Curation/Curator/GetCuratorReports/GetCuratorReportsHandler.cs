@@ -1,10 +1,12 @@
 using MediatR;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Curation.Curator.GetCuratorReports;
@@ -15,17 +17,20 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 	private readonly IBankQuestionRepository _bankQuestionRepository;
 	private readonly ILearningUnitRepository _learningUnitRepository;
 	private readonly ITranscriptRepository _transcriptRepository;
+	private readonly ILearnerAnalyticsQueryService _learnerAnalyticsQueryService;
 
 	public GetCuratorReportsHandler(
 		IReportRepository reportRepository,
 		IBankQuestionRepository bankQuestionRepository,
 		ILearningUnitRepository learningUnitRepository,
-		ITranscriptRepository transcriptRepository)
+		ITranscriptRepository transcriptRepository,
+		ILearnerAnalyticsQueryService learnerAnalyticsQueryService)
 	{
 		_reportRepository = reportRepository;
 		_bankQuestionRepository = bankQuestionRepository;
 		_learningUnitRepository = learningUnitRepository;
 		_transcriptRepository = transcriptRepository;
+		_learnerAnalyticsQueryService = learnerAnalyticsQueryService;
 	}
 
 	public async Task<Result<PaginatedList<CuratorReportSummaryDto>>> Handle(
@@ -138,6 +143,18 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 						return !string.IsNullOrEmpty(videoTitle)
 							? $"Video: {videoTitle} - Cụm 「{expr}」"
 							: $"Đơn vị học: 「{expr}」";
+					}
+					return null;
+
+				case TargetType.ShadowingAttempt:
+					var attemptCtx = await _learnerAnalyticsQueryService.GetAttemptAssessmentsContextAsync(
+						ShadowingAttemptId.From(targetId), cancellationToken);
+					if (attemptCtx is not null)
+					{
+						var roleSuffix = !string.IsNullOrWhiteSpace(attemptCtx.RoleName)
+							? $" ({attemptCtx.RoleName})"
+							: string.Empty;
+						return $"Shadowing: {attemptCtx.MaterialName}{roleSuffix}";
 					}
 					return null;
 

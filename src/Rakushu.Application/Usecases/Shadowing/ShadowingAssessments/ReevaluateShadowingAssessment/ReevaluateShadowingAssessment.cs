@@ -1,9 +1,9 @@
 using FluentValidation;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
+using Rakushu.Application.Usecases.Shadowing.ShadowingAttempts;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
-using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment;
 using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt.ShadowingAttemptDetail;
@@ -33,8 +33,10 @@ internal sealed class ReevaluateShadowingAssessmentValidator : AbstractValidator
 		RuleFor(x => x.AttemptId).NotEmpty();
 		RuleFor(x => x.OverallFeedback).NotEmpty().WithMessage("OverallFeedback is required");
 		RuleFor(x => x.Details).NotEmpty().WithMessage("At least one assessment detail is required");
+		RuleForEach(x => x.Details).NotNull().WithMessage("Assessment detail item cannot be null");
 		RuleFor(x => x.Details)
 			.Must(d => d.Select(i => i.AttemptDetailId).Distinct().Count() == d.Count)
+			.When(x => x.Details is not null && x.Details.All(i => i is not null))
 			.WithMessage("AttemptDetailId must not be duplicated");
 		RuleForEach(x => x.Details).ChildRules(detail =>
 		{
@@ -63,7 +65,7 @@ internal sealed class ReevaluateShadowingAssessmentHandler(
 		{
 			if (currentUser.UserId is null)
 				return Result.Failure<Guid>(ShadowingSessionErrors.Unauthenticated);
-			if (currentUser.Role != RoleCodes.LinguisticCurator)
+			if (!AttemptMapper.IsCurator(currentUser))
 				return Result.Failure<Guid>(ShadowingAttemptErrors.CuratorOnly);
 
 			var attempt = await attemptRepository.GetWithContextAsync(ShadowingAttemptId.From(request.AttemptId), cancellationToken);
@@ -75,7 +77,8 @@ internal sealed class ReevaluateShadowingAssessmentHandler(
 			var assessments = await attemptRepository.GetAssessmentsWithDetailsAsync(attempt.Id, cancellationToken);
 			if (assessments.Count == 0)
 				return Result.Failure<Guid>(ShadowingAttemptErrors.NotAssessed);
-			if (assessments.Count >= MaxAssessmentsPerAttempt)
+			if (assessments.Count >= MaxAssessmentsPerAttempt ||
+				assessments.Any(a => a.Type == ShadowingAssessmentType.CuratorReevaluation))
 				return Result.Failure<Guid>(ShadowingAttemptErrors.ReevaluationLimitReached);
 
 			var attemptDetails = (await attemptRepository.GetDetailsAsync(attempt.Id, cancellationToken))
@@ -91,19 +94,32 @@ internal sealed class ReevaluateShadowingAssessmentHandler(
 			var assessment = ShadowingAssessment.CreateCuratorReevaluation(
 				attempt.Id, request.OverallFeedback.Trim(), DateTimeOffset.UtcNow);
 
+			var latest = assessments.OrderByDescending(a => a.CreatedAt).First();
+			var latestByDetailId = latest.Details
+				.GroupBy(d => d.ShadowingAttemptDetailId.Value)
+				.ToDictionary(g => g.Key, g => g.First());
+
 			foreach (var input in request.Details)
 			{
+				latestByDetailId.TryGetValue(input.AttemptDetailId, out var previousDetail);
+				var accuracyResponse = string.IsNullOrWhiteSpace(input.AccuracyAssessmentResponse)
+					? previousDetail?.AccuracyAssessmentResponse
+					: input.AccuracyAssessmentResponse;
+				var pitchScore = input.PitchSimilarityScore ?? previousDetail?.PitchSimilarityScore;
+				var pitchResponse = string.IsNullOrWhiteSpace(input.PitchSimilarityAssessmentResponse)
+					? previousDetail?.PitchSimilarityAssessmentResponse
+					: input.PitchSimilarityAssessmentResponse;
+
 				assessment.AddDetail(
 					ShadowingAttemptDetailId.From(input.AttemptDetailId),
 					input.AccuracyScore,
-					input.AccuracyAssessmentResponse,
-					input.PitchSimilarityScore,
-					input.PitchSimilarityAssessmentResponse,
+					accuracyResponse,
+					pitchScore,
+					pitchResponse,
 					input.Feedback.Trim());
 			}
 
 			var updatedIds = request.Details.Select(d => d.AttemptDetailId).ToHashSet();
-			var latest = assessments.OrderByDescending(a => a.CreatedAt).First();
 			foreach (var old in latest.Details.Where(d => !updatedIds.Contains(d.ShadowingAttemptDetailId.Value)))
 			{
 				assessment.AddDetail(

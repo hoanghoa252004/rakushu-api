@@ -4,6 +4,8 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 
 namespace Rakushu.Application.Usecases.Curation.Curator.DismissReport;
 
@@ -11,17 +13,20 @@ internal sealed class DismissReportHandler : IRequestHandler<DismissReportComman
 {
 	private readonly IReportRepository _reportRepository;
 	private readonly IIssueCategoryRepository _issueCategoryRepository;
+	private readonly IShadowingAttemptRepository _shadowingAttemptRepository;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public DismissReportHandler(
 		IReportRepository reportRepository,
 		IIssueCategoryRepository issueCategoryRepository,
+		IShadowingAttemptRepository shadowingAttemptRepository,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_reportRepository = reportRepository;
 		_issueCategoryRepository = issueCategoryRepository;
+		_shadowingAttemptRepository = shadowingAttemptRepository;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
 	}
@@ -42,6 +47,17 @@ internal sealed class DismissReportHandler : IRequestHandler<DismissReportComman
 
 			if (report.Status == ReportStatus.Dismissed)
 				return Result.Failure(ReportErrors.AlreadyDismissed);
+
+			if (report.TargetType == TargetType.ShadowingAttempt)
+			{
+				var assessments = await _shadowingAttemptRepository.GetAssessmentsWithDetailsAsync(
+					ShadowingAttemptId.From(report.TargetId),
+					cancellationToken);
+
+				bool hasCuratorReevaluation = assessments.Any(a => a.Type == ShadowingAssessmentType.CuratorReevaluation);
+				if (hasCuratorReevaluation)
+					return Result.Failure(ReportErrors.ShadowingAlreadyReevaluatedCannotDismiss);
+			}
 
 			var now = _systemClock.UtcNow;
 			report.Dismiss(request.Reason, now);

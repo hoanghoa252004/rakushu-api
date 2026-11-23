@@ -24,7 +24,19 @@ public sealed record CurationTargetSnapshotDto(
 	int? StartCharIndex = null,
 	int? EndCharIndex = null,
 	string? SelectedOovText = null,
-	string? VideoSourceType = null);
+	string? VideoSourceType = null,
+	Guid? ShadowingSessionId = null,
+	string? ShadowingSessionTitle = null,
+	string? ShadowingMaterialName = null,
+	string? ShadowingMaterialJapaneseName = null,
+	string? ShadowingRoleName = null,
+	string? ShadowingLearnerName = null,
+	decimal? ShadowingOverallScore = null,
+	decimal? ShadowingAccuracyScore = null,
+	decimal? ShadowingPitchSimilarityScore = null,
+	string? ShadowingOverallFeedback = null,
+	int? ShadowingAssessedLineCount = null,
+	int? ShadowingSkippedLineCount = null);
 
 public sealed record LearnerTargetContextDto(
 	string? QuestionTitle,
@@ -50,7 +62,17 @@ public sealed record LearnerTargetContextDto(
 	int? StartCharIndex = null,
 	int? EndCharIndex = null,
 	string? SelectedOovText = null,
-	string? VideoSourceType = null);
+	string? VideoSourceType = null,
+	Guid? ShadowingSessionId = null,
+	Guid? ShadowingAttemptId = null,
+	string? ShadowingMaterialName = null,
+	string? ShadowingRoleName = null,
+	decimal? ShadowingOverallScore = null,
+	decimal? ShadowingAccuracyScore = null,
+	decimal? ShadowingPitchSimilarityScore = null,
+	string? ShadowingOverallFeedback = null,
+	bool? HasCuratorReevaluation = null,
+	ShadowingAttemptContextDto? ShadowingContext = null);
 
 public sealed record LearnerIssueHistoryDto(
 	Guid Id,
@@ -135,7 +157,36 @@ public sealed record IssueFeedbackDto(
 
 public sealed record ReportTargetContextDto(
 	BankQuestionContextDto? QuestionContext,
-	VideoLearningUnitContextDto? VideoContext);
+	VideoLearningUnitContextDto? VideoContext,
+	ShadowingAttemptContextDto? ShadowingContext = null);
+
+public sealed record ShadowingAssessmentSummaryDto(
+	Guid AssessmentId,
+	string Type,
+	decimal? OverallScore,
+	decimal? AccuracyScore,
+	decimal? PitchSimilarityScore,
+	string? OverallFeedback,
+	DateTimeOffset CreatedAt);
+
+public sealed record ShadowingAttemptContextDto(
+	Guid AttemptId,
+	Guid SessionId,
+	string? SessionTitle,
+	string MaterialName,
+	string? MaterialJapaneseName,
+	string? VideoTitle,
+	string? RoleName,
+	string? LearnerName,
+	string AttemptStatus,
+	int TotalLinesCount,
+	int AssessedLinesCount,
+	int SkippedLinesCount,
+	bool HasCuratorReevaluation,
+	ShadowingAssessmentSummaryDto? AutomatedAssessment,
+	ShadowingAssessmentSummaryDto? CuratorAssessment,
+	DateTimeOffset StartedAt,
+	DateTimeOffset? CompletedAt);
 
 public sealed record BankQuestionContextDto(
 	Guid QuestionId,

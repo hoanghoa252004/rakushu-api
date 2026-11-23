@@ -44,7 +44,9 @@ public sealed record ShadowingAttemptAssessmentContextModel(
 	DateTimeOffset StartedAt,
 	DateTimeOffset? CompletedAt,
 	IReadOnlyList<ShadowingAttemptLineContextModel> Lines,
-	IReadOnlyList<ShadowingAssessmentContextModel> Assessments);
+	IReadOnlyList<ShadowingAssessmentContextModel> Assessments,
+	string? SessionTitle = null,
+	string? LearnerName = null);
 
 public sealed record ShadowingAttemptLineAssessmentDto(
 	Guid AttemptDetailId,
@@ -89,4 +91,7 @@ public sealed record ShadowingAttemptAssessmentsResponseDto(
 	int SkippedLinesCount,
 	ShadowingAttemptAssessmentItemDto? PrimaryAssessment,
 	IReadOnlyList<ShadowingAttemptAssessmentItemDto> Assessments,
-	IReadOnlyList<ShadowingAttemptLineAssessmentDto> Lines);
+	IReadOnlyList<ShadowingAttemptLineAssessmentDto> Lines,
+	string? ReevaluationRequestStatus = null,
+	Guid? ReevaluationIssueId = null,
+	Guid? ReevaluationReportId = null);

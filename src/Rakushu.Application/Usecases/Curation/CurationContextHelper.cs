@@ -1,11 +1,14 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Application.Usecases.Analytics.Shadowing.GetShadowingAttemptAssessments;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Material.Video.MediaAsset;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAssessment;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Curation;
@@ -13,6 +16,7 @@ namespace Rakushu.Application.Usecases.Curation;
 public static class CurationContextHelper
 {
 	public const string OovCategory = "Oov";
+	public const string ShadowingReevaluationCategory = "ShadowingReevaluation";
 
 	private static readonly JsonSerializerOptions JsonOptions = new()
 	{
@@ -203,6 +207,114 @@ public static class CurationContextHelper
 		return JsonSerializer.Serialize(snapshot, JsonOptions);
 	}
 
+	public static string SerializeShadowingAttempt(ShadowingAttemptAssessmentContextModel ctx)
+	{
+		var context = BuildShadowingAttemptContext(ctx);
+		var baseline = context.AutomatedAssessment ?? context.CuratorAssessment;
+
+		var snapshot = new CurationTargetSnapshotDto(
+			TargetType: nameof(TargetType.ShadowingAttempt),
+			VideoTitle: ctx.VideoTitle,
+			ShadowingSessionId: ctx.SessionId,
+			ShadowingSessionTitle: ctx.SessionTitle,
+			ShadowingMaterialName: ctx.MaterialName,
+			ShadowingMaterialJapaneseName: ctx.MaterialJapaneseName,
+			ShadowingRoleName: ctx.RoleName,
+			ShadowingLearnerName: ctx.LearnerName,
+			ShadowingOverallScore: baseline?.OverallScore,
+			ShadowingAccuracyScore: baseline?.AccuracyScore,
+			ShadowingPitchSimilarityScore: baseline?.PitchSimilarityScore,
+			ShadowingOverallFeedback: baseline?.OverallFeedback,
+			ShadowingAssessedLineCount: context.AssessedLinesCount,
+			ShadowingSkippedLineCount: context.SkippedLinesCount);
+
+		return JsonSerializer.Serialize(snapshot, JsonOptions);
+	}
+
+	public static ShadowingAttemptContextDto BuildShadowingAttemptContext(ShadowingAttemptAssessmentContextModel ctx)
+	{
+		var automated = ctx.Assessments
+			.Where(a => a.Type == ShadowingAssessmentType.Automated)
+			.OrderByDescending(a => a.CreatedAt)
+			.FirstOrDefault();
+
+		var curator = ctx.Assessments
+			.Where(a => a.Type == ShadowingAssessmentType.CuratorReevaluation)
+			.OrderByDescending(a => a.CreatedAt)
+			.FirstOrDefault();
+
+		var automatedSummary = automated is not null ? BuildAssessmentSummary(automated) : null;
+		var curatorSummary = curator is not null ? BuildAssessmentSummary(curator) : null;
+
+		int assessedLinesCount = ctx.Lines.Count(l => !l.IsSkipped);
+		int skippedLinesCount = ctx.Lines.Count(l => l.IsSkipped);
+
+		return new ShadowingAttemptContextDto(
+			ctx.AttemptId,
+			ctx.SessionId,
+			ctx.SessionTitle,
+			ctx.MaterialName,
+			ctx.MaterialJapaneseName,
+			ctx.VideoTitle,
+			ctx.RoleName,
+			ctx.LearnerName,
+			ctx.AttemptStatus.ToString(),
+			ctx.Lines.Count,
+			assessedLinesCount,
+			skippedLinesCount,
+			curatorSummary is not null,
+			automatedSummary,
+			curatorSummary,
+			ctx.StartedAt,
+			ctx.CompletedAt);
+	}
+
+	public static string MapLearnerIssueStatus(Report? report)
+	{
+		return report switch
+		{
+			null => "Pending",
+			{ Status: ReportStatus.Pending } => "Pending",
+			{ Status: ReportStatus.InReview } => "Investigating",
+			{ Status: ReportStatus.Resolved } => "Resolved",
+			{ Status: ReportStatus.Dismissed } => "Dismissed",
+			_ => report.Status.ToString()
+		};
+	}
+
+	private static ShadowingAssessmentSummaryDto BuildAssessmentSummary(ShadowingAssessmentContextModel assessment)
+	{
+		var accScores = assessment.Details
+			.Where(d => d.AccuracyScore.HasValue)
+			.Select(d => d.AccuracyScore!.Value)
+			.ToList();
+		var pitchScores = assessment.Details
+			.Where(d => d.PitchSimilarityScore.HasValue)
+			.Select(d => d.PitchSimilarityScore!.Value)
+			.ToList();
+
+		decimal? avgAcc = accScores.Count > 0 ? Math.Round(accScores.Average(), 1) : null;
+		decimal? avgPitch = pitchScores.Count > 0 ? Math.Round(pitchScores.Average(), 1) : null;
+		decimal? overall = assessment.OverallScore.HasValue
+			? Math.Round(assessment.OverallScore.Value, 1)
+			: assessment.Details.Any(d => d.AccuracyScore.HasValue || d.PitchSimilarityScore.HasValue)
+				? Math.Round(
+					assessment.Details
+						.Where(d => d.AccuracyScore.HasValue || d.PitchSimilarityScore.HasValue)
+						.Average(d => ((d.AccuracyScore ?? 0m) + (d.PitchSimilarityScore ?? 0m)) / 2m),
+					1)
+				: null;
+
+		return new ShadowingAssessmentSummaryDto(
+			assessment.AssessmentId,
+			assessment.Type.ToString(),
+			overall,
+			avgAcc,
+			avgPitch,
+			assessment.OverallFeedback,
+			assessment.CreatedAt);
+	}
+
 	public static CurationTargetSnapshotDto? DeserializeSnapshot(string? json)
 	{
 		if (string.IsNullOrWhiteSpace(json))
@@ -268,6 +380,23 @@ public static class CurationContextHelper
 				}
 
 				return snapshot.VideoTitle;
+			}
+
+			case TargetType.ShadowingAttempt:
+			{
+				var materialName = snapshot.ShadowingMaterialName ?? snapshot.VideoTitle;
+				if (string.IsNullOrWhiteSpace(materialName))
+				{
+					return "Luyện Shadowing";
+				}
+
+				var roleSuffix = !string.IsNullOrWhiteSpace(snapshot.ShadowingRoleName)
+					? $" ({snapshot.ShadowingRoleName})"
+					: string.Empty;
+				var scoreSuffix = snapshot.ShadowingOverallScore.HasValue
+					? $" — {snapshot.ShadowingOverallScore.Value.ToString("0.#", CultureInfo.InvariantCulture)} điểm"
+					: string.Empty;
+				return $"Shadowing: {materialName}{roleSuffix}{scoreSuffix}";
 			}
 
 			default:

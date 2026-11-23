@@ -110,7 +110,8 @@ internal sealed partial class CuratorAnalyticsQueryService
 		{
 			new(nameof(TargetType.TranscriptSegment), rawTargetTypeCounts.FirstOrDefault(x => x.TargetType == TargetType.TranscriptSegment)?.Count ?? 0),
 			new(nameof(TargetType.LearningUnit), rawTargetTypeCounts.FirstOrDefault(x => x.TargetType == TargetType.LearningUnit)?.Count ?? 0),
-			new(nameof(TargetType.BankQuestion), rawTargetTypeCounts.FirstOrDefault(x => x.TargetType == TargetType.BankQuestion)?.Count ?? 0)
+			new(nameof(TargetType.BankQuestion), rawTargetTypeCounts.FirstOrDefault(x => x.TargetType == TargetType.BankQuestion)?.Count ?? 0),
+			new(nameof(TargetType.ShadowingAttempt), rawTargetTypeCounts.FirstOrDefault(x => x.TargetType == TargetType.ShadowingAttempt)?.Count ?? 0)
 		};
 
 		// 4. Priority actionable queue (Pending first, oldest SLA first, max 6).
@@ -219,6 +220,8 @@ internal sealed partial class CuratorAnalyticsQueryService
 				"surface",
 				"meaning",
 				"subtitleVn",
+				"shadowingMaterialName",
+				"materialName",
 				"videoTitle",
 				"title",
 				"content"

@@ -1,6 +1,8 @@
+using System.Globalization;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Application.Common.Pagination;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Curation.Report;
@@ -9,6 +11,7 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Shadowing.ShadowingAttempt;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Curation.Learner.GetMyIssueHistory;
@@ -19,6 +22,7 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 	private readonly IBankQuestionRepository _bankQuestionRepository;
 	private readonly ILearningUnitRepository _learningUnitRepository;
 	private readonly ITranscriptRepository _transcriptRepository;
+	private readonly ILearnerAnalyticsQueryService _learnerAnalyticsQueryService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly IStorageService _storageService;
 
@@ -27,6 +31,7 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 		IBankQuestionRepository bankQuestionRepository,
 		ILearningUnitRepository learningUnitRepository,
 		ITranscriptRepository transcriptRepository,
+		ILearnerAnalyticsQueryService learnerAnalyticsQueryService,
 		ICurrentUserContext currentUserContext,
 		IStorageService storageService)
 	{
@@ -34,6 +39,7 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 		_bankQuestionRepository = bankQuestionRepository;
 		_learningUnitRepository = learningUnitRepository;
 		_transcriptRepository = transcriptRepository;
+		_learnerAnalyticsQueryService = learnerAnalyticsQueryService;
 		_currentUserContext = currentUserContext;
 		_storageService = storageService;
 	}
@@ -69,15 +75,7 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 		var dtos = new List<LearnerIssueHistoryDto>(issues.Count);
 		foreach (var x in issues)
 		{
-			string reportStatus = x.Report switch
-			{
-				null => "Pending",
-				{ Status: ReportStatus.Pending } => "Pending",
-				{ Status: ReportStatus.InReview } => "Investigating",
-				{ Status: ReportStatus.Resolved } => "Resolved",
-				{ Status: ReportStatus.Dismissed } => "Dismissed",
-				_ => x.Report.Status.ToString()
-			};
+			string reportStatus = CurationContextHelper.MapLearnerIssueStatus(x.Report);
 
 			bool isFinalized = x.Report?.Status is ReportStatus.Resolved or ReportStatus.Dismissed;
 			var reportedSnapshot = CurationContextHelper.DeserializeSnapshot(x.TargetSnapshot ?? x.Report?.TargetSnapshot);
@@ -85,10 +83,11 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 			string? targetTitle;
 			LearnerTargetContextDto? targetContext;
 
-			if (!isFinalized && reportedSnapshot is not null && x.TargetType == TargetType.BankQuestion)
+			if (!isFinalized && reportedSnapshot is not null &&
+				x.TargetType is TargetType.BankQuestion or TargetType.ShadowingAttempt)
 			{
-				// Do not leak Curator WIP edits or soft-delete status to Learners before Resolve/Dismiss.
-				(targetTitle, targetContext) = BuildSnapshotContext(x.TargetType, reportedSnapshot, videoUrl: null);
+				// Do not leak Curator WIP edits, soft-delete, or unfinalized re-evaluation to Learners before Resolve/Dismiss.
+				(targetTitle, targetContext) = BuildSnapshotContext(x.TargetType, x.TargetId, reportedSnapshot, videoUrl: null);
 			}
 			else
 			{
@@ -106,12 +105,40 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 				{
 					if (reportedSnapshot is not null)
 					{
-						(targetTitle, targetContext) = BuildSnapshotContext(x.TargetType, reportedSnapshot, targetContext?.VideoUrl);
+						(targetTitle, targetContext) = BuildSnapshotContext(x.TargetType, x.TargetId, reportedSnapshot, targetContext?.VideoUrl);
 					}
 					else if (targetContext is not null && x.TargetType == TargetType.BankQuestion && targetContext.IsActive == false)
 					{
 						// Legacy pre-snapshot record: keep soft-delete hidden while report is still open.
 						targetContext = targetContext with { IsActive = true };
+					}
+					else if (targetContext is not null && x.TargetType == TargetType.ShadowingAttempt && targetContext.HasCuratorReevaluation == true)
+					{
+						// Legacy/corrupt snapshot fallback: keep unfinalized curator re-evaluation hidden while open.
+						var baseline = targetContext.ShadowingContext?.AutomatedAssessment;
+						var materialName = targetContext.ShadowingMaterialName ?? "Shadowing";
+						var roleSuffix = !string.IsNullOrWhiteSpace(targetContext.ShadowingRoleName)
+							? $" ({targetContext.ShadowingRoleName})"
+							: string.Empty;
+						var scoreSuffix = baseline?.OverallScore is decimal baselineScore
+							? $" — {baselineScore.ToString("0.#", CultureInfo.InvariantCulture)} điểm"
+							: string.Empty;
+						targetTitle = $"Shadowing: {materialName}{roleSuffix}{scoreSuffix}";
+						targetContext = targetContext with
+						{
+							ShadowingOverallScore = baseline?.OverallScore,
+							ShadowingAccuracyScore = baseline?.AccuracyScore,
+							ShadowingPitchSimilarityScore = baseline?.PitchSimilarityScore,
+							ShadowingOverallFeedback = baseline?.OverallFeedback,
+							HasCuratorReevaluation = false,
+							ShadowingContext = targetContext.ShadowingContext is not null
+								? targetContext.ShadowingContext with
+								{
+									HasCuratorReevaluation = false,
+									CuratorAssessment = null
+								}
+								: null
+						};
 					}
 				}
 			}
@@ -169,6 +196,7 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 
 	private static (string? TargetTitle, LearnerTargetContextDto Context) BuildSnapshotContext(
 		TargetType targetType,
+		Guid targetId,
 		CurationTargetSnapshotDto snap,
 		string? videoUrl)
 	{
@@ -261,6 +289,25 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 					snap.Meaning,
 					IsActive: null,
 					VideoSourceType: snap.VideoSourceType);
+				return (title, ctx);
+			}
+
+			case TargetType.ShadowingAttempt:
+			{
+				var title = CurationContextHelper.FormatSnapshotTitle(targetType, snap);
+				var ctx = new LearnerTargetContextDto(
+					null, null, null, null, null,
+					null, snap.VideoTitle, null, null, null, null,
+					null, null, null, null, null, null, null, null,
+					ShadowingSessionId: snap.ShadowingSessionId,
+					ShadowingAttemptId: targetId,
+					ShadowingMaterialName: snap.ShadowingMaterialName ?? snap.VideoTitle,
+					ShadowingRoleName: snap.ShadowingRoleName,
+					ShadowingOverallScore: snap.ShadowingOverallScore,
+					ShadowingAccuracyScore: snap.ShadowingAccuracyScore,
+					ShadowingPitchSimilarityScore: snap.ShadowingPitchSimilarityScore,
+					ShadowingOverallFeedback: snap.ShadowingOverallFeedback,
+					HasCuratorReevaluation: false);
 				return (title, ctx);
 			}
 
@@ -426,6 +473,40 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 							lu.KnowledgeMeaning?.Meaning,
 							IsActive: null,
 							VideoSourceType: video?.SourceType.ToString());
+
+						return (title, context);
+					}
+					return (null, null);
+
+				case TargetType.ShadowingAttempt:
+					var attemptCtx = await _learnerAnalyticsQueryService.GetAttemptAssessmentsContextAsync(
+						ShadowingAttemptId.From(targetId), cancellationToken);
+					if (attemptCtx is not null)
+					{
+						var shadowingContext = CurationContextHelper.BuildShadowingAttemptContext(attemptCtx);
+						var primary = shadowingContext.CuratorAssessment ?? shadowingContext.AutomatedAssessment;
+						var roleSuffix = !string.IsNullOrWhiteSpace(shadowingContext.RoleName)
+							? $" ({shadowingContext.RoleName})"
+							: string.Empty;
+						var scoreSuffix = primary?.OverallScore is decimal score
+							? $" — {score.ToString("0.#", CultureInfo.InvariantCulture)} điểm"
+							: string.Empty;
+						var title = $"Shadowing: {shadowingContext.MaterialName}{roleSuffix}{scoreSuffix}";
+
+						var context = new LearnerTargetContextDto(
+							null, null, null, null, null,
+							null, shadowingContext.VideoTitle, null, null, null, null,
+							null, null, null, null, null, null, null, null,
+							ShadowingSessionId: shadowingContext.SessionId,
+							ShadowingAttemptId: shadowingContext.AttemptId,
+							ShadowingMaterialName: shadowingContext.MaterialName,
+							ShadowingRoleName: shadowingContext.RoleName,
+							ShadowingOverallScore: primary?.OverallScore,
+							ShadowingAccuracyScore: primary?.AccuracyScore,
+							ShadowingPitchSimilarityScore: primary?.PitchSimilarityScore,
+							ShadowingOverallFeedback: primary?.OverallFeedback,
+							HasCuratorReevaluation: shadowingContext.HasCuratorReevaluation,
+							ShadowingContext: shadowingContext);
 
 						return (title, context);
 					}

@@ -24,13 +24,14 @@ internal sealed class ResolveReport : IEndpoint
 			})
 			.WithName("ResolveReport")
 			.WithSummary("Curator, Administrator")
-			.WithDescription("Marks an escalated issue report as resolved with curator notes and resets the category aggregation counter to 0.")
+			.WithDescription("Marks an escalated issue report as resolved with curator notes and resets the category aggregation counter to 0. For ShadowingAttempt reports, a CuratorReevaluation assessment must be submitted before resolving.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)
+			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
 }

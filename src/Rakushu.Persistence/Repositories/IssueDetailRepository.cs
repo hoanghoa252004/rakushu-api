@@ -43,6 +43,54 @@ public sealed class IssueDetailRepository : BaseRepository<IssueDetail, IssueDet
 				cancellationToken);
 	}
 
+	public async Task<bool> HasAnyIssueAsync(
+		UserId userId,
+		TargetType targetType,
+		Guid targetId,
+		string category,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.IssueDetails
+			.AnyAsync(
+				id => id.UserId == userId &&
+					  id.TargetType == targetType &&
+					  id.TargetId == targetId &&
+					  id.Category == category,
+				cancellationToken);
+	}
+
+	public async Task<int> CountByReportIdAsync(
+		ReportId reportId,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.IssueDetails
+			.CountAsync(id => id.ReportId == reportId, cancellationToken);
+	}
+
+	public async Task<IssueDetail?> GetLatestByTargetAndCategoryAsync(
+		TargetType targetType,
+		Guid targetId,
+		string category,
+		UserId? userId = null,
+		CancellationToken cancellationToken = default)
+	{
+		var query = _context.IssueDetails
+			.AsNoTracking()
+			.Include(id => id.Report)
+			.Where(id => id.TargetType == targetType &&
+						 id.TargetId == targetId &&
+						 id.Category == category);
+
+		if (userId is not null)
+		{
+			query = query.Where(id => id.UserId == userId);
+		}
+
+		return await query
+			.OrderByDescending(id => id.CreatedAt)
+			.FirstOrDefaultAsync(cancellationToken);
+	}
+
 	public async Task<IReadOnlyList<IssueDetail>> GetUnassignedByTargetAndCategoryAsync(
 		TargetType targetType,
 		Guid targetId,

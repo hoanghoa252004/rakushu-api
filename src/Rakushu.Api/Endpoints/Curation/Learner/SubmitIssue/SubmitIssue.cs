@@ -30,7 +30,7 @@ internal sealed class SubmitIssue : IEndpoint
 			})
 			.WithName("SubmitLearnerIssue")
 			.WithSummary("Learner")
-			.WithDescription("Submits an issue report regarding a transcript segment (including OOV character ranges), learning unit, or bank question. Automatically escalates to a curator ticket when the threshold is reached.")
+			.WithDescription("Submits an issue report regarding a transcript segment (including OOV character ranges), learning unit, bank question, or shadowing attempt re-evaluation request. Automatically escalates to a curator ticket when the threshold is reached.")
 			.RequireAuthorization()
 			.Produces<SubmitIssueResponse>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

@@ -22,9 +22,9 @@ internal sealed class GetShadowingAttemptAssessments : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetShadowingAttemptAnalyticsDetail")
-			.WithSummary("Learner (owner), Curator")
+			.WithSummary("Learner (owner), Curator & Admin")
 			.WithDescription("Returns full Level-3 attempt analytics with AI/Curator assessments, per-line accuracy & pitch scores, Azure speech word breakdown, presigned user & native reference audio URLs, and feedback.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner, RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<ShadowingAttemptAssessmentsResponseDto>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

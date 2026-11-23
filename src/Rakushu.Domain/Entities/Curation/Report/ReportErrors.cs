@@ -30,4 +30,10 @@ public static class ReportErrors
 
 	public static readonly Error InvalidCharRange = Error.Validation(
 		"REPORT.INVALID_CHAR_RANGE", "Character range [startCharIndex, endCharIndex) must be non-negative and endCharIndex must be greater than startCharIndex.");
+
+	public static readonly Error ShadowingReevaluationRequired = Error.Conflict(
+		"REPORT.SHADOWING_REEVALUATION_REQUIRED", "A curator re-evaluation must be submitted for this shadowing attempt before marking the report as resolved.");
+
+	public static readonly Error ShadowingAlreadyReevaluatedCannotDismiss = Error.Conflict(
+		"REPORT.SHADOWING_ALREADY_REEVALUATED_CANNOT_DISMISS", "Cannot dismiss this report because a curator re-evaluation has already been submitted for this shadowing attempt. Please resolve the report instead.");
 }

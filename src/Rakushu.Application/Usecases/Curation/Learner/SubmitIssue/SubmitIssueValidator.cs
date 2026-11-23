@@ -28,14 +28,20 @@ public sealed class SubmitIssueValidator : AbstractValidator<SubmitIssueCommand>
 		"TypingEvaluationError"
 	};
 
+	private static readonly HashSet<string> ValidShadowingAttemptCategories = new(StringComparer.OrdinalIgnoreCase)
+	{
+		CurationContextHelper.ShadowingReevaluationCategory
+	};
+
 	public SubmitIssueValidator()
 	{
 		RuleFor(x => x.TargetType)
 			.NotEmpty()
 			.Must(t => string.Equals(t, nameof(TargetType.TranscriptSegment), StringComparison.OrdinalIgnoreCase)
 			        || string.Equals(t, nameof(TargetType.LearningUnit), StringComparison.OrdinalIgnoreCase)
-			        || string.Equals(t, nameof(TargetType.BankQuestion), StringComparison.OrdinalIgnoreCase))
-			.WithMessage("TargetType is invalid. Allowed: TranscriptSegment, LearningUnit, BankQuestion.");
+			        || string.Equals(t, nameof(TargetType.BankQuestion), StringComparison.OrdinalIgnoreCase)
+			        || string.Equals(t, nameof(TargetType.ShadowingAttempt), StringComparison.OrdinalIgnoreCase))
+			.WithMessage("TargetType is invalid. Allowed: TranscriptSegment, LearningUnit, BankQuestion, ShadowingAttempt.");
 
 		RuleFor(x => x.TargetId)
 			.NotEmpty()
@@ -95,6 +101,9 @@ public sealed class SubmitIssueValidator : AbstractValidator<SubmitIssueCommand>
 
 		if (string.Equals(targetType, nameof(TargetType.BankQuestion), StringComparison.OrdinalIgnoreCase))
 			return ValidBankQuestionCategories.Contains(category);
+
+		if (string.Equals(targetType, nameof(TargetType.ShadowingAttempt), StringComparison.OrdinalIgnoreCase))
+			return ValidShadowingAttemptCategories.Contains(category);
 
 		return false;
 	}
