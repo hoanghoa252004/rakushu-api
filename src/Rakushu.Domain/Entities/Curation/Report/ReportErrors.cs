@@ -36,4 +36,16 @@ public static class ReportErrors
 
 	public static readonly Error ShadowingAlreadyReevaluatedCannotDismiss = Error.Conflict(
 		"REPORT.SHADOWING_ALREADY_REEVALUATED_CANNOT_DISMISS", "Cannot dismiss this report because a curator re-evaluation has already been submitted for this shadowing attempt. Please resolve the report instead.");
+
+	public static readonly Error WrongSpeakerAlreadyUpdatedCannotDismiss = Error.Conflict(
+		"REPORT.WRONG_SPEAKER_ALREADY_UPDATED_CANNOT_DISMISS", "Cannot dismiss this report because the segment speaker has already been updated. Please resolve the report instead.");
+
+	public static readonly Error BankQuestionAlreadyUpdatedCannotDismiss = Error.Conflict(
+		"REPORT.BANK_QUESTION_ALREADY_UPDATED_CANNOT_DISMISS", "Cannot dismiss this report because the bank question has already been updated or archived. Please resolve the report instead.");
+
+	public static readonly Error TranscriptSegmentAlreadyUpdatedCannotDismiss = Error.Conflict(
+		"REPORT.TRANSCRIPT_SEGMENT_ALREADY_UPDATED_CANNOT_DISMISS", "Cannot dismiss this report because the transcript segment has already been updated or removed. Please resolve the report instead.");
+
+	public static readonly Error LearningUnitAlreadyUpdatedCannotDismiss = Error.Conflict(
+		"REPORT.LEARNING_UNIT_ALREADY_UPDATED_CANNOT_DISMISS", "Cannot dismiss this report because the learning unit has already been updated or removed. Please resolve the report instead.");
 }

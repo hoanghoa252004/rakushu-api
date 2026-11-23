@@ -23,9 +23,9 @@ internal sealed class CreateTranscriptSpeakerEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("CreateTranscriptSpeaker")
-			.WithSummary("Curator")
+			.WithSummary("Curator, Admin")
 			.WithDescription("Adds a speaker to the transcript of a video. A speaker can only be added once per transcript.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<Guid>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status409Conflict);
@@ -46,7 +46,7 @@ internal sealed class GetTranscriptSpeakersEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetTranscriptSpeakers")
-			.WithSummary("Curator")
+			.WithSummary("Curator, Admin")
 			.WithDescription("Retrieves the speakers of a transcript, including speaker information.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<IReadOnlyList<TranscriptSpeakerDto>>(StatusCodes.Status200OK)
@@ -94,9 +94,9 @@ internal sealed class UpdateTranscriptSpeakerEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("UpdateTranscriptSpeaker")
-			.WithSummary("Curator")
+			.WithSummary("Curator, Admin")
 			.WithDescription("Updates the label and speaker of a transcript speaker.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status409Conflict);
@@ -118,9 +118,9 @@ internal sealed class DeleteTranscriptSpeakerEndpoint : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("DeleteTranscriptSpeaker")
-			.WithSummary("Curator")
+			.WithSummary("Curator, Admin")
 			.WithDescription("Deletes a transcript speaker. Segments using it will have their speaker cleared.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status404NotFound);
 	}

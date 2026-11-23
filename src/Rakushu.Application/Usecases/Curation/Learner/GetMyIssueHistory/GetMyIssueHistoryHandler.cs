@@ -92,6 +92,7 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 			else
 			{
 				bool isOovIssue = string.Equals(x.Category, CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
+				bool maskUnfinalizedSpeaker = !isFinalized && reportedSnapshot is not null;
 				(targetTitle, targetContext) = await ResolveLearnerTargetContextAsync(
 					x.TargetType,
 					x.TargetId,
@@ -99,13 +100,24 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 					x.StartCharIndex ?? reportedSnapshot?.StartCharIndex,
 					x.EndCharIndex ?? reportedSnapshot?.EndCharIndex,
 					reportedSnapshot?.SelectedOovText,
+					maskUnfinalizedSpeaker,
+					reportedSnapshot?.SpeakerId,
 					cancellationToken);
 
 				if (!isFinalized)
 				{
 					if (reportedSnapshot is not null)
 					{
-						(targetTitle, targetContext) = BuildSnapshotContext(x.TargetType, x.TargetId, reportedSnapshot, targetContext?.VideoUrl);
+						var safeSpeakerAvatarUrl = targetContext?.SpeakerId is not null
+							&& targetContext.SpeakerId == reportedSnapshot.SpeakerId
+							? targetContext.SpeakerAvatarUrl
+							: null;
+						(targetTitle, targetContext) = BuildSnapshotContext(
+							x.TargetType,
+							x.TargetId,
+							reportedSnapshot,
+							targetContext?.VideoUrl,
+							safeSpeakerAvatarUrl);
 					}
 					else if (targetContext is not null && x.TargetType == TargetType.BankQuestion && targetContext.IsActive == false)
 					{
@@ -198,7 +210,8 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 		TargetType targetType,
 		Guid targetId,
 		CurationTargetSnapshotDto snap,
-		string? videoUrl)
+		string? videoUrl,
+		string? speakerAvatarUrl = null)
 	{
 		switch (targetType)
 		{
@@ -257,7 +270,14 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 					StartCharIndex: snap.StartCharIndex,
 					EndCharIndex: snap.EndCharIndex,
 					SelectedOovText: snap.SelectedOovText,
-					VideoSourceType: snap.VideoSourceType);
+					VideoSourceType: snap.VideoSourceType,
+					TranscriptSpeakerId: snap.TranscriptSpeakerId,
+					SpeakerId: snap.SpeakerId,
+					SpeakerLabel: snap.SpeakerLabel,
+					SpeakerName: snap.SpeakerName,
+					SpeakerJapaneseName: snap.SpeakerJapaneseName,
+					SpeakerThemeColor: snap.SpeakerThemeColor,
+					SpeakerAvatarUrl: speakerAvatarUrl);
 				return (title, ctx);
 			}
 
@@ -327,6 +347,8 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 		int? startCharIndex,
 		int? endCharIndex,
 		string? snapshotOovText,
+		bool maskUnfinalizedSpeaker,
+		Guid? snapshotSpeakerId,
 		CancellationToken cancellationToken)
 	{
 		try
@@ -398,6 +420,17 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 							title = $"Video: {videoTitle} ({timestampFormatted}) - OOV 「{oovText}」";
 						}
 
+						var transcriptSpeaker = seg.TranscriptSpeaker;
+						var speaker = transcriptSpeaker?.Speaker;
+						bool shouldPresignSpeakerAvatar = !maskUnfinalizedSpeaker
+							|| (snapshotSpeakerId.HasValue && transcriptSpeaker?.SpeakerId?.Value == snapshotSpeakerId.Value);
+						var speakerAvatarUrl = shouldPresignSpeakerAvatar
+							? await CurationContextHelper.ResolveSpeakerAvatarUrlAsync(
+								speaker?.AvatarKey,
+								_storageService,
+								cancellationToken)
+							: null;
+
 						var context = new LearnerTargetContextDto(
 							null,
 							null,
@@ -422,7 +455,14 @@ internal sealed class GetMyIssueHistoryHandler : IRequestHandler<GetMyIssueHisto
 							StartCharIndex: isOovIssue ? startCharIndex : null,
 							EndCharIndex: isOovIssue ? endCharIndex : null,
 							SelectedOovText: isOovIssue ? oovText : null,
-							VideoSourceType: video?.SourceType.ToString());
+							VideoSourceType: video?.SourceType.ToString(),
+							TranscriptSpeakerId: seg.TranscriptSpeakerId?.Value,
+							SpeakerId: transcriptSpeaker?.SpeakerId?.Value,
+							SpeakerLabel: transcriptSpeaker?.Label,
+							SpeakerName: speaker?.Name,
+							SpeakerJapaneseName: speaker?.JapaneseName,
+							SpeakerThemeColor: speaker?.ThemeColor,
+							SpeakerAvatarUrl: speakerAvatarUrl);
 
 						return (title, context);
 					}

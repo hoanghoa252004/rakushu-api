@@ -36,9 +36,9 @@ internal sealed class UpdateTranscriptSegment : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("UpdateTranscriptSegment")
-			.WithSummary("Curator")
+			.WithSummary("Curator, Admin")
 			.WithDescription("Updates an existing transcript segment. Automatically reorders sequences if segment position changes.")
-			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator))
+			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<TranscriptSegmentDetailDto>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status404NotFound)

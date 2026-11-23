@@ -75,7 +75,11 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 						q.KnowledgeMeaning?.KnowledgeUnit?.Expression,
 						q.KnowledgeMeaning?.KnowledgeUnit?.Reading,
 						q.KnowledgeMeaning?.Meaning,
-						q.IsActive);
+						q.IsActive,
+						q.MediaType,
+						q.MediaUrl,
+						q.MediaMetadata,
+						q.UpdatedAt);
 				}
 			}
 			else if (report.TargetType == TargetType.TranscriptSegment)
@@ -109,6 +113,13 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 							oovText)
 						: null;
 
+					var transcriptSpeaker = segment.TranscriptSpeaker;
+					var speaker = transcriptSpeaker?.Speaker;
+					var speakerAvatarUrl = await CurationContextHelper.ResolveSpeakerAvatarUrlAsync(
+						speaker?.AvatarKey,
+						_storageService,
+						cancellationToken);
+
 					videoContext = new VideoLearningUnitContextDto(
 						matchedOovUnit?.Id.Value,
 						video?.Id.Value ?? Guid.Empty,
@@ -129,7 +140,14 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 						matchedOovUnit?.KnowledgeMeaning?.KnowledgeUnit?.Expression,
 						matchedOovUnit?.KnowledgeMeaning?.Meaning,
 						matchedOovUnit?.KnowledgeMeaning?.KnowledgeUnit?.Reading,
-						video?.SourceType.ToString());
+						video?.SourceType.ToString(),
+						TranscriptSpeakerId: segment.TranscriptSpeakerId?.Value,
+						SpeakerId: transcriptSpeaker?.SpeakerId?.Value,
+						SpeakerLabel: transcriptSpeaker?.Label,
+						SpeakerName: speaker?.Name,
+						SpeakerJapaneseName: speaker?.JapaneseName,
+						SpeakerThemeColor: speaker?.ThemeColor,
+						SpeakerAvatarUrl: speakerAvatarUrl);
 				}
 			}
 			else if (report.TargetType == TargetType.LearningUnit)
@@ -194,12 +212,7 @@ internal sealed class GetReportDetailHandler : IRequestHandler<GetReportDetailQu
 			? new ReportTargetContextDto(questionContext, videoContext, shadowingContext)
 			: null;
 
-		var rawSnapshotJson = report.TargetSnapshot
-			?? report.Details
-				.OrderBy(d => d.CreatedAt)
-				.Select(d => d.TargetSnapshot)
-				.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
-		var reportedSnapshot = CurationContextHelper.DeserializeSnapshot(rawSnapshotJson);
+		var reportedSnapshot = CurationContextHelper.ResolveCanonicalSnapshot(report);
 
 		int? startCharIndex = report.StartCharIndex ?? reportedSnapshot?.StartCharIndex;
 		int? endCharIndex = report.EndCharIndex ?? reportedSnapshot?.EndCharIndex;

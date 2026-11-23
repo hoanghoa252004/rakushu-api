@@ -11,7 +11,8 @@ public sealed class SubmitIssueValidator : AbstractValidator<SubmitIssueCommand>
 		"CutoffContext",
 		"GrammarOrTranscriptError",
 		"SubtitleTranslationError",
-		CurationContextHelper.OovCategory
+		CurationContextHelper.OovCategory,
+		CurationContextHelper.WrongSpeakerCategory
 	};
 
 	private static readonly HashSet<string> ValidLearningUnitCategories = new(StringComparer.OrdinalIgnoreCase)

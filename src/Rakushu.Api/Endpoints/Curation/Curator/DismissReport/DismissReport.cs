@@ -24,7 +24,7 @@ internal sealed class DismissReport : IEndpoint
 			})
 			.WithName("DismissReport")
 			.WithSummary("Curator, Administrator")
-			.WithDescription("Dismisses an escalated report as a false alarm or invalid issue, recording the reason and resetting the aggregation counter. For ShadowingAttempt reports, fails with 409 Conflict if a CuratorReevaluation has already been submitted.")
+			.WithDescription("Dismisses an escalated report as a false alarm or invalid issue, recording the reason and resetting the aggregation counter. Fails with 409 Conflict if the reported target (ShadowingAttempt, BankQuestion, TranscriptSegment, or LearningUnit) has already been updated, re-evaluated, archived, or removed compared to its reported snapshot.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces(StatusCodes.Status204NoContent)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)

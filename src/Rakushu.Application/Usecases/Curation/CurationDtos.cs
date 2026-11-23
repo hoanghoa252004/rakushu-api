@@ -36,7 +36,16 @@ public sealed record CurationTargetSnapshotDto(
 	decimal? ShadowingPitchSimilarityScore = null,
 	string? ShadowingOverallFeedback = null,
 	int? ShadowingAssessedLineCount = null,
-	int? ShadowingSkippedLineCount = null);
+	int? ShadowingSkippedLineCount = null,
+	Guid? TranscriptSpeakerId = null,
+	Guid? SpeakerId = null,
+	string? SpeakerLabel = null,
+	string? SpeakerName = null,
+	string? SpeakerJapaneseName = null,
+	string? SpeakerThemeColor = null,
+	string? MediaType = null,
+	string? MediaUrl = null,
+	string? MediaMetadata = null);
 
 public sealed record LearnerTargetContextDto(
 	string? QuestionTitle,
@@ -72,7 +81,14 @@ public sealed record LearnerTargetContextDto(
 	decimal? ShadowingPitchSimilarityScore = null,
 	string? ShadowingOverallFeedback = null,
 	bool? HasCuratorReevaluation = null,
-	ShadowingAttemptContextDto? ShadowingContext = null);
+	ShadowingAttemptContextDto? ShadowingContext = null,
+	Guid? TranscriptSpeakerId = null,
+	Guid? SpeakerId = null,
+	string? SpeakerLabel = null,
+	string? SpeakerName = null,
+	string? SpeakerJapaneseName = null,
+	string? SpeakerThemeColor = null,
+	string? SpeakerAvatarUrl = null);
 
 public sealed record LearnerIssueHistoryDto(
 	Guid Id,
@@ -198,7 +214,11 @@ public sealed record BankQuestionContextDto(
 	string? TargetExpression,
 	string? TargetReading,
 	string? TargetMeaning,
-	bool IsActive = true);
+	bool IsActive = true,
+	string? MediaType = null,
+	string? MediaUrl = null,
+	string? MediaMetadata = null,
+	DateTimeOffset? UpdatedAt = null);
 
 public sealed record VideoLearningUnitContextDto(
 	Guid? LearningUnitId,
@@ -220,4 +240,11 @@ public sealed record VideoLearningUnitContextDto(
 	string? Expression,
 	string? Meaning,
 	string? Reading = null,
-	string? VideoSourceType = null);
+	string? VideoSourceType = null,
+	Guid? TranscriptSpeakerId = null,
+	Guid? SpeakerId = null,
+	string? SpeakerLabel = null,
+	string? SpeakerName = null,
+	string? SpeakerJapaneseName = null,
+	string? SpeakerThemeColor = null,
+	string? SpeakerAvatarUrl = null);

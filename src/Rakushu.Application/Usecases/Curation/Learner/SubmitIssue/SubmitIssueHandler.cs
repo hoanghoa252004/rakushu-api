@@ -67,12 +67,15 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 			return Result.Failure<SubmitIssueResponse>(ReportErrors.InvalidTargetId);
 
 		bool isOov = string.Equals(request.Category?.Trim(), CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
+		bool isWrongSpeaker = string.Equals(request.Category?.Trim(), CurationContextHelper.WrongSpeakerCategory, StringComparison.OrdinalIgnoreCase);
 		bool isShadowingReeval = string.Equals(request.Category?.Trim(), CurationContextHelper.ShadowingReevaluationCategory, StringComparison.OrdinalIgnoreCase);
 		string normalizedCategory = isOov
 			? CurationContextHelper.OovCategory
-			: isShadowingReeval
-				? CurationContextHelper.ShadowingReevaluationCategory
-				: request.Category!.Trim();
+			: isWrongSpeaker
+				? CurationContextHelper.WrongSpeakerCategory
+				: isShadowingReeval
+					? CurationContextHelper.ShadowingReevaluationCategory
+					: request.Category!.Trim();
 		int? startCharIndex = isOov ? request.StartCharIndex : null;
 		int? endCharIndex = isOov ? request.EndCharIndex : null;
 

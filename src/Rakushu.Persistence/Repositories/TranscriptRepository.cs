@@ -96,6 +96,8 @@ public sealed class TranscriptRepository : BaseRepository<Transcript, Transcript
 				.ThenInclude(t => t.Video)
 					.ThenInclude(v => v.MediaAssets)
 			.Include(ts => ts.Subtitle)
+			.Include(ts => ts.TranscriptSpeaker)
+				.ThenInclude(sp => sp!.Speaker)
 			.Include(ts => ts.LearningUnits)
 				.ThenInclude(lu => lu.KnowledgeMeaning)
 					.ThenInclude(km => km.KnowledgeUnit)
