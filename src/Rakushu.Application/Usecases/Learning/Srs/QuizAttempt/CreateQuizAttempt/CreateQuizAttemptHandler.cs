@@ -7,6 +7,7 @@ using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.QuestionType;
@@ -22,11 +23,12 @@ using QuizEntity = Rakushu.Domain.Entities.Srs.Quiz.Quiz;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.CreateQuizAttempt;
 
-internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttemptCommand, Result<Guid>>
+internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttemptCommand, Result<CreateQuizAttemptResultDto>>
 {
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly IBankQuestionRepository _bankQuestionRepository;
 	private readonly ILearningUnitRepository _learningUnitRepository;
+	private readonly ILearnerEncounteredLearningUnitRepository _encounterRepository;
 	private readonly IQuizRepository _quizRepository;
 	private readonly IQuizAttemptRepository _quizAttemptRepository;
 	private readonly IQuizContentGenerator _quizContentGenerator;
@@ -39,6 +41,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		ISavedItemRepository savedItemRepository,
 		IBankQuestionRepository bankQuestionRepository,
 		ILearningUnitRepository learningUnitRepository,
+		ILearnerEncounteredLearningUnitRepository encounterRepository,
 		IQuizRepository quizRepository,
 		IQuizAttemptRepository quizAttemptRepository,
 		IQuizContentGenerator quizContentGenerator,
@@ -50,6 +53,7 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		_savedItemRepository = savedItemRepository;
 		_bankQuestionRepository = bankQuestionRepository;
 		_learningUnitRepository = learningUnitRepository;
+		_encounterRepository = encounterRepository;
 		_quizRepository = quizRepository;
 		_quizAttemptRepository = quizAttemptRepository;
 		_quizContentGenerator = quizContentGenerator;
@@ -59,16 +63,16 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 		_unitOfWork = unitOfWork;
 	}
 
-	public async Task<Result<Guid>> Handle(
+	public async Task<Result<CreateQuizAttemptResultDto>> Handle(
 		CreateQuizAttemptCommand request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 		if (userId is null)
-			return Result.Failure<Guid>(UserErrors.NotFound);
+			return Result.Failure<CreateQuizAttemptResultDto>(UserErrors.NotFound);
 
 		if (request.ItemIds is null || request.ItemIds.Count == 0)
-			return Result.Failure<Guid>(QuizErrors.EmptySelectedItems);
+			return Result.Failure<CreateQuizAttemptResultDto>(QuizErrors.EmptySelectedItems);
 
 		return await _unitOfWork.ExecuteAsync(async () =>
 		{
@@ -86,9 +90,17 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 					}
 					_quizAttemptRepository.Update(activeAttempt);
 				}
+				else if (request.DiscardActive)
+				{
+					var cancelResult = activeAttempt.Cancel(now);
+					if (cancelResult.IsFailure)
+						return Result.Failure<CreateQuizAttemptResultDto>(cancelResult.Error);
+
+					_quizAttemptRepository.Update(activeAttempt);
+				}
 				else
 				{
-					return Result.Failure<Guid>(QuizAttemptErrors.ActiveAttemptInProgress);
+					return Result.Failure<CreateQuizAttemptResultDto>(QuizAttemptErrors.ActiveAttemptInProgressWithId(activeAttempt.Id.Value));
 				}
 			}
 
@@ -96,146 +108,55 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			var items = await _savedItemRepository.GetByIdsWithScheduleAsync(ids, userId, cancellationToken);
 
 			if (items.Count == 0)
-				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
+				return Result.Failure<CreateQuizAttemptResultDto>(QuizErrors.NoQuestionsAvailable);
 
 			var meaningIds = items.Select(i => i.KnowledgeMeaningId).Distinct().ToList();
 			var bankQuestions = (await _bankQuestionRepository.GetByMeaningIdsAsync(meaningIds, cancellationToken)).ToList();
 
-			// Fallback: Generate BankQuestions for items that do not have matching bank questions
-			var itemsNeedingQuestions = items
-				.Where(item => !bankQuestions.Any(bq => bq.KnowledgeMeaningId == item.KnowledgeMeaningId))
-				.GroupBy(item => item.KnowledgeMeaningId)
-				.Select(g => g.First())
+			// Case 2.4: Dynamic Priority Score Ordering (PriorityScore = UrgencyScore - ImmersionBonusScore)
+			// Overdue / rarely seen words appear first (Questions 1, 2, 3...), while words frequently heard
+			// in videos over the last 7 days are pushed toward the end of the quiz.
+			var encounterCounts7d = await _encounterRepository.GetEffectiveEncounterCountsByMeaningsAsync(
+				userId,
+				meaningIds,
+				now.AddDays(-7),
+				cancellationToken);
+
+			var orderedItems = items
+				.OrderByDescending(item =>
+				{
+					double urgencyScore = 0;
+					if (item.Schedule is not null && item.Schedule.DueAt < now)
+					{
+						urgencyScore = (now - item.Schedule.DueAt).TotalDays * 2.0;
+					}
+
+					int recentEncounters = encounterCounts7d.GetValueOrDefault(item.KnowledgeMeaningId, 0);
+					double immersionBonusScore = recentEncounters * 1.5;
+					return urgencyScore - immersionBonusScore;
+				})
+				.ThenBy(item => item.Schedule != null ? item.Schedule.DueAt : item.SavedAt)
 				.ToList();
-
-			if (itemsNeedingQuestions.Count > 0)
-			{
-				var needingMeaningGuids = itemsNeedingQuestions.Select(i => i.KnowledgeMeaningId.Value).ToList();
-				var mediaContexts = await _learningUnitRepository.GetMediaContextByMeaningIdsAsync(needingMeaningGuids, cancellationToken);
-
-				var llmPrompts = itemsNeedingQuestions.Select(item =>
-				{
-					mediaContexts.TryGetValue(item.KnowledgeMeaningId.Value, out var mediaContext);
-					var contextSentence = mediaContext?.OriginalSentence ?? item.Expression;
-
-					return new GenerateQuizContentPrompt(
-						item.KnowledgeMeaningId.Value,
-						item.Expression,
-						item.Reading,
-						item.Meaning,
-						ContextSentence: contextSentence);
-				}).ToList();
-
-				var llmResults = await _quizContentGenerator.GenerateQuizContentBatchAsync(llmPrompts, cancellationToken);
-
-				var excludeIds = items.Select(i => i.KnowledgeMeaningId);
-				var distractorPool = await _bankQuestionRepository.GetRandomDistractorMeaningsAsync(
-					excludeIds,
-					itemsNeedingQuestions.Count * 3,
-					cancellationToken);
-
-				var distractorQueue = new Queue<string>(distractorPool);
-				var defaultQuestionTypeId = QuestionTypeId.From(Guid.Parse("10000000-0000-0000-0000-000000000001")); // MULTIPLE_CHOICE
-
-				foreach (var item in itemsNeedingQuestions)
-				{
-					var itemDistractors = new List<string>();
-					while (itemDistractors.Count < 3 && distractorQueue.Count > 0)
-					{
-						var d = distractorQueue.Dequeue();
-						if (d != item.Meaning && !itemDistractors.Contains(d))
-						{
-							itemDistractors.Add(d);
-						}
-					}
-
-					var fallbackChoices = new[] { "Điểm thắc mắc, nghi vấn", "Vấn đề cần giải quyết", "Lịch trình dự kiến", "Nội dung được ghi chép" };
-					foreach (var fb in fallbackChoices)
-					{
-						if (itemDistractors.Count >= 3) break;
-						if (fb != item.Meaning && !itemDistractors.Contains(fb))
-						{
-							itemDistractors.Add(fb);
-						}
-					}
-
-					var options = new List<(string Text, bool IsCorrect)>
-					{
-						(item.Meaning, true),
-						(itemDistractors[0], false),
-						(itemDistractors[1], false),
-						(itemDistractors[2], false)
-					};
-
-					var shuffled = options.OrderBy(_ => Random.Shared.Next()).ToList();
-					var labels = new[] { "A", "B", "C", "D" };
-					string correctChoiceId = "A";
-					var choiceList = new List<object>();
-
-					for (int i = 0; i < shuffled.Count; i++)
-					{
-						var label = labels[i];
-						if (shuffled[i].IsCorrect)
-						{
-							correctChoiceId = label;
-						}
-						choiceList.Add(new { id = label, text = shuffled[i].Text });
-					}
-
-					var choicesJson = JsonSerializer.Serialize(choiceList);
-
-					string promptText;
-					string? explanationText;
-
-					if (llmResults.TryGetValue(item.KnowledgeMeaningId.Value, out var gen) &&
-						!string.IsNullOrWhiteSpace(gen.Prompt))
-					{
-						promptText = gen.Prompt;
-						explanationText = gen.Explanation;
-					}
-					else
-					{
-						promptText = $"Từ/ngữ pháp 「{item.Expression}」 có ý nghĩa là gì?";
-						explanationText = $"「{item.Expression}」{(string.IsNullOrWhiteSpace(item.Reading) ? "" : $"({item.Reading})")} có nghĩa là: {item.Meaning}.";
-					}
-
-					var newBankQResult = BankQuestionEntity.Create(
-						item.KnowledgeMeaningId,
-						defaultQuestionTypeId,
-						promptText,
-						choicesJson,
-						correctChoiceId,
-						now,
-						explanationText,
-						isActive: true);
-
-					if (newBankQResult.IsSuccess)
-					{
-						var newBankQ = newBankQResult.Value;
-						_bankQuestionRepository.Add(newBankQ);
-						bankQuestions.Add(newBankQ);
-					}
-				}
-			}
-
-			if (bankQuestions.Count == 0)
-				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
 
 			var quizResult = QuizEntity.Create(userId, now);
 			if (quizResult.IsFailure)
-				return Result.Failure<Guid>(quizResult.Error);
+				return Result.Failure<CreateQuizAttemptResultDto>(quizResult.Error);
 
 			var quiz = quizResult.Value;
 			int position = 1;
+			var skippedItems = new List<SkippedItemDto>();
 
-			foreach (var item in items)
+			foreach (var item in orderedItems)
 			{
 				var matchingQuestions = bankQuestions
 					.Where(bq => bq.KnowledgeMeaningId == item.KnowledgeMeaningId)
 					.ToList();
 
 				if (matchingQuestions.Count == 0)
+				{
+					skippedItems.Add(new SkippedItemDto(item.Expression, item.Reading));
 					continue;
+				}
 
 				// Pick question adaptively based on item's SRS repetition level
 				var bankQ = SrsQuestionSelector.PickQuestionForSrsStage(item, matchingQuestions);
@@ -254,14 +175,12 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 				if (questionResult.IsFailure)
 					continue;
 
-				var question = questionResult.Value;
-				quiz.AddQuestion(question);
-
+				quiz.AddQuestion(questionResult.Value);
 				position++;
 			}
 
 			if (quiz.TotalQuestions == 0)
-				return Result.Failure<Guid>(QuizErrors.NoQuestionsAvailable);
+				return Result.Failure<CreateQuizAttemptResultDto>(QuizErrors.NoQuestionsAvailable);
 
 			var attemptMode = string.Equals(request.Mode, "Cramming", StringComparison.OrdinalIgnoreCase)
 				? QuizAttemptMode.PracticeAll
@@ -270,14 +189,14 @@ internal sealed class CreateQuizAttemptHandler : IRequestHandler<CreateQuizAttem
 			var attemptResult = Domain.Entities.Srs.QuizAttempt.QuizAttempt.Create(
 				userId, quiz.Id, now, quiz.TotalQuestions, attemptMode);
 			if (attemptResult.IsFailure)
-				return Result.Failure<Guid>(attemptResult.Error);
+				return Result.Failure<CreateQuizAttemptResultDto>(attemptResult.Error);
 
 			var attempt = attemptResult.Value;
 
 			_quizRepository.Add(quiz);
 			_quizAttemptRepository.Add(attempt);
 
-			return Result.Success(attempt.Id.Value);
+			return Result.Success(new CreateQuizAttemptResultDto(attempt.Id.Value, skippedItems));
 		}, cancellationToken);
 	}
 }

@@ -73,6 +73,15 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 			.IsRequired()
 			.HasDefaultValue(true);
 
+		builder.Property(bq => bq.Status)
+			.HasColumnName("status")
+			.IsRequired()
+			.HasDefaultValue(QuestionStatus.Published)
+			.HasSentinel(QuestionStatus.Published);
+
+		builder.Property(bq => bq.ReviewedAt)
+			.HasColumnName("reviewed_at");
+
 		builder.Property(bq => bq.CreatedAt)
 			.IsRequired();
 
@@ -81,5 +90,7 @@ internal sealed class BankQuestionConfiguration : IEntityTypeConfiguration<BankQ
 
 		builder.HasIndex(bq => bq.KnowledgeMeaningId);
 		builder.HasIndex(bq => bq.QuestionTypeId);
+		builder.HasIndex(bq => bq.Status);
+		builder.HasIndex(bq => new { bq.KnowledgeMeaningId, bq.Status, bq.IsActive });
 	}
 }

@@ -30,22 +30,30 @@ internal sealed class DeleteQuestionHandler : IRequestHandler<DeleteQuestionComm
 		{
 			var questionId = BankQuestionId.From(request.Id);
 			var question = await _bankQuestionRepository.GetByIdAsync(questionId, cancellationToken);
-			if (question is null || !question.IsActive)
+			if (question is null)
+			{
+				return Result.Failure(BankQuestionErrors.NotFound);
+			}
+
+			// Nếu đã là Published và đã bị hủy kích hoạt (!IsActive) => coi như đã bị xóa rồi
+			if (question.Status == QuestionStatus.Published && !question.IsActive)
 			{
 				return Result.Failure(BankQuestionErrors.NotFound);
 			}
 
 			bool hasBeenUsed = await _bankQuestionRepository.HasBeenUsedInQuizAsync(questionId, cancellationToken);
+			bool hasCurationRefs = await _bankQuestionRepository.HasCurationReferencesAsync(questionId, cancellationToken);
 
-			if (hasBeenUsed)
+			if (hasBeenUsed || hasCurationRefs)
 			{
-				// Case 2: Đã có người dùng làm bài thi => Soft delete (chuyển isActive = false để bảo vệ tính toàn vẹn lịch sử)
+				// Case 2: Đã có người dùng làm bài thi hoặc đã có lịch sử báo cáo Curation
+				// => Bắt buộc Soft delete (chuyển isActive = false để bảo vệ tính toàn vẹn lịch sử & đối chiếu)
 				question.Deactivate(_systemClock.UtcNow);
 				_bankQuestionRepository.Update(question);
 			}
 			else
 			{
-				// Case 1: Câu hỏi mới tạo / chưa từng ai làm => Xóa cứng hoàn toàn khỏi cơ sở dữ liệu
+				// Case 1: Câu hỏi mới tạo / chưa từng ai làm & chưa có báo cáo => Xóa cứng hoàn toàn khỏi cơ sở dữ liệu
 				_bankQuestionRepository.Delete(question);
 			}
 

@@ -63,6 +63,8 @@ internal sealed class DeleteMyIssueHandler : IRequestHandler<DeleteMyIssueComman
 					issue.TargetType,
 					issue.TargetId,
 					issue.Category,
+					issue.StartCharIndex,
+					issue.EndCharIndex,
 					cancellationToken);
 
 				category?.DecrementCount(now);

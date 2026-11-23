@@ -28,6 +28,10 @@ internal sealed class IssueCategoryConfiguration : IEntityTypeConfiguration<Issu
 			.HasMaxLength(50)
 			.IsRequired();
 
+		builder.Property(ic => ic.StartCharIndex);
+
+		builder.Property(ic => ic.EndCharIndex);
+
 		builder.Property(ic => ic.CurrentCount)
 			.IsRequired()
 			.HasDefaultValue(1);
@@ -46,6 +50,13 @@ internal sealed class IssueCategoryConfiguration : IEntityTypeConfiguration<Issu
 			.IsRequired();
 
 		builder.HasIndex(ic => new { ic.TargetType, ic.TargetId, ic.Category })
+			.HasDatabaseName("ix_issue_categories_non_oov_unique")
+			.HasFilter("start_char_index IS NULL AND end_char_index IS NULL")
+			.IsUnique();
+
+		builder.HasIndex(ic => new { ic.TargetType, ic.TargetId, ic.Category, ic.StartCharIndex, ic.EndCharIndex })
+			.HasDatabaseName("ix_issue_categories_oov_span_unique")
+			.HasFilter("start_char_index IS NOT NULL AND end_char_index IS NOT NULL")
 			.IsUnique();
 	}
 }

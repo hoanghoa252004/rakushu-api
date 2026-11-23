@@ -1,5 +1,11 @@
 namespace Rakushu.Application.Usecases.Learning.Srs;
 
+public sealed record SkippedItemDto(string Expression, string? Reading);
+
+public sealed record CreateQuizAttemptResultDto(
+	Guid AttemptId,
+	IReadOnlyList<SkippedItemDto> SkippedItems);
+
 public static class QuizAnswerHelper
 {
 	public const string Skip = "SKIP";
@@ -17,11 +23,13 @@ public sealed record QuizOptionDto(string Id, string Text);
 
 public sealed record QuizQuestionDto(
 	Guid ItemId,
+	Guid SavedItemId,
 	int Sequence,
 	string Question,
 	IReadOnlyList<QuizOptionDto> Choices,
 	string? SelectedAnswer,
 	int TimeSpentMs,
+	Guid? DetailId = null,
 	string? QuestionType = null,
 	string? CorrectAnswer = null,
 	bool? IsCorrect = null,
@@ -30,7 +38,8 @@ public sealed record QuizQuestionDto(
 	string? Explanation = null,
 	string? MediaType = null,
 	string? MediaUrl = null,
-	QuestionMediaMetadataDto? MediaMetadata = null);
+	QuestionMediaMetadataDto? MediaMetadata = null,
+	Guid? BankQuestionId = null);
 
 public sealed record QuizAttemptDetailDto(
 	Guid Id,
@@ -48,6 +57,7 @@ public sealed record QuizAttemptDetailDto(
 
 public sealed record QuizAnswerResultDto(
 	Guid ItemId,
+	Guid SavedItemId,
 	int Sequence,
 	string Question,
 	IReadOnlyList<QuizOptionDto> Choices,
@@ -61,7 +71,8 @@ public sealed record QuizAnswerResultDto(
 	string? QuestionType = null,
 	string? MediaType = null,
 	string? MediaUrl = null,
-	QuestionMediaMetadataDto? MediaMetadata = null);
+	QuestionMediaMetadataDto? MediaMetadata = null,
+	Guid? BankQuestionId = null);
 
 public sealed record QuizAttemptResultDto(
 	Guid Id,

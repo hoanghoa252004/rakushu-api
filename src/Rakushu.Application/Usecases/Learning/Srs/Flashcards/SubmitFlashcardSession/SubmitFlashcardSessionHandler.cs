@@ -55,16 +55,12 @@ internal sealed class SubmitFlashcardSessionHandler : IRequestHandler<SubmitFlas
 
 			if (session.IsExpired(now))
 			{
-				if (!session.HasAnyReviewedItems)
+				session.Expire(now);
+				if (session.HasAnyReviewedItems)
 				{
-					_flashcardSessionRepository.Delete(session);
-				}
-				else
-				{
-					session.Expire(now);
 					await _flashcardSrsService.ApplySrsUpdatesAsync(session, now, cancellationToken);
-					_flashcardSessionRepository.Update(session);
 				}
+				_flashcardSessionRepository.Update(session);
 				return Result.Failure(FlashcardSessionErrors.Expired);
 			}
 

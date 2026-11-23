@@ -8,6 +8,7 @@ public sealed class QuestionType : AggregateRoot<QuestionTypeId>
 	public string Code { get; private set; } = null!;
 	public string Name { get; private set; } = null!;
 	public string? Description { get; private set; }
+	public int ExpectedDurationSeconds { get; private set; } = 15;
 	public bool IsActive { get; private set; }
 
 	public DateTimeOffset CreatedAt { get; private set; }
@@ -21,7 +22,8 @@ public sealed class QuestionType : AggregateRoot<QuestionTypeId>
 		string name,
 		string? description,
 		DateTimeOffset now,
-		bool isActive = true)
+		bool isActive = true,
+		int expectedDurationSeconds = 15)
 	{
 		var validation = Validate(code, name);
 		if (validation.IsFailure)
@@ -32,6 +34,7 @@ public sealed class QuestionType : AggregateRoot<QuestionTypeId>
 			Code = code.Trim().ToUpperInvariant(),
 			Name = name.Trim(),
 			Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+			ExpectedDurationSeconds = expectedDurationSeconds > 0 ? expectedDurationSeconds : 15,
 			IsActive = isActive,
 			CreatedAt = now,
 			UpdatedAt = now

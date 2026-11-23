@@ -167,4 +167,62 @@ public sealed class QuizAttemptRepository : BaseRepository<QuizAttempt, QuizAtte
 			.Select(a => a.Id)
 			.ToListAsync(cancellationToken);
 	}
+
+	public async Task<IReadOnlyList<QuizAttempt>> GetStaleAttemptsAsync(
+		DateTimeOffset now,
+		int maxCount,
+		CancellationToken cancellationToken = default)
+	{
+		return await _context.QuizAttempts
+			.Include(qa => qa.Items)
+			.Include(qa => qa.Quiz)
+				.ThenInclude(q => q.Questions)
+					.ThenInclude(qn => qn.BankQuestion)
+						.ThenInclude(bq => bq.QuestionType)
+			.Include(qa => qa.Quiz)
+				.ThenInclude(q => q.Questions)
+					.ThenInclude(qn => qn.SavedItem)
+			.Where(a => a.Status == QuizAttemptStatus.InProgress && a.ExpiresAt < now)
+			.OrderBy(a => a.ExpiresAt)
+			.Take(maxCount)
+			.ToListAsync(cancellationToken);
+	}
+
+	public async Task<QuizAnswerSummary> GetAnswerSummaryByUserAsync(
+		UserId userId,
+		DateTimeOffset now,
+		CancellationToken cancellationToken = default)
+	{
+		var attempts = await _context.QuizAttempts
+			.AsNoTracking()
+			.Where(qa =>
+				qa.UserId == userId &&
+				(qa.Status == QuizAttemptStatus.Completed ||
+				 qa.Status == QuizAttemptStatus.Expired ||
+				 (qa.Status == QuizAttemptStatus.InProgress && qa.ExpiresAt < now)))
+			.Select(qa => new
+			{
+				qa.TotalItems,
+				qa.AnsweredItems,
+				qa.CorrectItems
+			})
+			.ToListAsync(cancellationToken);
+
+		int correct = 0;
+		int incorrect = 0;
+		int unanswered = 0;
+
+		foreach (var attempt in attempts)
+		{
+			int total = Math.Max(0, attempt.TotalItems);
+			int answered = Math.Clamp(attempt.AnsweredItems, 0, total);
+			int attemptCorrect = Math.Clamp(attempt.CorrectItems, 0, answered);
+
+			correct += attemptCorrect;
+			incorrect += answered - attemptCorrect;
+			unanswered += total - answered;
+		}
+
+		return new QuizAnswerSummary(correct, incorrect, unanswered);
+	}
 }

@@ -7,6 +7,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttempt;
@@ -107,28 +108,28 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 			var rawMetadata = QuestionMediaMetadataParser.Parse(question.MediaMetadata);
 			var mediaMetadataDto = isFinished ? rawMetadata : QuestionMediaMetadataParser.SanitizeForActiveQuiz(rawMetadata);
 
-			bool isSkip = item != null && QuizAnswerHelper.IsSkip(item.SelectedAnswer);
 			bool? isItemCorrect = item?.IsCorrect;
 			int timeSpentMs = item?.TimeSpentMs ?? 0;
 
 			int? quality = null;
 			if (isFinished && item != null && item.AnsweredAt.HasValue)
 			{
-				quality = isSkip ? 1
-					: isItemCorrect != true ? 2
-					: timeSpentMs > 15_000 ? 3
-					: timeSpentMs >= 5_000 ? 4
-					: 5;
+				quality = SrsQuestionBenchmark.CalculateQuality(
+					isItemCorrect == true,
+					timeSpentMs,
+					question.QuestionType?.ExpectedDurationSeconds);
 			}
 
 			questionDtos.Add(new QuizQuestionDto(
 				ItemId: question.Id.Value,
+				SavedItemId: question.SavedItemId.Value,
 				Sequence: question.Sequence,
 				Question: question.QuestionText,
 				Choices: choices,
 				SelectedAnswer: item?.SelectedAnswer,
 				TimeSpentMs: timeSpentMs,
-				QuestionType: typeCode,
+				DetailId: item?.Id.Value,
+				QuestionType: typeCode ?? "PENDING_CURATION",
 				CorrectAnswer: isFinished ? question.CorrectAnswer : null,
 				IsCorrect: isFinished ? isItemCorrect : null,
 				Quality: quality,
@@ -136,7 +137,8 @@ internal sealed class GetQuizAttemptHandler : IRequestHandler<GetQuizAttemptQuer
 				Explanation: isFinished ? question.BankQuestion?.Explanation : null,
 				MediaType: question.MediaType,
 				MediaUrl: resolvedMediaUrl,
-				MediaMetadata: mediaMetadataDto));
+				MediaMetadata: mediaMetadataDto,
+				BankQuestionId: question.BankQuestionId?.Value));
 		}
 
 		return Result.Success(new QuizAttemptDetailDto(

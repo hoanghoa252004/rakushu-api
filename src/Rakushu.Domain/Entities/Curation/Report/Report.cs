@@ -11,6 +11,9 @@ public sealed class Report : AggregateRoot<ReportId>
 	public string Category { get; private set; } = null!;
 	public ReportStatus Status { get; private set; } = ReportStatus.Pending;
 	public string? CuratorNotes { get; private set; }
+	public string? TargetSnapshot { get; private set; }
+	public int? StartCharIndex { get; private set; }
+	public int? EndCharIndex { get; private set; }
 	public DateTimeOffset? ResolvedAt { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public DateTimeOffset UpdatedAt { get; private set; }
@@ -26,9 +29,12 @@ public sealed class Report : AggregateRoot<ReportId>
 		TargetType targetType,
 		Guid targetId,
 		string category,
-		DateTimeOffset now)
+		DateTimeOffset now,
+		string? targetSnapshot = null,
+		int? startCharIndex = null,
+		int? endCharIndex = null)
 	{
-		var validation = Validate(targetId, category);
+		var validation = Validate(targetId, category, startCharIndex, endCharIndex);
 		if (validation.IsFailure)
 			return Result.Failure<Report>(validation.Error);
 
@@ -37,6 +43,9 @@ public sealed class Report : AggregateRoot<ReportId>
 			TargetType = targetType,
 			TargetId = targetId,
 			Category = category.Trim(),
+			TargetSnapshot = string.IsNullOrWhiteSpace(targetSnapshot) ? null : targetSnapshot.Trim(),
+			StartCharIndex = startCharIndex,
+			EndCharIndex = endCharIndex,
 			Status = ReportStatus.Pending,
 			CreatedAt = now,
 			UpdatedAt = now
@@ -65,13 +74,24 @@ public sealed class Report : AggregateRoot<ReportId>
 		UpdatedAt = now;
 	}
 
-	private static Result Validate(Guid targetId, string category)
+	private static Result Validate(
+		Guid targetId,
+		string category,
+		int? startCharIndex,
+		int? endCharIndex)
 	{
 		if (targetId == Guid.Empty)
 			return Result.Failure(ReportErrors.InvalidTargetId);
 
 		if (string.IsNullOrWhiteSpace(category))
 			return Result.Failure(ReportErrors.EmptyCategory);
+
+		if (startCharIndex.HasValue != endCharIndex.HasValue)
+			return Result.Failure(ReportErrors.InvalidCharRange);
+
+		if (startCharIndex.HasValue && endCharIndex.HasValue &&
+			(startCharIndex.Value < 0 || endCharIndex.Value <= startCharIndex.Value))
+			return Result.Failure(ReportErrors.InvalidCharRange);
 
 		return Result.Success();
 	}

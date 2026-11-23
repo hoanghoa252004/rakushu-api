@@ -36,4 +36,7 @@ public static class BankQuestionErrors
 
 	public static readonly Error QuestionTypeNotFound = Error.NotFound(
 		"BANK_QUESTION.QUESTION_TYPE_NOT_FOUND", "The specified question type does not exist.");
+
+	public static readonly Error AlreadyArchived = Error.Validation(
+		"BANK_QUESTION.ALREADY_ARCHIVED", "This bank question has been archived (soft-deleted) and cannot be modified or published.");
 }

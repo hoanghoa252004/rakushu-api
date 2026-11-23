@@ -46,5 +46,5 @@ internal sealed class UpdateAttemptDetail : IEndpoint
 }
 
 internal sealed record UpdateAttemptDetailRequestDto(
-	string? SelectedAnswer,
+	string SelectedAnswer,
 	int TimeSpentMs);

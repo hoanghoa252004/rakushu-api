@@ -1,5 +1,6 @@
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
+using Rakushu.Domain.Entities.Srs.QuestionType;
 
 namespace Rakushu.Domain.Entities.Srs.BankQuestion;
 
@@ -25,6 +26,7 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		KnowledgeMeaningId? meaningId = null,
 		Guid? questionTypeId = null,
 		bool? isActive = null,
+		QuestionStatus? status = null,
 		int page = 1,
 		int pageSize = 20,
 		CancellationToken cancellationToken = default);
@@ -35,6 +37,10 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		CancellationToken cancellationToken = default);
 
 	Task<bool> HasBeenUsedInQuizAsync(
+		BankQuestionId id,
+		CancellationToken cancellationToken = default);
+
+	Task<bool> HasCurationReferencesAsync(
 		BankQuestionId id,
 		CancellationToken cancellationToken = default);
 
@@ -49,5 +55,20 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		KnowledgeMeaningId meaningId,
 		Guid questionTypeId,
 		string questionText,
+		CancellationToken cancellationToken = default);
+
+	Task<bool> HasDraftOrPublishedQuestionAsync(
+		KnowledgeMeaningId meaningId,
+		CancellationToken cancellationToken = default);
+
+	Task<QuestionTypeId?> GetQuestionTypeIdByCodeAsync(
+		string code,
+		CancellationToken cancellationToken = default);
+
+	Task<QuestionTypeId> GetDefaultQuestionTypeIdAsync(
+		CancellationToken cancellationToken = default);
+
+	Task<IReadOnlyList<KnowledgeMeaning>> GetMeaningsNeedingDraftQuestionsAsync(
+		int limit,
 		CancellationToken cancellationToken = default);
 }

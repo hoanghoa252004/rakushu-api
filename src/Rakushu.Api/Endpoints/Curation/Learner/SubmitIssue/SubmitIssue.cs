@@ -21,18 +21,21 @@ internal sealed class SubmitIssue : IEndpoint
 					dto.TargetType,
 					dto.TargetId,
 					dto.Category,
-					dto.LearnerFeedback);
+					dto.LearnerFeedback,
+					dto.StartCharIndex,
+					dto.EndCharIndex);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("SubmitLearnerIssue")
-			.WithSummary("Submit an issue report ticket for a learning unit, meaning, or question")
-			.WithDescription("Allows learners to report errors, typos, unclear definitions, or audio issues. Aggregates reports and automatically escalates to a Curator ticket when threshold is met.")
+			.WithSummary("Learner")
+			.WithDescription("Submits an issue report regarding a transcript segment (including OOV character ranges), learning unit, or bank question. Automatically escalates to a curator ticket when the threshold is reached.")
 			.RequireAuthorization()
 			.Produces<SubmitIssueResponse>(StatusCodes.Status200OK)
 			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
+			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status409Conflict)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}
@@ -42,4 +45,6 @@ internal sealed record SubmitIssueRequestDto(
 	string TargetType,
 	Guid TargetId,
 	string Category,
-	string? LearnerFeedback);
+	string? LearnerFeedback,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null);

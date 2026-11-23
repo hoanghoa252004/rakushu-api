@@ -52,9 +52,30 @@ internal static class SrsEndpointGroupExtension
 			.WithGroupName("srs");
 	}
 
+	internal static RouteGroupBuilder MapSrsQuestionTypeEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/srs/question-types")
+			.WithTags("Question Type")
+			.WithGroupName("srs");
+	}
+
 	internal static RouteGroupBuilder MapSrsBankQuestionEndpoints(this IEndpointRouteBuilder app)
 	{
 		return app.MapSrsQuestionEndpoints();
+	}
+
+	internal static RouteGroupBuilder MapSrsHistoryEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/srs/history")
+			.WithTags("History")
+			.WithGroupName("srs");
+	}
+
+	internal static RouteGroupBuilder MapSrsStatisticsEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/srs/statistics")
+			.WithTags("Statistics")
+			.WithGroupName("srs");
 	}
 
 	internal static RouteGroupBuilder MapSrsEndpoints(this IEndpointRouteBuilder app)

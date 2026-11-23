@@ -1,6 +1,7 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
@@ -15,6 +16,7 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 {
 	private readonly IFlashcardSessionRepository _flashcardSessionRepository;
 	private readonly ISavedItemRepository _savedItemRepository;
+	private readonly IFlashcardSrsService _flashcardSrsService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
@@ -22,12 +24,14 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 	public CreateFlashcardSessionHandler(
 		IFlashcardSessionRepository flashcardSessionRepository,
 		ISavedItemRepository savedItemRepository,
+		IFlashcardSrsService flashcardSrsService,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
 	{
 		_flashcardSessionRepository = flashcardSessionRepository;
 		_savedItemRepository = savedItemRepository;
+		_flashcardSrsService = flashcardSrsService;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
@@ -51,19 +55,24 @@ internal sealed class CreateFlashcardSessionHandler : IRequestHandler<CreateFlas
 			{
 				if (activeSession.IsExpired(now))
 				{
-					if (!activeSession.HasAnyReviewedItems)
+					activeSession.Expire(now);
+					if (activeSession.HasAnyReviewedItems)
 					{
-						_flashcardSessionRepository.Delete(activeSession);
+						await _flashcardSrsService.ApplySrsUpdatesAsync(activeSession, now, cancellationToken);
 					}
-					else
-					{
-						activeSession.Expire(now);
-						_flashcardSessionRepository.Update(activeSession);
-					}
+					_flashcardSessionRepository.Update(activeSession);
+				}
+				else if (request.DiscardActive)
+				{
+					var cancelResult = activeSession.Cancel(now);
+					if (cancelResult.IsFailure)
+						return Result.Failure<Guid>(cancelResult.Error);
+
+					_flashcardSessionRepository.Update(activeSession);
 				}
 				else
 				{
-					return Result.Failure<Guid>(FlashcardSessionErrors.ActiveSessionInProgress);
+					return Result.Failure<Guid>(FlashcardSessionErrors.ActiveSessionInProgressWithId(activeSession.Id.Value));
 				}
 			}
 

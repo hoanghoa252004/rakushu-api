@@ -14,11 +14,17 @@ public sealed class IssueCategoryRepository : BaseRepository<IssueCategory, Issu
 		TargetType targetType,
 		Guid targetId,
 		string category,
+		int? startCharIndex = null,
+		int? endCharIndex = null,
 		CancellationToken cancellationToken = default)
 	{
 		return await _context.IssueCategories
 			.FirstOrDefaultAsync(
-				ic => ic.TargetType == targetType && ic.TargetId == targetId && ic.Category == category,
+				ic => ic.TargetType == targetType &&
+					  ic.TargetId == targetId &&
+					  ic.Category == category &&
+					  ic.StartCharIndex == startCharIndex &&
+					  ic.EndCharIndex == endCharIndex,
 				cancellationToken);
 	}
 }

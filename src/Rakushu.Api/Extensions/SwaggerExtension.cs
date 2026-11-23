@@ -77,6 +77,20 @@ internal static class SwaggerExtension
 				Description = "APIs for Learner Issue Reporting and Curator Triage."
 			});
 
+			options.SwaggerDoc("learning", new OpenApiInfo
+			{
+				Title = "Learning API",
+				Version = "v1",
+				Description = "APIs for Learner Video Watch History, Playback Progress Tracking, Krashen i+1 Recommendations, and Immersion Vocabulary Coverage."
+			});
+
+			options.SwaggerDoc("analytics", new OpenApiInfo
+			{
+				Title = "Analytics API",
+				Version = "v1",
+				Description = "APIs for Learner Statistics, SRS Heatmaps, Quiz Diagnostics, Shadowing Pronunciation Analytics, and Curator Dashboard Analytics."
+      });
+      
 			options.SwaggerDoc("assistant", new OpenApiInfo
 			{
 				Title = "Assistant API",
@@ -133,6 +147,8 @@ internal static class SwaggerExtension
 			options.SwaggerEndpoint("/swagger/shadowing/swagger.json", "Shadowing API");
 			options.SwaggerEndpoint("/swagger/srs/swagger.json", "SRS API");
 			options.SwaggerEndpoint("/swagger/curation/swagger.json", "Curation API");
+			options.SwaggerEndpoint("/swagger/learning/swagger.json", "Learning API");
+			options.SwaggerEndpoint("/swagger/analytics/swagger.json", "Analytics API");
 			options.SwaggerEndpoint("/swagger/assistant/swagger.json", "Assistant API");
 			options.SwaggerEndpoint("/swagger/configuration/swagger.json", "Configuration API");
 		});

@@ -2,7 +2,7 @@ namespace Rakushu.Domain.Entities.Curation.Report;
 
 public enum TargetType
 {
-	LearningUnit = 0,
-	KnowledgeMeaning = 1,
+	TranscriptSegment = 0,
+	LearningUnit = 1,
 	BankQuestion = 2
 }

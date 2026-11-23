@@ -74,6 +74,14 @@ public sealed class SrsScheduleDetail : Entity<SrsScheduleDetailId>
 		ReviewedAt = reviewedAt;
 	}
 
+	public void AddBonusInterval(int bonusDays)
+	{
+		if (bonusDays > 0)
+		{
+			IntervalDays += bonusDays;
+		}
+	}
+
 	private static Result Validate(SrsScheduleId srsScheduleId, int reviewNumber, int quality)
 	{
 		if (srsScheduleId is null || srsScheduleId.Value == Guid.Empty)

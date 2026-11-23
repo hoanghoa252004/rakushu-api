@@ -80,6 +80,12 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 				return Result.Failure(BankQuestionErrors.NotFound);
 			}
 
+			// Câu hỏi đã Published nhưng bị hủy kích hoạt (!IsActive) => đã xóa mềm (Archived), khóa chỉ đọc tuyệt đối
+			if (question.Status == QuestionStatus.Published && !question.IsActive)
+			{
+				return Result.Failure(BankQuestionErrors.AlreadyArchived);
+			}
+
 			bool isDuplicate = await _bankQuestionRepository.ExistsDuplicateAsync(
 				question.KnowledgeMeaningId,
 				question.QuestionTypeId.Value,
@@ -94,16 +100,32 @@ internal sealed class UpdateBankQuestionHandler : IRequestHandler<UpdateBankQues
 
 			var now = _systemClock.UtcNow;
 
-			question.Update(
-				request.Question,
-				answersJson ?? question.Answers,
-				request.CorrectAnswer,
-				request.Explanation,
-				now,
-				request.MediaType,
-				request.MediaUrl,
-				request.MediaMetadata);
+			if (question.Status == QuestionStatus.Draft)
+			{
+				question.UpdateAndPublish(
+					request.Question,
+					answersJson ?? question.Answers,
+					request.CorrectAnswer,
+					request.Explanation,
+					now,
+					request.MediaType,
+					request.MediaUrl,
+					request.MediaMetadata);
+			}
+			else
+			{
+				question.Update(
+					request.Question,
+					answersJson ?? question.Answers,
+					request.CorrectAnswer,
+					request.Explanation,
+					now,
+					request.MediaType,
+					request.MediaUrl,
+					request.MediaMetadata);
+			}
 
+			_bankQuestionRepository.Update(question);
 			return Result.Success();
 		}, cancellationToken);
 	}

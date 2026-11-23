@@ -20,7 +20,7 @@ public static class Sm2Calculator
 		int q = Math.Clamp(quality, 1, 5);
 		double currentFactor = Math.Max(1.3, lastFactor <= 0 ? 2.5 : lastFactor);
 
-		// q < 3 means failed (1: unanswered, 2: wrong)
+		// q < 3 means failed (1: wrong)
 		if (q < 3)
 		{
 			int lapses = lastLapses + 1;

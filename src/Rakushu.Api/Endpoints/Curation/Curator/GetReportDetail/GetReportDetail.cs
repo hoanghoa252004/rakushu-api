@@ -23,10 +23,11 @@ internal sealed class GetReportDetail : IEndpoint
 				return result.MatchOk();
 			})
 			.WithName("GetReportDetail")
-			.WithSummary("Get curator report details with all learner feedback")
-			.WithDescription("Retrieves aggregate report details including all individual learner comments and feedback.")
+			.WithSummary("Curator, Administrator")
+			.WithDescription("Retrieves comprehensive details of a report ticket, including enriched target context (bank question, transcript segment, or learning unit), reported snapshot, and learner feedback.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			.Produces<CuratorReportDetailDto>(StatusCodes.Status200OK)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status404NotFound)

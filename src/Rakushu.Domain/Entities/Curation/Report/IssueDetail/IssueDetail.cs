@@ -11,6 +11,9 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 	public Guid TargetId { get; private set; }
 	public string Category { get; private set; } = null!;
 	public string? LearnerFeedback { get; private set; }
+	public string? TargetSnapshot { get; private set; }
+	public int? StartCharIndex { get; private set; }
+	public int? EndCharIndex { get; private set; }
 	public ReportId? ReportId { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 
@@ -28,9 +31,12 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 		string category,
 		DateTimeOffset now,
 		string? learnerFeedback = null,
-		ReportId? reportId = null)
+		ReportId? reportId = null,
+		string? targetSnapshot = null,
+		int? startCharIndex = null,
+		int? endCharIndex = null)
 	{
-		var validation = Validate(userId, targetId, category);
+		var validation = Validate(userId, targetId, category, startCharIndex, endCharIndex);
 		if (validation.IsFailure)
 			return Result.Failure<IssueDetail>(validation.Error);
 
@@ -41,6 +47,9 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 			TargetId = targetId,
 			Category = category.Trim(),
 			LearnerFeedback = string.IsNullOrWhiteSpace(learnerFeedback) ? null : learnerFeedback.Trim(),
+			TargetSnapshot = string.IsNullOrWhiteSpace(targetSnapshot) ? null : targetSnapshot.Trim(),
+			StartCharIndex = startCharIndex,
+			EndCharIndex = endCharIndex,
 			ReportId = reportId,
 			CreatedAt = now
 		});
@@ -51,7 +60,12 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 		ReportId = reportId;
 	}
 
-	private static Result Validate(UserId userId, Guid targetId, string category)
+	private static Result Validate(
+		UserId userId,
+		Guid targetId,
+		string category,
+		int? startCharIndex,
+		int? endCharIndex)
 	{
 		if (userId is null || userId.Value == Guid.Empty)
 			return Result.Failure(IssueDetailErrors.InvalidUserId);
@@ -61,6 +75,13 @@ public sealed class IssueDetail : Entity<IssueDetailId>
 
 		if (string.IsNullOrWhiteSpace(category))
 			return Result.Failure(IssueDetailErrors.EmptyCategory);
+
+		if (startCharIndex.HasValue != endCharIndex.HasValue)
+			return Result.Failure(IssueDetailErrors.InvalidCharRange);
+
+		if (startCharIndex.HasValue && endCharIndex.HasValue &&
+			(startCharIndex.Value < 0 || endCharIndex.Value <= startCharIndex.Value))
+			return Result.Failure(IssueDetailErrors.InvalidCharRange);
 
 		return Result.Success();
 	}

@@ -7,6 +7,11 @@ using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Material.LearningUnit;
+using Rakushu.Domain.Entities.Material.Transcript;
+using Rakushu.Domain.Entities.Material.Transcript.TranscriptSegment;
+using Rakushu.Domain.Entities.Material.Video;
+using Rakushu.Domain.Entities.Srs.BankQuestion;
 
 namespace Rakushu.Application.Usecases.Curation.Learner.SubmitIssue;
 
@@ -15,6 +20,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 	private readonly IIssueCategoryRepository _issueCategoryRepository;
 	private readonly IReportRepository _reportRepository;
 	private readonly IIssueDetailRepository _issueDetailRepository;
+	private readonly IBankQuestionRepository _bankQuestionRepository;
+	private readonly ILearningUnitRepository _learningUnitRepository;
+	private readonly ITranscriptRepository _transcriptRepository;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 	private readonly IUnitOfWork _unitOfWork;
@@ -23,6 +31,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 		IIssueCategoryRepository issueCategoryRepository,
 		IReportRepository reportRepository,
 		IIssueDetailRepository issueDetailRepository,
+		IBankQuestionRepository bankQuestionRepository,
+		ILearningUnitRepository learningUnitRepository,
+		ITranscriptRepository transcriptRepository,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
 		IUnitOfWork unitOfWork)
@@ -30,6 +41,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 		_issueCategoryRepository = issueCategoryRepository;
 		_reportRepository = reportRepository;
 		_issueDetailRepository = issueDetailRepository;
+		_bankQuestionRepository = bankQuestionRepository;
+		_learningUnitRepository = learningUnitRepository;
+		_transcriptRepository = transcriptRepository;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 		_unitOfWork = unitOfWork;
@@ -46,11 +60,82 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 		if (!Enum.TryParse<TargetType>(request.TargetType, true, out var targetType))
 			return Result.Failure<SubmitIssueResponse>(ReportErrors.InvalidTargetId);
 
+		bool isOov = string.Equals(request.Category?.Trim(), CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
+		string normalizedCategory = isOov ? CurationContextHelper.OovCategory : request.Category!.Trim();
+		int? startCharIndex = isOov ? request.StartCharIndex : null;
+		int? endCharIndex = isOov ? request.EndCharIndex : null;
+
+		string? targetSnapshotJson = null;
+		int effectiveThreshold = 3;
+
+		if (targetType == TargetType.BankQuestion)
+		{
+			var bankQuestion = await _bankQuestionRepository.GetByIdWithDetailsAsync(
+				BankQuestionId.From(request.TargetId),
+				cancellationToken);
+
+			if (bankQuestion is null)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
+
+			targetSnapshotJson = CurationContextHelper.SerializeBankQuestion(bankQuestion);
+		}
+		else if (targetType == TargetType.TranscriptSegment)
+		{
+			var seg = await _transcriptRepository.GetSegmentWithCurationContextByIdAsync(
+				TranscriptSegmentId.From(request.TargetId),
+				cancellationToken);
+
+			if (seg is null)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
+
+			var video = seg.Transcript?.Video;
+			bool isPersonalVideo = video is not null && video.SourceType != VideoSource.Curated;
+			if (isPersonalVideo && video!.LearnerId != userId)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
+
+			if (isOov)
+			{
+				var selectedText = CurationContextHelper.ExtractOovText(seg.Text, startCharIndex, endCharIndex);
+				if (string.IsNullOrWhiteSpace(selectedText))
+					return Result.Failure<SubmitIssueResponse>(IssueDetailErrors.InvalidCharRange);
+			}
+
+			if (isPersonalVideo)
+			{
+				effectiveThreshold = 1;
+			}
+
+			targetSnapshotJson = CurationContextHelper.SerializeTranscriptSegment(seg, startCharIndex, endCharIndex);
+		}
+		else if (targetType == TargetType.LearningUnit)
+		{
+			var (lu, _) = await _learningUnitRepository.GetCurationContextByIdAsync(
+				LearningUnitId.From(request.TargetId),
+				cancellationToken);
+
+			if (lu is null)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
+
+			var video = lu.TranscriptSegment?.Transcript?.Video;
+			bool isPersonalVideo = video is not null && video.SourceType != VideoSource.Curated;
+			if (isPersonalVideo && video!.LearnerId != userId)
+				return Result.Failure<SubmitIssueResponse>(ReportErrors.TargetNotFound);
+
+			if (isPersonalVideo)
+			{
+				effectiveThreshold = 1;
+			}
+
+			targetSnapshotJson = CurationContextHelper.SerializeLearningUnit(lu);
+		}
+
 		var hasActive = await _issueDetailRepository.HasActiveIssueAsync(
 			userId,
 			targetType,
 			request.TargetId,
-			request.Category,
+			normalizedCategory,
+			startCharIndex,
+			endCharIndex,
 			cancellationToken);
 
 		if (hasActive)
@@ -64,9 +149,12 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 				userId,
 				targetType,
 				request.TargetId,
-				request.Category,
+				normalizedCategory,
 				now,
-				request.LearnerFeedback);
+				request.LearnerFeedback,
+				targetSnapshot: targetSnapshotJson,
+				startCharIndex: startCharIndex,
+				endCharIndex: endCharIndex);
 
 			if (detailResult.IsFailure)
 				return Result.Failure<SubmitIssueResponse>(detailResult.Error);
@@ -76,7 +164,9 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 			var categoryAggregator = await _issueCategoryRepository.GetByTargetAndCategoryAsync(
 				targetType,
 				request.TargetId,
-				request.Category,
+				normalizedCategory,
+				startCharIndex,
+				endCharIndex,
 				cancellationToken);
 
 			bool thresholdReached;
@@ -86,9 +176,11 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 				var createCatResult = IssueCategory.Create(
 					targetType,
 					request.TargetId,
-					request.Category,
+					normalizedCategory,
 					now,
-					threshold: 3);
+					threshold: effectiveThreshold,
+					startCharIndex: startCharIndex,
+					endCharIndex: endCharIndex);
 
 				if (createCatResult.IsFailure)
 					return Result.Failure<SubmitIssueResponse>(createCatResult.Error);
@@ -107,12 +199,36 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 				var activeReport = await _reportRepository.GetActiveReportByTargetAndCategoryAsync(
 					targetType,
 					request.TargetId,
-					request.Category,
+					normalizedCategory,
+					startCharIndex,
+					endCharIndex,
 					cancellationToken);
 
 				if (activeReport is null)
 				{
-					var reportResult = Report.Create(targetType, request.TargetId, request.Category, now);
+					var unassignedDetails = await _issueDetailRepository.GetUnassignedByTargetAndCategoryAsync(
+						targetType,
+						request.TargetId,
+						normalizedCategory,
+						startCharIndex,
+						endCharIndex,
+						cancellationToken);
+
+					var canonicalSnapshot = unassignedDetails
+						.OrderBy(u => u.CreatedAt)
+						.Select(u => u.TargetSnapshot)
+						.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s))
+						?? targetSnapshotJson;
+
+					var reportResult = Report.Create(
+						targetType,
+						request.TargetId,
+						normalizedCategory,
+						now,
+						targetSnapshot: canonicalSnapshot,
+						startCharIndex: startCharIndex,
+						endCharIndex: endCharIndex);
+
 					if (reportResult.IsFailure)
 						return Result.Failure<SubmitIssueResponse>(reportResult.Error);
 
@@ -120,12 +236,6 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 					_reportRepository.Add(activeReport);
 
 					detail.AssignToReport(activeReport.Id);
-
-					var unassignedDetails = await _issueDetailRepository.GetUnassignedByTargetAndCategoryAsync(
-						targetType,
-						request.TargetId,
-						request.Category,
-						cancellationToken);
 
 					foreach (var unassigned in unassignedDetails)
 					{
@@ -140,12 +250,7 @@ internal sealed class SubmitIssueHandler : IRequestHandler<SubmitIssueCommand, R
 
 			_issueDetailRepository.Add(detail);
 
-			string status = thresholdReached ? "EscalatedToCurator" : "Logged";
-			string message = thresholdReached
-				? "Báo cáo của bạn và các người học khác đã đạt ngưỡng và được chuyển tới Curator để xử lý."
-				: "Cảm ơn bạn đã phản hồi! Báo cáo đã được ghi nhận vào hệ thống.";
-
-			return Result.Success(new SubmitIssueResponse(detail.Id.Value, status, message));
+			return Result.Success(new SubmitIssueResponse(detail.Id.Value));
 		}, cancellationToken);
 	}
 }

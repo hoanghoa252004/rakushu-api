@@ -14,4 +14,7 @@ public static class QuizAttemptItemErrors
 		"QUIZ_ATTEMPT_ITEM.INVALID_SEQUENCE", "Sequence must be greater than zero.");
 
 	public static readonly Error InvalidPosition = InvalidSequence;
+
+	public static readonly Error InvalidSelectedAnswer = Error.Validation(
+		"QUIZ_ATTEMPT_ITEM.INVALID_SELECTED_ANSWER", "Selected answer cannot be empty or skipped in update.");
 }

@@ -44,6 +44,13 @@ internal sealed class IssueDetailConfiguration : IEntityTypeConfiguration<IssueD
 		builder.Property(id => id.LearnerFeedback)
 			.HasMaxLength(1000);
 
+		builder.Property(id => id.TargetSnapshot)
+			.HasColumnType("jsonb");
+
+		builder.Property(id => id.StartCharIndex);
+
+		builder.Property(id => id.EndCharIndex);
+
 		builder.Property(id => id.ReportId)
 			.HasConversion(
 				id => id != null ? id.Value : (Guid?)null,
@@ -53,6 +60,9 @@ internal sealed class IssueDetailConfiguration : IEntityTypeConfiguration<IssueD
 			.IsRequired();
 
 		builder.HasIndex(id => new { id.TargetType, id.TargetId, id.Category });
+		builder.HasIndex(id => new { id.TargetId, id.StartCharIndex, id.EndCharIndex })
+			.HasDatabaseName("ix_issue_details_oov_span")
+			.HasFilter("category = 'Oov' AND start_char_index IS NOT NULL AND end_char_index IS NOT NULL");
 		builder.HasIndex(id => id.UserId);
 		builder.HasIndex(id => id.ReportId);
 	}

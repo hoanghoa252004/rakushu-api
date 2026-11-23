@@ -46,5 +46,5 @@ internal sealed class CreateAttemptDetail : IEndpoint
 
 internal sealed record CreateAttemptDetailRequestDto(
 	Guid QuizItemId,
-	string? SelectedAnswer,
+	string SelectedAnswer,
 	int TimeSpentMs);

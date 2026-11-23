@@ -1,28 +1,95 @@
 namespace Rakushu.Application.Usecases.Curation;
 
-public sealed record SubmitIssueResponse(
-	Guid IssueDetailId,
-	string Status,
-	string Message);
+public sealed record SubmitIssueResponse(Guid Id);
+
+public sealed record CurationTargetSnapshotDto(
+	string TargetType,
+	string? QuestionTitle = null,
+	string? QuestionTypeCode = null,
+	string? AnswersJson = null,
+	string? CorrectAnswer = null,
+	string? Explanation = null,
+	Guid? VideoId = null,
+	string? VideoTitle = null,
+	double? StartTimeSeconds = null,
+	double? EndTimeSeconds = null,
+	string? OriginalSentenceJp = null,
+	string? SubtitleVn = null,
+	string? TargetToken = null,
+	int? StartTokenIndex = null,
+	int? EndTokenIndex = null,
+	string? Expression = null,
+	string? Reading = null,
+	string? Meaning = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
+
+public sealed record LearnerTargetContextDto(
+	string? QuestionTitle,
+	string? QuestionTypeCode,
+	string? AnswersJson,
+	string? CorrectAnswer,
+	string? Explanation,
+	Guid? VideoId,
+	string? VideoTitle,
+	string? VideoUrl,
+	string? VideoTimestampFormatted,
+	double? StartTimeSeconds,
+	double? EndTimeSeconds,
+	string? OriginalSentenceJp,
+	string? SubtitleVn,
+	string? TargetToken,
+	int? StartTokenIndex,
+	int? EndTokenIndex,
+	string? Expression,
+	string? Reading,
+	string? Meaning,
+	bool? IsActive = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
 
 public sealed record LearnerIssueHistoryDto(
 	Guid Id,
 	string TargetType,
 	Guid TargetId,
+	string? TargetTitle,
 	string Category,
 	string? LearnerFeedback,
 	string ReportStatus,
-	DateTimeOffset CreatedAt);
+	string? CuratorNotes,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset? ResolvedAt,
+	LearnerTargetContextDto? TargetContext,
+	CurationTargetSnapshotDto? ReportedSnapshot = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null);
+
+public sealed record LearnerIssueSummaryDto(
+	int TotalCount,
+	int PendingCount,
+	int InvestigatingCount,
+	int ResolvedCount,
+	int DismissedCount);
 
 public sealed record CuratorReportSummaryDto(
 	Guid ReportId,
 	string TargetType,
 	Guid TargetId,
+	string? TargetTitle,
 	string Category,
 	string Status,
 	int ReportCount,
 	DateTimeOffset CreatedAt,
-	DateTimeOffset? ResolvedAt);
+	DateTimeOffset? ResolvedAt,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
 
 public sealed record CuratorReportDetailDto(
 	Guid ReportId,
@@ -33,10 +100,73 @@ public sealed record CuratorReportDetailDto(
 	string? CuratorNotes,
 	DateTimeOffset CreatedAt,
 	DateTimeOffset? ResolvedAt,
-	IReadOnlyList<IssueFeedbackDto> Feedbacks);
+	IReadOnlyList<IssueFeedbackDto> Feedbacks,
+	ReportTargetContextDto? Context,
+	CurationTargetSnapshotDto? ReportedSnapshot = null,
+	int? StartCharIndex = null,
+	int? EndCharIndex = null,
+	string? SelectedOovText = null,
+	string? VideoSourceType = null);
+
+public sealed record CuratorOovStatDto(
+	Guid VideoId,
+	string VideoTitle,
+	Guid SegmentId,
+	double StartTimeSeconds,
+	string TimestampFormatted,
+	string SentenceJp,
+	string? SubtitleVn,
+	int StartCharIndex,
+	int EndCharIndex,
+	string OovText,
+	int ReportCount,
+	int UniqueLearnerCount,
+	Guid? ActiveReportId,
+	string ReportStatus,
+	DateTimeOffset FirstReportedAt,
+	DateTimeOffset LastReportedAt,
+	IReadOnlyList<string> SampleFeedbacks);
 
 public sealed record IssueFeedbackDto(
 	Guid UserId,
 	string? UserName,
 	string? LearnerFeedback,
 	DateTimeOffset CreatedAt);
+
+public sealed record ReportTargetContextDto(
+	BankQuestionContextDto? QuestionContext,
+	VideoLearningUnitContextDto? VideoContext);
+
+public sealed record BankQuestionContextDto(
+	Guid QuestionId,
+	string QuestionTitle,
+	string QuestionTypeCode,
+	string AnswersJson,
+	string CorrectAnswer,
+	string? Explanation,
+	string? TargetExpression,
+	string? TargetReading,
+	string? TargetMeaning,
+	bool IsActive = true);
+
+public sealed record VideoLearningUnitContextDto(
+	Guid? LearningUnitId,
+	Guid VideoId,
+	string VideoTitle,
+	string? VideoUrl,
+	string? VideoThumbnail,
+	double VideoDurationSeconds,
+	string VideoDurationFormatted,
+	double StartTimeSeconds,
+	double EndTimeSeconds,
+	double TimestampSeconds,
+	string TimestampFormatted,
+	string OriginalSentenceJp,
+	string? SubtitleVn,
+	string? TargetToken,
+	int StartTokenIndex,
+	int EndTokenIndex,
+	string? Expression,
+	string? Meaning,
+	string? Reading = null,
+	string? VideoSourceType = null);

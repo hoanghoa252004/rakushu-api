@@ -20,7 +20,7 @@ internal sealed class CreateFlashcardSession : IEndpoint
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var command = new CreateFlashcardSessionCommand(dto.ItemIds);
+				var command = new CreateFlashcardSessionCommand(dto.ItemIds, dto.DiscardActive);
 
 				var result = await sender.Send(command, cancellationToken);
 				return result.MatchCreated("GetFlashcardSession", sessionId => new { sessionId });
@@ -40,4 +40,5 @@ internal sealed class CreateFlashcardSession : IEndpoint
 }
 
 internal sealed record CreateFlashcardSessionRequestDto(
-	IReadOnlyList<Guid> ItemIds);
+	IReadOnlyList<Guid> ItemIds,
+	bool DiscardActive = false);

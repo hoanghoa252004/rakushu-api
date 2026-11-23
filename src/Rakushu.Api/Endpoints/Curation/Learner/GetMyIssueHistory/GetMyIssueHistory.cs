@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
+using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Curation;
 using Rakushu.Application.Usecases.Curation.Learner.GetMyIssueHistory;
 
@@ -13,23 +14,28 @@ internal sealed class GetMyIssueHistory : IEndpoint
 	{
 		app.MapLearnerCurationEndpoints()
 			.MapGet("/my-history", async (
-				[FromQuery] int page,
-				[FromQuery] int pageSize,
+				[FromQuery] int? page,
+				[FromQuery] int? pageSize,
+				[FromQuery] string? status,
+				[FromQuery] string? targetType,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
 				var query = new GetMyIssueHistoryQuery(
-					page <= 0 ? 1 : page,
-					pageSize <= 0 ? 20 : pageSize);
+					page is null or <= 0 ? 1 : page.Value,
+					pageSize is null or <= 0 ? 20 : pageSize.Value,
+					status,
+					targetType);
 
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetMyIssueHistory")
-			.WithSummary("Get current learner's submitted issue reports")
-			.WithDescription("Retrieves all issue reports submitted by the logged-in learner and their current review/escalation status.")
+			.WithSummary("Learner")
+			.WithDescription("Retrieves a paginated list of issue reports submitted by the currently authenticated learner along with their review status.")
 			.RequireAuthorization()
-			.Produces<IReadOnlyList<LearnerIssueHistoryDto>>(StatusCodes.Status200OK)
+			.Produces<PaginatedList<LearnerIssueHistoryDto>>(StatusCodes.Status200OK)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
 	}

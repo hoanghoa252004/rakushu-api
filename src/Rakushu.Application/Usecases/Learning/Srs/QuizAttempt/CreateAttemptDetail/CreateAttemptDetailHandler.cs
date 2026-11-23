@@ -80,11 +80,13 @@ internal sealed class CreateAttemptDetailHandler : IRequestHandler<CreateAttempt
 			if (attempt.Items.Any(i => i.QuestionId == question.Id))
 				return Result.Failure<Guid>(QuizAttemptErrors.QuestionAlreadyAnswered);
 
+			if (string.IsNullOrWhiteSpace(request.SelectedAnswer) || QuizAnswerHelper.IsSkip(request.SelectedAnswer))
+				return Result.Failure<Guid>(QuizAttemptItemErrors.InvalidSelectedAnswer);
+
 			var typeCode = question.QuestionType?.Code;
-			bool isSkip = QuizAnswerHelper.IsSkip(request.SelectedAnswer);
-			bool isCorrect = !isSkip && CheckIsCorrect(request.SelectedAnswer, question.CorrectAnswer, question.Answers, typeCode);
+			bool isCorrect = CheckIsCorrect(request.SelectedAnswer, question.CorrectAnswer, question.Answers, typeCode);
 			int timeSpentMs = Math.Max(0, request.TimeSpentMs);
-			string? storedAnswer = isSkip ? QuizAnswerHelper.Skip : (string.IsNullOrWhiteSpace(request.SelectedAnswer) ? null : request.SelectedAnswer.Trim());
+			string storedAnswer = request.SelectedAnswer.Trim();
 
 			var itemResult = QuizAttemptItem.Create(
 				question.Id,

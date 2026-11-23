@@ -2,12 +2,15 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Rakushu.Application.Abstractions.Persistence.Queries;
 using Rakushu.Application.Usecases.Embedding;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Configuration.SystemConfiguration;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
+using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerVideoProgress;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.ContentCategory;
@@ -32,6 +35,7 @@ using Rakushu.Domain.Entities.Shadowing.ShadowingSessionMember;
 using Rakushu.Domain.Entities.Shadowing.Speaker;
 using Rakushu.Domain.Entities.Srs.BankQuestion;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
+using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.Quiz;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 using Rakushu.Domain.Entities.Srs.SavedItem;
@@ -41,6 +45,7 @@ using Rakushu.Domain.Entities.Subscriptions.Plan;
 using Rakushu.Domain.Entities.Subscriptions.Subscription;
 using Rakushu.Domain.Entities.Subscriptions.Transaction;
 using Rakushu.Persistence.Connection;
+using Rakushu.Persistence.Queries;
 using Rakushu.Persistence.Repositories;
 
 namespace Rakushu.Persistence.Extensions;
@@ -104,6 +109,7 @@ public static class PersistenceServiceCollectionExtensions
 		// SRS Repositories
 		services.AddScoped<ISavedItemRepository, SavedItemRepository>();
 		services.AddScoped<IBankQuestionRepository, BankQuestionRepository>();
+		services.AddScoped<IQuestionTypeRepository, QuestionTypeRepository>();
 		services.AddScoped<IQuizRepository, QuizRepository>();
 		services.AddScoped<IQuizAttemptRepository, QuizAttemptRepository>();
 		services.AddScoped<IFlashcardSessionRepository, FlashcardSessionRepository>();
@@ -112,6 +118,14 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<IIssueCategoryRepository, IssueCategoryRepository>();
 		services.AddScoped<IReportRepository, ReportRepository>();
 		services.AddScoped<IIssueDetailRepository, IssueDetailRepository>();
+
+		// Video History & Encounter Tracking Repositories
+		services.AddScoped<ILearnerVideoProgressRepository, LearnerVideoProgressRepository>();
+		services.AddScoped<ILearnerEncounteredLearningUnitRepository, LearnerEncounteredLearningUnitRepository>();
+
+		// Read-Only Analytics Query Services
+		services.AddScoped<ILearnerAnalyticsQueryService, LearnerAnalyticsQueryService>();
+		services.AddScoped<ICuratorAnalyticsQueryService, CuratorAnalyticsQueryService>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();

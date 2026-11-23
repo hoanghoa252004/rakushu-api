@@ -8,7 +8,7 @@ namespace Rakushu.Domain.Entities.Srs.FlashcardSession;
 
 public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 {
-	public static readonly TimeSpan DefaultIdleTimeout = TimeSpan.FromMinutes(15);
+	public static readonly TimeSpan DefaultDuration = TimeSpan.FromHours(24);
 
 	public UserId UserId { get; private set; } = null!;
 	public FlashcardSessionStatus Status { get; private set; } = FlashcardSessionStatus.InProgress;
@@ -31,19 +31,21 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 	public static Result<FlashcardSession> Create(
 		UserId userId,
 		DateTimeOffset now,
-		TimeSpan? idleTimeout = null)
+		TimeSpan? duration = null)
 	{
 		if (userId is null || userId.Value == Guid.Empty)
 			return Result.Failure<FlashcardSession>(FlashcardSessionErrors.InvalidUserId);
 
-		var effectiveTimeout = idleTimeout ?? DefaultIdleTimeout;
+		var effectiveDuration = duration.HasValue && duration.Value > TimeSpan.Zero
+			? duration.Value
+			: DefaultDuration;
 
 		return Result.Success(new FlashcardSession(FlashcardSessionId.Create())
 		{
 			UserId = userId,
 			Status = FlashcardSessionStatus.InProgress,
 			CreatedAt = now,
-			ExpiresAt = now.Add(effectiveTimeout)
+			ExpiresAt = now.Add(effectiveDuration)
 		});
 	}
 
@@ -65,15 +67,12 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 	public void Expire(DateTimeOffset now)
 	{
 		Status = FlashcardSessionStatus.Expired;
+		CompletedAt = null;
 	}
 
 	public void RefreshIdleTimeout(DateTimeOffset now, TimeSpan? idleTimeout = null)
 	{
-		if (Status != FlashcardSessionStatus.InProgress)
-			return;
-
-		var duration = idleTimeout ?? DefaultIdleTimeout;
-		ExpiresAt = now.Add(duration);
+		// Deprecated: Session duration is fixed to 24h from CreatedAt, consistent with QuizAttempt
 	}
 
 	public Result Complete(DateTimeOffset now)
@@ -90,6 +89,7 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 		if (now > ExpiresAt)
 		{
 			Status = FlashcardSessionStatus.Expired;
+			CompletedAt = null;
 			return Result.Failure(FlashcardSessionErrors.Expired);
 		}
 
@@ -113,7 +113,7 @@ public sealed class FlashcardSession : AggregateRoot<FlashcardSessionId>
 			return Result.Failure(FlashcardSessionErrors.NotInProgress);
 
 		Status = FlashcardSessionStatus.Canceled;
-		CompletedAt = now;
+		CompletedAt = null;
 		return Result.Success();
 	}
 }

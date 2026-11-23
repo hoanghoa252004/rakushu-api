@@ -2,6 +2,7 @@ using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
 using Rakushu.Application.Abstractions.Infrastructure.Storage;
+using Rakushu.Application.Usecases.Learning.Srs.Flashcards.SubmitFlashcardSession;
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Errors;
 using Rakushu.Domain.Common.Results;
@@ -15,6 +16,7 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 {
 	private readonly IFlashcardSessionRepository _flashcardSessionRepository;
 	private readonly ILearningUnitRepository _learningUnitRepository;
+	private readonly IFlashcardSrsService _flashcardSrsService;
 	private readonly IStorageService _storageService;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
@@ -23,6 +25,7 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 	public GetFlashcardSessionHandler(
 		IFlashcardSessionRepository flashcardSessionRepository,
 		ILearningUnitRepository learningUnitRepository,
+		IFlashcardSrsService flashcardSrsService,
 		IStorageService storageService,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
@@ -30,6 +33,7 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 	{
 		_flashcardSessionRepository = flashcardSessionRepository;
 		_learningUnitRepository = learningUnitRepository;
+		_flashcardSrsService = flashcardSrsService;
 		_storageService = storageService;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
@@ -57,22 +61,11 @@ internal sealed class GetFlashcardSessionHandler : IRequestHandler<GetFlashcardS
 		var now = _systemClock.UtcNow;
 		if (session.IsExpired(now))
 		{
-			if (!session.HasAnyReviewedItems)
+			session.Expire(now);
+			if (session.HasAnyReviewedItems)
 			{
-				_flashcardSessionRepository.Delete(session);
+				await _flashcardSrsService.ApplySrsUpdatesAsync(session, now, cancellationToken);
 			}
-			else
-			{
-				session.Expire(now);
-				_flashcardSessionRepository.Update(session);
-			}
-			await _unitOfWork.SaveChangesAsync(cancellationToken);
-			return Result.Failure<FlashcardSessionDetailDto>(FlashcardSessionErrors.Expired);
-		}
-
-		if (session.Status == FlashcardSessionStatus.InProgress)
-		{
-			session.RefreshIdleTimeout(now);
 			_flashcardSessionRepository.Update(session);
 			await _unitOfWork.SaveChangesAsync(cancellationToken);
 		}

@@ -61,6 +61,8 @@ using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
+using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerVideoProgress;
 using Rakushu.Persistence.Configurations.Knowledge;
 
 namespace Rakushu.Persistence;
@@ -163,6 +165,10 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<IssueCategory> IssueCategories => Set<IssueCategory>();
 	public DbSet<Report> Reports => Set<Report>();
 	public DbSet<IssueDetail> IssueDetails => Set<IssueDetail>();
+
+	// Video History & Learning Unit Encounter Tracking
+	public DbSet<LearnerVideoProgress> LearnerVideoProgresses => Set<LearnerVideoProgress>();
+	public DbSet<LearnerEncounteredLearningUnit> LearnerEncounteredLearningUnits => Set<LearnerEncounteredLearningUnit>();
 
 
 

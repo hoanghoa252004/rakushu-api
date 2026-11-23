@@ -4,6 +4,7 @@ using Rakushu.Application.Abstractions.Infrastructure.Storage;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
+using Rakushu.Domain.Entities.Srs.QuestionType;
 using Rakushu.Domain.Entities.Srs.QuizAttempt;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.QuizAttempt.GetQuizAttemptResult;
@@ -37,7 +38,7 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 		if (attempt is null || attempt.UserId != userId)
 			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotFound);
 
-		if (attempt.Status != QuizAttemptStatus.Completed && attempt.Status != QuizAttemptStatus.Expired)
+		if (attempt.Status != QuizAttemptStatus.Completed)
 			return Result.Failure<QuizAttemptResultDto>(QuizAttemptErrors.NotCompleted);
 
 		var questionsDict = attempt.Quiz.Questions.ToDictionary(q => q.Id);
@@ -54,17 +55,15 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 			var item = entry.Item;
 			var question = entry.Question!;
 
-			bool isSkip = QuizAnswerHelper.IsSkip(item.SelectedAnswer);
+			var typeCode = question.QuestionType?.Code;
+
 			bool isCorrect = item.IsCorrect ?? false;
 			int timeSpentMs = item.TimeSpentMs;
 
-			int quality = isSkip ? 1
-				: !isCorrect ? 2
-				: timeSpentMs > 15_000 ? 3
-				: timeSpentMs >= 5_000 ? 4
-				: 5;
-
-			var typeCode = question.QuestionType?.Code;
+			int quality = SrsQuestionBenchmark.CalculateQuality(
+				isCorrect,
+				timeSpentMs,
+				question.QuestionType?.ExpectedDurationSeconds);
 			var isTyping = string.Equals(typeCode, "TYPE_READING", StringComparison.OrdinalIgnoreCase) ||
 			               string.Equals(typeCode, "TYPE_MEANING", StringComparison.OrdinalIgnoreCase) ||
 			               string.Equals(typeCode, "AUDIO_DICTATION", StringComparison.OrdinalIgnoreCase);
@@ -99,6 +98,7 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 
 			answerResults.Add(new QuizAnswerResultDto(
 				ItemId: question.Id.Value,
+				SavedItemId: question.SavedItemId.Value,
 				Sequence: question.Sequence,
 				Question: question.QuestionText,
 				Choices: choices,
@@ -109,10 +109,11 @@ internal sealed class GetQuizAttemptResultHandler : IRequestHandler<GetQuizAttem
 				Quality: quality,
 				Feedback: item.Feedback,
 				Explanation: question.BankQuestion?.Explanation,
-				QuestionType: typeCode,
+				QuestionType: typeCode ?? "PENDING_CURATION",
 				MediaType: question.MediaType,
 				MediaUrl: resolvedMediaUrl,
-				MediaMetadata: mediaMetadataDto));
+				MediaMetadata: mediaMetadataDto,
+				BankQuestionId: question.BankQuestionId?.Value));
 		}
 
 		return Result.Success(new QuizAttemptResultDto(

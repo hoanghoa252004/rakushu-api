@@ -21,11 +21,11 @@ internal sealed class DeleteMyIssue : IEndpoint
 				return result.MatchNoContent();
 			})
 			.WithName("DeleteMyIssue")
-			.WithSummary("Delete or withdraw a pending issue report submitted by current user")
-			.WithDescription("Allows learners to cancel/delete their own submitted feedback as long as the report is not already in review or resolved.")
+			.WithSummary("Learner")
+			.WithDescription("Cancels and withdraws a pending issue report submitted by the current learner before it is reviewed by a curator.")
 			.RequireAuthorization()
 			.Produces(StatusCodes.Status204NoContent)
-			.ProducesProblem(StatusCodes.Status400BadRequest)
+			.ProducesValidationProblem(StatusCodes.Status400BadRequest)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status404NotFound)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);
