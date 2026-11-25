@@ -70,18 +70,28 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 					.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
 			var snap = CurationContextHelper.DeserializeSnapshot(snapshotJson);
 
-			// Prioritize original reported snapshot title on Curator report list so Curator sees
-			// what was originally reported; post-edit changes are inspected in Report Detail.
-			string? targetTitle = CurationContextHelper.FormatSnapshotTitle(r.TargetType, snap);
-			if (string.IsNullOrWhiteSpace(targetTitle))
-			{
-				targetTitle = await ResolveTargetTitleAsync(r.TargetType, r.TargetId, cancellationToken);
-			}
-
 			int? startCharIdx = r.StartCharIndex ?? snap?.StartCharIndex;
 			int? endCharIdx = r.EndCharIndex ?? snap?.EndCharIndex;
 			string? selectedOovText = snap?.SelectedOovText
 				?? CurationContextHelper.ExtractOovText(snap?.OriginalSentenceJp, startCharIdx, endCharIdx);
+
+			// Prioritize original reported snapshot context on Curator report list so Curator sees
+			// what was originally reported; post-edit changes are inspected in Report Detail.
+			string? targetTitle = CurationContextHelper.FormatSnapshotTitle(r.TargetType, snap);
+			var targetPreview = CurationContextHelper.FormatSnapshotPreview(r.TargetType, r.Category, snap, selectedOovText);
+			if (string.IsNullOrWhiteSpace(targetTitle) || targetPreview is null)
+			{
+				var (fallbackTitle, fallbackPreview) = await ResolveTargetContextAsync(
+					r.TargetType,
+					r.TargetId,
+					r.Category,
+					startCharIdx,
+					endCharIdx,
+					selectedOovText,
+					cancellationToken);
+				targetTitle ??= fallbackTitle;
+				targetPreview ??= fallbackPreview;
+			}
 
 			dtos.Add(new CuratorReportSummaryDto(
 				r.Id.Value,
@@ -96,7 +106,11 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 				startCharIdx,
 				endCharIdx,
 				selectedOovText,
-				snap?.VideoSourceType));
+				snap?.VideoSourceType,
+				targetPreview?.Headline,
+				targetPreview?.Subline,
+				targetPreview?.HighlightText,
+				targetPreview?.IsHeadlineJapanese ?? false));
 		}
 
 		var pagedList = new PaginatedList<CuratorReportSummaryDto>(
@@ -108,9 +122,13 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 		return Result.Success(pagedList);
 	}
 
-	private async Task<string?> ResolveTargetTitleAsync(
+	private async Task<(string? TargetTitle, CuratorTargetPreviewDto? Preview)> ResolveTargetContextAsync(
 		TargetType targetType,
 		Guid targetId,
+		string category,
+		int? startCharIndex,
+		int? endCharIndex,
+		string? selectedOovText,
 		CancellationToken cancellationToken)
 	{
 		try
@@ -118,53 +136,166 @@ internal sealed class GetCuratorReportsHandler : IRequestHandler<GetCuratorRepor
 			switch (targetType)
 			{
 				case TargetType.BankQuestion:
+				{
 					var q = await _bankQuestionRepository.GetByIdWithDetailsAsync(
 						BankQuestionId.From(targetId), cancellationToken);
-					return q is not null ? $"Câu hỏi: {q.Question}" : null;
+					if (q is null)
+					{
+						return (null, null);
+					}
+
+					var plainQuestion = CurationContextHelper.StripHtmlToPlainText(q.Question);
+					var expr = q.KnowledgeMeaning?.KnowledgeUnit?.Expression?.Trim();
+					var meaning = q.KnowledgeMeaning?.Meaning?.Trim();
+					string? subline = !string.IsNullOrWhiteSpace(expr)
+						? !string.IsNullOrWhiteSpace(meaning) ? $"{expr} — {meaning}" : expr
+						: null;
+
+					return (
+						$"Câu hỏi: {q.Question}",
+						new CuratorTargetPreviewDto(
+							string.IsNullOrWhiteSpace(plainQuestion) ? q.Question : plainQuestion,
+							subline,
+							null,
+							false));
+				}
 
 				case TargetType.TranscriptSegment:
+				{
 					var seg = await _transcriptRepository.GetSegmentWithCurationContextByIdAsync(
 						TranscriptSegmentId.From(targetId), cancellationToken);
-					if (seg is not null)
+					if (seg is null)
 					{
-						var videoTitle = seg.Transcript?.Video?.Title ?? "Video bài học";
-						var timestamp = CurationContextHelper.FormatTimestamp(seg.StartTime.TotalSeconds);
-						return $"Video: {videoTitle} ({timestamp})";
+						return (null, null);
 					}
-					return null;
+
+					var videoTitle = seg.Transcript?.Video?.Title ?? "Video bài học";
+					var timestamp = CurationContextHelper.FormatTimestamp(seg.StartTime.TotalSeconds);
+					var sentenceJp = seg.Text?.Trim();
+					var isOov = string.Equals(category, CurationContextHelper.OovCategory, StringComparison.OrdinalIgnoreCase);
+					var isWrongSpeaker = string.Equals(category, CurationContextHelper.WrongSpeakerCategory, StringComparison.OrdinalIgnoreCase);
+					var oov = !string.IsNullOrWhiteSpace(selectedOovText)
+						? selectedOovText.Trim()
+						: CurationContextHelper.ExtractOovText(sentenceJp, startCharIndex, endCharIndex);
+					var speakerName = !string.IsNullOrWhiteSpace(seg.TranscriptSpeaker?.Speaker?.Name)
+						? seg.TranscriptSpeaker.Speaker.Name.Trim()
+						: !string.IsNullOrWhiteSpace(seg.TranscriptSpeaker?.Label)
+							? seg.TranscriptSpeaker.Label.Trim()
+							: null;
+
+					var headline = !string.IsNullOrWhiteSpace(sentenceJp) ? sentenceJp : videoTitle;
+					var sublineParts = new List<string>(3);
+					if (!string.IsNullOrWhiteSpace(sentenceJp))
+					{
+						sublineParts.Add(videoTitle);
+					}
+
+					sublineParts.Add(timestamp);
+					if (isWrongSpeaker)
+					{
+						sublineParts.Add($"Vai: {speakerName ?? "Chưa gán vai"}");
+					}
+
+					return (
+						$"Video: {videoTitle} ({timestamp})",
+						new CuratorTargetPreviewDto(
+							headline,
+							string.Join(" • ", sublineParts),
+							isOov && !string.IsNullOrWhiteSpace(sentenceJp) && !string.IsNullOrWhiteSpace(oov) ? oov : null,
+							!string.IsNullOrWhiteSpace(sentenceJp)));
+				}
 
 				case TargetType.LearningUnit:
+				{
 					var (lu, _) = await _learningUnitRepository.GetCurationContextByIdAsync(
 						LearningUnitId.From(targetId), cancellationToken);
-					if (lu is not null)
+					if (lu is null)
 					{
-						var videoTitle = lu.TranscriptSegment?.Transcript?.Video?.Title;
-						var expr = lu.KnowledgeMeaning?.KnowledgeUnit?.Expression;
-						return !string.IsNullOrEmpty(videoTitle)
-							? $"Video: {videoTitle} - Cụm 「{expr}」"
-							: $"Đơn vị học: 「{expr}」";
+						return (null, null);
 					}
-					return null;
+
+					var seg = lu.TranscriptSegment;
+					var videoTitle = seg?.Transcript?.Video?.Title;
+					var sentenceJp = seg?.Text?.Trim();
+					var ts = seg is not null ? CurationContextHelper.FormatTimestamp(seg.StartTime.TotalSeconds) : null;
+					var expr = lu.KnowledgeMeaning?.KnowledgeUnit?.Expression?.Trim();
+
+					var title = !string.IsNullOrEmpty(videoTitle)
+						? $"Video: {videoTitle} - Cụm 「{expr}」"
+						: $"Đơn vị học: 「{expr}」";
+
+					var headline = !string.IsNullOrWhiteSpace(sentenceJp)
+						? sentenceJp
+						: !string.IsNullOrWhiteSpace(expr)
+							? expr
+							: videoTitle;
+
+					var sublineParts = new List<string>(3);
+					if (!string.IsNullOrWhiteSpace(videoTitle) && !string.Equals(headline, videoTitle, StringComparison.Ordinal))
+					{
+						sublineParts.Add(videoTitle);
+					}
+
+					if (!string.IsNullOrWhiteSpace(ts))
+					{
+						sublineParts.Add(ts);
+					}
+
+					if (!string.IsNullOrWhiteSpace(expr) && !string.Equals(headline, expr, StringComparison.Ordinal))
+					{
+						sublineParts.Add(expr);
+					}
+
+					return (
+						title,
+						string.IsNullOrWhiteSpace(headline)
+							? null
+							: new CuratorTargetPreviewDto(
+								headline,
+								sublineParts.Count > 0 ? string.Join(" • ", sublineParts) : null,
+								!string.IsNullOrWhiteSpace(sentenceJp) && !string.IsNullOrWhiteSpace(expr) ? expr : null,
+								!string.IsNullOrWhiteSpace(sentenceJp) || !string.IsNullOrWhiteSpace(expr)));
+				}
 
 				case TargetType.ShadowingAttempt:
+				{
 					var attemptCtx = await _learnerAnalyticsQueryService.GetAttemptAssessmentsContextAsync(
 						ShadowingAttemptId.From(targetId), cancellationToken);
-					if (attemptCtx is not null)
+					if (attemptCtx is null)
 					{
-						var roleSuffix = !string.IsNullOrWhiteSpace(attemptCtx.RoleName)
-							? $" ({attemptCtx.RoleName})"
-							: string.Empty;
-						return $"Shadowing: {attemptCtx.MaterialName}{roleSuffix}";
+						return (null, null);
 					}
-					return null;
+
+					var roleSuffix = !string.IsNullOrWhiteSpace(attemptCtx.RoleName)
+						? $" ({attemptCtx.RoleName})"
+						: string.Empty;
+					var sublineParts = new List<string>(2);
+					if (!string.IsNullOrWhiteSpace(attemptCtx.RoleName))
+					{
+						sublineParts.Add($"Vai: {attemptCtx.RoleName.Trim()}");
+					}
+
+					if (!string.IsNullOrWhiteSpace(attemptCtx.LearnerName))
+					{
+						sublineParts.Add(attemptCtx.LearnerName.Trim());
+					}
+
+					return (
+						$"Shadowing: {attemptCtx.MaterialName}{roleSuffix}",
+						new CuratorTargetPreviewDto(
+							attemptCtx.MaterialName,
+							sublineParts.Count > 0 ? string.Join(" • ", sublineParts) : null,
+							null,
+							false));
+				}
 
 				default:
-					return null;
+					return (null, null);
 			}
 		}
 		catch
 		{
-			return null;
+			return (null, null);
 		}
 	}
 }

@@ -114,6 +114,12 @@ public sealed record LearnerIssueSummaryDto(
 	int ResolvedCount,
 	int DismissedCount);
 
+public sealed record CuratorTargetPreviewDto(
+	string? Headline,
+	string? Subline,
+	string? HighlightText,
+	bool IsHeadlineJapanese);
+
 public sealed record CuratorReportSummaryDto(
 	Guid ReportId,
 	string TargetType,
@@ -127,7 +133,11 @@ public sealed record CuratorReportSummaryDto(
 	int? StartCharIndex = null,
 	int? EndCharIndex = null,
 	string? SelectedOovText = null,
-	string? VideoSourceType = null);
+	string? VideoSourceType = null,
+	string? TargetHeadline = null,
+	string? TargetSubline = null,
+	string? TargetHighlightText = null,
+	bool IsHeadlineJapanese = false);
 
 public sealed record CuratorReportDetailDto(
 	Guid ReportId,

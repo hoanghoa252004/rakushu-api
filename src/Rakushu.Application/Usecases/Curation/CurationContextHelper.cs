@@ -372,6 +372,171 @@ public static class CurationContextHelper
 		return $"{mins:D2}:{secs:D2}";
 	}
 
+	public static CuratorTargetPreviewDto? FormatSnapshotPreview(
+		TargetType targetType,
+		string? category,
+		CurationTargetSnapshotDto? snapshot,
+		string? selectedOovText = null)
+	{
+		if (snapshot is null)
+		{
+			return null;
+		}
+
+		switch (targetType)
+		{
+			case TargetType.BankQuestion:
+			{
+				var plainQuestion = StripHtmlToPlainText(snapshot.QuestionTitle);
+				if (string.IsNullOrWhiteSpace(plainQuestion))
+				{
+					return null;
+				}
+
+				var expr = snapshot.Expression?.Trim();
+				var meaning = snapshot.Meaning?.Trim();
+				string? subline = !string.IsNullOrWhiteSpace(expr)
+					? !string.IsNullOrWhiteSpace(meaning) ? $"{expr} — {meaning}" : expr
+					: null;
+
+				return new CuratorTargetPreviewDto(plainQuestion, subline, null, false);
+			}
+
+			case TargetType.TranscriptSegment:
+			{
+				var sentenceJp = snapshot.OriginalSentenceJp?.Trim();
+				var videoTitle = snapshot.VideoTitle?.Trim();
+				var ts = snapshot.StartTimeSeconds.HasValue
+					? FormatTimestamp(snapshot.StartTimeSeconds.Value)
+					: null;
+				var isOov = string.Equals(category, OovCategory, StringComparison.OrdinalIgnoreCase);
+				var isWrongSpeaker = string.Equals(category, WrongSpeakerCategory, StringComparison.OrdinalIgnoreCase);
+				var oov = !string.IsNullOrWhiteSpace(selectedOovText)
+					? selectedOovText.Trim()
+					: (snapshot.SelectedOovText ?? snapshot.TargetToken)?.Trim();
+				var speakerName = !string.IsNullOrWhiteSpace(snapshot.SpeakerName)
+					? snapshot.SpeakerName.Trim()
+					: !string.IsNullOrWhiteSpace(snapshot.SpeakerLabel)
+						? snapshot.SpeakerLabel.Trim()
+						: null;
+
+				var headline = !string.IsNullOrWhiteSpace(sentenceJp) ? sentenceJp : videoTitle;
+				if (string.IsNullOrWhiteSpace(headline))
+				{
+					return null;
+				}
+
+				var sublineParts = new List<string>(3);
+				if (!string.IsNullOrWhiteSpace(sentenceJp) && !string.IsNullOrWhiteSpace(videoTitle))
+				{
+					sublineParts.Add(videoTitle);
+				}
+
+				if (!string.IsNullOrWhiteSpace(ts))
+				{
+					sublineParts.Add(ts);
+				}
+
+				if (isWrongSpeaker)
+				{
+					sublineParts.Add($"Vai: {speakerName ?? "Chưa gán vai"}");
+				}
+
+				return new CuratorTargetPreviewDto(
+					headline,
+					sublineParts.Count > 0 ? string.Join(" • ", sublineParts) : null,
+					isOov && !string.IsNullOrWhiteSpace(sentenceJp) && !string.IsNullOrWhiteSpace(oov) ? oov : null,
+					!string.IsNullOrWhiteSpace(sentenceJp));
+			}
+
+			case TargetType.LearningUnit:
+			{
+				var sentenceJp = snapshot.OriginalSentenceJp?.Trim();
+				var videoTitle = snapshot.VideoTitle?.Trim();
+				var ts = snapshot.StartTimeSeconds.HasValue
+					? FormatTimestamp(snapshot.StartTimeSeconds.Value)
+					: null;
+				var reportedToken = (!string.IsNullOrWhiteSpace(snapshot.TargetToken)
+					? snapshot.TargetToken
+					: snapshot.Expression)?.Trim();
+
+				var headline = !string.IsNullOrWhiteSpace(sentenceJp)
+					? sentenceJp
+					: !string.IsNullOrWhiteSpace(reportedToken)
+						? reportedToken
+						: videoTitle;
+
+				if (string.IsNullOrWhiteSpace(headline))
+				{
+					return null;
+				}
+
+				var sublineParts = new List<string>(3);
+				if (!string.IsNullOrWhiteSpace(videoTitle) && !string.Equals(headline, videoTitle, StringComparison.Ordinal))
+				{
+					sublineParts.Add(videoTitle);
+				}
+
+				if (!string.IsNullOrWhiteSpace(ts))
+				{
+					sublineParts.Add(ts);
+				}
+
+				if (!string.IsNullOrWhiteSpace(reportedToken) && !string.Equals(headline, reportedToken, StringComparison.Ordinal))
+				{
+					sublineParts.Add(reportedToken);
+				}
+
+				return new CuratorTargetPreviewDto(
+					headline,
+					sublineParts.Count > 0 ? string.Join(" • ", sublineParts) : null,
+					!string.IsNullOrWhiteSpace(sentenceJp) && !string.IsNullOrWhiteSpace(reportedToken) ? reportedToken : null,
+					!string.IsNullOrWhiteSpace(sentenceJp) || !string.IsNullOrWhiteSpace(reportedToken));
+			}
+
+			case TargetType.ShadowingAttempt:
+			{
+				var materialName = (snapshot.ShadowingMaterialName ?? snapshot.VideoTitle)?.Trim();
+				var headline = !string.IsNullOrWhiteSpace(materialName) ? materialName : "Luyện Shadowing";
+
+				var sublineParts = new List<string>(3);
+				if (!string.IsNullOrWhiteSpace(snapshot.ShadowingRoleName))
+				{
+					sublineParts.Add($"Vai: {snapshot.ShadowingRoleName.Trim()}");
+				}
+
+				if (snapshot.ShadowingOverallScore.HasValue)
+				{
+					sublineParts.Add($"{snapshot.ShadowingOverallScore.Value.ToString("0.#", CultureInfo.InvariantCulture)} điểm");
+				}
+
+				if (sublineParts.Count < 2 && !string.IsNullOrWhiteSpace(snapshot.ShadowingLearnerName))
+				{
+					sublineParts.Add(snapshot.ShadowingLearnerName.Trim());
+				}
+
+				return new CuratorTargetPreviewDto(
+					headline,
+					sublineParts.Count > 0 ? string.Join(" • ", sublineParts) : null,
+					null,
+					false);
+			}
+
+			default:
+			{
+				var fallback = StripHtmlToPlainText(snapshot.QuestionTitle);
+				if (string.IsNullOrWhiteSpace(fallback))
+				{
+					fallback = snapshot.VideoTitle?.Trim();
+				}
+
+				return string.IsNullOrWhiteSpace(fallback)
+					? null
+					: new CuratorTargetPreviewDto(fallback, null, null, false);
+			}
+		}
+	}
+
 	public static string? FormatSnapshotTitle(TargetType targetType, CurationTargetSnapshotDto? snapshot)
 	{
 		if (snapshot is null)
