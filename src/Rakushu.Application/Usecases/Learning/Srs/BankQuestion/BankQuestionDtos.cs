@@ -20,6 +20,7 @@ public sealed record BankQuestionSummaryDto(
 	string Question,
 	bool IsActive,
 	QuestionStatus Status,
+	QuestionSourceType SourceType,
 	DateTimeOffset CreatedAt,
 	string MediaType = "NONE",
 	string? MediaUrl = null,
@@ -38,6 +39,7 @@ public sealed record BankQuestionDetailDto(
 	string? Explanation,
 	bool IsActive,
 	QuestionStatus Status,
+	QuestionSourceType SourceType,
 	DateTimeOffset? ReviewedAt,
 	DateTimeOffset CreatedAt,
 	DateTimeOffset UpdatedAt,
@@ -58,6 +60,7 @@ public sealed record BankQuestionReviewItemDto(
 	string Question,
 	bool IsActive,
 	QuestionStatus Status,
+	QuestionSourceType SourceType,
 	string MediaType,
 	DateTimeOffset CreatedAt);
 

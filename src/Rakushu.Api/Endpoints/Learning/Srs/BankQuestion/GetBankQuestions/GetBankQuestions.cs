@@ -20,6 +20,7 @@ internal sealed class GetBankQuestions : IEndpoint
 				[FromQuery] Guid? questionTypeId,
 				[FromQuery] bool? isActive,
 				[FromQuery] QuestionStatus? status,
+				[FromQuery] QuestionSourceType? sourceType,
 				[FromQuery] int? page,
 				[FromQuery] int? pageSize,
 				ISender sender,
@@ -30,6 +31,7 @@ internal sealed class GetBankQuestions : IEndpoint
 					questionTypeId,
 					isActive,
 					status,
+					sourceType,
 					page <= 0 ? 1 : page ?? 1,
 					pageSize <= 0 ? 20 : pageSize ?? 20);
 
@@ -39,7 +41,7 @@ internal sealed class GetBankQuestions : IEndpoint
 			// 2. Description
 			.WithName("GetBankQuestions")
 			.WithSummary("Curator")
-			.WithDescription("Retrieves a paginated list of bank questions with optional filters by knowledge meaning, question type, review status (Draft, Published), and active status.")
+			.WithDescription("Retrieves a paginated list of bank questions with optional filters by knowledge meaning, question type, review status (Draft, Published), source type (Curator, Ai), and active status.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			// 4. Response

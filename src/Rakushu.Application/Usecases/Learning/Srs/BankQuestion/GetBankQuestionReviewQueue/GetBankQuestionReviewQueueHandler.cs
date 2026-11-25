@@ -23,6 +23,7 @@ internal sealed class GetBankQuestionReviewQueueHandler
 
 		var (items, totalCount) = await _bankQuestionRepository.GetReviewQueueAsync(
 			request.Status,
+			request.SourceType,
 			request.Level,
 			request.QuestionTypeCode,
 			request.MediaType,
@@ -47,6 +48,7 @@ internal sealed class GetBankQuestionReviewQueueHandler
 			bq.Question,
 			bq.IsActive,
 			bq.Status,
+			bq.SourceType,
 			string.IsNullOrWhiteSpace(bq.MediaType) ? "NONE" : bq.MediaType.Trim().ToUpperInvariant(),
 			bq.CreatedAt)).ToList();
 

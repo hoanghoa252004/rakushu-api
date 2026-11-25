@@ -6,6 +6,7 @@ namespace Rakushu.Application.Usecases.Learning.Srs.BankQuestion.GetBankQuestion
 
 public sealed record GetBankQuestionReviewQueueQuery(
 	QuestionStatus? Status = QuestionStatus.Draft,
+	QuestionSourceType? SourceType = null,
 	string? Level = null,
 	string? QuestionTypeCode = null,
 	string? MediaType = null,

@@ -27,12 +27,14 @@ public interface IBankQuestionRepository : IBaseRepository<BankQuestion, BankQue
 		Guid? questionTypeId = null,
 		bool? isActive = null,
 		QuestionStatus? status = null,
+		QuestionSourceType? sourceType = null,
 		int page = 1,
 		int pageSize = 20,
 		CancellationToken cancellationToken = default);
 
 	Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetReviewQueueAsync(
 		QuestionStatus? status = QuestionStatus.Draft,
+		QuestionSourceType? sourceType = null,
 		string? level = null,
 		string? questionTypeCode = null,
 		string? mediaType = null,

@@ -15,6 +15,7 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 	public string? Explanation { get; private set; }
 	public bool IsActive { get; private set; }
 	public QuestionStatus Status { get; private set; } = QuestionStatus.Published;
+	public QuestionSourceType SourceType { get; private set; } = QuestionSourceType.Curator;
 	public DateTimeOffset? ReviewedAt { get; private set; }
 	public string MediaType { get; private set; } = "NONE";
 	public string? MediaUrl { get; private set; }
@@ -57,6 +58,7 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
 			IsActive = isActive,
 			Status = QuestionStatus.Published,
+			SourceType = QuestionSourceType.Curator,
 			ReviewedAt = now,
 			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant(),
 			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim(),
@@ -92,6 +94,7 @@ public sealed class BankQuestion : AggregateRoot<BankQuestionId>
 			Explanation = string.IsNullOrWhiteSpace(explanation) ? null : explanation.Trim(),
 			IsActive = false,
 			Status = QuestionStatus.Draft,
+			SourceType = QuestionSourceType.Ai,
 			ReviewedAt = null,
 			MediaType = string.IsNullOrWhiteSpace(mediaType) ? "NONE" : mediaType.Trim().ToUpperInvariant(),
 			MediaUrl = string.IsNullOrWhiteSpace(mediaUrl) ? null : mediaUrl.Trim(),

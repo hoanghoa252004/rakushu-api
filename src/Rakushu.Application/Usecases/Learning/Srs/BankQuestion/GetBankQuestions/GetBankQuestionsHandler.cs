@@ -30,6 +30,7 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 			request.QuestionTypeId,
 			request.IsActive,
 			request.Status,
+			request.SourceType,
 			page,
 			pageSize,
 			cancellationToken);
@@ -44,6 +45,7 @@ internal sealed class GetBankQuestionsHandler : IRequestHandler<GetBankQuestions
 			bq.Question,
 			bq.IsActive,
 			bq.Status,
+			bq.SourceType,
 			bq.CreatedAt,
 			bq.MediaType,
 			bq.MediaUrl,

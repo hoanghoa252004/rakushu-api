@@ -74,6 +74,7 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		Guid? questionTypeId = null,
 		bool? isActive = null,
 		QuestionStatus? status = null,
+		QuestionSourceType? sourceType = null,
 		int page = 1,
 		int pageSize = 20,
 		CancellationToken cancellationToken = default)
@@ -100,6 +101,11 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 			query = query.Where(bq => bq.Status == status.Value);
 		}
 
+		if (sourceType.HasValue)
+		{
+			query = query.Where(bq => bq.SourceType == sourceType.Value);
+		}
+
 		if (isActive.HasValue)
 		{
 			query = query.Where(bq => bq.IsActive == isActive.Value);
@@ -118,6 +124,7 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 
 	public async Task<(IReadOnlyList<BankQuestion> Items, int TotalCount)> GetReviewQueueAsync(
 		QuestionStatus? status = QuestionStatus.Draft,
+		QuestionSourceType? sourceType = null,
 		string? level = null,
 		string? questionTypeCode = null,
 		string? mediaType = null,
@@ -137,6 +144,11 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		if (status.HasValue)
 		{
 			query = query.Where(bq => bq.Status == status.Value);
+		}
+
+		if (sourceType.HasValue)
+		{
+			query = query.Where(bq => bq.SourceType == sourceType.Value);
 		}
 
 		if (!string.IsNullOrWhiteSpace(level) && !string.Equals(level.Trim(), "ALL", StringComparison.OrdinalIgnoreCase))

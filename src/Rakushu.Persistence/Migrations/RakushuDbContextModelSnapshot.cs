@@ -2668,10 +2668,20 @@ namespace Rakushu.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("reviewed_at");
 
-                    b.Property<int>("Status")
+                    b.Property<string>("SourceType")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(2)
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Curator")
+                        .HasColumnName("source_type");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Published")
                         .HasColumnName("status");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -2686,6 +2696,9 @@ namespace Rakushu.Persistence.Migrations
 
                     b.HasIndex("QuestionTypeId")
                         .HasDatabaseName("ix_questions_question_type_id");
+
+                    b.HasIndex("SourceType")
+                        .HasDatabaseName("ix_questions_source_type");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_questions_status");

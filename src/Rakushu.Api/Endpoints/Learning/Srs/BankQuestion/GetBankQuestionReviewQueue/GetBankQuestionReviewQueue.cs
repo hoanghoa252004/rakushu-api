@@ -17,6 +17,7 @@ internal sealed class GetBankQuestionReviewQueue : IEndpoint
 			// 1. Endpoint
 			.MapGet("/review-queue", async (
 				[FromQuery] QuestionStatus? status,
+				[FromQuery] QuestionSourceType? sourceType,
 				[FromQuery] string? level,
 				[FromQuery] string? questionTypeCode,
 				[FromQuery] string? mediaType,
@@ -28,6 +29,7 @@ internal sealed class GetBankQuestionReviewQueue : IEndpoint
 			{
 				var query = new GetBankQuestionReviewQueueQuery(
 					status ?? QuestionStatus.Draft,
+					sourceType,
 					level,
 					questionTypeCode,
 					mediaType,
@@ -41,7 +43,7 @@ internal sealed class GetBankQuestionReviewQueue : IEndpoint
 			// 2. Description
 			.WithName("GetBankQuestionReviewQueue")
 			.WithSummary("Curator, Administrator")
-			.WithDescription("Retrieves a paginated review queue of bank questions (defaulting to Draft) with filters by JLPT level, question type code, media type, and search keyword.")
+			.WithDescription("Retrieves a paginated review queue of bank questions (defaulting to Draft) with filters by source type (Curator, Ai), JLPT level, question type code, media type, and search keyword.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			// 4. Response

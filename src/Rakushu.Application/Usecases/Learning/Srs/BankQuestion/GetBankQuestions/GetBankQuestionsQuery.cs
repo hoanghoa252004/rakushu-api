@@ -9,5 +9,6 @@ public sealed record GetBankQuestionsQuery(
 	Guid? QuestionTypeId = null,
 	bool? IsActive = null,
 	QuestionStatus? Status = null,
+	QuestionSourceType? SourceType = null,
 	int Page = 1,
 	int PageSize = 20) : IRequest<Result<IReadOnlyList<BankQuestionSummaryDto>>>;
