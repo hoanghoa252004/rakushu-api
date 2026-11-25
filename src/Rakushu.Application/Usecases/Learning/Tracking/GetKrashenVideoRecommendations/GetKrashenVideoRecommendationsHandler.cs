@@ -14,6 +14,8 @@ internal sealed class GetKrashenVideoRecommendationsHandler
 	: IRequestHandler<GetKrashenVideoRecommendationsQuery, Result<IReadOnlyList<KrashenVideoRecommendationDto>>>
 {
 	private const double IdealKnownRatio = 0.825; // Krashen i+1 sweet spot: 80% - 85% known
+	private const int MaxComprehensibilityScore = 99;
+	private const int FullReviewComprehensibilityScore = 75;
 	private const int MinEffectiveEncounterCountForKnown = 3;
 	private const int MinSrsRepetitionsForKnown = 2;
 	private const int MinSrsIntervalDaysForKnown = 6;
@@ -97,6 +99,14 @@ internal sealed class GetKrashenVideoRecommendationsHandler
 			.Concat(knownBySrs)
 			.ToHashSet();
 
+		// Cold-start guard (Option A): Krashen i+1 requires at least 1 known vocabulary unit
+		// (encountered >= 3 times or graduated in SRS); brand-new learners receive empty list
+		// so UI does not show misleading "0% known / 15% match" cards.
+		if (knownKnowledgeUnitIds.Count == 0)
+		{
+			return Result.Success<IReadOnlyList<KrashenVideoRecommendationDto>>([]);
+		}
+
 		var user = await _userRepository.GetProfileByIdAsync(userId, cancellationToken);
 		var interestCategoryIds = user?.Profile?.Interests
 			.Select(i => i.ContentCategoryId)
@@ -125,12 +135,16 @@ internal sealed class GetKrashenVideoRecommendationsHandler
 			}
 
 			int knownCount = distinctVideoUnitIds.Count(uid => knownKnowledgeUnitIds.Contains(uid));
+			if (knownCount == 0)
+			{
+				continue;
+			}
+
 			int newCount = Math.Max(0, totalVocab - knownCount);
 			double knownRatio = Math.Round((double)knownCount / totalVocab, 4);
 
-			// Distance from Krashen i+1 sweet spot (0.825 = 82.5% known, 17.5% new)
-			double distance = Math.Abs(knownRatio - IdealKnownRatio);
-			int comprehensibilityScore = (int)Math.Clamp(Math.Round((1.0 - Math.Min(1.0, distance * 1.6)) * 100.0), 15, 99);
+			// Two-sided piecewise linear score around Krashen i+1 peak (0% -> 99% at 82.5% -> 75% at 100%)
+			int comprehensibilityScore = CalculateComprehensibilityScore(knownRatio);
 
 			string difficultyLabel;
 			string reason;
@@ -206,5 +220,17 @@ internal sealed class GetKrashenVideoRecommendationsHandler
 			.ToList();
 
 		return Result.Success<IReadOnlyList<KrashenVideoRecommendationDto>>(ordered);
+	}
+
+	private static int CalculateComprehensibilityScore(double knownRatio)
+	{
+		double clampedRatio = Math.Clamp(knownRatio, 0.0, 1.0);
+		double rawScore = clampedRatio <= IdealKnownRatio
+			? (clampedRatio / IdealKnownRatio) * MaxComprehensibilityScore
+			: MaxComprehensibilityScore
+				- ((clampedRatio - IdealKnownRatio) / (1.0 - IdealKnownRatio))
+				* (MaxComprehensibilityScore - FullReviewComprehensibilityScore);
+
+		return (int)Math.Clamp(Math.Round(rawScore), 0, MaxComprehensibilityScore);
 	}
 }
