@@ -69,7 +69,7 @@ public static class InfrastructureServiceCollectionExtensions
 		services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
 
 		// AI SERVICE CLIENT
-		services.AddHttpClient<IQuizContentGenerator, OllamaQuizContentGenerator>();
+		services.AddScoped<IQuizContentGenerator, BedrockQuizContentGenerator>();
 
 		// SPEECH ASSESSMENT
 		services.AddHttpClient<Rakushu.Application.Abstractions.Infrastructure.Assessment.ISpeechAssessmentService, Rakushu.Infrastructure.Assessment.SpeechAssessmentService>(
