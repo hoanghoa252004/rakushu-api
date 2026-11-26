@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
@@ -15,16 +16,17 @@ internal sealed class GetSrsDashboardMetrics : IEndpoint
 	{
 		app.MapSrsScheduleEndpoints()
 			.MapGet("/metrics", async (
+				[FromQuery] string? timeZone,
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
-				var query = new GetSrsDashboardMetricsQuery();
+				var query = new GetSrsDashboardMetricsQuery(timeZone);
 				var result = await sender.Send(query, cancellationToken);
 				return result.MatchOk();
 			})
 			.WithName("GetSrsScheduleMetrics")
 			.WithSummary("Learner")
-			.WithDescription("Retrieves aggregate learning statistics including due counts, true retention rate (30-day logs), leech count, and mastery rate.")
+			.WithDescription("Retrieves aggregate learning statistics including due counts (aligned to optional IANA/Windows timeZone, defaulting to Asia/Ho_Chi_Minh), true retention rate (30-day logs), leech count, and mastery rate.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<SrsDashboardMetricsDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

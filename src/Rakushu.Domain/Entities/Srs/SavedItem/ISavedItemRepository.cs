@@ -48,6 +48,8 @@ public interface ISavedItemRepository : IBaseRepository<SavedItem, SavedItemId>
 	Task<SrsDashboardMetrics> GetDashboardMetricsAsync(
 		UserId userId,
 		DateTimeOffset now,
+		DateTimeOffset? startOfTodayUtc = null,
+		DateTimeOffset? endOfTodayUtc = null,
 		CancellationToken cancellationToken = default);
 
 	Task<bool> HasAnyWithMeaningIdAsync(

@@ -216,9 +216,13 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 	public async Task<SrsDashboardMetrics> GetDashboardMetricsAsync(
 		UserId userId,
 		DateTimeOffset now,
+		DateTimeOffset? startOfTodayUtc = null,
+		DateTimeOffset? endOfTodayUtc = null,
 		CancellationToken cancellationToken = default)
 	{
-		var today = now.Date;
+		var todayStartUtc = startOfTodayUtc
+			?? new DateTimeOffset(now.Year, now.Month, now.Day, 0, 0, 0, now.Offset);
+		var todayEndUtc = endOfTodayUtc ?? todayStartUtc.AddDays(1);
 		var thirtyDaysAgo = now.AddDays(-30);
 
 		// 1. Load active saved items for this user with schedule and latest detail
@@ -252,12 +256,11 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 		{
 			if (item.DueAt.HasValue)
 			{
-				var dueDate = item.DueAt.Value.Date;
-				if (dueDate < today)
+				if (item.DueAt.Value < todayStartUtc)
 				{
 					overdueCount++;
 				}
-				else if (dueDate == today || item.DueAt.Value <= now)
+				else if (item.DueAt.Value < todayEndUtc)
 				{
 					dueTodayCount++;
 				}

@@ -1,6 +1,7 @@
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Common.Time;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.SavedItem;
@@ -34,7 +35,16 @@ internal sealed class GetSrsDashboardMetricsHandler : IRequestHandler<GetSrsDash
 		}
 
 		var now = _systemClock.UtcNow;
-		var metrics = await _savedItemRepository.GetDashboardMetricsAsync(userId, now, cancellationToken);
+		var timeZone = AnalyticsTimeZoneHelper.ResolveTimeZone(request.TimeZone);
+		var localToday = AnalyticsTimeZoneHelper.GetLocalToday(now, timeZone);
+		var (todayStartUtc, todayEndUtc) = AnalyticsTimeZoneHelper.GetUtcBoundsForLocalDate(localToday, timeZone);
+
+		var metrics = await _savedItemRepository.GetDashboardMetricsAsync(
+			userId,
+			now,
+			todayStartUtc,
+			todayEndUtc,
+			cancellationToken);
 
 		var dto = new SrsDashboardMetricsDto(
 			metrics.TotalDueCount,

@@ -1,5 +1,7 @@
+using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Rakushu.Application.Abstractions.Infrastructure.Ai;
 using Rakushu.Application.Abstractions.Infrastructure.AiService;
@@ -10,6 +12,11 @@ public sealed class BedrockQuizContentGenerator : IQuizContentGenerator
 {
 	private const int MaxQuizContentChunkSize = 5;
 	private const int MaxFeedbackChunkSize = 8;
+	private static readonly TimeSpan RegexMatchTimeout = TimeSpan.FromMilliseconds(250);
+	private static readonly Regex BrTagRegex = new(@"<\s*br\s*/?\s*>", RegexOptions.IgnoreCase | RegexOptions.Compiled, RegexMatchTimeout);
+	private static readonly Regex BlockCloseTagRegex = new(@"</\s*(p|div|li|h[1-6]|blockquote)\s*>", RegexOptions.IgnoreCase | RegexOptions.Compiled, RegexMatchTimeout);
+	private static readonly Regex HtmlTagRegex = new(@"</?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*?)?/?>", RegexOptions.Compiled, RegexMatchTimeout);
+	private static readonly Regex MultiWhitespaceRegex = new(@"[ \t]{2,}", RegexOptions.Compiled, RegexMatchTimeout);
 
 	private static readonly JsonDocumentOptions LenientJsonOptions = new()
 	{
@@ -177,6 +184,7 @@ public sealed class BedrockQuizContentGenerator : IQuizContentGenerator
 			     + Kết thúc câu hỏi BẮT BUỘC bằng định dạng chuẩn: Từ/ngữ pháp 「từ_vựng」 trong câu trên mang ý nghĩa gì?
 			     + Định dạng mẫu: [Bối cảnh giao tiếp tự nhiên]: "[Câu thoại trích dẫn]" Từ/ngữ pháp 「[Từ/ngữ pháp mục tiêu]」 trong câu trên mang ý nghĩa gì?
 			  3. Viết lời giải thích ngắn gọn, rõ ràng bằng tiếng Việt (trường "explanation") về ý nghĩa tiếng Việt, cách đọc Hiragana và sắc thái thực tế của từ vựng trong câu thoại.
+			- Chỉ dùng văn bản thuần (plain text), TUYỆT ĐỐI KHÔNG dùng thẻ HTML như <p>, <br>, <b>, <div>.
 			- BẮT BUỘC trả về đủ tất cả {{chunk.Count}} mục ứng với đúng meaningId tương ứng.
 
 			QUAN TRỌNG VỀ ĐỊNH DẠNG ĐẦU RA:
@@ -231,8 +239,8 @@ public sealed class BedrockQuizContentGenerator : IQuizContentGenerator
 				el.TryGetProperty("explanation", out var expProp) &&
 				expProp.ValueKind == JsonValueKind.String)
 			{
-				var promptText = promptProp.GetString()?.Trim();
-				var expText = expProp.GetString()?.Trim();
+				var promptText = SanitizePlainText(promptProp.GetString());
+				var expText = SanitizePlainText(expProp.GetString());
 
 				if (!string.IsNullOrWhiteSpace(promptText) && !string.IsNullOrWhiteSpace(expText))
 				{
@@ -347,6 +355,7 @@ public sealed class BedrockQuizContentGenerator : IQuizContentGenerator
 				- Nếu đúng liên tiếp nhiều lần: khen ngợi khả năng ghi nhớ vững vàng, phong độ ổn định.
 				- Nếu là lần đầu: động viên khởi đầu tốt.
 				- Xưng hô thân thiện là 'Bạn'.
+				- Chỉ dùng văn bản thuần (plain text), TUYỆT ĐỐI KHÔNG dùng thẻ HTML như <p>, <br>, <b>, <div>.
 				- BẮT BUỘC trả về đủ tất cả {{items.Count}} câu trong mảng feedback (từ index 1 đến index {{items.Count}}).
 
 				QUAN TRỌNG VỀ ĐỊNH DẠNG ĐẦU RA:
@@ -367,6 +376,7 @@ public sealed class BedrockQuizContentGenerator : IQuizContentGenerator
 				  + Nếu sai nhiều lần liên tiếp: động viên học viên kiên trì, đừng nản lòng, gợi ý nên ghi chú lại hoặc đặt câu ví dụ để khắc sâu.
 				  + Nếu là lần đầu làm sai: động viên tinh thần, nhắc học viên chú ý ôn tập lại.
 				- Xưng hô thân thiện là 'Bạn'.
+				- Chỉ dùng văn bản thuần (plain text), TUYỆT ĐỐI KHÔNG dùng thẻ HTML như <p>, <br>, <b>, <div>.
 				- BẮT BUỘC trả về đủ tất cả {{items.Count}} câu trong mảng feedback (từ index 1 đến index {{items.Count}}).
 
 				QUAN TRỌNG VỀ ĐỊNH DẠNG ĐẦU RA:
@@ -434,10 +444,13 @@ public sealed class BedrockQuizContentGenerator : IQuizContentGenerator
 			if (targetIndex.HasValue && itemByIndex.TryGetValue(targetIndex.Value, out var questionId))
 			{
 				if (element.TryGetProperty("message", out var messageElement) &&
-					messageElement.ValueKind == JsonValueKind.String &&
-					!string.IsNullOrWhiteSpace(messageElement.GetString()))
+					messageElement.ValueKind == JsonValueKind.String)
 				{
-					result[questionId] = messageElement.GetString()!.Trim();
+					var cleanMessage = SanitizePlainText(messageElement.GetString());
+					if (!string.IsNullOrWhiteSpace(cleanMessage))
+					{
+						result[questionId] = cleanMessage;
+					}
 				}
 			}
 		}
@@ -527,6 +540,25 @@ public sealed class BedrockQuizContentGenerator : IQuizContentGenerator
 			"[QuizLLM][BedrockInvalidJson] Model={Model}; Purpose={Purpose}; ResponsePreview={Preview}",
 			_aiService.ModelId, purpose, preview);
 		return null;
+	}
+
+	private static string SanitizePlainText(string? raw)
+	{
+		if (string.IsNullOrWhiteSpace(raw))
+		{
+			return string.Empty;
+		}
+
+		var withoutBreaks = BrTagRegex.Replace(raw, "\n");
+		withoutBreaks = BlockCloseTagRegex.Replace(withoutBreaks, "\n");
+		var stripped = HtmlTagRegex.Replace(withoutBreaks, string.Empty);
+		var decoded = WebUtility.HtmlDecode(stripped);
+		var lines = decoded
+			.Replace("\r\n", "\n")
+			.Split('\n')
+			.Select(line => MultiWhitespaceRegex.Replace(line.Trim(), " "))
+			.Where(line => line.Length > 0);
+		return string.Join("\n", lines).Trim();
 	}
 
 	private static string StripThinkingBlocks(string text)
