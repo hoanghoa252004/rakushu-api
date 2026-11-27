@@ -41,7 +41,7 @@ internal sealed class GetBankQuestions : IEndpoint
 			// 2. Description
 			.WithName("GetBankQuestions")
 			.WithSummary("Curator")
-			.WithDescription("Retrieves a paginated list of bank questions with optional filters by knowledge meaning, question type, review status (Draft, Published), source type (Curator, Ai), and active status.")
+			.WithDescription("Retrieves a paginated list of bank questions with optional filters by knowledge meaning, question type, review status (Draft, Published), source type (Curator, Ai), and active status. Excludes soft-deleted (Published and inactive) questions by default unless isActive=false is explicitly requested.")
 			// 3. Authentication & Authorization
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.LinguisticCurator, RoleCodes.SystemAdministrator))
 			// 4. Response

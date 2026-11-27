@@ -110,6 +110,11 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 		{
 			query = query.Where(bq => bq.IsActive == isActive.Value);
 		}
+		else
+		{
+			// Exclude soft-deleted (Published && !IsActive) questions by default; keep Draft and active Published questions.
+			query = query.Where(bq => bq.Status == QuestionStatus.Draft || bq.IsActive);
+		}
 
 		int totalCount = await query.CountAsync(cancellationToken);
 
@@ -140,6 +145,9 @@ public sealed class BankQuestionRepository : BaseRepository<BankQuestion, BankQu
 				.ThenInclude(km => km.KnowledgeUnit)
 					.ThenInclude(ku => ku.ProficiencyLevel)
 			.AsQueryable();
+
+		// Always exclude soft-deleted (Published && !IsActive) questions from the review queue.
+		query = query.Where(bq => bq.Status == QuestionStatus.Draft || bq.IsActive);
 
 		if (status.HasValue)
 		{
