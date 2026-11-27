@@ -1,16 +1,20 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Pgvector;
 
 #nullable disable
 
 namespace Rakushu.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialBaseline : Migration
+    public partial class DomainModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "assistant");
+
             migrationBuilder.EnsureSchema(
                 name: "material");
 
@@ -30,7 +34,16 @@ namespace Rakushu.Persistence.Migrations
                 name: "curation");
 
             migrationBuilder.EnsureSchema(
+                name: "learning");
+
+            migrationBuilder.EnsureSchema(
+                name: "processing");
+
+            migrationBuilder.EnsureSchema(
                 name: "shadowing");
+
+            migrationBuilder.EnsureSchema(
+                name: "configuration");
 
             migrationBuilder.CreateTable(
                 name: "content_categories",
@@ -97,6 +110,8 @@ namespace Rakushu.Persistence.Migrations
                     target_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     target_id = table.Column<Guid>(type: "uuid", nullable: false),
                     category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    start_char_index = table.Column<int>(type: "integer", nullable: true),
+                    end_char_index = table.Column<int>(type: "integer", nullable: true),
                     current_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
                     threshold = table.Column<int>(type: "integer", nullable: false, defaultValue: 3),
                     last_reported_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -167,6 +182,31 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "processing_job_logs",
+                schema: "processing",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    job_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    target_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    target_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    sequence = table.Column<int>(type: "integer", nullable: false),
+                    parent_job_log_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    service_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    job_label = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    input = table.Column<string>(type: "text", nullable: true),
+                    output = table.Column<string>(type: "text", nullable: true),
+                    is_success = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    is_failed = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    start_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    end_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_processing_job_logs", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "proficiency_levels",
                 schema: "knowledge",
                 columns: table => new
@@ -195,6 +235,7 @@ namespace Rakushu.Persistence.Migrations
                     code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    expected_duration_seconds = table.Column<int>(type: "integer", nullable: false, defaultValue: 15),
                     is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -215,6 +256,9 @@ namespace Rakushu.Persistence.Migrations
                     category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     curator_notes = table.Column<string>(type: "text", nullable: true),
+                    target_snapshot = table.Column<string>(type: "jsonb", nullable: true),
+                    start_char_index = table.Column<int>(type: "integer", nullable: true),
+                    end_char_index = table.Column<int>(type: "integer", nullable: true),
                     resolved_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -260,6 +304,24 @@ namespace Rakushu.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_speakers", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "system_configurations",
+                schema: "configuration",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    config_key = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    data_type = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    config_value = table.Column<string>(type: "text", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    version_in_used = table.Column<int>(type: "integer", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_system_configurations", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -385,6 +447,30 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "roles",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "system_configuration_histories",
+                schema: "configuration",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    version = table.Column<int>(type: "integer", nullable: false),
+                    configuration_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    config_value = table.Column<string>(type: "text", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_system_configuration_histories", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_system_configuration_histories_system_configurations_config",
+                        column: x => x.configuration_id,
+                        principalSchema: "configuration",
+                        principalTable: "system_configurations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -514,6 +600,9 @@ namespace Rakushu.Persistence.Migrations
                     target_id = table.Column<Guid>(type: "uuid", nullable: false),
                     category = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     learner_feedback = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    target_snapshot = table.Column<string>(type: "jsonb", nullable: true),
+                    start_char_index = table.Column<int>(type: "integer", nullable: true),
+                    end_char_index = table.Column<int>(type: "integer", nullable: true),
                     report_id = table.Column<Guid>(type: "uuid", nullable: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
@@ -529,6 +618,32 @@ namespace Rakushu.Persistence.Migrations
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_issue_details_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "password_reset_codes",
+                schema: "identity",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    code_hash = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    is_expired = table.Column<bool>(type: "boolean", nullable: false),
+                    is_used = table.Column<bool>(type: "boolean", nullable: false),
+                    used_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_password_reset_codes", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_password_reset_codes_users_user_id",
                         column: x => x.user_id,
                         principalSchema: "identity",
                         principalTable: "users",
@@ -693,6 +808,8 @@ namespace Rakushu.Persistence.Migrations
                     correct_answer = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     explanation = table.Column<string>(type: "text", nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    status = table.Column<int>(type: "integer", nullable: false, defaultValue: 2),
+                    reviewed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     media_type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "NONE"),
                     media_url = table.Column<string>(type: "text", nullable: true),
                     media_metadata = table.Column<string>(type: "jsonb", nullable: true),
@@ -1093,6 +1210,71 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "conversations",
+                schema: "assistant",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    learner_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    video_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_conversations", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_conversations_users_learner_id",
+                        column: x => x.learner_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_conversations_videos_video_id",
+                        column: x => x.video_id,
+                        principalSchema: "material",
+                        principalTable: "videos",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "learner_video_progresses",
+                schema: "learning",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    video_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    last_watched_second = table.Column<double>(type: "double precision", nullable: false, defaultValue: 0.0),
+                    total_watched_seconds = table.Column<double>(type: "double precision", nullable: false, defaultValue: 0.0),
+                    watched_intervals_json = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'[]'::jsonb"),
+                    completion_rate = table.Column<double>(type: "double precision", nullable: false, defaultValue: 0.0),
+                    is_completed = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    last_watched_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_learner_video_progresses", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_learner_video_progresses_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_learner_video_progresses_videos_video_id",
+                        column: x => x.video_id,
+                        principalSchema: "material",
+                        principalTable: "videos",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "media_assets",
                 schema: "material",
                 columns: table => new
@@ -1478,6 +1660,109 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "learner_encountered_learning_units",
+                schema: "learning",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    learning_unit_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    knowledge_meaning_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    knowledge_unit_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    video_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    encounter_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
+                    raw_playback_count = table.Column<int>(type: "integer", nullable: false, defaultValue: 1),
+                    encounter_sources_json = table.Column<string>(type: "jsonb", nullable: false, defaultValueSql: "'[]'::jsonb"),
+                    first_encountered_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    last_encountered_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_learner_encountered_learning_units", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_learner_encountered_learning_units_knowledge_meanings_knowl",
+                        column: x => x.knowledge_meaning_id,
+                        principalSchema: "knowledge",
+                        principalTable: "knowledge_meanings",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_learner_encountered_learning_units_knowledge_units_knowledg",
+                        column: x => x.knowledge_unit_id,
+                        principalSchema: "knowledge",
+                        principalTable: "knowledge_units",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_learner_encountered_learning_units_learning_units_learning_",
+                        column: x => x.learning_unit_id,
+                        principalSchema: "material",
+                        principalTable: "learning_units",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_learner_encountered_learning_units_users_user_id",
+                        column: x => x.user_id,
+                        principalSchema: "identity",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_learner_encountered_learning_units_videos_video_id",
+                        column: x => x.video_id,
+                        principalSchema: "material",
+                        principalTable: "videos",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "messages",
+                schema: "assistant",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    conversation_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    transcript_segment_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    learning_unit_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    role = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    content = table.Column<string>(type: "text", nullable: true),
+                    status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    input_tokens = table.Column<int>(type: "integer", nullable: true),
+                    output_tokens = table.Column<int>(type: "integer", nullable: true),
+                    error_message = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    ai_request_payload = table.Column<string>(type: "text", nullable: true),
+                    model_id = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    completed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_messages", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_messages_conversations_conversation_id",
+                        column: x => x.conversation_id,
+                        principalSchema: "assistant",
+                        principalTable: "conversations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "fk_messages_learning_units_learning_unit_id",
+                        column: x => x.learning_unit_id,
+                        principalSchema: "material",
+                        principalTable: "learning_units",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "fk_messages_transcript_segments_transcript_segment_id",
+                        column: x => x.transcript_segment_id,
+                        principalSchema: "material",
+                        principalTable: "transcript_segments",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "shadowing_roles",
                 schema: "shadowing",
                 columns: table => new
@@ -1538,6 +1823,55 @@ namespace Rakushu.Persistence.Migrations
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "attachments",
+                schema: "assistant",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    message_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    file_key = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    content_type = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    file_size = table.Column<long>(type: "bigint", nullable: false),
+                    timestamp = table.Column<TimeSpan>(type: "interval", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_attachments", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_attachments_messages_message_id",
+                        column: x => x.message_id,
+                        principalSchema: "assistant",
+                        principalTable: "messages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "message_embeddings",
+                schema: "assistant",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    message_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    source_content = table.Column<string>(type: "text", nullable: false),
+                    model_id = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    dimensions = table.Column<int>(type: "integer", nullable: false),
+                    embedding = table.Column<Vector>(type: "vector(1024)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_message_embeddings", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_message_embeddings_messages_message_id",
+                        column: x => x.message_id,
+                        principalSchema: "assistant",
+                        principalTable: "messages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1799,6 +2133,13 @@ namespace Rakushu.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ix_attachments_message_id",
+                schema: "assistant",
+                table: "attachments",
+                column: "message_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_bunsetsu_transcript_segment_id",
                 schema: "material",
                 table: "bunsetsu",
@@ -1829,6 +2170,19 @@ namespace Rakushu.Persistence.Migrations
                 schema: "knowledge",
                 table: "content_knowledge_collections",
                 column: "knowledge_collection_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_conversations_learner_id_video_id",
+                schema: "assistant",
+                table: "conversations",
+                columns: new[] { "learner_id", "video_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_conversations_video_id",
+                schema: "assistant",
+                table: "conversations",
+                column: "video_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_dependency_relationships_code",
@@ -1901,11 +2255,27 @@ namespace Rakushu.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_issue_categories_target_type_target_id_category",
+                name: "ix_issue_categories_non_oov_unique",
                 schema: "curation",
                 table: "issue_categories",
                 columns: new[] { "target_type", "target_id", "category" },
-                unique: true);
+                unique: true,
+                filter: "start_char_index IS NULL AND end_char_index IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_issue_categories_oov_span_unique",
+                schema: "curation",
+                table: "issue_categories",
+                columns: new[] { "target_type", "target_id", "category", "start_char_index", "end_char_index" },
+                unique: true,
+                filter: "start_char_index IS NOT NULL AND end_char_index IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_issue_details_oov_span",
+                schema: "curation",
+                table: "issue_details",
+                columns: new[] { "target_id", "start_char_index", "end_char_index" },
+                filter: "category = 'Oov' AND start_char_index IS NOT NULL AND end_char_index IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "ix_issue_details_report_id",
@@ -1976,6 +2346,74 @@ namespace Rakushu.Persistence.Migrations
                 column: "proficiency_level_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_knowledge_meaning_id",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                column: "knowledge_meaning_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_knowledge_unit_id",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                column: "knowledge_unit_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_learning_unit_id",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                column: "learning_unit_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_user_id_knowledge_meanin",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                columns: new[] { "user_id", "knowledge_meaning_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_user_id_knowledge_unit_id",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                columns: new[] { "user_id", "knowledge_unit_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_user_id_learning_unit_id",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                columns: new[] { "user_id", "learning_unit_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_user_id_video_id",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                columns: new[] { "user_id", "video_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_encountered_learning_units_video_id",
+                schema: "learning",
+                table: "learner_encountered_learning_units",
+                column: "video_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_video_progresses_user_id_last_watched_at",
+                schema: "learning",
+                table: "learner_video_progresses",
+                columns: new[] { "user_id", "last_watched_at" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_video_progresses_user_id_video_id",
+                schema: "learning",
+                table: "learner_video_progresses",
+                columns: new[] { "user_id", "video_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_learner_video_progresses_video_id",
+                schema: "learning",
+                table: "learner_video_progresses",
+                column: "video_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_learning_units_knowledge_meaning_id",
                 schema: "material",
                 table: "learning_units",
@@ -1992,6 +2430,37 @@ namespace Rakushu.Persistence.Migrations
                 schema: "material",
                 table: "media_assets",
                 column: "video_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_message_embeddings_message_id",
+                schema: "assistant",
+                table: "message_embeddings",
+                column: "message_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_messages_conversation_id_created_at",
+                schema: "assistant",
+                table: "messages",
+                columns: new[] { "conversation_id", "created_at" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_messages_learning_unit_id",
+                schema: "assistant",
+                table: "messages",
+                column: "learning_unit_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_messages_transcript_segment_id",
+                schema: "assistant",
+                table: "messages",
+                column: "transcript_segment_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_password_reset_codes_user_id_code_hash",
+                schema: "identity",
+                table: "password_reset_codes",
+                columns: new[] { "user_id", "code_hash" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_payments_plan_id",
@@ -2011,6 +2480,30 @@ namespace Rakushu.Persistence.Migrations
                 table: "plans",
                 column: "code",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_processing_job_logs_job_label",
+                schema: "processing",
+                table: "processing_job_logs",
+                column: "job_label");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_processing_job_logs_parent_job_log_id",
+                schema: "processing",
+                table: "processing_job_logs",
+                column: "parent_job_log_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_processing_job_logs_target_id_job_type_start_at",
+                schema: "processing",
+                table: "processing_job_logs",
+                columns: new[] { "target_id", "job_type", "start_at" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_processing_job_logs_target_type_target_id_sequence",
+                schema: "processing",
+                table: "processing_job_logs",
+                columns: new[] { "target_type", "target_id", "sequence" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_proficiency_levels_code",
@@ -2046,10 +2539,22 @@ namespace Rakushu.Persistence.Migrations
                 column: "knowledge_meaning_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_questions_knowledge_meaning_id_status_is_active",
+                schema: "srs",
+                table: "questions",
+                columns: new[] { "knowledge_meaning_id", "status", "is_active" });
+
+            migrationBuilder.CreateIndex(
                 name: "ix_questions_question_type_id",
                 schema: "srs",
                 table: "questions",
                 column: "question_type_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_questions_status",
+                schema: "srs",
+                table: "questions",
+                column: "status");
 
             migrationBuilder.CreateIndex(
                 name: "ix_quiz_attempt_items_question_id",
@@ -2117,6 +2622,12 @@ namespace Rakushu.Persistence.Migrations
                 schema: "curation",
                 table: "reports",
                 column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_reports_target_category_span",
+                schema: "curation",
+                table: "reports",
+                columns: new[] { "target_type", "target_id", "category", "start_char_index", "end_char_index" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_reports_target_type_target_id_category",
@@ -2390,6 +2901,28 @@ namespace Rakushu.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_system_configuration_histories_configuration_id_version",
+                schema: "configuration",
+                table: "system_configuration_histories",
+                columns: new[] { "configuration_id", "version" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ux_system_configuration_histories_active",
+                schema: "configuration",
+                table: "system_configuration_histories",
+                column: "configuration_id",
+                unique: true,
+                filter: "is_active = true");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_system_configurations_config_key",
+                schema: "configuration",
+                table: "system_configurations",
+                column: "config_key",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_tokens_bunsetsu_id",
                 schema: "material",
                 table: "tokens",
@@ -2507,6 +3040,10 @@ namespace Rakushu.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "attachments",
+                schema: "assistant");
+
+            migrationBuilder.DropTable(
                 name: "content_knowledge_collections",
                 schema: "knowledge");
 
@@ -2539,12 +3076,28 @@ namespace Rakushu.Persistence.Migrations
                 schema: "knowledge");
 
             migrationBuilder.DropTable(
-                name: "learning_units",
-                schema: "material");
+                name: "learner_encountered_learning_units",
+                schema: "learning");
+
+            migrationBuilder.DropTable(
+                name: "learner_video_progresses",
+                schema: "learning");
 
             migrationBuilder.DropTable(
                 name: "media_assets",
                 schema: "material");
+
+            migrationBuilder.DropTable(
+                name: "message_embeddings",
+                schema: "assistant");
+
+            migrationBuilder.DropTable(
+                name: "password_reset_codes",
+                schema: "identity");
+
+            migrationBuilder.DropTable(
+                name: "processing_job_logs",
+                schema: "processing");
 
             migrationBuilder.DropTable(
                 name: "refresh_tokens",
@@ -2571,6 +3124,10 @@ namespace Rakushu.Persistence.Migrations
                 schema: "material");
 
             migrationBuilder.DropTable(
+                name: "system_configuration_histories",
+                schema: "configuration");
+
+            migrationBuilder.DropTable(
                 name: "tokens",
                 schema: "material");
 
@@ -2589,6 +3146,10 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "reports",
                 schema: "curation");
+
+            migrationBuilder.DropTable(
+                name: "messages",
+                schema: "assistant");
 
             migrationBuilder.DropTable(
                 name: "shadowing_assessments",
@@ -2619,6 +3180,10 @@ namespace Rakushu.Persistence.Migrations
                 schema: "subscription");
 
             migrationBuilder.DropTable(
+                name: "system_configurations",
+                schema: "configuration");
+
+            migrationBuilder.DropTable(
                 name: "bunsetsu",
                 schema: "material");
 
@@ -2629,6 +3194,14 @@ namespace Rakushu.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "japanese_part_of_speeches",
                 schema: "knowledge");
+
+            migrationBuilder.DropTable(
+                name: "conversations",
+                schema: "assistant");
+
+            migrationBuilder.DropTable(
+                name: "learning_units",
+                schema: "material");
 
             migrationBuilder.DropTable(
                 name: "shadowing_attempts",
