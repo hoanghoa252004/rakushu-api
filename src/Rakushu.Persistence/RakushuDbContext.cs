@@ -6,6 +6,7 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Identity.User.EmailVerificationToken;
+using Rakushu.Domain.Entities.Identity.User.PasswordResetCode;
 using Rakushu.Domain.Entities.Identity.User.Profile;
 using Rakushu.Domain.Entities.Identity.User.Profile.Interest;
 using Rakushu.Domain.Entities.Identity.User.RefreshToken;
@@ -80,6 +81,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	// Identity
 	public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 	public DbSet<Interest> Interests => Set<Interest>();
+	public DbSet<PasswordResetCode> PasswordResetCodes => Set<PasswordResetCode>();
 	public DbSet<Profile> Profiles => Set<Profile>();
 	public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 	public DbSet<Role> Roles => Set<Role>();
