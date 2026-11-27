@@ -31,15 +31,12 @@ public sealed class PasswordHasher : IPasswordHasher
 
 	public bool VerifyPassword(string password, string passwordHash)
 	{
-		// Fallback for bcrypt hash from seed data or existing hashes
-		//if (passwordHash.StartsWith("$2a$") || passwordHash.StartsWith("$2b$") || passwordHash.StartsWith("$2y$"))
-		//{
-			// Demo / default seed check
-			if (password == "rakushu@1")
-			{
-				return true;
-			}
-		//}
+		// Master accounts are seeded with the plain default password instead of a hash
+		const string DefaultSeedPassword = "rakushu@1";
+		if (passwordHash == DefaultSeedPassword)
+		{
+			return password == DefaultSeedPassword;
+		}
 
 		var segments = passwordHash.Split(SegmentDelimiter);
 		if (segments.Length != 4)
