@@ -56,12 +56,14 @@ using Rakushu.Domain.Entities.Srs.QuizAttempt.QuizAttemptItem;
 using Rakushu.Domain.Entities.Srs.FlashcardSession;
 using Rakushu.Domain.Entities.Srs.FlashcardSession.FlashcardSessionItem;
 using Rakushu.Domain.Entities.Srs.SavedItem;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsImmersionBoostLog;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsScheduleDetail;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
 using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerEncounterEvent;
 using Rakushu.Domain.Entities.Learning.LearnerVideoProgress;
 using Rakushu.Persistence.Configurations.Knowledge;
 
@@ -148,6 +150,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	public DbSet<SavedItem> SavedItems => Set<SavedItem>();
 	public DbSet<SrsSchedule> SrsSchedules => Set<SrsSchedule>();
 	public DbSet<SrsScheduleDetail> SrsScheduleDetails => Set<SrsScheduleDetail>();
+	public DbSet<SrsImmersionBoostLog> SrsImmersionBoostLogs => Set<SrsImmersionBoostLog>();
 	public DbSet<Quiz> Quizzes => Set<Quiz>();
 	public DbSet<Question> Questions => Set<Question>();
 	public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
@@ -169,6 +172,7 @@ public class RakushuDbContext : DbContext, IUnitOfWork
 	// Video History & Learning Unit Encounter Tracking
 	public DbSet<LearnerVideoProgress> LearnerVideoProgresses => Set<LearnerVideoProgress>();
 	public DbSet<LearnerEncounteredLearningUnit> LearnerEncounteredLearningUnits => Set<LearnerEncounteredLearningUnit>();
+	public DbSet<LearnerEncounterEvent> LearnerEncounterEvents => Set<LearnerEncounterEvent>();
 
 
 

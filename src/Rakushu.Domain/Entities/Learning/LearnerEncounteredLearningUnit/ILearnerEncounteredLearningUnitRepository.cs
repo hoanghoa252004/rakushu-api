@@ -1,6 +1,5 @@
 using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Video;
 
@@ -21,12 +20,6 @@ public interface ILearnerEncounteredLearningUnitRepository
 
 	Task<IReadOnlyList<LearnerEncounteredLearningUnit>> GetByUserWithDetailsAsync(
 		UserId userId,
-		CancellationToken cancellationToken = default);
-
-	Task<Dictionary<KnowledgeMeaningId, int>> GetEffectiveEncounterCountsByMeaningsAsync(
-		UserId userId,
-		IReadOnlyCollection<KnowledgeMeaningId> meaningIds,
-		DateTimeOffset? sinceUtc,
 		CancellationToken cancellationToken = default);
 
 	Task<int> DeleteByUserAndVideoAsync(

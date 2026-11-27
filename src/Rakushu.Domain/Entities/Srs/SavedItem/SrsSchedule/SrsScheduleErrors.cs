@@ -18,4 +18,7 @@ public static class SrsScheduleErrors
 
 	public static readonly Error AlreadyIgnored = Error.Conflict(
 		"SRS_SCHEDULE.ALREADY_IGNORED", "The vocabulary item is already ignored.");
+
+	public static readonly Error PassiveBoostCapReached = Error.Conflict(
+		"SRS_SCHEDULE.PASSIVE_BOOST_CAP_REACHED", "Maximum consecutive passive immersion boosts reached; an active review is required.");
 }

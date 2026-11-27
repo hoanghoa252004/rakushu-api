@@ -5,8 +5,9 @@ using Rakushu.Application.Common.Time;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerEncounterEvent;
 using Rakushu.Domain.Entities.Srs.SavedItem;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 using System.Globalization;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.SavedItem.GetSrsItems;
@@ -14,18 +15,18 @@ namespace Rakushu.Application.Usecases.Learning.Srs.SavedItem.GetSrsItems;
 internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Result<IReadOnlyList<SavedItemSummaryDto>>>
 {
 	private readonly ISavedItemRepository _savedItemRepository;
-	private readonly ILearnerEncounteredLearningUnitRepository _encounterRepository;
+	private readonly ILearnerEncounterEventRepository _encounterEventRepository;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
 
 	public GetSrsItemsHandler(
 		ISavedItemRepository savedItemRepository,
-		ILearnerEncounteredLearningUnitRepository encounterRepository,
+		ILearnerEncounterEventRepository encounterEventRepository,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock)
 	{
 		_savedItemRepository = savedItemRepository;
-		_encounterRepository = encounterRepository;
+		_encounterEventRepository = encounterEventRepository;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
 	}
@@ -86,8 +87,8 @@ internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Res
 			return Result.Success<IReadOnlyList<SavedItemSummaryDto>>(Array.Empty<SavedItemSummaryDto>());
 
 		var meaningIds = items.Select(i => i.KnowledgeMeaningId).Distinct().ToList();
-		var sevenDaysAgo = utcNow.AddDays(-7);
-		var encounterCounts = await _encounterRepository.GetEffectiveEncounterCountsByMeaningsAsync(
+		var sevenDaysAgo = utcNow.AddDays(-SrsSchedule.ImmersionWindowDays);
+		var encounterCounts = await _encounterEventRepository.GetEncounterCountsByMeaningsAsync(
 			userId,
 			meaningIds,
 			sevenDaysAgo,

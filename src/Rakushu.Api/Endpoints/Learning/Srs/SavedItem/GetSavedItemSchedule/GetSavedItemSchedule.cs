@@ -26,7 +26,7 @@ internal sealed class GetSavedItemSchedule : IEndpoint
 			})
 			.WithName("GetSavedItemSchedule")
 			.WithSummary("Learner")
-			.WithDescription("Retrieves current SM-2 scheduling parameters (interval, repetitions, lapses, easiness factor) and complete review audit log history for a specific saved item.")
+			.WithDescription("Retrieves current SM-2 scheduling parameters (interval, repetitions, lapses, easiness factor), passive immersion defer status, and complete review audit log history for a specific saved item.")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
 			.Produces<SavedItemScheduleDto>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)

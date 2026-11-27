@@ -40,9 +40,22 @@ internal sealed class SrsScheduleConfiguration : IEntityTypeConfiguration<SrsSch
 			.HasColumnName("updated_at")
 			.IsRequired();
 
+		builder.Property(s => s.LastImmersionBoostAt)
+			.HasColumnName("last_immersion_boost_at");
+
+		builder.Property(s => s.ConsecutivePassiveBoosts)
+			.HasColumnName("consecutive_passive_boosts")
+			.IsRequired()
+			.HasDefaultValue(0);
+
 		builder.HasMany(s => s.Details)
 			.WithOne(d => d.SrsSchedule)
 			.HasForeignKey(d => d.SrsScheduleId)
+			.OnDelete(DeleteBehavior.Cascade);
+
+		builder.HasMany(s => s.BoostLogs)
+			.WithOne(b => b.SrsSchedule)
+			.HasForeignKey(b => b.SrsScheduleId)
 			.OnDelete(DeleteBehavior.Cascade);
 	}
 }

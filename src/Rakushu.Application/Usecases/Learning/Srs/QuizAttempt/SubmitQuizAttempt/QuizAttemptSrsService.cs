@@ -95,7 +95,7 @@ internal sealed class QuizAttemptSrsService : IQuizAttemptSrsService
 			int nextReviewNumber = (lastDetail?.ReviewNumber ?? 0) + 1;
 
 			var sm2 = Sm2Calculator.Calculate(lastRepetitions, lastInterval, lastFactor, lastLapses, quality, now);
-			schedule.UpdateSchedule(sm2.DueAt, now);
+			schedule.RecordActiveReview(sm2.DueAt, now);
 
 			var detailResult = SrsScheduleDetail.Create(
 				schedule.Id,

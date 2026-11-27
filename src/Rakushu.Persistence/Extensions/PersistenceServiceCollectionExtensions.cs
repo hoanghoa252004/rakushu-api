@@ -10,6 +10,7 @@ using Rakushu.Domain.Entities.Curation.IssueCategory;
 using Rakushu.Domain.Entities.Curation.Report;
 using Rakushu.Domain.Entities.Curation.Report.IssueDetail;
 using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerEncounterEvent;
 using Rakushu.Domain.Entities.Learning.LearnerVideoProgress;
 using Rakushu.Domain.Entities.Identity.Role;
 using Rakushu.Domain.Entities.Identity.User;
@@ -122,6 +123,7 @@ public static class PersistenceServiceCollectionExtensions
 		// Video History & Encounter Tracking Repositories
 		services.AddScoped<ILearnerVideoProgressRepository, LearnerVideoProgressRepository>();
 		services.AddScoped<ILearnerEncounteredLearningUnitRepository, LearnerEncounteredLearningUnitRepository>();
+		services.AddScoped<ILearnerEncounterEventRepository, LearnerEncounterEventRepository>();
 
 		// Read-Only Analytics Query Services
 		services.AddScoped<ILearnerAnalyticsQueryService, LearnerAnalyticsQueryService>();

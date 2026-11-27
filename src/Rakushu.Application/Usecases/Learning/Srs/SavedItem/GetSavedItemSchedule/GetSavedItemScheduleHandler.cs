@@ -5,6 +5,7 @@ using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Srs.SavedItem;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.SavedItem.GetSavedItemSchedule;
 
@@ -48,7 +49,11 @@ internal sealed class GetSavedItemScheduleHandler : IRequestHandler<GetSavedItem
 				2.5,
 				0,
 				0,
-				Array.Empty<ScheduleDetailHistoryDto>()));
+				Array.Empty<ScheduleDetailHistoryDto>(),
+				null,
+				0,
+				SrsSchedule.MaxConsecutivePassiveBoosts,
+				Array.Empty<ImmersionBoostHistoryDto>()));
 		}
 
 		var sortedDetails = schedule.Details
@@ -79,6 +84,19 @@ internal sealed class GetSavedItemScheduleHandler : IRequestHandler<GetSavedItem
 				flashcardSessionId);
 		}).ToList();
 
+		var boostHistoryDtos = schedule.BoostLogs
+			.OrderBy(b => b.BoostedAt)
+			.Select(b => new ImmersionBoostHistoryDto(
+				b.Id.Value,
+				b.AdjustmentType,
+				b.BonusDays,
+				b.PreviousDueAt,
+				b.NewDueAt,
+				b.BoostNumber,
+				b.EncounterCountInWindow,
+				b.BoostedAt))
+			.ToList();
+
 		return Result.Success(new SavedItemScheduleDto(
 			item.Id.Value,
 			schedule.DueAt,
@@ -86,6 +104,10 @@ internal sealed class GetSavedItemScheduleHandler : IRequestHandler<GetSavedItem
 			currentEasinessFactor,
 			currentRepetitions,
 			currentLapses,
-			historyDtos));
+			historyDtos,
+			schedule.LastImmersionBoostAt,
+			schedule.ConsecutivePassiveBoosts,
+			SrsSchedule.MaxConsecutivePassiveBoosts,
+			boostHistoryDtos));
 	}
 }

@@ -6,10 +6,13 @@ using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerEncounterEvent;
 using Rakushu.Domain.Entities.Learning.LearnerVideoProgress;
 using Rakushu.Domain.Entities.Material.Transcript;
 using Rakushu.Domain.Entities.Material.Video;
 using Rakushu.Domain.Entities.Srs.SavedItem;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsImmersionBoostLog;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Application.Usecases.Learning.Tracking.RecordWatchHeartbeat;
 
@@ -20,6 +23,7 @@ internal sealed class RecordWatchHeartbeatHandler
 	private readonly ITranscriptRepository _transcriptRepository;
 	private readonly ILearnerVideoProgressRepository _progressRepository;
 	private readonly ILearnerEncounteredLearningUnitRepository _encounterRepository;
+	private readonly ILearnerEncounterEventRepository _encounterEventRepository;
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly ISystemClock _systemClock;
@@ -30,6 +34,7 @@ internal sealed class RecordWatchHeartbeatHandler
 		ITranscriptRepository transcriptRepository,
 		ILearnerVideoProgressRepository progressRepository,
 		ILearnerEncounteredLearningUnitRepository encounterRepository,
+		ILearnerEncounterEventRepository encounterEventRepository,
 		ISavedItemRepository savedItemRepository,
 		ICurrentUserContext currentUserContext,
 		ISystemClock systemClock,
@@ -39,6 +44,7 @@ internal sealed class RecordWatchHeartbeatHandler
 		_transcriptRepository = transcriptRepository;
 		_progressRepository = progressRepository;
 		_encounterRepository = encounterRepository;
+		_encounterEventRepository = encounterEventRepository;
 		_savedItemRepository = savedItemRepository;
 		_currentUserContext = currentUserContext;
 		_systemClock = systemClock;
@@ -123,9 +129,9 @@ internal sealed class RecordWatchHeartbeatHandler
 						cancellationToken);
 					var existingByUnitId = existingEncounters.ToDictionary(x => x.LearningUnitId);
 
-					var sevenDaysAgo = now.AddDays(-7);
+					var sevenDaysAgo = now.AddDays(-SrsSchedule.ImmersionWindowDays);
 					var touchedMeaningIds = new HashSet<KnowledgeMeaningId>();
-					var effectiveMeaningDeltas = new Dictionary<KnowledgeMeaningId, int>();
+					var unflushedEventCounts = new Dictionary<KnowledgeMeaningId, int>();
 
 					foreach (var (segment, lu) in candidateUnits)
 					{
@@ -138,6 +144,7 @@ internal sealed class RecordWatchHeartbeatHandler
 							segment.Text);
 
 						touchedMeaningIds.Add(km.Id);
+						bool recordedNewEffectiveEncounter;
 
 						if (!existingByUnitId.TryGetValue(lu.Id, out var encounterRecord))
 						{
@@ -159,76 +166,79 @@ internal sealed class RecordWatchHeartbeatHandler
 							encounterRecord = createEncounterResult.Value;
 							_encounterRepository.Add(encounterRecord);
 							existingByUnitId[lu.Id] = encounterRecord;
-
-							var delta = VideoTrackingHelper.ComputeSevenDayEncounterDelta(
-								isNewRecord: true,
-								previousLastEncounteredAt: null,
-								incrementedEffective: true,
-								currentEncounterCount: encounterRecord.EncounterCount,
-								sevenDaysAgo: sevenDaysAgo);
-							effectiveMeaningDeltas[km.Id] = effectiveMeaningDeltas.GetValueOrDefault(km.Id, 0) + delta;
+							recordedNewEffectiveEncounter = true;
 						}
 						else
 						{
-							var prevLastEncounteredAt = encounterRecord.LastEncounteredAt;
 							var sourcesJson = VideoTrackingHelper.UpsertEncounterSource(
 								encounterRecord.EncounterSourcesJson,
 								sourceDto);
 
-							bool incrementedEffective = encounterRecord.RecordEncounter(sourcesJson, now);
-							var delta = VideoTrackingHelper.ComputeSevenDayEncounterDelta(
-								isNewRecord: false,
-								previousLastEncounteredAt: prevLastEncounteredAt,
-								incrementedEffective: incrementedEffective,
-								currentEncounterCount: encounterRecord.EncounterCount,
-								sevenDaysAgo: sevenDaysAgo);
-							if (delta > 0)
+							recordedNewEffectiveEncounter = encounterRecord.RecordEncounter(sourcesJson, now);
+						}
+
+						if (recordedNewEffectiveEncounter)
+						{
+							var eventResult = LearnerEncounterEvent.Create(
+								userId,
+								lu.Id,
+								km.Id,
+								videoId,
+								now);
+
+							if (eventResult.IsFailure)
 							{
-								effectiveMeaningDeltas[km.Id] = effectiveMeaningDeltas.GetValueOrDefault(km.Id, 0) + delta;
+								return Result.Failure<RecordWatchHeartbeatResponseDto>(eventResult.Error);
 							}
+
+							_encounterEventRepository.Add(eventResult.Value);
+							unflushedEventCounts[km.Id] = unflushedEventCounts.GetValueOrDefault(km.Id, 0) + 1;
 						}
 					}
 
-					// 3. Case 2A: Natural Exposure SRS DueAt Adjustment when 7-day effective encounters >= 3
+					// 3. Case 2A: Natural Exposure SRS DueAt Adjustment
+					// Uses append-only encounter events, per-schedule watermark (no double-dipping),
+					// and max consecutive passive boost cap (passive listening cannot permanently replace active recall).
 					if (touchedMeaningIds.Count > 0)
 					{
-						var counts7d = await _encounterRepository.GetEffectiveEncounterCountsByMeaningsAsync(
+						var savedItems = await _savedItemRepository.GetByUserAndMeaningsWithScheduleAsync(
 							userId,
 							touchedMeaningIds,
-							sevenDaysAgo,
 							cancellationToken);
 
-						// Add unflushed deltas from the current Unit of Work to DB totals
-						foreach (var (meaningId, delta) in effectiveMeaningDeltas)
-						{
-							counts7d[meaningId] = counts7d.GetValueOrDefault(meaningId, 0) + delta;
-						}
+						var startOfToday = new DateTimeOffset(now.Year, now.Month, now.Day, 0, 0, 0, now.Offset);
+						var endOfToday = startOfToday.AddDays(1).AddTicks(-1);
 
-						var qualifyingMeaningIds = counts7d
-							.Where(kv => kv.Value >= 3)
-							.Select(kv => kv.Key)
+						var eligibleSavedItems = savedItems
+							.Where(si => si.Schedule is not null && si.Schedule.CanReceivePassiveBoost(startOfToday, endOfToday))
 							.ToList();
 
-						if (qualifyingMeaningIds.Count > 0)
+						if (eligibleSavedItems.Count > 0)
 						{
-							var savedItems = await _savedItemRepository.GetByUserAndMeaningsWithScheduleAsync(
+							var exclusiveAfterByMeaning = new Dictionary<KnowledgeMeaningId, DateTimeOffset?>();
+							foreach (var savedItem in eligibleSavedItems)
+							{
+								exclusiveAfterByMeaning[savedItem.KnowledgeMeaningId] = savedItem.Schedule!.GetPassiveBoostExclusiveAfterUtc();
+							}
+
+							var dbWindowCounts = await _encounterEventRepository.GetEncounterCountsInWindowAsync(
 								userId,
-								qualifyingMeaningIds,
+								exclusiveAfterByMeaning,
+								sevenDaysAgo,
 								cancellationToken);
 
-							var startOfToday = new DateTimeOffset(now.Year, now.Month, now.Day, 0, 0, 0, now.Offset);
-							var endOfToday = startOfToday.AddDays(1).AddTicks(-1);
-
-							foreach (var savedItem in savedItems)
+							foreach (var savedItem in eligibleSavedItems)
 							{
-								var schedule = savedItem.Schedule;
-								if (schedule is null)
-								{
-									continue;
-								}
+								var schedule = savedItem.Schedule!;
+								var exclusiveAfter = exclusiveAfterByMeaning[savedItem.KnowledgeMeaningId];
 
-								// Guard against shifting DueAt more than once on the same calendar day
-								if (schedule.UpdatedAt >= startOfToday && schedule.DueAt > endOfToday)
+								int dbCount = dbWindowCounts.GetValueOrDefault(savedItem.KnowledgeMeaningId, 0);
+								int unflushedCount = (!exclusiveAfter.HasValue || now > exclusiveAfter.Value)
+									? unflushedEventCounts.GetValueOrDefault(savedItem.KnowledgeMeaningId, 0)
+									: 0;
+
+								int effectiveWindowCount = dbCount + unflushedCount;
+								if (effectiveWindowCount < SrsSchedule.PassiveBoostEncounterThreshold)
 								{
 									continue;
 								}
@@ -238,33 +248,46 @@ internal sealed class RecordWatchHeartbeatHandler
 								if (prevDueAt < startOfToday)
 								{
 									// Case 2.3 - TH 1 (Overdue): Grace rescue -> Now + 2 days (no lapse penalty)
-									var newDueAt = now.AddDays(2);
-									schedule.UpdateSchedule(newDueAt, now);
+									var newDueAt = now.AddDays(SrsSchedule.OverdueRescueDays);
+									var boostResult = schedule.ApplyPassiveImmersionBoost(
+										newDueAt,
+										SrsImmersionAdjustmentTypes.OverdueRescue,
+										SrsSchedule.OverdueRescueDays,
+										effectiveWindowCount,
+										now);
+									if (boostResult.IsFailure)
+									{
+										return Result.Failure<RecordWatchHeartbeatResponseDto>(boostResult.Error);
+									}
+
 									srsAdjustedDtos.Add(new SrsAdjustedItemDto(
 										savedItem.Id.Value,
 										savedItem.Expression,
-										"OverdueRescue",
+										SrsImmersionAdjustmentTypes.OverdueRescue,
 										newDueAt));
 								}
 								else if (prevDueAt <= endOfToday)
 								{
-									// Case 2.3 - TH 2 (Due Today): Bonus interval -> Now + 4 days, IntervalDays += 4
-									const int bonusDays = 4;
-									var newDueAt = now.AddDays(bonusDays);
-									schedule.UpdateSchedule(newDueAt, now);
-
-									var latestDetail = schedule.Details
-										.OrderByDescending(d => d.ReviewNumber)
-										.FirstOrDefault();
-									latestDetail?.AddBonusInterval(bonusDays);
+									// Case 2.3 - TH 2 (Due Today): Soft defer -> Now + 4 days
+									// Active-recall IntervalDays stays untouched so passive watching cannot inflate mastery status.
+									var newDueAt = now.AddDays(SrsSchedule.DueTodayBonusDays);
+									var boostResult = schedule.ApplyPassiveImmersionBoost(
+										newDueAt,
+										SrsImmersionAdjustmentTypes.DueTodayBonus,
+										SrsSchedule.DueTodayBonusDays,
+										effectiveWindowCount,
+										now);
+									if (boostResult.IsFailure)
+									{
+										return Result.Failure<RecordWatchHeartbeatResponseDto>(boostResult.Error);
+									}
 
 									srsAdjustedDtos.Add(new SrsAdjustedItemDto(
 										savedItem.Id.Value,
 										savedItem.Expression,
-										"DueTodayBonus",
+										SrsImmersionAdjustmentTypes.DueTodayBonus,
 										newDueAt));
 								}
-								// Case 2.3 - TH 3 (Not Yet Due): Keep DueAt unchanged; UI renders reinforcement badge from encounter count
 							}
 						}
 					}

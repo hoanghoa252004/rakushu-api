@@ -4,6 +4,7 @@ using Rakushu.Domain.Common.Contract;
 using Rakushu.Domain.Common.Results;
 using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
+using Rakushu.Domain.Entities.Learning.LearnerEncounterEvent;
 using Rakushu.Domain.Entities.Learning.LearnerVideoProgress;
 using Rakushu.Domain.Entities.Material.Video;
 
@@ -13,17 +14,20 @@ internal sealed class DeleteVideoWatchHistoryHandler : IRequestHandler<DeleteVid
 {
 	private readonly ILearnerVideoProgressRepository _progressRepository;
 	private readonly ILearnerEncounteredLearningUnitRepository _encounterRepository;
+	private readonly ILearnerEncounterEventRepository _encounterEventRepository;
 	private readonly ICurrentUserContext _currentUserContext;
 	private readonly IUnitOfWork _unitOfWork;
 
 	public DeleteVideoWatchHistoryHandler(
 		ILearnerVideoProgressRepository progressRepository,
 		ILearnerEncounteredLearningUnitRepository encounterRepository,
+		ILearnerEncounterEventRepository encounterEventRepository,
 		ICurrentUserContext currentUserContext,
 		IUnitOfWork unitOfWork)
 	{
 		_progressRepository = progressRepository;
 		_encounterRepository = encounterRepository;
+		_encounterEventRepository = encounterEventRepository;
 		_currentUserContext = currentUserContext;
 		_unitOfWork = unitOfWork;
 	}
@@ -43,6 +47,7 @@ internal sealed class DeleteVideoWatchHistoryHandler : IRequestHandler<DeleteVid
 			var videoId = VideoId.From(request.VideoId);
 			await _progressRepository.DeleteByUserAndVideoAsync(userId, videoId, cancellationToken);
 			await _encounterRepository.DeleteByUserAndVideoAsync(userId, videoId, cancellationToken);
+			await _encounterEventRepository.DeleteByUserAndVideoAsync(userId, videoId, cancellationToken);
 			return Result.Success();
 		}, cancellationToken);
 	}

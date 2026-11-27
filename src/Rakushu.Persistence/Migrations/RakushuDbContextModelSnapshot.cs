@@ -1259,6 +1259,53 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("proficiency_levels", "knowledge");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerEncounterEvent.LearnerEncounterEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("EncounteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("encountered_at");
+
+                    b.Property<Guid>("KnowledgeMeaningId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("knowledge_meaning_id");
+
+                    b.Property<Guid>("LearningUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("learning_unit_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("video_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_learner_encounter_events");
+
+                    b.HasIndex("KnowledgeMeaningId")
+                        .HasDatabaseName("ix_learner_encounter_events_knowledge_meaning_id");
+
+                    b.HasIndex("LearningUnitId")
+                        .HasDatabaseName("ix_learner_encounter_events_learning_unit_id");
+
+                    b.HasIndex("VideoId")
+                        .HasDatabaseName("ix_learner_encounter_events_video_id");
+
+                    b.HasIndex("UserId", "VideoId")
+                        .HasDatabaseName("ix_learner_encounter_events_user_id_video_id");
+
+                    b.HasIndex("UserId", "KnowledgeMeaningId", "EncounteredAt")
+                        .HasDatabaseName("ix_learner_encounter_events_user_id_knowledge_meaning_id_encou");
+
+                    b.ToTable("learner_encounter_events", "learning");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit.LearnerEncounteredLearningUnit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3115,11 +3162,66 @@ namespace Rakushu.Persistence.Migrations
                     b.ToTable("saved_items", "srs");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsImmersionBoostLog.SrsImmersionBoostLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AdjustmentType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("adjustment_type");
+
+                    b.Property<int>("BonusDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("bonus_days");
+
+                    b.Property<int>("BoostNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("boost_number");
+
+                    b.Property<DateTimeOffset>("BoostedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("boosted_at");
+
+                    b.Property<int>("EncounterCountInWindow")
+                        .HasColumnType("integer")
+                        .HasColumnName("encounter_count_in_window");
+
+                    b.Property<DateTimeOffset>("NewDueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("new_due_at");
+
+                    b.Property<DateTimeOffset>("PreviousDueAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("previous_due_at");
+
+                    b.Property<Guid>("SrsScheduleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("srs_schedule_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_srs_immersion_boost_logs");
+
+                    b.HasIndex("SrsScheduleId", "BoostedAt")
+                        .HasDatabaseName("ix_srs_immersion_boost_logs_srs_schedule_id_boosted_at");
+
+                    b.ToTable("srs_immersion_boost_logs", "srs");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<int>("ConsecutivePassiveBoosts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("consecutive_passive_boosts");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -3128,6 +3230,10 @@ namespace Rakushu.Persistence.Migrations
                     b.Property<DateTimeOffset>("DueAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("due_at");
+
+                    b.Property<DateTimeOffset?>("LastImmersionBoostAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_immersion_boost_at");
 
                     b.Property<Guid>("SavedItemId")
                         .HasColumnType("uuid")
@@ -3882,6 +3988,45 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("KnowledgeUnit");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerEncounterEvent.LearnerEncounterEvent", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", "KnowledgeMeaning")
+                        .WithMany()
+                        .HasForeignKey("KnowledgeMeaningId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encounter_events_knowledge_meanings_knowledge_meani");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.LearningUnit.LearningUnit", "LearningUnit")
+                        .WithMany()
+                        .HasForeignKey("LearningUnitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encounter_events_learning_units_learning_unit_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Identity.User.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encounter_events_users_user_id");
+
+                    b.HasOne("Rakushu.Domain.Entities.Material.Video.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_learner_encounter_events_videos_video_id");
+
+                    b.Navigation("KnowledgeMeaning");
+
+                    b.Navigation("LearningUnit");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Video");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit.LearnerEncounteredLearningUnit", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning.KnowledgeMeaning", "KnowledgeMeaning")
@@ -4567,6 +4712,18 @@ namespace Rakushu.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsImmersionBoostLog.SrsImmersionBoostLog", b =>
+                {
+                    b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", "SrsSchedule")
+                        .WithMany("BoostLogs")
+                        .HasForeignKey("SrsScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_srs_immersion_boost_logs_srs_schedules_srs_schedule_id");
+
+                    b.Navigation("SrsSchedule");
+                });
+
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
                 {
                     b.HasOne("Rakushu.Domain.Entities.Srs.SavedItem.SavedItem", "SavedItem")
@@ -4936,6 +5093,8 @@ namespace Rakushu.Persistence.Migrations
 
             modelBuilder.Entity("Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule.SrsSchedule", b =>
                 {
+                    b.Navigation("BoostLogs");
+
                     b.Navigation("Details");
                 });
 

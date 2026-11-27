@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
 
 namespace Rakushu.Application.Usecases.Learning.Srs;
 
@@ -58,6 +59,16 @@ public sealed record ScheduleDetailHistoryDto(
 	[property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 	Guid? FlashcardSessionId = null);
 
+public sealed record ImmersionBoostHistoryDto(
+	Guid Id,
+	string AdjustmentType,
+	int BonusDays,
+	DateTimeOffset PreviousDueAt,
+	DateTimeOffset NewDueAt,
+	int BoostNumber,
+	int EncounterCountInWindow,
+	DateTimeOffset BoostedAt);
+
 public sealed record SavedItemScheduleDto(
 	Guid SavedItemId,
 	DateTimeOffset? DueAt,
@@ -65,7 +76,11 @@ public sealed record SavedItemScheduleDto(
 	double CurrentEasinessFactor,
 	int CurrentRepetitions,
 	int CurrentLapses,
-	IReadOnlyList<ScheduleDetailHistoryDto> ReviewHistory);
+	IReadOnlyList<ScheduleDetailHistoryDto> ReviewHistory,
+	DateTimeOffset? LastImmersionBoostAt = null,
+	int ConsecutivePassiveBoosts = 0,
+	int MaxConsecutivePassiveBoosts = SrsSchedule.MaxConsecutivePassiveBoosts,
+	IReadOnlyList<ImmersionBoostHistoryDto>? BoostHistory = null);
 
 // Backwards-compatible alias for existing code referencing SrsItemDto
 public sealed record SrsItemDto(

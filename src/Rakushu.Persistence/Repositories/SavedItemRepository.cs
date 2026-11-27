@@ -34,8 +34,11 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 			.Include(si => si.Schedule)
 				.ThenInclude(sch => sch!.Details)
 					.ThenInclude(d => d.FlashcardSessionItem)
+			.Include(si => si.Schedule)
+				.ThenInclude(sch => sch!.BoostLogs)
 			.Include(si => si.KnowledgeMeaning)
 				.ThenInclude(km => km.KnowledgeUnit)
+			.AsSplitQuery()
 			.FirstOrDefaultAsync(si => si.Id == id, cancellationToken);
 	}
 
@@ -451,8 +454,11 @@ internal sealed class SavedItemRepository : BaseRepository<SavedItem, SavedItemI
 		return await _context.SavedItems
 			.Include(si => si.Schedule)
 				.ThenInclude(sch => sch!.Details)
+			.Include(si => si.Schedule)
+				.ThenInclude(sch => sch!.BoostLogs)
 			.Include(si => si.KnowledgeMeaning)
 				.ThenInclude(km => km.KnowledgeUnit)
+			.AsSplitQuery()
 			.Where(si => si.UserId == userId && si.IsActive && meaningIds.Contains(si.KnowledgeMeaningId))
 			.ToListAsync(cancellationToken);
 	}

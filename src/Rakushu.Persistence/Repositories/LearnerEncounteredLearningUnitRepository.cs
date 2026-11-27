@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Rakushu.Domain.Entities.Identity.User;
-using Rakushu.Domain.Entities.Knowledge.KnowledgeMeaning;
 using Rakushu.Domain.Entities.Learning.LearnerEncounteredLearningUnit;
 using Rakushu.Domain.Entities.Material.LearningUnit;
 using Rakushu.Domain.Entities.Material.Video;
@@ -57,38 +56,6 @@ public sealed class LearnerEncounteredLearningUnitRepository
 			.OrderByDescending(x => x.LastEncounteredAt)
 			.AsSplitQuery()
 			.ToListAsync(cancellationToken);
-	}
-
-	public async Task<Dictionary<KnowledgeMeaningId, int>> GetEffectiveEncounterCountsByMeaningsAsync(
-		UserId userId,
-		IReadOnlyCollection<KnowledgeMeaningId> meaningIds,
-		DateTimeOffset? sinceUtc,
-		CancellationToken cancellationToken = default)
-	{
-		if (meaningIds.Count == 0)
-		{
-			return [];
-		}
-
-		var query = _context.LearnerEncounteredLearningUnits
-			.AsNoTracking()
-			.Where(x => x.UserId == userId && meaningIds.Contains(x.KnowledgeMeaningId));
-
-		if (sinceUtc.HasValue)
-		{
-			query = query.Where(x => x.LastEncounteredAt >= sinceUtc.Value);
-		}
-
-		var rows = await query
-			.GroupBy(x => x.KnowledgeMeaningId)
-			.Select(g => new
-			{
-				MeaningId = g.Key,
-				TotalEncounters = g.Sum(x => x.EncounterCount)
-			})
-			.ToListAsync(cancellationToken);
-
-		return rows.ToDictionary(r => r.MeaningId, r => r.TotalEncounters);
 	}
 
 	public async Task<int> DeleteByUserAndVideoAsync(

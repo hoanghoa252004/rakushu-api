@@ -69,28 +69,4 @@ public static class VideoTrackingHelper
 
 		return $"{mins:D2}:{secs:D2}";
 	}
-
-	/// <summary>
-	/// Computes the delta that an unflushed encounter create/update adds to the 7-day DB encounter sum
-	/// before SaveChangesAsync commits the current Unit of Work.
-	/// </summary>
-	public static int ComputeSevenDayEncounterDelta(
-		bool isNewRecord,
-		DateTimeOffset? previousLastEncounteredAt,
-		bool incrementedEffective,
-		int currentEncounterCount,
-		DateTimeOffset sevenDaysAgo)
-	{
-		if (isNewRecord)
-		{
-			return currentEncounterCount;
-		}
-
-		if (previousLastEncounteredAt.HasValue && previousLastEncounteredAt.Value < sevenDaysAgo)
-		{
-			return currentEncounterCount;
-		}
-
-		return incrementedEffective ? 1 : 0;
-	}
 }
