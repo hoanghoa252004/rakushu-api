@@ -74,8 +74,40 @@ internal sealed partial class LearnerAnalyticsQueryService
 				a.AccuracyScore,
 				a.PitchSimilarityScore,
 				a.OverallScore,
-				a.AssessmentType.ToString()))
+				a.AssessmentType.ToString(),
+				a.OverallScore >= 80m ? "PASSED" : "NEEDS_WORK"))
 			.ToList();
+
+		int passCount = 0;
+		int tier60To79Count = 0;
+		int tier30To59Count = 0;
+		int under30Count = 0;
+
+		foreach (var attempt in orderedChrono)
+		{
+			if (attempt.OverallScore >= 80m)
+			{
+				passCount++;
+			}
+			else if (attempt.OverallScore >= 60m)
+			{
+				tier60To79Count++;
+			}
+			else if (attempt.OverallScore >= 30m)
+			{
+				tier30To59Count++;
+			}
+			else
+			{
+				under30Count++;
+			}
+		}
+
+		var gradeDistribution = new ScoreGradeDistributionDto(
+			passCount,
+			tier60To79Count,
+			tier30To59Count,
+			under30Count);
 
 		int totalLines = raw.CompletedLinesCount + raw.SkippedLinesCount;
 		double skipRate = totalLines > 0
@@ -95,7 +127,8 @@ internal sealed partial class LearnerAnalyticsQueryService
 			skipRate,
 			avgOverall,
 			scoreTrend,
-			history);
+			history,
+			gradeDistribution);
 	}
 
 	private async Task<LearnerShadowingProgressDto> GetDashboardShadowingProgressAsync(

@@ -190,7 +190,8 @@ internal sealed partial class CuratorAnalyticsQueryService
 			dailyTrend,
 			categoryBreakdown,
 			targetTypeBreakdown,
-			priorityReports);
+			priorityReports,
+			pendingCount + inReviewCount);
 	}
 
 	private static string? ExtractSnapshotPreview(string? snapshotJson)

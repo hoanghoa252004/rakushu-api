@@ -1,6 +1,8 @@
+using System.Globalization;
 using MediatR;
 using Rakushu.Application.Abstractions.Infrastructure.Authentication;
 using Rakushu.Application.Abstractions.Infrastructure.Clock;
+using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Common.Time;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
@@ -8,12 +10,13 @@ using Rakushu.Domain.Entities.Identity.User;
 using Rakushu.Domain.Entities.Learning.LearnerEncounterEvent;
 using Rakushu.Domain.Entities.Srs.SavedItem;
 using Rakushu.Domain.Entities.Srs.SavedItem.SrsSchedule;
-using System.Globalization;
 
 namespace Rakushu.Application.Usecases.Learning.Srs.SavedItem.GetSrsItems;
 
-internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Result<IReadOnlyList<SavedItemSummaryDto>>>
+internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Result<PaginatedList<SavedItemSummaryDto>>>
 {
+	private const int MasteredIntervalDays = 21;
+
 	private readonly ISavedItemRepository _savedItemRepository;
 	private readonly ILearnerEncounterEventRepository _encounterEventRepository;
 	private readonly ICurrentUserContext _currentUserContext;
@@ -31,13 +34,15 @@ internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Res
 		_systemClock = systemClock;
 	}
 
-	public async Task<Result<IReadOnlyList<SavedItemSummaryDto>>> Handle(
+	public async Task<Result<PaginatedList<SavedItemSummaryDto>>> Handle(
 		GetSrsItemsQuery request,
 		CancellationToken cancellationToken)
 	{
 		var userId = _currentUserContext.UserId;
 		if (userId is null)
-			return Result.Failure<IReadOnlyList<SavedItemSummaryDto>>(UserErrors.NotFound);
+		{
+			return Result.Failure<PaginatedList<SavedItemSummaryDto>>(UserErrors.NotFound);
+		}
 
 		int page = Math.Max(1, request.Page);
 		int pageSize = Math.Clamp(request.PageSize, 1, 500);
@@ -78,13 +83,33 @@ internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Res
 			EndOfTodayUtc: todayEndUtc,
 			NowUtc: utcNow);
 
+		int totalCount = await _savedItemRepository.CountUserItemsAsync(
+			userId,
+			options,
+			cancellationToken);
+
+		if (totalCount == 0)
+		{
+			return Result.Success(PaginatedList<SavedItemSummaryDto>.Create(
+				[],
+				0,
+				page,
+				pageSize));
+		}
+
 		var items = await _savedItemRepository.GetUserItemsAsync(
 			userId,
 			options,
 			cancellationToken);
 
 		if (items.Count == 0)
-			return Result.Success<IReadOnlyList<SavedItemSummaryDto>>(Array.Empty<SavedItemSummaryDto>());
+		{
+			return Result.Success(PaginatedList<SavedItemSummaryDto>.Create(
+				[],
+				totalCount,
+				page,
+				pageSize));
+		}
 
 		var meaningIds = items.Select(i => i.KnowledgeMeaningId).Distinct().ToList();
 		var sevenDaysAgo = utcNow.AddDays(-SrsSchedule.ImmersionWindowDays);
@@ -105,6 +130,8 @@ internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Res
 			var jlptLevel = si.KnowledgeMeaning?.KnowledgeUnit?.ProficiencyLevel?.Code;
 			var knowledgeType = si.KnowledgeMeaning?.KnowledgeUnit?.KnowledgeType.ToString();
 			var status = ResolveMaturityStatus(si.IsActive, latestDetail?.IntervalDays);
+			bool isMastered = (latestDetail?.IntervalDays >= MasteredIntervalDays)
+				|| string.Equals(status, "mastered", StringComparison.OrdinalIgnoreCase);
 
 			return new SavedItemSummaryDto(
 				si.Id.Value,
@@ -123,22 +150,39 @@ internal sealed class GetSrsItemsHandler : IRequestHandler<GetSrsItemsQuery, Res
 				recentEncounters,
 				jlptLevel,
 				knowledgeType,
-				status);
+				status,
+				isMastered);
 		}).ToList();
 
-		return Result.Success<IReadOnlyList<SavedItemSummaryDto>>(dtos);
+		return Result.Success(PaginatedList<SavedItemSummaryDto>.Create(
+			dtos,
+			totalCount,
+			page,
+			pageSize));
 	}
 
 	private static string ResolveMaturityStatus(bool isActive, int? latestIntervalDays)
 	{
 		if (!isActive)
+		{
 			return "inactive";
+		}
+
 		if (!latestIntervalDays.HasValue)
+		{
 			return "new";
-		if (latestIntervalDays.Value >= 21)
+		}
+
+		if (latestIntervalDays.Value >= MasteredIntervalDays)
+		{
 			return "mastered";
+		}
+
 		if (latestIntervalDays.Value >= 7)
+		{
 			return "young";
+		}
+
 		return "learning";
 	}
 }

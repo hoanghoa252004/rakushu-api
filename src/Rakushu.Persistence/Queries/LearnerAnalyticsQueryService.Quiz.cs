@@ -51,20 +51,25 @@ internal sealed partial class LearnerAnalyticsQueryService
 		var summaries = BuildQuestionTypeSummaries(questionTypes, items);
 		var wordsByType = BuildWordsByTypeDictionary(questionTypes, items);
 
+		var weakest = summaries.FirstOrDefault(s => s.IsWeakest) ?? summaries.FirstOrDefault();
+		string? defaultSelectedWeakestTypeId = weakest?.Code;
+
 		IReadOnlyList<QuestionTypeWordEvidenceDto> selectedWords = [];
 		if (!string.IsNullOrWhiteSpace(questionTypeCode))
 		{
 			var normalizedCode = questionTypeCode.Trim().ToUpperInvariant();
 			selectedWords = wordsByType.GetValueOrDefault(normalizedCode, []);
 		}
-		else
+		else if (weakest is not null)
 		{
-			var weakest = summaries.FirstOrDefault(s => s.IsWeakest) ?? summaries.FirstOrDefault();
-			if (weakest is not null)
-				selectedWords = wordsByType.GetValueOrDefault(weakest.Code, []);
+			selectedWords = wordsByType.GetValueOrDefault(weakest.Code, []);
 		}
 
-		return new QuestionTypeDetailResponseDto(summaries, wordsByType, selectedWords);
+		return new QuestionTypeDetailResponseDto(
+			summaries,
+			wordsByType,
+			selectedWords,
+			defaultSelectedWeakestTypeId);
 	}
 
 	private async Task<LearnerPracticePerformanceDto> GetPracticePerformanceSectionAsync(
@@ -172,7 +177,9 @@ internal sealed partial class LearnerAnalyticsQueryService
 					s.AccuracyRate,
 					s.AvgTimeSpentSeconds,
 					s.ExpectedDurationSeconds,
-					wrongWords);
+					wrongWords,
+					s.PerformanceTier,
+					s.IsOverTime);
 			})
 			.ToList();
 
@@ -295,8 +302,30 @@ internal sealed partial class LearnerAnalyticsQueryService
 				x.Correct,
 				x.Accuracy,
 				x.AvgSec,
-				weakestCode is not null && string.Equals(x.Code, weakestCode, StringComparison.OrdinalIgnoreCase)))
+				weakestCode is not null && string.Equals(x.Code, weakestCode, StringComparison.OrdinalIgnoreCase),
+				ResolvePerformanceTier(x.Accuracy),
+				x.AvgSec > x.ExpectedDurationSeconds))
 			.ToList();
+	}
+
+	private static string ResolvePerformanceTier(double accuracyRate)
+	{
+		if (accuracyRate >= 90.0)
+		{
+			return "EXCELLENT";
+		}
+
+		if (accuracyRate >= 80.0)
+		{
+			return "GOOD";
+		}
+
+		if (accuracyRate >= 70.0)
+		{
+			return "AVERAGE";
+		}
+
+		return "WEAK";
 	}
 
 	private static IReadOnlyDictionary<string, IReadOnlyList<QuestionTypeWordEvidenceDto>> BuildWordsByTypeDictionary(

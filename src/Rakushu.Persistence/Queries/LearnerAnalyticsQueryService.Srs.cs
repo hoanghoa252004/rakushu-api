@@ -138,6 +138,33 @@ internal sealed partial class LearnerAnalyticsQueryService
 		return new SrsHeatmapResponseDto(year, points);
 	}
 
+	private async Task<double> GetRecentRetentionRateAsync(
+		UserId userId,
+		DateTimeOffset utcNow,
+		CancellationToken cancellationToken)
+	{
+		var thirtyDaysAgo = utcNow.AddDays(-30);
+		var summary = await _context.SrsScheduleDetails
+			.AsNoTracking()
+			.Where(d => d.ReviewedAt >= thirtyDaysAgo
+				&& d.SrsSchedule.SavedItem.UserId == userId
+				&& d.SrsSchedule.SavedItem.IsActive)
+			.GroupBy(_ => 1)
+			.Select(g => new
+			{
+				TotalReviews = g.Count(),
+				SuccessfulReviews = g.Count(d => d.Quality >= 3)
+			})
+			.FirstOrDefaultAsync(cancellationToken);
+
+		if (summary is null || summary.TotalReviews == 0)
+		{
+			return 0.0;
+		}
+
+		return Math.Round((double)summary.SuccessfulReviews / summary.TotalReviews * 100.0, 1);
+	}
+
 	private async Task<LearnerSrsAnalyticsDto> GetSrsAnalyticsSectionAsync(
 		UserId userId,
 		int forecastDays,

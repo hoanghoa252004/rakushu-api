@@ -91,7 +91,9 @@ public sealed record QuestionTypeDiagnosticDto(
 	double AccuracyRate,
 	double AvgTimeSpentSeconds,
 	int ExpectedDurationSeconds,
-	IReadOnlyList<QuizWeakWordDto> WeakWords);
+	IReadOnlyList<QuizWeakWordDto> WeakWords,
+	string PerformanceTier = "WEAK",
+	bool IsOverTime = false);
 
 public sealed record FlashcardRatingDistributionDto(
 	[property: JsonPropertyName("Forgot")] int Forgot,
@@ -191,7 +193,12 @@ public sealed record LearnerDashboardDto(
 	LearnerSrsAnalyticsDto SrsAnalytics,
 	LearnerKnowledgeCoverageDto KnowledgeCoverage,
 	LearnerPracticePerformanceDto PracticePerformance,
-	LearnerShadowingProgressDto ShadowingProgress);
+	LearnerShadowingProgressDto ShadowingProgress,
+	double MasteryRatePercent = 0.0,
+	double LeechRatePercent = 0.0,
+	double AssessmentCompletionRate = 0.0,
+	string BestPerformingSkill = "",
+	string RetentionStatusLabel = "Khá");
 
 // ============================================================================
 // 3. QUIZ DIAGNOSTICS DETAIL (/api/analytics/learner/quiz-diagnostics)
@@ -205,7 +212,9 @@ public sealed record QuestionTypeSummaryDto(
 	int CorrectCount,
 	double AccuracyRate,
 	double AvgTimeSpentSeconds,
-	bool IsWeakest);
+	bool IsWeakest,
+	string PerformanceTier = "WEAK",
+	bool IsOverTime = false);
 
 public sealed record QuestionTypeWordEvidenceDto(
 	Guid SavedItemId,
@@ -220,4 +229,5 @@ public sealed record QuestionTypeWordEvidenceDto(
 public sealed record QuestionTypeDetailResponseDto(
 	IReadOnlyList<QuestionTypeSummaryDto> TypesOverview,
 	IReadOnlyDictionary<string, IReadOnlyList<QuestionTypeWordEvidenceDto>> WordsByType,
-	IReadOnlyList<QuestionTypeWordEvidenceDto> SelectedTypeWords);
+	IReadOnlyList<QuestionTypeWordEvidenceDto> SelectedTypeWords,
+	string? DefaultSelectedWeakestTypeId = null);

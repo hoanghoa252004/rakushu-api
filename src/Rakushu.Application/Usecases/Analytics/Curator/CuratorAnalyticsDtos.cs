@@ -22,7 +22,8 @@ public sealed record CuratorReportsSummaryCountsDto(
 	int PendingCount,
 	int InReviewCount,
 	int ResolvedCount,
-	int DismissedCount);
+	int DismissedCount,
+	int UnresolvedReportsCount = 0);
 
 public sealed record CuratorVideosSummaryCountsDto(
 	int TotalVideos,
@@ -32,7 +33,10 @@ public sealed record CuratorVideosSummaryCountsDto(
 	int ProcessingCount,
 	int DraftCount,
 	int RejectedCount,
-	int ArchivedCount);
+	int ArchivedCount,
+	int PendingReviewTotal = 0,
+	int OtherStatusCount = 0,
+	double ReadyRatePercent = 0.0);
 
 public sealed record CuratorQuestionBankSummaryCountsDto(
 	int TotalQuestions,
@@ -43,7 +47,8 @@ public sealed record CuratorQuestionBankSummaryCountsDto(
 	int WithAudioCount,
 	int WithVideoCount,
 	int WithImageCount,
-	int TextOnlyCount);
+	int TextOnlyCount,
+	double PublishedRatePercent = 0.0);
 
 public sealed record CuratorKnowledgeSummaryCountsDto(
 	int TotalCollections,
@@ -53,7 +58,8 @@ public sealed record CuratorKnowledgeSummaryCountsDto(
 	int ActiveUnitsCount,
 	int PendingUnitsCount,
 	int OovDetectedUnitsCount,
-	int PendingOovUnitsCount);
+	int PendingOovUnitsCount,
+	int UnresolvedReportsCount = 0);
 
 public sealed record CuratorReportsAnalyticsDto(
 	int TotalReports,
@@ -67,7 +73,8 @@ public sealed record CuratorReportsAnalyticsDto(
 	IReadOnlyList<CuratorReportDailyTrendPointDto> DailyTrend,
 	IReadOnlyList<CuratorReportCategoryBreakdownDto> CategoryBreakdown,
 	IReadOnlyList<CuratorReportTargetTypeBreakdownDto> TargetTypeBreakdown,
-	IReadOnlyList<CuratorPriorityReportItemDto> PriorityReports);
+	IReadOnlyList<CuratorPriorityReportItemDto> PriorityReports,
+	int UnresolvedReportsCount = 0);
 
 public sealed record CuratorReportDailyTrendPointDto(
 	string Date,
@@ -114,7 +121,10 @@ public sealed record CuratorVideosAnalyticsDto(
 	int UnreviewedLearningUnitsCount,
 	int LowConfidenceLearningUnitsCount,
 	IReadOnlyList<CuratorStatusBreakdownDto> StatusBreakdown,
-	IReadOnlyList<CuratorVideoQueueItemDto> NeedsAttentionVideos);
+	IReadOnlyList<CuratorVideoQueueItemDto> NeedsAttentionVideos,
+	int PendingReviewTotal = 0,
+	int OtherStatusCount = 0,
+	double ReadyRatePercent = 0.0);
 
 public sealed record CuratorStatusBreakdownDto(
 	string Status,
@@ -144,7 +154,8 @@ public sealed record CuratorQuestionBankAnalyticsDto(
 	int PeriodCreatedCount,
 	int PeriodReviewedCount,
 	IReadOnlyList<CuratorQuestionTypeBreakdownDto> TypeDistribution,
-	IReadOnlyList<CuratorDraftQuestionItemDto> RecentDraftQuestions);
+	IReadOnlyList<CuratorDraftQuestionItemDto> RecentDraftQuestions,
+	double PublishedRatePercent = 0.0);
 
 public sealed record CuratorQuestionTypeBreakdownDto(
 	Guid QuestionTypeId,
@@ -152,7 +163,8 @@ public sealed record CuratorQuestionTypeBreakdownDto(
 	string Name,
 	int TotalCount,
 	int PublishedCount,
-	int DraftCount);
+	int DraftCount,
+	double DraftPercent = 0.0);
 
 public sealed record CuratorDraftQuestionItemDto(
 	Guid Id,

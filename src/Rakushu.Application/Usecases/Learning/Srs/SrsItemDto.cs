@@ -33,7 +33,8 @@ public sealed record SavedItemSummaryDto(
 	int RecentEncounterCount = 0,
 	string? JlptLevel = null,
 	string? KnowledgeType = null,
-	string? Status = null);
+	string? Status = null,
+	bool IsMastered = false);
 
 public sealed record SavedItemDetailDto(
 	Guid Id,

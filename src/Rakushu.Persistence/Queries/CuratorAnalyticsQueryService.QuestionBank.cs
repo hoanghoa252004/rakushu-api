@@ -109,13 +109,18 @@ internal sealed partial class CuratorAnalyticsQueryService
 		{
 			int pub = publishedByType.GetValueOrDefault(qt.Id.Value);
 			int dr = draftByType.GetValueOrDefault(qt.Id.Value);
+			double draftPercent = draftCount > 0
+				? Math.Round((double)dr / draftCount * 100.0, 1)
+				: 0.0;
+
 			return new CuratorQuestionTypeBreakdownDto(
 				qt.Id.Value,
 				qt.Code,
 				qt.Name,
 				pub + dr,
 				pub,
-				dr);
+				dr,
+				draftPercent);
 		}).OrderByDescending(x => x.TotalCount).ThenBy(x => x.Code).ToList();
 
 		// 4. Recent draft questions queue (max 6, newest first).
@@ -153,8 +158,13 @@ internal sealed partial class CuratorAnalyticsQueryService
 			q.CreatedAt,
 			string.IsNullOrWhiteSpace(q.JlptLevel) ? null : q.JlptLevel.Trim().ToUpperInvariant())).ToList();
 
+		int totalQuestions = publishedCount + draftCount;
+		double publishedRatePercent = totalQuestions > 0
+			? Math.Round((double)publishedCount / totalQuestions * 100.0, 1)
+			: 0.0;
+
 		return new CuratorQuestionBankAnalyticsDto(
-			publishedCount + draftCount,
+			totalQuestions,
 			publishedCount,
 			draftCount,
 			inactiveCount,
@@ -166,6 +176,7 @@ internal sealed partial class CuratorAnalyticsQueryService
 			periodCreatedCount,
 			periodReviewedCount,
 			typeDistribution,
-			recentDraftQuestions);
+			recentDraftQuestions,
+			publishedRatePercent);
 	}
 }

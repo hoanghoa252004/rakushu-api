@@ -36,7 +36,14 @@ internal sealed partial class CuratorAnalyticsQueryService
 		int draftCount = statusMap.GetValueOrDefault(VideoStatus.Draft);
 		int rejectedCount = statusMap.GetValueOrDefault(VideoStatus.Rejected);
 		int archivedCount = statusMap.GetValueOrDefault(VideoStatus.Archived);
-		int totalVideos = readyCount + reviewingCount + pendingCount + processingCount + draftCount + rejectedCount + archivedCount;
+		int importingCount = statusMap.GetValueOrDefault(VideoStatus.Importing);
+		int moderatingCount = statusMap.GetValueOrDefault(VideoStatus.Moderating);
+		int totalVideos = readyCount + reviewingCount + pendingCount + processingCount + draftCount + rejectedCount + archivedCount + importingCount + moderatingCount;
+		int pendingReviewTotal = reviewingCount + pendingCount;
+		int otherStatusCount = draftCount + processingCount + rejectedCount + archivedCount + importingCount + moderatingCount;
+		double readyRatePercent = totalVideos > 0
+			? Math.Round((double)readyCount / totalVideos * 100.0, 1)
+			: 0.0;
 
 		var statusBreakdown = OrderedVideoStatuses
 			.Select(status => new CuratorStatusBreakdownDto(status.ToString(), statusMap.GetValueOrDefault(status)))
@@ -142,6 +149,9 @@ internal sealed partial class CuratorAnalyticsQueryService
 			unreviewedLearningUnitsCount,
 			lowConfidenceLearningUnitsCount,
 			statusBreakdown,
-			needsAttentionVideos);
+			needsAttentionVideos,
+			pendingReviewTotal,
+			otherStatusCount,
+			readyRatePercent);
 	}
 }

@@ -29,4 +29,11 @@ internal static class AnalyticsEndpointGroupExtension
 			.WithTags("Finance Analytics")
 			.WithGroupName("analytics");
 	}
+
+	internal static RouteGroupBuilder MapAdminAnalyticsEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/analytics/admin")
+			.WithTags("Admin Analytics")
+			.WithGroupName("analytics");
+	}
 }

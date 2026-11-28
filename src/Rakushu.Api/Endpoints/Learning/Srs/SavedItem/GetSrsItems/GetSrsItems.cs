@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Rakushu.Api.Common;
 using Rakushu.Api.Extensions;
+using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Application.Usecases.Learning.Srs.SavedItem.GetSrsItems;
 using Rakushu.Domain.Entities.Identity.Role;
@@ -23,6 +24,7 @@ internal sealed class GetSrsItems : IEndpoint
 				[FromQuery] string? sortBy,
 				[FromQuery] string? sortOrder,
 				[FromQuery] string? level,
+				[FromQuery] string? jlptLevel,
 				[FromQuery] string? knowledgeType,
 				[FromQuery] string? status,
 				[FromQuery] string? search,
@@ -32,13 +34,14 @@ internal sealed class GetSrsItems : IEndpoint
 				ISender sender,
 				CancellationToken cancellationToken) =>
 			{
+				var effectiveLevel = !string.IsNullOrWhiteSpace(jlptLevel) ? jlptLevel : level;
 				var query = new GetSrsItemsQuery(
 					page ?? 1,
 					pageSize ?? 50,
 					filter,
 					sortBy,
 					sortOrder,
-					level,
+					effectiveLevel,
 					knowledgeType,
 					status,
 					search,
@@ -50,9 +53,9 @@ internal sealed class GetSrsItems : IEndpoint
 			})
 			.WithName("GetSrsItems")
 			.WithSummary("Learner")
-			.WithDescription("Returns saved vocabulary items with word details, SM-2 metrics, JLPT level, knowledge type, and maturity status. Supports filtering by filter, level, knowledgeType, status, search, dueDate (yyyy-MM-dd), timeZone, and isActive, plus sorting via sortBy ('saved', 'due', 'leech', 'alphabetical', 'interval') and sortOrder.")
+			.WithDescription("Returns paginated saved vocabulary items with word details, SM-2 metrics, isMastered flag, JLPT level, knowledge type, and maturity status. Supports server-side filtering by filter, level/jlptLevel, knowledgeType, status, search, dueDate (yyyy-MM-dd), timeZone, and isActive, plus sorting and pagination (page, pageSize).")
 			.RequireAuthorization(policy => policy.RequireRole(RoleCodes.Learner))
-			.Produces<IReadOnlyList<SavedItemSummaryDto>>(StatusCodes.Status200OK)
+			.Produces<PaginatedList<SavedItemSummaryDto>>(StatusCodes.Status200OK)
 			.ProducesProblem(StatusCodes.Status401Unauthorized)
 			.ProducesProblem(StatusCodes.Status403Forbidden)
 			.ProducesProblem(StatusCodes.Status500InternalServerError);

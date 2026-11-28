@@ -15,6 +15,12 @@ public sealed record ShadowingWordBreakdownDto(
 	string? ErrorType,
 	string? Tag);
 
+public sealed record ScoreGradeDistributionDto(
+	int Pass,
+	int Tier60To79,
+	int Tier30To59,
+	int Under30);
+
 public sealed record ShadowingHistoryItemDto(
 	Guid AttemptId,
 	Guid SessionId,
@@ -26,7 +32,8 @@ public sealed record ShadowingHistoryItemDto(
 	decimal AccuracyScore,
 	decimal PitchScore,
 	decimal OverallScore,
-	string AssessmentType);
+	string AssessmentType,
+	string AssessmentTier = "NEEDS_WORK");
 
 public sealed record ShadowingDetailScoreTrendPointDto(
 	string Date,
@@ -48,4 +55,5 @@ public sealed record ShadowingAnalyticsDetailResponseDto(
 	double SkipRatePercentage,
 	decimal AverageOverallScore,
 	IReadOnlyList<ShadowingDetailScoreTrendPointDto> ScoreTrend,
-	IReadOnlyList<ShadowingHistoryItemDto> History);
+	IReadOnlyList<ShadowingHistoryItemDto> History,
+	ScoreGradeDistributionDto? GradeDistribution = null);

@@ -1,4 +1,5 @@
 using MediatR;
+using Rakushu.Application.Common.Pagination;
 using Rakushu.Application.Usecases.Learning.Srs;
 using Rakushu.Domain.Common.Results;
 
@@ -16,4 +17,4 @@ public sealed record GetSrsItemsQuery(
 	string? Search = null,
 	string? DueDate = null,
 	string? TimeZone = null,
-	bool? IsActive = null) : IRequest<Result<IReadOnlyList<SavedItemSummaryDto>>>;
+	bool? IsActive = null) : IRequest<Result<PaginatedList<SavedItemSummaryDto>>>;

@@ -84,12 +84,14 @@ internal sealed partial class CuratorAnalyticsQueryService : ICuratorAnalyticsQu
 		int reportResolved = reportStatusCounts.FirstOrDefault(x => x.Status == ReportStatus.Resolved)?.Count ?? 0;
 		int reportDismissed = reportStatusCounts.FirstOrDefault(x => x.Status == ReportStatus.Dismissed)?.Count ?? 0;
 
+		int unresolvedReportsCount = reportPending + reportInReview;
 		var reportsSummary = new CuratorReportsSummaryCountsDto(
 			reportPending + reportInReview + reportResolved + reportDismissed,
 			reportPending,
 			reportInReview,
 			reportResolved,
-			reportDismissed);
+			reportDismissed,
+			unresolvedReportsCount);
 
 		var videoStatusCounts = await _context.Videos
 			.AsNoTracking()
@@ -104,16 +106,25 @@ internal sealed partial class CuratorAnalyticsQueryService : ICuratorAnalyticsQu
 		int videoDraft = videoStatusCounts.FirstOrDefault(x => x.Status == VideoStatus.Draft)?.Count ?? 0;
 		int videoRejected = videoStatusCounts.FirstOrDefault(x => x.Status == VideoStatus.Rejected)?.Count ?? 0;
 		int videoArchived = videoStatusCounts.FirstOrDefault(x => x.Status == VideoStatus.Archived)?.Count ?? 0;
+		int videoImporting = videoStatusCounts.FirstOrDefault(x => x.Status == VideoStatus.Importing)?.Count ?? 0;
+		int videoModerating = videoStatusCounts.FirstOrDefault(x => x.Status == VideoStatus.Moderating)?.Count ?? 0;
+		int totalVideos = videoReady + videoReviewing + videoPending + videoProcessing + videoDraft + videoRejected + videoArchived + videoImporting + videoModerating;
+		int pendingReviewTotal = videoReviewing + videoPending;
+		int otherStatusCount = videoDraft + videoProcessing + videoRejected + videoArchived + videoImporting + videoModerating;
+		double readyRatePercent = totalVideos > 0 ? Math.Round((double)videoReady / totalVideos * 100.0, 1) : 0.0;
 
 		var videosSummary = new CuratorVideosSummaryCountsDto(
-			videoReady + videoReviewing + videoPending + videoProcessing + videoDraft + videoRejected + videoArchived,
+			totalVideos,
 			videoReady,
 			videoReviewing,
 			videoPending,
 			videoProcessing,
 			videoDraft,
 			videoRejected,
-			videoArchived);
+			videoArchived,
+			pendingReviewTotal,
+			otherStatusCount,
+			readyRatePercent);
 
 		var questionGroups = await _context.BankQuestions
 			.AsNoTracking()
@@ -170,8 +181,13 @@ internal sealed partial class CuratorAnalyticsQueryService : ICuratorAnalyticsQu
 			}
 		}
 
+		int totalQuestions = publishedCount + draftCount;
+		double publishedRatePercent = totalQuestions > 0
+			? Math.Round((double)publishedCount / totalQuestions * 100.0, 1)
+			: 0.0;
+
 		var questionBankSummary = new CuratorQuestionBankSummaryCountsDto(
-			publishedCount + draftCount,
+			totalQuestions,
 			publishedCount,
 			draftCount,
 			inactiveCount,
@@ -179,7 +195,8 @@ internal sealed partial class CuratorAnalyticsQueryService : ICuratorAnalyticsQu
 			withAudio,
 			withVideo,
 			withImage,
-			textOnly);
+			textOnly,
+			publishedRatePercent);
 
 		var collectionCounts = await _context.KnowledgeCollections
 			.AsNoTracking()
@@ -209,7 +226,8 @@ internal sealed partial class CuratorAnalyticsQueryService : ICuratorAnalyticsQu
 			activeUnits,
 			pendingUnits,
 			oovTotal,
-			oovPending);
+			oovPending,
+			unresolvedReportsCount);
 
 		return new CuratorSummaryDto(
 			utcNow,

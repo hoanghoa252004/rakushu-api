@@ -53,6 +53,36 @@ internal sealed partial class LearnerAnalyticsQueryService : ILearnerAnalyticsQu
 			utcNow,
 			cancellationToken);
 
+		var retentionRate30d = await GetRecentRetentionRateAsync(
+			userId,
+			utcNow,
+			cancellationToken);
+
+		int totalSaved = coverageStats.TotalSaved;
+		int masteredCount = coverageStats.TotalMastered;
+		double masteryRatePercent = totalSaved > 0
+			? Math.Round((double)masteredCount / totalSaved * 100.0, 1)
+			: 0.0;
+
+		var maturity = srsAnalytics.MaturityBreakdown;
+		int activeWordsCount = maturity.NewCount + maturity.LearningCount + maturity.YoungCount + maturity.MasteredCount;
+		double leechRatePercent = activeWordsCount > 0
+			? Math.Round((double)maturity.LeechCount / activeWordsCount * 100.0, 1)
+			: 0.0;
+
+		double assessmentCompletionRate = shadowingProgress.TotalAttempts > 0
+			? Math.Round((double)shadowingProgress.AssessedAttempts / shadowingProgress.TotalAttempts * 100.0, 1)
+			: 0.0;
+
+		string bestPerformingSkill = practicePerformance.ByQuestionType
+			.Where(x => x.AnsweredCount > 0)
+			.OrderByDescending(x => x.AccuracyRate)
+			.ThenByDescending(x => x.AnsweredCount)
+			.Select(x => x.QuestionTypeName)
+			.FirstOrDefault() ?? string.Empty;
+
+		string retentionStatusLabel = retentionRate30d >= 80.0 ? "Rất tốt" : "Khá";
+
 		return new LearnerDashboardDto(
 			days,
 			utcNow,
@@ -60,6 +90,11 @@ internal sealed partial class LearnerAnalyticsQueryService : ILearnerAnalyticsQu
 			srsAnalytics,
 			MapToKnowledgeCoverage(coverageStats),
 			practicePerformance,
-			shadowingProgress);
+			shadowingProgress,
+			masteryRatePercent,
+			leechRatePercent,
+			assessmentCompletionRate,
+			bestPerformingSkill,
+			retentionStatusLabel);
 	}
 }

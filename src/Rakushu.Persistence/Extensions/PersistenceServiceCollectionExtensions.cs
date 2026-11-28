@@ -130,6 +130,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<ILearnerAnalyticsQueryService, LearnerAnalyticsQueryService>();
 		services.AddScoped<ICuratorAnalyticsQueryService, CuratorAnalyticsQueryService>();
 		services.AddScoped<IFinanceAnalyticsQueryService, FinanceAnalyticsQueryService>();
+		services.AddScoped<IAdminAnalyticsQueryService, AdminAnalyticsQueryService>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
