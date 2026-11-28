@@ -22,60 +22,26 @@ internal sealed class GetVideosHandler : IRequestHandler<GetVideosQuery, Result<
 
 	public async Task<Result<PaginatedList<VideoDetailDto>>> Handle(GetVideosQuery request, CancellationToken cancellationToken)
 	{
-		var videos = await _repository.GetAllAsync(cancellationToken);
-
-		var filteredVideos = videos.AsEnumerable();
-
-		// Filter by SearchKey (title or slug)
-		if (!string.IsNullOrWhiteSpace(request.SearchKey))
-		{
-			var searchKeyLower = request.SearchKey.ToLower();
-			filteredVideos = filteredVideos.Where(v =>
-				v.Title.ToLower().Contains(searchKeyLower) ||
-				v.Slug.ToLower().Contains(searchKeyLower));
-		}
-
-		// Filter by ContentCategoryId
-		if (request.ContentCategoryId.HasValue)
-		{
-			var categoryId = ContentCategoryId.From(request.ContentCategoryId.Value);
-			filteredVideos = filteredVideos.Where(v => v.ContentCategoryId == categoryId);
-		}
-
-		// Filter by SeriesId
-		if (request.SeriesId.HasValue)
-		{
-			var seriesId = SeriesId.From(request.SeriesId.Value);
-			filteredVideos = filteredVideos.Where(v => v.SeriesId == seriesId);
-		}
-
-		// Filter by UserId
-		if (request.UserId.HasValue)
-		{
-			var userId = UserId.From(request.UserId.Value);
-			filteredVideos = filteredVideos.Where(v => v.LearnerId == userId);
-		}
-
-		if (string.IsNullOrWhiteSpace(request.Status) == false && !Enum.TryParse<VideoStatus>(request.Status, true, out var status))
-		{
-			return Result.Failure<PaginatedList<VideoDetailDto>>(VideoErrors.InvalidStatus);
-		}
-
+		VideoStatus? status = null;
 		if (!string.IsNullOrWhiteSpace(request.Status))
 		{
-			filteredVideos = filteredVideos.Where(v => v.Status.ToString() == request.Status.ToString());
+			if (!Enum.TryParse<VideoStatus>(request.Status, true, out var parsedStatus))
+				return Result.Failure<PaginatedList<VideoDetailDto>>(VideoErrors.InvalidStatus);
+			status = parsedStatus;
 		}
-		
-		// Calculate total count before paging
-		var totalCount = filteredVideos.Count();
 
-		// Apply paging
-		var items = filteredVideos
-			.OrderByDescending(v => v.CreatedAt)
-			.Skip((request.PageNumber - 1) * request.PageSize)
-			.Take(request.PageSize)
-			.Select(VideoDetailDto.FromEntity)
-			.ToList();
+		var (videos, totalCount) = await _repository.GetPagedAsync(
+			Enum.GetValues<VideoSource>(),
+			status,
+			request.UserId,
+			request.SearchKey,
+			request.ContentCategoryId,
+			request.SeriesId,
+			request.PageNumber,
+			request.PageSize,
+			cancellationToken);
+
+		var items = videos.Select(VideoDetailDto.FromEntity).ToList();
 
 		// Generate pre-signed URLs for media assets
 		var enrichedItems = await Task.WhenAll(

@@ -25,6 +25,13 @@ public enum SystemConfigurationKey
 	// AzureSettings
 	AzureSettings_AzureSpeechKey,
 	AzureSettings_AzureSpeechRegion,
+	AzureSettings_TenantId,
+	AzureSettings_ClientId,
+	AzureSettings_ClientSecret,
+	AzureSettings_SubscriptionId,
+
+	// FinanceSettings
+	FinanceSettings_UsdToVndRate,
 
 	// VnPaySettings
 	VnPaySettings_Version,

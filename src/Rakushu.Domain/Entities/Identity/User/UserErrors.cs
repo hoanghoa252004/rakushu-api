@@ -46,6 +46,14 @@ public static class UserErrors
 	public static readonly Error InvalidVerificationCode = Error.Failure(
 		"AUTH.INVALID_VERIFICATION_TOKEN", "The verification code is invalid ( expired or used or invalid code ).");
 
+	public static readonly Error InvalidPasswordResetCode = Error.Failure(
+		"AUTH.INVALID_PASSWORD_RESET_CODE", "The password reset code is invalid ( expired or used or invalid code ).");
+
+	public static Error RemainActivePasswordResetCode(string message)
+	{
+		return Error.Failure("AUTH.REMAIN_ACTIVE_PASSWORD_RESET_CODE", message);
+	}
+
 	public static Error RemainActiveVerificationCode(string message)
 	{
 		return Error.Failure("AUTH.REMAIN_ACTIVE_VERIFICATION_CODE",message);

@@ -39,6 +39,9 @@ internal static class ServiceCollectionExtensions
 		services.AddHostedService<ShadowingAudioNormalizationWorker>();
 		services.AddHostedService<ShadowingAssessmentWorker>();
 
+		// AUTHENTICATION
+		services.AddHostedService<Rakushu.Worker.Jobs.Authentication.PasswordResetCodeExpiryWorker>();
+
 		// SUBSCRIPTION
 		services.AddHostedService<SubscriptionTrackingWorker>();
 

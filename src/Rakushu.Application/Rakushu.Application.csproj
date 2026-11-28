@@ -20,7 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Abstractions\Persistence\Queries\" />
     <Folder Include="Usecases\Shadowing\ShadowingMaterials\ChangeShadowingMaterialStatus\" />
     <Folder Include="Usecases\Shadowing\ShadowingRoles\CreateShadowingRole\" />
   </ItemGroup>

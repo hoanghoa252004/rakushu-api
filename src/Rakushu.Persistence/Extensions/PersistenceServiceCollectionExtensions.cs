@@ -77,6 +77,7 @@ public static class PersistenceServiceCollectionExtensions
 		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Configuration.ISystemConfigurationProvider, SystemConfigurationProvider>();
 		//services.AddHostedService<Rakushu.Persistence.Configuration.SystemConfigurationSeeder>();
 		services.AddScoped<IUserRepository, UserRepository>();
+		services.AddScoped<Rakushu.Domain.Entities.Identity.User.PasswordResetCode.IPasswordResetCodeRepository, PasswordResetCodeRepository>();
 		services.AddScoped<IRoleRepository, RoleRepository>();
 		services.AddScoped<IPlanRepository, PlanRepository>();
 		services.AddScoped<IFeatureRepository, FeatureRepository>();
@@ -128,6 +129,7 @@ public static class PersistenceServiceCollectionExtensions
 		// Read-Only Analytics Query Services
 		services.AddScoped<ILearnerAnalyticsQueryService, LearnerAnalyticsQueryService>();
 		services.AddScoped<ICuratorAnalyticsQueryService, CuratorAnalyticsQueryService>();
+		services.AddScoped<IFinanceAnalyticsQueryService, FinanceAnalyticsQueryService>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();
