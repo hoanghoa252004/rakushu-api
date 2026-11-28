@@ -22,4 +22,11 @@ internal static class AnalyticsEndpointGroupExtension
 			.WithTags("Curator Analytics")
 			.WithGroupName("analytics");
 	}
+
+	internal static RouteGroupBuilder MapFinanceAnalyticsEndpoints(this IEndpointRouteBuilder app)
+	{
+		return app.MapGroup("/api/analytics/finance")
+			.WithTags("Finance Analytics")
+			.WithGroupName("analytics");
+	}
 }

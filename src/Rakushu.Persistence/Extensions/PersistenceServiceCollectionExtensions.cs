@@ -127,6 +127,7 @@ public static class PersistenceServiceCollectionExtensions
 		// Read-Only Analytics Query Services
 		services.AddScoped<ILearnerAnalyticsQueryService, LearnerAnalyticsQueryService>();
 		services.AddScoped<ICuratorAnalyticsQueryService, CuratorAnalyticsQueryService>();
+		services.AddScoped<IFinanceAnalyticsQueryService, FinanceAnalyticsQueryService>();
 
 		DefaultTypeMap.MatchNamesWithUnderscores = true;
 		services.AddScoped<IDbConnectionFactory, NpgsqlConnectionFactory>();

@@ -78,6 +78,10 @@ internal static class AwsExtention
 			services.AddSingleton<IAmazonMediaConvert>(_ =>
 				new AmazonMediaConvertClient(
 					Amazon.RegionEndpoint.APSoutheast1));
+
+			services.AddSingleton<Amazon.CostExplorer.IAmazonCostExplorer>(_ =>
+				new Amazon.CostExplorer.AmazonCostExplorerClient(
+					Amazon.RegionEndpoint.USEast1));
 		}
 		else
 		{
@@ -135,6 +139,12 @@ internal static class AwsExtention
 				new AmazonMediaConvertClient(
 					awsCredentials,
 					Amazon.RegionEndpoint.APSoutheast1));
+
+			// AWS Cost Explorer (billing data is served from us-east-1)
+			services.AddSingleton<Amazon.CostExplorer.IAmazonCostExplorer>(_ =>
+				new Amazon.CostExplorer.AmazonCostExplorerClient(
+					awsCredentials,
+					Amazon.RegionEndpoint.USEast1));
 		}
 
 		//services.Configure<AwsSettings>(configuration.GetSection(AwsSettings.ConfigurationSection));

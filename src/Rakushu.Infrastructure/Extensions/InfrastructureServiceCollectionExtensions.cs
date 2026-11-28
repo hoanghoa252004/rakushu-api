@@ -71,6 +71,12 @@ public static class InfrastructureServiceCollectionExtensions
 		// AI SERVICE CLIENT
 		services.AddHttpClient<IQuizContentGenerator, OllamaQuizContentGenerator>();
 
+		// CLOUD BILLING
+		services.AddScoped<Rakushu.Infrastructure.Billing.AwsCostExplorerBillingClient>();
+		services.AddHttpClient<Rakushu.Infrastructure.Billing.AzureCostManagementBillingClient>(
+			client => client.Timeout = TimeSpan.FromMinutes(1));
+		services.AddScoped<Rakushu.Application.Abstractions.Infrastructure.Billing.ICloudBillingService, Rakushu.Infrastructure.Billing.CloudBillingService>();
+
 		// SPEECH ASSESSMENT
 		services.AddHttpClient<Rakushu.Application.Abstractions.Infrastructure.Assessment.ISpeechAssessmentService, Rakushu.Infrastructure.Assessment.SpeechAssessmentService>(
 			client => client.Timeout = TimeSpan.FromMinutes(2));
